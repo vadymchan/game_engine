@@ -1,4 +1,4 @@
-#include "glfw_window.h" // change the path
+#include "../../include/game_engine/window/glfw_window.h" // change the path
 
 namespace game_engine {
 namespace window {

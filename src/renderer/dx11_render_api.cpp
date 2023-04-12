@@ -1,4 +1,4 @@
-#include "dx11_render_api.h"
+#include "../../include/game_engine/renderer/dx11_render_api.h"
 #include <DirectXMath.h>
 #include <vector>
 
@@ -98,8 +98,7 @@ UINT createDeviceFlags = 0;
 createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-scss
-Copy code
+
 D3D_FEATURE_LEVEL featureLevel;
 const D3D_FEATURE_LEVEL featureLevelArray[1] = {D3D_FEATURE_LEVEL_11_0};
 
