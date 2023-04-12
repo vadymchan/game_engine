@@ -1,0 +1,35 @@
+# .gitignore
+
+# Ignore build directory
+build/
+
+# Ignore CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+
+# Ignore other generated files
+*.o
+*.obj
+*.exe
+*.lib
+*.dll
+*.so
+*.a
+*.dylib
+
+# Ignore Visual Studio generated files
+.vs/
+*.sln
+*.suo
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Ignore other common files
+*.log
+*.swp
+*.bak
+*.tmp
+*.orig
