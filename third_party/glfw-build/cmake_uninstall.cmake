@@ -1,9 +1,9 @@
 
-if (NOT EXISTS "C:/Users/vadym/source/repos/pet project/game_engine/third_party/glfw-build/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: \"C:/Users/vadym/source/repos/pet project/game_engine/third_party/glfw-build/install_manifest.txt\"")
+if (NOT EXISTS "C:/Users/vadym/Downloads/game_engine/third_party/glfw-build/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: \"C:/Users/vadym/Downloads/game_engine/third_party/glfw-build/install_manifest.txt\"")
 endif()
 
-file(READ "C:/Users/vadym/source/repos/pet project/game_engine/third_party/glfw-build/install_manifest.txt" files)
+file(READ "C:/Users/vadym/Downloads/game_engine/third_party/glfw-build/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 
 foreach (file ${files})

@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.26.0-rc2)
 # to something that will highlight to the user what we are working on if
 # something goes wrong and an error message is produced.
 
-project(glfw-populate NONE)
+project(spdlog-populate NONE)
 
 
 # Pass through things we've already detected in the main project to avoid
@@ -20,10 +20,10 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 
 
 include(ExternalProject)
-ExternalProject_Add(glfw-populate
-                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/glfw/glfw.git" "GIT_TAG" "3.3.4"
-                    SOURCE_DIR          "C:/Users/vadym/Downloads/game_engine/third_party/glfw-src"
-                    BINARY_DIR          "C:/Users/vadym/Downloads/game_engine/third_party/glfw-build"
+ExternalProject_Add(spdlog-populate
+                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/gabime/spdlog.git" "GIT_TAG" "v1.9.2"
+                    SOURCE_DIR          "C:/Users/vadym/Downloads/game_engine/third_party/spdlog-src"
+                    BINARY_DIR          "C:/Users/vadym/Downloads/game_engine/third_party/spdlog-build"
                     CONFIGURE_COMMAND   ""
                     BUILD_COMMAND       ""
                     INSTALL_COMMAND     ""

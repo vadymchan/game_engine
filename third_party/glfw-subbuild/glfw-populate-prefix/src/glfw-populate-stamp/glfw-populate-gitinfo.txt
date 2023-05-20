@@ -3,9 +3,9 @@
 # No other meaning or use of this file is supported.
 
 method=git
-command=C:/Program Files/CMake/bin/cmake.exe;-P;C:/Users/vadym/source/repos/pet project/game_engine/third_party/glfw-subbuild/glfw-populate-prefix/tmp/glfw-populate-gitclone.cmake
-source_dir=C:/Users/vadym/source/repos/pet project/game_engine/third_party/glfw-src
-work_dir=C:/Users/vadym/source/repos/pet project/game_engine/third_party
+command=C:/Program Files/CMake/bin/cmake.exe;-P;C:/Users/vadym/Downloads/game_engine/third_party/glfw-subbuild/glfw-populate-prefix/tmp/glfw-populate-gitclone.cmake
+source_dir=C:/Users/vadym/Downloads/game_engine/third_party/glfw-src
+work_dir=C:/Users/vadym/Downloads/game_engine/third_party
 repository=https://github.com/glfw/glfw.git
 remote=origin
 init_submodules=TRUE

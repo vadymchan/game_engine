@@ -5,49 +5,145 @@ project(game_engine)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(PLATFORM "x64")
+else()
+    set(PLATFORM "x86")
+endif()
+
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT game_engine)
 endif()
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
 
-include(FetchContent)
+set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/game_engine.dir)
 
+include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
 
+option(BUILD_GLFW "Build the GLFW library" ON)
+option(BUILD_SPDLOG "Build the SPDLOG library" OFF)
+option(BUILD_BULLET "Build the Bullet library" OFF)
+option(BUILD_IMGUI "Build the ImGui library" OFF)
+option(BUILD_ASSIMP "Build the Assimp library" OFF)
+option(BUILD_STB "Build the STB library" OFF)
+option(BUILD_BOOST "Build the Boost library" OFF)
 
-FetchContent_Declare(
-    glfw
-    GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 3.3.4
-)
-
-FetchContent_GetProperties(glfw)
-if(NOT glfw_POPULATED)
-    FetchContent_Populate(glfw)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "Build the GLFW example programs")
-    set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "Build the GLFW test programs")
-    set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
-    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+if(BUILD_GLFW)
+    message(STATUS "Fetching GLFW...")
+    FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.3.4
+    )
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 endif()
 
 
+if(BUILD_SPDLOG)
+message(STATUS "Fetching SPDLOG...")
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.9.2
+    )
+
+endif()
+
+if(BUILD_BULLET)
+message(STATUS "Fetching BULLET-3...")
+    FetchContent_Declare(
+        bullet
+        GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
+        GIT_TAG 3.09
+    )
+
+endif()
+
+if(BUILD_IMGUI)
+message(STATUS "Fetching IMGUI...")
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG v1.82
+    )
+endif()
+
+if(BUILD_ASSIMP)
+message(STATUS "Fetching ASSIMP...")
+    FetchContent_Declare(
+        assimp
+        GIT_REPOSITORY https://github.com/assimp/assimp.git
+        GIT_TAG v5.0.1
+    )
+endif()
+
+if(BUILD_STB)
+message(STATUS "Fetching STB...")
+    FetchContent_Declare(
+        stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_TAG master
+    )
+endif()
+
+if(BUILD_BOOST)
+message(STATUS "Fetching BOOST...")
+    FetchContent_Declare(
+        boost
+        GIT_REPOSITORY https://github.com/boostorg/boost.git
+        GIT_TAG boost-1.77.0
+    )
+    FetchContent_GetProperties(boost)
+    if(NOT boost_POPULATED)
+        FetchContent_Populate(boost)
+        include_directories(${boost_SOURCE_DIR})
+    endif()
+
+endif()
+
 include_directories(include)
 
-file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*.h")
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
 
-set_target_properties(game_engine PROPERTIES
-    OBJECT_OUTPUTS "${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/$<CONFIG>/intermediate/$<TARGET_NAME>/$<TARGET_OBJECTS:game_engine>"
-)
+if(BUILD_GLFW)
+    FetchContent_MakeAvailable(glfw)
+    target_link_libraries(game_engine glfw)
+endif()
+
+if(BUILD_SPDLOG)
+    FetchContent_MakeAvailable(spdlog)
+    target_link_libraries(game_engine spdlog)
+endif()
+
+if(BUILD_BULLET)
+    FetchContent_MakeAvailable(bullet)
+    target_link_libraries(game_engine BulletDynamics BulletCollision LinearMath)
+endif()
+
+if(BUILD_IMGUI)
+    FetchContent_MakeAvailable(imgui)
+    target_link_libraries(game_engine imgui)
+endif()
+
+if(BUILD_ASSIMP)
+    FetchContent_MakeAvailable(assimp)
+    target_link_libraries(game_engine assimp)
+endif()
+
+if(BUILD_STB)
+    FetchContent_MakeAvailable(stb)
+    target_link_libraries(game_engine stb)
+endif()
 
 find_package(Vulkan REQUIRED)
-
-target_link_libraries(game_engine glfw)
 target_link_libraries(game_engine Vulkan::Vulkan)
