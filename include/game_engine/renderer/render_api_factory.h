@@ -31,6 +31,7 @@
 #include "dx11_render_api.h"
 #include "dx12_render_api.h"
 #include "vulkan_render_api.h"
+#include <memory>
 
 namespace game_engine {
 namespace renderer {

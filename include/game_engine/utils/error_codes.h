@@ -7,6 +7,7 @@ enum class ErrorCode {
     Success = 0,
     GLFWInitFailed,
     GLFWWindowCreationFailed,
+
 };
 
 } // namespace utils

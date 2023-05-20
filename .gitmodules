@@ -1,0 +1,18 @@
+[submodule "third_party/glfw"]
+	path = third_party/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "third_party/spdlog"]
+	path = third_party/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "third_party/eigen"]
+	path = third_party/eigen
+	url = https://gitlab.com/libeigen/eigen.git
+[submodule "third_party/boost"]
+	path = third_party/boost
+	url = https://github.com/boostorg/boost.git
+[submodule "third_party/imgui"]
+	path = third_party/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "third_party/bullet"]
+	path = third_party/bullet
+	url = https://github.com/bulletphysics/bullet3.git

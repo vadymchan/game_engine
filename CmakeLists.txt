@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 
 project(game_engine)
 
@@ -9,13 +9,45 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT game_engine)
 endif()
 
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
+
+include(FetchContent)
+
+set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
+
+
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 3.3.4
+)
+
+FetchContent_GetProperties(glfw)
+if(NOT glfw_POPULATED)
+    FetchContent_Populate(glfw)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "Build the GLFW example programs")
+    set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "Build the GLFW test programs")
+    set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
+    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+endif()
+
+
 include_directories(include)
 
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/*.h")
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 
-add_executable(game_engine ${SOURCES} main.cpp)
+add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
+
+set_target_properties(game_engine PROPERTIES
+    OBJECT_OUTPUTS "${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/$<CONFIG>/intermediate/$<TARGET_NAME>/$<TARGET_OBJECTS:game_engine>"
+)
 
 find_package(Vulkan REQUIRED)
 
+target_link_libraries(game_engine glfw)
 target_link_libraries(game_engine Vulkan::Vulkan)
-
