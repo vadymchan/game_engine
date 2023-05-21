@@ -5,8 +5,10 @@
 
 namespace GameEngine {
 
+    class IBaseWindow {};
+
     template <typename DerivedWindow>
-    class IWindow {
+    class IWindow : public IBaseWindow{
     public:
         bool Initialize(int width, int height, const std::string& title) {
             return static_cast<DerivedWindow*>(this)->InitializeImplementation(width, height, title);
