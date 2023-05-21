@@ -1,20 +1,20 @@
-#pragma once
-#include <Windows.h>
 
-namespace game_engine {
-	namespace renderer {
+#include "../window/i_window.h"
 
-		template <typename T>
-		class RenderAPI {
-		public:
-			void Initialize(HWND hwnd) { static_cast<T*>(this)->InitializeImpl(hwnd); }
-			void DrawTriangle() { static_cast<T*>(this)->DrawTriangleImpl(); }
-			void Present() { static_cast<T*>(this)->PresentImpl(); }
-		};
+namespace GameEngine {
 
+    class IRenderer {
+    public:
+        virtual ~IRenderer() = default;
 
+        virtual bool Initialize(IWindow& window) = 0;
+        virtual void Shutdown() = 0;
 
+        virtual void BeginFrame() = 0;
+        virtual void EndFrame() = 0;
 
-	} // namespace renderer
-} // namespace game_engine
+        // other renderer-related methods...
+    };
+
+}  // namespace GameEngine
 
