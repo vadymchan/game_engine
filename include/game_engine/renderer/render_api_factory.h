@@ -1,45 +1,21 @@
-// #pragma once
+// render_api_factory.h
 
-// #include "render_api.h"
-// #include "dx11_render_api.h"
-// #include "dx12_render_api.h"
-// #include "vulkan_render_api.h"
+#pragma once
 
-// namespace game_engine {
-// namespace renderer {
+#include "i_renderer.h"
+#include "dx12_renderer.h"
+#include "vulkan_renderer.h"
+#include "render_api_type.h"
+#include "../window/i_window.h"
+#include <memory>
 
-// std::unique_ptr<RenderAPI> CreateRenderAPI(RenderAPIType type) {
-//     switch (type) {
-//         case
-// RenderAPIType::DirectX11:
-// return std::make_unique<DX11RenderAPI>();
-// case RenderAPIType::DirectX12:
-// return std::make_unique<DX12RenderAPI>();
-// case RenderAPIType::Vulkan:
-// return std::make_unique<VulkanRenderAPI>();
-// default:
-// return nullptr;
-// }
-// }
+namespace GameEngine {
 
-// } // namespace renderer
-// } // namespace game_engine
+    class RenderAPIFactory {
+    public:
+        static std::unique_ptr<IRenderer<DX12Renderer>> CreateDX12Renderer();
+        static std::unique_ptr<IRenderer<VulkanRenderer>> CreateVulkanRenderer();
+        //static std::unique_ptr<IRenderer> CreateRenderer(RenderAPI api); // currently not work due to CRTP pattern
+    };
 
-//#pragma once
-//
-//#include "render_api.h"
-//#include "dx11_render_api.h"
-//#include "dx12_render_api.h"
-//#include "vulkan_render_api.h"
-//#include <memory>
-//
-//namespace game_engine {
-//namespace renderer {
-//
-//template <typename T>
-//std::unique_ptr<RenderAPI<T>> CreateRenderAPI() {
-//    return std::make_unique<T>();
-//}
-//
-//} // namespace renderer
-//} // namespace game_engine
+}  // namespace GameEngine

@@ -4,6 +4,14 @@
 
 namespace GameEngine {
 
+    enum class ShaderType {
+        VERTEX_SHADER,
+        FRAGMENT_SHADER,
+        GEOMETRY_SHADER,
+        // add more types as needed...
+    };
+
+
     template <typename DerivedShader>
     class IShader {
     public:

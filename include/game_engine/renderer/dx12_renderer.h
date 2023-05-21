@@ -1,5 +1,4 @@
-#ifndef GAME_ENGINE_DX12_RENDERER_H
-#define GAME_ENGINE_DX12_RENDERER_H
+#pragma once
 
 #include "i_renderer.h"
 #include "../window/winapi_window.h"
@@ -22,4 +21,3 @@ namespace GameEngine {
 
 }  // namespace GameEngine
 
-#endif  // GAME_ENGINE_DX12_RENDERER_H

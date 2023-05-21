@@ -5,6 +5,8 @@
 
 namespace GameEngine {
 
+    
+
     template <typename DerivedRenderer>
     class IRenderer {
     public:
