@@ -1,19 +1,28 @@
 #pragma once
 
-
 #include <string>
 
 namespace GameEngine {
 
+    template <typename DerivedShader>
     class IShader {
     public:
-        virtual ~IShader() = default;
+        bool Initialize(const std::string& shaderFile) {
+            return static_cast<DerivedShader*>(this)->InitializeImplementation(shaderFile);
+        }
 
-        virtual bool Initialize(const std::string& shaderFile) = 0;
-        virtual void Destroy() = 0;
+        void Destroy() {
+            return static_cast<DerivedShader*>(this)->DestroyImplementation();
+        }
 
-        virtual void Bind() = 0;
-        virtual void Unbind() = 0;
+        void Bind() {
+            return static_cast<DerivedShader*>(this)->BindImplementation();
+        }
+
+        void Unbind() {
+            return static_cast<DerivedShader*>(this)->UnbindImplementation();
+        }
     };
 
 }  // namespace GameEngine
+

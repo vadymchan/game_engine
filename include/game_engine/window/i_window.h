@@ -1,19 +1,32 @@
 #pragma once
 
+
 #include <string>
 
 namespace GameEngine {
 
+    template <typename DerivedWindow>
     class IWindow {
     public:
-        virtual ~IWindow() = default;
+        bool Initialize(int width, int height, const std::string& title) {
+            return static_cast<DerivedWindow*>(this)->InitializeImplementation(width, height, title);
+        }
 
-        virtual bool Initialize(int width, int height, const std::string& title) = 0;
-        virtual void Shutdown() = 0;
+        void Shutdown() {
+            return static_cast<DerivedWindow*>(this)->ShutdownImplementation();
+        }
 
-        virtual bool ShouldClose() const = 0;
-        virtual void PollEvents() const = 0;
-        virtual void SwapBuffers() const = 0;
+        bool ShouldClose() const {
+            return static_cast<const DerivedWindow*>(this)->ShouldCloseImplementation();
+        }
+
+        void PollEvents() const {
+            return static_cast<const DerivedWindow*>(this)->PollEventsImplementation();
+        }
+
+        void SwapBuffers() const {
+            return static_cast<const DerivedWindow*>(this)->SwapBuffersImplementation();
+        }
     };
 
 }  // namespace GameEngine

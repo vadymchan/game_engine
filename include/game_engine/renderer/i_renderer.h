@@ -1,17 +1,28 @@
 
 #include "../window/i_window.h"
 
+
+
 namespace GameEngine {
 
+    template <typename DerivedRenderer>
     class IRenderer {
     public:
-        virtual ~IRenderer() = default;
+        bool Initialize(IWindow<DerivedRenderer>& window) {
+            return static_cast<DerivedRenderer*>(this)->InitializeImplementation(window);
+        }
 
-        virtual bool Initialize(IWindow& window) = 0;
-        virtual void Shutdown() = 0;
+        void Shutdown() {
+            return static_cast<DerivedRenderer*>(this)->ShutdownImplementation();
+        }
 
-        virtual void BeginFrame() = 0;
-        virtual void EndFrame() = 0;
+        void BeginFrame() {
+            return static_cast<DerivedRenderer*>(this)->BeginFrameImplementation();
+        }
+
+        void EndFrame() {
+            return static_cast<DerivedRenderer*>(this)->EndFrameImplementation();
+        }
 
         // other renderer-related methods...
     };
