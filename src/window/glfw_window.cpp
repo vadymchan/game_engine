@@ -1,22 +1,35 @@
-#pragma once
+#include "../include/game_engine/window/glfw_window.h"
 
-#include "window.h"
 #include <GLFW/glfw3.h>
 
-namespace game_engine {
-namespace window {
+namespace GameEngine {
 
-class GLFWWindow : public Window<GLFWWindow> {
-public:
-    using Window::Window;
+    GLFWWindow::GLFWWindow() : window_(nullptr) {
+        // Nothing to do here.
+    }
 
-    utils::ErrorCode InitializeImpl();
-    bool ShouldCloseImpl() const;
-    void PollEventsImpl();
+    GLFWWindow::~GLFWWindow() {
+        Shutdown();
+    }
 
-private:
-    GLFWwindow* window_ = nullptr;
-};
+    bool GLFWWindow::Initialize(int width, int height, const std::string& title) {
+        // Initialization code for GLFW window...
+    }
 
-} // namespace window
-} // namespace game_engine
+    void GLFWWindow::Shutdown() {
+        // Clean-up code for GLFW window...
+    }
+
+    bool GLFWWindow::ShouldClose() const {
+        // Should close check for GLFW window...
+    }
+
+    void GLFWWindow::PollEvents() const {
+        // Event polling for GLFW window...
+    }
+
+    void GLFWWindow::SwapBuffers() const {
+        // Buffer swapping for GLFW window...
+    }
+
+}  // namespace GameEngine

@@ -1,22 +1,24 @@
-#pragma once
+#include "i_window.h"
 
-#include "window.h"
-#include <GLFW/glfw3.h>
+struct GLFWwindow;
 
-namespace game_engine {
-namespace window {
+namespace GameEngine {
 
-class GLFWWindow : public Window<GLFWWindow> {
-public:
-    using Window::Window;
+    class GLFWWindow : public IWindow {
+    public:
+        GLFWWindow();
+        virtual ~GLFWWindow();
 
-    utils::ErrorCode InitializeImpl();
-    bool ShouldCloseImpl() const;
-    void PollEventsImpl();
+        bool Initialize(int width, int height, const std::string& title) override;
+        void Shutdown() override;
 
-private:
-    GLFWwindow* window_ = nullptr;
-};
+        bool ShouldClose() const override;
+        void PollEvents() const override;
+        void SwapBuffers() const override;
 
-} // namespace window
-} // namespace game_engine
+    private:
+        GLFWwindow* window_;
+    };
+
+}  // namespace GameEngine
+
