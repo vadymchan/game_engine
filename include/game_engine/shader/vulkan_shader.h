@@ -1,20 +1,21 @@
 #pragma once
 
 
+
 #include "i_shader.h"
 
 namespace GameEngine {
 
-    class VulkanShader : public IShader {
+    class VulkanShader : public IShader<VulkanShader> {
     public:
         VulkanShader();
-        virtual ~VulkanShader();
+        ~VulkanShader();
 
-        bool Initialize(const std::string& shaderFile) override;
-        void Destroy() override;
+        bool InitializeImplementation(const std::string& shaderFile);
+        void DestroyImplementation();
 
-        void Bind() override;
-        void Unbind() override;
+        void BindImplementation();
+        void UnbindImplementation();
 
         // other shader-related methods...
     };

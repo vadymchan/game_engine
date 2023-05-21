@@ -1,6 +1,8 @@
 #pragma once
 #include "../include/game_engine/shader/vulkan_shader.h"
 
+
+
 namespace GameEngine {
 
     VulkanShader::VulkanShader() {
@@ -11,19 +13,19 @@ namespace GameEngine {
         Destroy();
     }
 
-    bool VulkanShader::Initialize(const std::string& shaderFile) {
+    bool VulkanShader::InitializeImplementation(const std::string& shaderFile) {
         // Initialization code for Vulkan shader...
     }
 
-    void VulkanShader::Destroy() {
+    void VulkanShader::DestroyImplementation() {
         // Clean-up code for Vulkan shader...
     }
 
-    void VulkanShader::Bind() {
+    void VulkanShader::BindImplementation() {
         // Bind Vulkan shader...
     }
 
-    void VulkanShader::Unbind() {
+    void VulkanShader::UnbindImplementation() {
         // Unbind Vulkan shader...
     }
 

@@ -2,34 +2,38 @@
 
 #include <GLFW/glfw3.h>
 
+
+
 namespace GameEngine {
 
-    GLFWWindow::GLFWWindow() : window_(nullptr) {
-        // Nothing to do here.
+    GlfwWindow::GlfwWindow() {
+        // Constructor code...
     }
 
-    GLFWWindow::~GLFWWindow() {
-        Shutdown();
+    GlfwWindow::~GlfwWindow() {
+        ShutdownImplementation();
     }
 
-    bool GLFWWindow::Initialize(int width, int height, const std::string& title) {
+    bool GlfwWindow::InitializeImplementation(int width, int height, const std::string& title) {
         // Initialization code for GLFW window...
     }
 
-    void GLFWWindow::Shutdown() {
+    void GlfwWindow::ShutdownImplementation() {
         // Clean-up code for GLFW window...
     }
 
-    bool GLFWWindow::ShouldClose() const {
-        // Should close check for GLFW window...
+    bool GlfwWindow::ShouldCloseImplementation() const {
+        // GLFW window should close logic...
     }
 
-    void GLFWWindow::PollEvents() const {
-        // Event polling for GLFW window...
+    void GlfwWindow::PollEventsImplementation() const {
+        // GLFW window poll events logic...
     }
 
-    void GLFWWindow::SwapBuffers() const {
-        // Buffer swapping for GLFW window...
+    void GlfwWindow::SwapBuffersImplementation() const {
+        // GLFW window swap buffers logic...
     }
+
+    // other window-related methods...
 
 }  // namespace GameEngine

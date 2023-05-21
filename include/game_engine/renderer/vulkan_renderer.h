@@ -1,20 +1,25 @@
 #pragma once
 
+
 #include "i_renderer.h"
+#include "../window/glfw_window.h"
 
 namespace GameEngine {
 
-    class VulkanRenderer : public IRenderer {
+    class VulkanRenderer : public IRenderer<VulkanRenderer> {
     public:
         VulkanRenderer();
-        virtual ~VulkanRenderer();
+        ~VulkanRenderer();
 
-        bool Initialize(IWindow& window) override;
-        void Shutdown() override;
+        bool InitializeImplementation(GlfwWindow& window);
+        void ShutdownImplementation();
 
-        void BeginFrame() override;
-        void EndFrame() override;
+        void BeginFrameImplementation();
+        void EndFrameImplementation();
 
         // other renderer-related methods...
     };
+
 }  // namespace GameEngine
+
+

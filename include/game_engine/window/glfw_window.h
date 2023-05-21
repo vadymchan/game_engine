@@ -1,23 +1,21 @@
 #include "i_window.h"
 
-struct GLFWwindow;
 
 namespace GameEngine {
 
-    class GLFWWindow : public IWindow {
+    class GlfwWindow : public IWindow<GlfwWindow> {
     public:
-        GLFWWindow();
-        virtual ~GLFWWindow();
+        GlfwWindow();
+        ~GlfwWindow();
 
-        bool Initialize(int width, int height, const std::string& title) override;
-        void Shutdown() override;
+        bool InitializeImplementation(int width, int height, const std::string& title);
+        void ShutdownImplementation();
 
-        bool ShouldClose() const override;
-        void PollEvents() const override;
-        void SwapBuffers() const override;
+        bool ShouldCloseImplementation() const;
+        void PollEventsImplementation() const;
+        void SwapBuffersImplementation() const;
 
-    private:
-        GLFWwindow* window_;
+        // other window-related methods...
     };
 
 }  // namespace GameEngine

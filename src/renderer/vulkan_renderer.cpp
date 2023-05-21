@@ -1,5 +1,6 @@
 #include "../include/game_engine/renderer/vulkan_renderer.h"
 
+
 namespace GameEngine {
 
     VulkanRenderer::VulkanRenderer() {
@@ -7,22 +8,22 @@ namespace GameEngine {
     }
 
     VulkanRenderer::~VulkanRenderer() {
-        Shutdown();
+        ShutdownImplementation();
     }
 
-    bool VulkanRenderer::Initialize(IWindow& window) {
+    bool VulkanRenderer::InitializeImplementation(GlfwWindow& window) {
         // Initialization code for Vulkan renderer...
     }
 
-    void VulkanRenderer::Shutdown() {
+    void VulkanRenderer::ShutdownImplementation() {
         // Clean-up code for Vulkan renderer...
     }
 
-    void VulkanRenderer::BeginFrame() {
+    void VulkanRenderer::BeginFrameImplementation() {
         // Frame start logic for Vulkan renderer...
     }
 
-    void VulkanRenderer::EndFrame() {
+    void VulkanRenderer::EndFrameImplementation() {
         // Frame end logic for Vulkan renderer...
     }
 
