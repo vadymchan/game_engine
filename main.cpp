@@ -2,8 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <d3d12.h>
 #include <dxgi1_4.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_sinks.h>
+//#include <spdlog/spdlog.h>
+//#include <spdlog/sinks/stdout_sinks.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -42,21 +42,21 @@ int main()
         return -1;
     }
 
-    auto consoleLogger = spdlog::stdout_logger_mt("console");
+    //auto consoleLogger = spdlog::stdout_logger_mt("console");
 
-    // Set the log level to display all messages
-    consoleLogger->set_level(spdlog::level::trace);
+    //// Set the log level to display all messages
+    //consoleLogger->set_level(spdlog::level::trace);
 
-    // Log some messages with different log levels
-    consoleLogger->trace("This is a trace message");
-    consoleLogger->debug("This is a debug message");
-    consoleLogger->info("This is an info message");
-    consoleLogger->warn("This is a warning message");
-    consoleLogger->error("This is an error message");
-    consoleLogger->critical("This is a critical message");
+    //// Log some messages with different log levels
+    //consoleLogger->trace("This is a trace message");
+    //consoleLogger->debug("This is a debug message");
+    //consoleLogger->info("This is an info message");
+    //consoleLogger->warn("This is a warning message");
+    //consoleLogger->error("This is an error message");
+    //consoleLogger->critical("This is a critical message");
 
-    // Flush the logger to ensure all messages are written
-    spdlog::drop_all();
+    //// Flush the logger to ensure all messages are written
+    //spdlog::drop_all();
 
     // Run the main loop
     while (!glfwWindowShouldClose(window))
