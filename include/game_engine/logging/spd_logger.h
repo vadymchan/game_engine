@@ -3,22 +3,22 @@
 
 namespace GameEngine
 {
-	class SPDLogLogger : public Logger<SPDLogLogger> 
+	class SPDLogger : public Logger<SPDLogger> 
 	{
 	public:
-		void LogDebug(const std::string& message) {
+		void Debug(const std::string& message) {
 			// Implement SPDLog-specific methods here
 		}
 
-		void LogInfo(const std::string& message) {
+		void Info(const std::string& message) {
 			// Implement SPDLog-specific methods here
 		}
 
-		void LogWarn(const std::string& message) {
+		void Warn(const std::string& message) {
 			// Implement SPDLog-specific methods here
 		}
 
-		void LogError(const std::string& message) {
+		void Error(const std::string& message) {
 			// Implement SPDLog-specific methods here
 		}
 	};

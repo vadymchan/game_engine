@@ -10,10 +10,10 @@ namespace GameEngine
     template<typename DerivedLogger>
     class Logger {
     public:
-        void Debug(const std::string& message) { impl().LogDebug(message); }
-        void Info(const std::string& message) { impl().LogInfo(message); }
-        void Warn(const std::string& message) { impl().LogWarn(message); }
-        void Error(const std::string& message) { impl().LogError(message); }
+        void Debug(const std::string& message) { impl().Debug(message); }
+        void Info(const std::string& message) { impl().Info(message); }
+        void Warn(const std::string& message) { impl().Warn(message); }
+        void Error(const std::string& message) { impl().Error(message); }
 
     private:
         // cast to derived type
