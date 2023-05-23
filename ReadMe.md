@@ -97,3 +97,7 @@ game_engine
 | Boolean Variables | `is` or `has` prefix + camelCase | `isVisible`, `hasPowerUp` |
 | Template Parameters | Single uppercase letters | `template <class T>` |
 | File Names | lowercase with underscores, match class name | `game_engine.h` |
+| Macros | UPPER_CASE_WITH_UNDERSCORES | `#define MAX_HEALTH 100` |
+| Typedefs and Type Aliases | PascalCase | `typedef long int BigNum;` or `using BigNum = long int;` |
+| Global Variables | g_ prefix + camelCase | `g_gameState` |
+| Static Variables | s_ prefix + camelCase | `s_instanceCount` |
