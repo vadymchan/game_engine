@@ -78,3 +78,22 @@ game_engine
         └── logger.cpp
 
 ```
+
+## naming conventions for this project:
+
+| Code Element | Naming Convention | Example |
+| --- | --- | --- |
+| Classes | PascalCase | `GameEngine` |
+| Structures | PascalCase | `Vector2D` |
+| Functions / Methods | camelCase | `updatePosition()` |
+| Public Variables | camelCase | `playerHealth` |
+| Member Variables | `m_` prefix + camelCase | `m_position` |
+| Private Member Variables | `m_` prefix + camelCase + `_` postfix | `m_position_` |
+| Private Methods | camelCase + `_` postfix | `updatePosition_()` |
+| Constants | `k` prefix + PascalCase | `kMaxPlayers` |
+| Enums | PascalCase for type, UPPER_CASE_WITH_UNDERSCORES for values | `enum class Difficulty { EASY, MEDIUM, HARD };` |
+| Namespaces | lowercase with underscores | `game_logic` |
+| Interface Classes | `I` prefix + PascalCase | `ICollidable` |
+| Boolean Variables | `is` or `has` prefix + camelCase | `isVisible`, `hasPowerUp` |
+| Template Parameters | Single uppercase letters | `template <class T>` |
+| File Names | lowercase with underscores, match class name | `game_engine.h` |
