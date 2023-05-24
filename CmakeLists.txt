@@ -195,3 +195,11 @@ if(NOT USE_VULKAN AND NOT USE_OPENGL)
     message(FATAL_ERROR "At least one of Vulkan or OpenGL must be selected for graphics API")
 endif()
 
+
+add_custom_command(TARGET game_engine
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E remove 
+                           "${CMAKE_SOURCE_DIR}/test_fs_support_case_sensitivity"
+                           "${CMAKE_SOURCE_DIR}/test_fs_support_CASE_sensitivity"
+                   COMMENT "Removing case sensitivity test files from " ${CMAKE_SOURCE_DIR}
+)
