@@ -105,8 +105,25 @@ message(STATUS "Fetching BOOST...")
         FetchContent_Populate(boost)
         include_directories(${boost_SOURCE_DIR})
     endif()
-
 endif()
+
+option(BUILD_GLEW "Build the GLEW library" ON)
+if(BUILD_GLEW)
+    message(STATUS "Fetching GLEW...")
+    FetchContent_Declare(
+      glew
+      GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
+      GIT_TAG master
+      CMAKE_ARGS -Dglew-cmake_BUILD_STATIC=ON
+    )
+    FetchContent_GetProperties(glew)
+    if(NOT glew_POPULATED)
+        FetchContent_Populate(glew)
+        add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR})
+    endif()
+endif()
+
+
 
 include_directories(include)
 
@@ -145,12 +162,36 @@ if(BUILD_STB)
     target_link_libraries(game_engine stb)
 endif()
 
-find_package(Vulkan)
-if(Vulkan_FOUND)
+if(BUILD_GLEW)
+    target_include_directories(game_engine PRIVATE ${glew_SOURCE_DIR}/include)
+    target_link_libraries(game_engine libglew_static)
+endif()
+
+
+
+option(USE_VULKAN "Use Vulkan for graphics" OFF)
+option(USE_OPENGL "Use OpenGL for graphics" OFF)
+
+if(USE_VULKAN)
+    find_package(Vulkan REQUIRED)
     add_definitions(-DUSE_VULKAN)
     include_directories(${Vulkan_INCLUDE_DIRS})
     target_link_libraries(game_engine ${Vulkan_LIBRARIES})
-else()
-    message("Vulkan not found, falling back to another graphics API")
-    # TODO::Add the necessary commands to link with the fallback graphics API
 endif()
+
+if(USE_OPENGL)
+    find_package(OpenGL QUIET COMPONENTS OpenGL EGL)
+if(NOT OpenGL_FOUND)
+    set(OpenGL_GL_PREFERENCE LEGACY)
+    find_package(OpenGL REQUIRED)
+endif()
+
+    add_definitions(-DUSE_OPENGL)
+    include_directories(${OPENGL_INCLUDE_DIR})
+    target_link_libraries(game_engine ${OPENGL_gl_LIBRARY})
+endif()
+
+if(NOT USE_VULKAN AND NOT USE_OPENGL)
+    message(FATAL_ERROR "At least one of Vulkan or OpenGL must be selected for graphics API")
+endif()
+
