@@ -15,6 +15,7 @@ namespace GameEngine {
 
     bool VulkanShader::InitializeImplementation(const std::string& shaderFile) {
         // Initialization code for Vulkan shader...
+        return true;
     }
 
     void VulkanShader::DestroyImplementation() {

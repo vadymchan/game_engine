@@ -13,6 +13,7 @@ namespace GameEngine {
 
     bool VulkanRenderer::InitializeImplementation(GlfwWindow& window) {
         // Initialization code for Vulkan renderer...
+        return true;
     }
 
     void VulkanRenderer::ShutdownImplementation() {

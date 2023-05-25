@@ -15,6 +15,7 @@ namespace GameEngine {
     bool DX12Shader::CompileShaderImplementation(const std::string& source, ShaderType type) {
         // Shader compilation code for DX12...
         // Store the compiled shader bytecode in vertexShaderBlob or pixelShaderBlob...
+        return true;
     }
 
     void DX12Shader::ReleaseShaderImplementation() {

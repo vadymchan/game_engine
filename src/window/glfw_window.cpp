@@ -16,6 +16,7 @@ namespace GameEngine {
 
     bool GlfwWindow::InitializeImplementation(int width, int height, const std::string& title) {
         // Initialization code for GLFW window...
+        return true;
     }
 
     void GlfwWindow::ShutdownImplementation() {
@@ -24,6 +25,7 @@ namespace GameEngine {
 
     bool GlfwWindow::ShouldCloseImplementation() const {
         // GLFW window should close logic...
+        return false;
     }
 
     void GlfwWindow::PollEventsImplementation() const {

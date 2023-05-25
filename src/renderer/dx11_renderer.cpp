@@ -12,6 +12,7 @@ namespace GameEngine {
 
     bool DX11Renderer::InitializeImplementation(WinApiWindow& window) {
         // Initialization code for DirectX 11 renderer...
+        return true;
     }
 
     void DX11Renderer::ShutdownImplementation() {

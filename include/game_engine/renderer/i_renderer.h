@@ -1,4 +1,4 @@
-
+#pragma once
 #include "../window/i_window.h"
 
 
