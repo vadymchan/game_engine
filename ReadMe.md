@@ -129,7 +129,7 @@ game_engine
 P.S this is not final tree hirerarchy, i will update it as i implement first triangle.
 
 ## naming conventions for this project:
-
+ 
 | Code Element | Naming Convention | Example |
 | --- | --- | --- |
 | Classes | PascalCase | `GameEngine` |
