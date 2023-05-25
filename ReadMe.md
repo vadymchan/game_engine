@@ -109,9 +109,9 @@ game_engine
 │       │   │   │		└── gl_rasterizer_state.h
 │       │   │   └── interfaces
 │       │   │       ├── i_device.h
-│	    │   │       ├── i_swap_chain.h
-│	    │   │       ├── i_shader.h
-│	    │   │       └── i_buffer.h
+│	      │   │       ├── i_swap_chain.h
+│	      │   │       ├── i_shader.h
+│	      │   │       └── i_buffer.h
 │       │   └── renderer_factory.h
 │       ├── window
 │       │    ├── i_window.h
