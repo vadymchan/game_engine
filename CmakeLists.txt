@@ -32,6 +32,9 @@ option(BUILD_IMGUI "Build the ImGui library" OFF)
 option(BUILD_ASSIMP "Build the Assimp library" OFF)
 option(BUILD_STB "Build the STB library" OFF)
 option(BUILD_BOOST "Build the Boost library" OFF)
+option(BUILD_GLEW "Build the GLEW library" ON)
+option(BUILD_EIGEN "Include the Eigen library" ON)
+
 
 if(BUILD_GLFW)
     message(STATUS "Fetching GLFW...")
@@ -107,7 +110,7 @@ message(STATUS "Fetching BOOST...")
     endif()
 endif()
 
-option(BUILD_GLEW "Build the GLEW library" ON)
+
 if(BUILD_GLEW)
     message(STATUS "Fetching GLEW...")
     FetchContent_Declare(
@@ -123,6 +126,20 @@ if(BUILD_GLEW)
     endif()
 endif()
 
+
+if(BUILD_EIGEN)
+    message(STATUS "Fetching Eigen...")
+    FetchContent_Declare(
+        eigen
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG 3.4.0
+    )
+    FetchContent_GetProperties(eigen)
+    if(NOT eigen_POPULATED)
+        FetchContent_Populate(eigen)
+        include_directories(${eigen_SOURCE_DIR})
+    endif()
+endif()
 
 
 include_directories(include)
@@ -165,6 +182,11 @@ endif()
 if(BUILD_GLEW)
     target_include_directories(game_engine PRIVATE ${glew_SOURCE_DIR}/include)
     target_link_libraries(game_engine libglew_static)
+endif()
+
+if(BUILD_EIGEN)
+    FetchContent_MakeAvailable(eigen)
+    include_directories(${eigen_SOURCE_DIR})
 endif()
 
 
