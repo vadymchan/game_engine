@@ -141,7 +141,6 @@ if(BUILD_EIGEN)
     endif()
 endif()
 
-
 include_directories(include)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
@@ -196,7 +195,7 @@ option(USE_OPENGL "Use OpenGL for graphics" OFF)
 
 if(USE_VULKAN)
     find_package(Vulkan REQUIRED)
-    add_definitions(-DUSE_VULKAN)
+    add_definitions(-DVULKAN)
     include_directories(${Vulkan_INCLUDE_DIRS})
     target_link_libraries(game_engine ${Vulkan_LIBRARIES})
 endif()
@@ -208,7 +207,7 @@ if(NOT OpenGL_FOUND)
     find_package(OpenGL REQUIRED)
 endif()
 
-    add_definitions(-DUSE_OPENGL)
+    add_definitions(-DOPENGL)
     include_directories(${OPENGL_INCLUDE_DIR})
     target_link_libraries(game_engine ${OPENGL_gl_LIBRARY})
 endif()
