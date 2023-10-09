@@ -5,7 +5,7 @@ build/
 
 #ignore the third_party (the folder third_party stays)
 /third_party/*
-
+.VSCodeCounter
 
 
 # Build results
