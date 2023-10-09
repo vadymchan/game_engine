@@ -1,3 +1,9 @@
+## Dependencies
+
+ 
+- LLVM + Clang Power Tools - for formatting and refactoring the code. Use `.clang-format`.
+
+
 ## The target architecture for the first triangle (draft):
 ```
 game_engine
@@ -131,6 +137,7 @@ P.S this is not final tree hirerarchy, i will update it as i implement first tri
 
 ## naming conventions for this project:
  
+
 | Code Element | Naming Convention | Example |
 | --- | --- | --- |
 | Classes | PascalCase | `GameEngine` |
@@ -140,8 +147,8 @@ P.S this is not final tree hirerarchy, i will update it as i implement first tri
 | Member Variables | `m_` prefix + camelCase | `m_position` |
 | Private Member Variables | `m_` prefix + camelCase + `_` postfix | `m_position_` | 
 | Private Methods | camelCase + `_` postfix | `updatePosition_()` | 
-| Constants | `k` prefix + PascalCase | `kMaxPlayers` | - i've seen it in Google's C++ style guide
-| Enums | PascalCase for type, UPPER_CASE_WITH_UNDERSCORES for values | `enum class Difficulty { EASY, MEDIUM, HARD };` |
+| Constants (const and constexpr) | `k` prefix + PascalCase | `kMaxPlayers` | - i've seen it in Google's C++ style guide
+| Enums | PascalCase for type and values | `enum class Difficulty { Easy, Medium, Hard };` |
 | Namespaces | lowercase with underscores | `game_logic` |
 | Interface Classes | `I` prefix + PascalCase | `ICollidable` |
 | Boolean Variables | `is` or `has` prefix + camelCase | `isVisible`, `hasPowerUp` |

@@ -1,0 +1,30 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+ColumnLimit: 0
+AccessModifierOffset: -4
+
+#BEGIN:includes
+#----------------------------------
+SortIncludes: true  
+IncludeBlocks: Preserve
+
+IncludeCategories:
+  # 1. Local headers with ".h" extension
+  - Regex:           '^".*\.h"'
+    Priority:        1
+
+  # C system headers
+  - Regex:           '^<.*\.h>'
+    Priority:        2
+
+  # C++ system headers
+  - Regex:           '^<[^.]+>$'
+    Priority:        3
+
+
+
+#END:includes
+#----------------------------------
