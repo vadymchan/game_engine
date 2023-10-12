@@ -96,7 +96,7 @@ SeparateDefinitionBlocks : Always
 
 SortUsingDeclarations : Lexicographic
 
-
+AllowShortEnumsOnASingleLine : false
 
 #BEGIN:includes
 #----------------------------------
