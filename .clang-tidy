@@ -1,8 +1,12 @@
+
+# 1. Disable all checks by default (-*).
+# 2. Enable the readability check for identifier naming (readability-identifier-naming).
+# 3. Enable all checks related to CppCoreGuidelines (cppcoreguidelines-*).
+Checks: '-*,readability-identifier-naming,cppcoreguidelines-*'
+
 #BEGIN:name convention
 #----------------------------------
 
-
-Checks: '-*,readability-identifier-naming'
 CheckOptions:
   # classes: CamelCase 
   - key: readability-identifier-naming.ClassCase
@@ -19,6 +23,12 @@ CheckOptions:
   # functions/methods: camelCase 
   - key: readability-identifier-naming.FunctionCase
     value: camelBack
+
+  # functions/methods: camelCase 
+  - key: readability-identifier-naming.GlobalFunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalFunctionPrefix
+    value: 'g_'
 
   # public member variables: camelCase with m_ prefix and _ postfix 
   - key: readability-identifier-naming.PublicMemberCase
@@ -58,8 +68,10 @@ CheckOptions:
   - key: readability-identifier-naming.ProtectedMethodSuffix
     value: '_'
 
-  # enums and enum constants: CamelCase
+  # enums, enum constants and enum class (scoped): CamelCase
   - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.ScopedEnumConstantCase
     value: CamelCase
   - key: readability-identifier-naming.EnumConstantCase
     value: CamelCase
@@ -93,6 +105,8 @@ CheckOptions:
   # typedefs and type aliases: CamelCase
   - key: readability-identifier-naming.TypeAliasCase
     value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
 
   # static constant member variables: camelCase with s_k prefix
   - key: readability-identifier-naming.StaticConstantCase
@@ -124,6 +138,12 @@ CheckOptions:
   - key: readability-identifier-naming.GlobalVariablePrefix
     value: 'g_'
 
+  # global constant: camelCase with g_ prefix 
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: 'g_k'
+
   # Class members: camelCase with s_ prefix
   - key: readability-identifier-naming.ClassMember
     value: camelBack
@@ -135,6 +155,14 @@ CheckOptions:
     value: camelBack
   - key: readability-identifier-naming.ClassMethodPrefix
     value: s_
+
+  #template value : camelCase
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: camelBack
+
+  #type template: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
 
 #END:name convention
 #----------------------------------
