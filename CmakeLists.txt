@@ -13,8 +13,6 @@ endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT game_engine)
-    # set_target_properties(game_engine PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
-    #set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_GLOBAL_EnableClangTidyCodeAnalysis true)
 endif()
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
@@ -109,8 +107,6 @@ message(STATUS "Fetching BOOST...")
     if(NOT boost_POPULATED)
         FetchContent_Populate(boost)
         target_include_directories(game_engine SYSTEM PRIVATE ${boost_SOURCE_DIR})
-    #=========================================================================================================================
-        #include_directories(${boost_SOURCE_DIR})
     endif()
 endif()
 
@@ -130,7 +126,6 @@ if(BUILD_GLEW)
     endif()
 endif()
 
-
 if(BUILD_EIGEN)
     message(STATUS "Fetching Eigen...")
     FetchContent_Declare(
@@ -145,11 +140,6 @@ if(BUILD_EIGEN)
     endif()
 endif()
 
-#include_directories(include)
-#=========================================================================================================================
-
-
-
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
@@ -159,12 +149,10 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(game_engine PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
 endif()
 
-    #=========================================================================================================================
 target_include_directories(game_engine PRIVATE include)
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
-        #=========================================================================================================================
     target_include_directories(game_engine SYSTEM PRIVATE ${glfw_SOURCE_DIR}/include)
     target_link_libraries(game_engine glfw)
 endif()
@@ -202,8 +190,6 @@ endif()
 if(BUILD_EIGEN)
     FetchContent_MakeAvailable(eigen)
     target_include_directories(game_engine SYSTEM PRIVATE ${eigen_SOURCE_DIR})
-#=========================================================================================================================
-    #include_directories(${eigen_SOURCE_DIR})
 endif()
 
 
@@ -213,9 +199,6 @@ option(USE_OPENGL "Use OpenGL for graphics" OFF)
 
 if(USE_VULKAN)
     find_package(Vulkan REQUIRED)
-    #add_definitions(-DVULKAN)
-    #include_directories(${Vulkan_INCLUDE_DIRS})
-    #=========================================================================================================================
     target_compile_definitions(game_engine PRIVATE VULKAN)
     target_include_directories(game_engine SYSTEM PRIVATE ${Vulkan_INCLUDE_DIRS})
     target_link_libraries(game_engine ${Vulkan_LIBRARIES})
@@ -227,10 +210,6 @@ if(NOT OpenGL_FOUND)
     set(OpenGL_GL_PREFERENCE LEGACY)
     find_package(OpenGL REQUIRED)
 endif()
-
-    #add_definitions(-DOPENGL)
-    #include_directories(${OPENGL_INCLUDE_DIR})
-    #=========================================================================================================================
     target_compile_definitions(game_engine PRIVATE OPENGL)
     target_include_directories(game_engine SYSTEM PRIVATE ${OPENGL_INCLUDE_DIR})
     target_link_libraries(game_engine ${OPENGL_gl_LIBRARY})
