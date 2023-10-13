@@ -2,7 +2,9 @@
 # 1. Disable all checks by default (-*).
 # 2. Enable the readability check for identifier naming (readability-identifier-naming).
 # 3. Enable all checks related to CppCoreGuidelines (cppcoreguidelines-*).
-Checks: '-*,readability-identifier-naming,cppcoreguidelines-*'
+# Checks: '-*,readability-identifier-naming,cppcoreguidelines-*'
+Checks: '-*,  readability-identifier-naming,  cppcoreguidelines-*,  llvm-*,  modernize-*,  bugprone-*, performance-*,  portability-*'
+
 
 #BEGIN:name convention
 #----------------------------------
