@@ -137,30 +137,40 @@ P.S this is not final tree hirerarchy, i will update it as i implement first tri
 
 ## naming conventions for this project:
  
+ For refactoring naming conventions this project uses **clang-format**.
 
-| Code Element | Naming Convention | Example |
-| --- | --- | --- |
-| Classes | PascalCase | `GameEngine` |
-| Structures | PascalCase | `Vector2D` |
-| Functions / Methods | camelCase | `updatePosition()` |
-| Public Variables | camelCase | `playerHealth` |
-| Member Variables | `m_` prefix + camelCase | `m_position` |
-| Private Member Variables | `m_` prefix + camelCase + `_` postfix | `m_position_` | 
-| Private Methods | camelCase + `_` postfix | `updatePosition_()` | 
-| Constants (const and constexpr) | `k` prefix + PascalCase | `kMaxPlayers` | - i've seen it in Google's C++ style guide
-| Enums | PascalCase for type and values | `enum class Difficulty { Easy, Medium, Hard };` |
-| Namespaces | lowercase with underscores | `game_logic` |
-| Interface Classes | `I` prefix + PascalCase | `ICollidable` |
-| Boolean Variables | `is` or `has` prefix + camelCase | `isVisible`, `hasPowerUp` |
-| Template Parameters | Single uppercase letters | `template <class T>` |
-| File Names | lowercase with underscores, match class name | `game_engine.h` |
-| Macros | UPPER_CASE_WITH_UNDERSCORES | `#define MAX_HEALTH 100` |
-| Typedefs and Type Aliases | PascalCase | `typedef long int BigNum;` or `using BigNum = long int;` |
-| Global Variables | g_ prefix + camelCase | `g_gameState` |
-| Static Variables | s_ prefix + camelCase | `s_instanceCount` |
 
-P.S if the static variable is an member of the class (struct), then the priority will be given to the `s_` prefix.
+| Code Element                     | Naming Convention                                 | Example                                  |
+| -------------------------------- | ------------------------------------------------- | ---------------------------------------- |
+| Classes                          | CamelCase                                         | `GameEngine`                             |
+| Structures                       | CamelCase                                         | `Vector2D`                               |
+| Unions                           | CamelCase                                         | `DataUnion`                              |
+| Functions / Methods              | camelCase with `g_` prefix (for global functions) | `updatePosition()`, `g_initializeGame()` |
+| Public Member Variables          | `m_` prefix + camelCase                           | `m_position`                             |
+| Private Member Variables         | `m_` prefix + camelCase + `_` postfix             | `m_position_`                            |
+| Protected Member Variables       | `m_` prefix + camelCase + `_` postfix             | `m_counter_`                             |
+| Public Methods                   | camelCase                                         | `updatePosition()`                       |
+| Protected Methods                | camelCase + `_` postfix                           | `run_()`                                 |
+| Private Methods                  | camelCase + `_` postfix                           | `initialize_()`                          |
+| Enums (both scoped and unscoped) | CamelCase                                         | `Color`                                  |
+| Enum Constants                   | CamelCase                                         | `Difficulty::Easy`, `RED`                |
+| Namespaces                       | lowercase with underscores                        | `game_logic`                             |
+| Interface Classes                | `I` prefix + CamelCase                            | `ICollidable`                            |
+| Template Parameters              | CamelCase                                         | `ContainerType`                          |
+| Macros                           | UPPER_CASE_WITH_UNDERSCORES                       | `MAX_HEALTH`                             |
+| Typedefs and Type Aliases        | CamelCase                                         | `BigInt`                                 |
+| Static Constant Member Variables | `s_k` prefix + CamelCase                          | `s_kMaxValue`                            |
+| Class Constant Member Variables  | `s_k` prefix + CamelCase                          | `s_kDefaultColor`                        |
+| Constants                        | `k` prefix + CamelCase                            | `kMaxPlayers`                            |
+| Static Variables                 | `s_` prefix + camelCase                           | `s_instanceCount`                        |
+| Global Variables                 | `g_` prefix + camelCase                           | `g_gameState`                            |
+| Global Constants                 | `g_k` prefix + CamelCase                          | `g_kInitialSpeed`                        |
+| Class Members                    | `s_` prefix + camelCase                           | `s_memberVariable`                       |
+| Class Methods                    | `s_` prefix + camelCase                           | `s_classMethod()`                        |
+| Template Value                   | camelCase                                         | `defaultValue`                           |
+| Type Template                    | CamelCase                                         | `TypeParam`                              |
 
-P.S.S I'm still finding the best naming convention for this project, so it may change in the future. (feel free to discuss about this topic and propose your variants)
-- For now, i wondering about const static variables (for me, using something like `ks_maxHealth` is really weird and i'm not sure if this is right).
-- Also, mayyybe in the future i will switch naming convention for const variable to `UPPER_CASE_WITH_UNDERSCORES`
+P.S. for some elements i'm still not sure: 
+- for class methods do i really need to add `_s` prefix 🤔
+- do i need to add `s_k`, `g_k` prefixes 🤔
+
