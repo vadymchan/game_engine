@@ -11,19 +11,22 @@ class Stopwatch {
   using TimePoint = Clock::time_point;
   using Duration  = Clock::duration;
 
-  std::chrono::high_resolution_clock::time_point m_startTime_;
-  bool                                           m_isRunning_{false};
+  TimePoint m_startTime_;
+  TimePoint m_pausedTime_ = TimePoint{};
+  bool      m_isRunning_{false};
 
   public:
   void               start();
   void               stop();
+  void               resume();
+  void               pause();
   void               reset();
   [[nodiscard]] auto elapsedTime() const;
   [[nodiscard]] auto isRunning() const -> bool;
 };
 
-/// Represents the duration between two frames. Used for frame rate-independent
-/// updates.
+/// Represents the duration between two frames. Used for frame
+/// rate-independent updates.
 using DeltaTime = Stopwatch;
 
 /// Represents the time taken to process a single frame. Used for performance
