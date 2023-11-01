@@ -153,7 +153,8 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(game_engine PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
 endif()
 
-target_include_directories(game_engine PRIVATE include)
+target_include_directories(game_engine PUBLIC  include)
+target_include_directories(game_engine PRIVATE src/internal_include)
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
