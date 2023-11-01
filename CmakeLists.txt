@@ -143,7 +143,11 @@ endif()
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
-add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
+if(WIN32)
+    add_executable(game_engine WIN32 ${SOURCES} ${HEADERS} main.cpp)
+else()
+    add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
+endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(game_engine PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
