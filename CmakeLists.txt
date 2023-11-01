@@ -201,6 +201,7 @@ endif()
 
 option(USE_VULKAN "Use Vulkan for graphics" OFF)
 option(USE_OPENGL "Use OpenGL for graphics" OFF)
+option(USE_DIRECTX "Use DirectX for graphics" OFF)
 
 if(USE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -224,6 +225,9 @@ if(NOT USE_VULKAN AND NOT USE_OPENGL)
     message(FATAL_ERROR "At least one of Vulkan or OpenGL must be selected for graphics API")
 endif()
 
+if(USE_DIRECTX AND NOT WIN32)
+    message(FATAL_ERROR "DirectX is only available on Windows!")
+endif()
 
 add_custom_command(TARGET game_engine
                    POST_BUILD
