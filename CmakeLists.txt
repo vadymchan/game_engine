@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 
 project(game_engine)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -144,7 +144,8 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
 if(WIN32)
-    add_executable(game_engine WIN32 ${SOURCES} ${HEADERS} main.cpp)
+    #add_executable(game_engine WIN32 ${SOURCES} ${HEADERS} main.cpp)
+    add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
 else()
     add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
 endif()
