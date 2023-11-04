@@ -1,9 +1,4 @@
-
-# 1. Disable all checks by default (-*).
-# 2. Enable the readability check for identifier naming (readability-identifier-naming).
-# 3. Enable all checks related to CppCoreGuidelines (cppcoreguidelines-*).
-# Checks: '-*,readability-identifier-naming,cppcoreguidelines-*'
-Checks: '-*,  readability-identifier-naming,  cppcoreguidelines-*,  llvm-*,  modernize-*,  bugprone-*, performance-*,  portability-*'
+Checks: '-*,  readability-identifier-naming,  cppcoreguidelines-*,  llvm-*,  modernize-*,  bugprone-*,  performance-*,  portability-*'
 
 
 #BEGIN:name convention
@@ -152,11 +147,9 @@ CheckOptions:
   - key: readability-identifier-naming.ClassMemberPrefix
     value: s_
   
-  # class methods: camelCase 
+  # class methods: CamelCase 
   - key: readability-identifier-naming.ClassMethodCase
-    value: camelBack
-  - key: readability-identifier-naming.ClassMethodPrefix
-    value: s_
+    value: CamelCase
 
   #template value : camelCase
   - key: readability-identifier-naming.ValueTemplateParameterCase
