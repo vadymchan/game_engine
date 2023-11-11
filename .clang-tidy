@@ -1,4 +1,4 @@
-Checks: '-*,  readability-identifier-naming,  cppcoreguidelines-*,  llvm-*,  modernize-*,  bugprone-*,  performance-*,  portability-*'
+Checks: '-*,  readability-identifier-naming,  cppcoreguidelines-*,  llvm-*, -llvm-header-guard,  modernize-*,  bugprone-*,  performance-*,  portability-*'
 
 
 #BEGIN:name convention
@@ -91,9 +91,7 @@ CheckOptions:
   # - key: readability-identifier-naming.VariablePrefixBool
   #   value: 'has'
 
-  # template parameters: Single uppercase letters 
-  - key: readability-identifier-naming.TemplateParameterCase
-    value: CamelCase
+  
 
   # macros: UPPER_CASE_WITH_UNDERSCORES
   - key: readability-identifier-naming.MacroDefinitionCase
@@ -151,13 +149,26 @@ CheckOptions:
   - key: readability-identifier-naming.ClassMethodCase
     value: CamelCase
 
-  #template value : camelCase
+  # template parameters: Single uppercase letters 
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+
+  #template value : CamelCase
   - key: readability-identifier-naming.ValueTemplateParameterCase
-    value: camelBack
+    value: CamelCase
 
   #type template: CamelCase
   - key: readability-identifier-naming.TypeTemplateParameterCase
     value: CamelCase
 
+  # function parameters: camelCase
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+
+  # constant parameters: CamelCase with k prefix
+  - key: readability-identifier-naming.ConstantParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantParameterPrefix
+    value: 'k'
 #END:name convention
 #----------------------------------
