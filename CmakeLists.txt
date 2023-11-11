@@ -141,13 +141,14 @@ if(BUILD_EIGEN)
 endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
 if(WIN32)
     #add_executable(game_engine WIN32 ${SOURCES} ${HEADERS} main.cpp)
-    add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
+    add_executable(game_engine ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
 else()
-    add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
+    add_executable(game_engine ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
 endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -165,6 +166,7 @@ endif()
 
 if(BUILD_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
+    target_include_directories(game_engine SYSTEM PRIVATE ${spdlog_SOURCE_DIR}/include)
     target_link_libraries(game_engine spdlog)
 endif()
 
