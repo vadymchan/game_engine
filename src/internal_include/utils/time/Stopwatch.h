@@ -1,5 +1,5 @@
-#ifndef UTILS_TIME_STOPWATCH_H
-#define UTILS_TIME_STOPWATCH_H
+#ifndef GAME_ENGINE_STOPWATCH_H
+#define GAME_ENGINE_STOPWATCH_H
 
 #include <chrono>
 

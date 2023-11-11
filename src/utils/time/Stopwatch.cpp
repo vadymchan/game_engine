@@ -1,4 +1,4 @@
-#include "utils/time/Stopwatch.h"
+#include "utils/time/stopwatch.h"
 
 namespace game_engine {
 
