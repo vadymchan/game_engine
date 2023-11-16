@@ -37,6 +37,15 @@ option(BUILD_GLEW "Build the GLEW library" ON)
 option(BUILD_EIGEN "Include the Eigen library" ON)
 
 
+if(BUILD_SDL)
+    message(STATUS "Fetching SDL...")
+    FetchContent_Declare(
+        sdl
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG release-2.28.5
+    )
+endif()
+
 if(BUILD_GLFW)
     message(STATUS "Fetching GLFW...")
     FetchContent_Declare(
@@ -146,7 +155,7 @@ file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
 if(WIN32)
-    #add_executable(game_engine WIN32 ${SOURCES} ${HEADERS} main.cpp)
+    #add_executable(game_engine WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
     add_executable(game_engine ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
 else()
     add_executable(game_engine ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
@@ -158,6 +167,32 @@ endif()
 
 target_include_directories(game_engine PUBLIC  include)
 target_include_directories(game_engine PRIVATE src/internal_include)
+
+if(BUILD_SDL)
+    FetchContent_MakeAvailable(sdl)
+    
+    set(SDL_BUILD_INCLUDE_DIR ${sdl_BINARY_DIR}/include)
+
+    if(EXISTS "${SDL_BUILD_INCLUDE_DIR}/SDL3")
+        set(SDL_VERSION_DIR "SDL3")
+    elseif(EXISTS "${SDL_BUILD_INCLUDE_DIR}/SDL2")
+        set(SDL_VERSION_DIR "SDL2")
+    else()
+        message(FATAL_ERROR "Wrong directory in ${SDL_BUILD_INCLUDE_DIR}")
+    endif()
+
+    # SDL's include directories are in the build directory (not the source directory   
+    # like other third parties in this project), due to SDL generating includes during build.
+
+    target_include_directories(game_engine SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
+    target_include_directories(game_engine SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    target_include_directories(game_engine SYSTEM PRIVATE
+        $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
+        $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
+    )
+
+    target_link_libraries(game_engine SDL2)
+endif()
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
