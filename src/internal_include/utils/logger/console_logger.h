@@ -43,31 +43,6 @@ class ConsoleLogger : public ILogger {
 
   void log(LogLevel logLevel, const std::string& message) override;
 
-  template <typename... Args>
-    requires MoreThanOneArgument<Args...>
-  void log(LogLevel logLevel, Args&&... args) {
-    switch (logLevel) {
-      case LogLevel::Fatal:
-        m_logger_->critical(std::forward<Args>(args)...);
-        break;
-      case LogLevel::Error:
-        m_logger_->error(std::forward<Args>(args)...);
-        break;
-      case LogLevel::Warning:
-        m_logger_->warn(std::forward<Args>(args)...);
-        break;
-      case LogLevel::Info:
-        m_logger_->info(std::forward<Args>(args)...);
-        break;
-      case LogLevel::Debug:
-        m_logger_->debug(std::forward<Args>(args)...);
-        break;
-      case LogLevel::Trace:
-        m_logger_->trace(std::forward<Args>(args)...);
-        break;
-    }
-  }
-
   // Getters
   [[nodiscard]] auto getLoggerName() const -> const std::string&;
   [[nodiscard]] auto getPattern() const -> const std::string&;

@@ -15,16 +15,9 @@ enum class LogLevel {
   Off,
 };
 
-template <typename... Args>
-concept MoreThanOneArgument = sizeof...(Args) > 1;
-
 class ILogger {
   public:
   virtual void log(LogLevel logLevel, const std::string& message) = 0;
-
-  template <typename... Args>
-    requires MoreThanOneArgument<Args...>
-  void log(LogLevel level, Args&&... args) {}
 
   ILogger()                                  = default;
   ILogger(const ILogger&)                    = delete;

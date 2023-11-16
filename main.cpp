@@ -46,13 +46,7 @@ auto main() -> int {
   game_engine::GlobalLogger::Log(game_engine::LogLevel::Error,
                                  "This is an error message.");
 
-  game_engine::GlobalLogger::Log(game_engine::LogLevel::Info,
-                                 "This is an info message {}.",
-                                 "with variadic templated args");
-
   consoleLogger->log(game_engine::LogLevel::Info, "This is local info message");
-  consoleLogger->log(
-      game_engine::LogLevel::Info, "This is local info message {}", "with variadic templated metod");
 
   std::cout << "Check the console output for log messages." << '\n';
 
