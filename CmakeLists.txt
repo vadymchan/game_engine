@@ -203,7 +203,7 @@ endif()
 
 
 
-option(USE_VULKAN "Use Vulkan for graphics" OFF)
+option(USE_VULKAN "Use Vulkan for graphics" ON)
 option(USE_OPENGL "Use OpenGL for graphics" OFF)
 option(USE_DIRECTX "Use DirectX for graphics" OFF)
 
@@ -225,8 +225,8 @@ endif()
     target_link_libraries(game_engine ${OPENGL_gl_LIBRARY})
 endif()
 
-if(NOT USE_VULKAN AND NOT USE_OPENGL)
-    message(FATAL_ERROR "At least one of Vulkan or OpenGL must be selected for graphics API")
+if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTXs)
+    message(FATAL_ERROR "At least one of Vulkan, OpenGL or DirectX must be selected for graphics API")
 endif()
 
 if(USE_DIRECTX AND NOT WIN32)
