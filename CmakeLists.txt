@@ -25,8 +25,9 @@ set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
 
-option(BUILD_GLFW "Build the GLFW library" ON)
-option(BUILD_SPDLOG "Build the SPDLOG library" OFF)
+option(BUILD_SDL "Build the SDL library" ON)
+option(BUILD_GLFW "Build the GLFW library" OFF)
+option(BUILD_SPDLOG "Build the SPDLOG library" ON)
 option(BUILD_BULLET "Build the Bullet library" OFF)
 option(BUILD_IMGUI "Build the ImGui library" OFF)
 option(BUILD_ASSIMP "Build the Assimp library" OFF)
