@@ -29,4 +29,5 @@ class ILogger {
 };
 
 }  // namespace game_engine
+
 #endif
