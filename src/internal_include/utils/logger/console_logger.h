@@ -33,12 +33,12 @@ class ConsoleLogger : public ILogger {
   bool                            m_isColored_;
 
   public:
-  ConsoleLogger(const std::string& logger_name
+  ConsoleLogger(const std::string& loggerName
                 = std::string(s_kDefaultLoggerName),
-                LogLevel           log_level   = s_kDefaultLogLevel,
+                LogLevel           logLevel   = s_kDefaultLogLevel,
                 const std::string& pattern     = std::string(s_kDefaultPattern),
                 ConsoleStreamType  consoleType = s_kDefaultConsoleType,
-                bool               multi_threaded = true,
+                bool               multiThreaded = true,
                 bool               colored        = true);
 
   void log(LogLevel logLevel, const std::string& message) override;
