@@ -15,6 +15,14 @@ class GlobalLogger {
   static void AddLogger(const std::shared_ptr<ILogger>& logger);
 
   static void Log(LogLevel logLevel, const std::string& message);
+
+  template <typename... Args>
+	requires MoreThanOneArgument<Args...>
+  static void Log(LogLevel logLevel, Args&&... args) {
+    for (auto& logger : s_loggers) {
+      logger->log(logLevel, std::forward<Args>(args)...);
+    }
+  };
 };
 
 }  // namespace game_engine
