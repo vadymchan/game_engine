@@ -19,4 +19,4 @@ class GlobalLogger {
 
 }  // namespace game_engine
 
-#endif
+#endif // GAME_ENGINE_GLOBAL_LOGGER_H

@@ -30,4 +30,4 @@ class ILogger {
 
 }  // namespace game_engine
 
-#endif
+#endif // GAME_ENGINE_I_LOGGER_H

@@ -54,4 +54,4 @@ class ConsoleLogger : public ILogger {
   void setLogLevel(LogLevel level);
 };
 }  // namespace game_engine
-#endif
+#endif // GAME_ENGINE_CONSOLE_LOGGER_H

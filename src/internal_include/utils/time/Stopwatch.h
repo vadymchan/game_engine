@@ -6,16 +6,11 @@
 namespace game_engine {
 
 class Stopwatch {
-  private:
+  public:
   using Clock     = std::chrono::high_resolution_clock;
   using TimePoint = Clock::time_point;
   using Duration  = Clock::duration;
 
-  TimePoint m_startTime_;
-  TimePoint m_pausedTime_ = TimePoint{};
-  bool      m_isRunning_{false};
-
-  public:
   void               start();
   void               stop();
   void               resume();
@@ -23,6 +18,11 @@ class Stopwatch {
   void               reset();
   [[nodiscard]] auto elapsedTime() const;
   [[nodiscard]] auto isRunning() const -> bool;
+
+  private:
+  TimePoint m_startTime_;
+  TimePoint m_pausedTime_ = TimePoint{};
+  bool      m_isRunning_{false};
 };
 
 /// Represents the duration between two frames. Used for frame
@@ -38,4 +38,4 @@ using FrameTime = Stopwatch;
 using ElapsedTime = Stopwatch;
 
 }  // namespace game_engine
-#endif
+#endif // GAME_ENGINE_STOPWATCH_H
