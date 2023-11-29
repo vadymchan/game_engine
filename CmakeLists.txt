@@ -34,7 +34,8 @@ option(BUILD_ASSIMP "Build the Assimp library" OFF)
 option(BUILD_STB "Build the STB library" OFF)
 option(BUILD_BOOST "Build the Boost library" OFF)
 option(BUILD_GLEW "Build the GLEW library" ON)
-option(BUILD_EIGEN "Include the Eigen library" ON)
+option(BUILD_EIGEN "Include the Eigen library" OFF)
+option(BUILD_MATH_LIBRARY "Build the Math Library" ON)
 
 
 if(BUILD_SDL)
@@ -150,6 +151,16 @@ if(BUILD_EIGEN)
     endif()
 endif()
 
+if(BUILD_MATH_LIBRARY)
+    message(STATUS "Fetching Math Library...")
+    FetchContent_Declare(
+        math_library
+        GIT_REPOSITORY https://github.com/vadymchan/math_library.git
+        GIT_TAG main
+        # GIT_TAG v.0.0.2-beta
+    )
+endif()
+
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
 file(GLOB_RECURSE HEADERS "include/*.h")
@@ -234,6 +245,14 @@ endif()
 if(BUILD_EIGEN)
     FetchContent_MakeAvailable(eigen)
     target_include_directories(game_engine SYSTEM PRIVATE ${eigen_SOURCE_DIR})
+endif()
+
+if(BUILD_MATH_LIBRARY)
+    FetchContent_MakeAvailable(math_library)
+    # if error with simd_define not generated occurs, uncomment this code
+    # add_dependencies(game_engine math_library)
+    target_include_directories(game_engine SYSTEM PRIVATE ${math_library_SOURCE_DIR}/include)
+    target_link_libraries(game_engine math_library)
 endif()
 
 
