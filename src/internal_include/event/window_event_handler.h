@@ -1,10 +1,40 @@
 #ifndef GAME_ENGINE_EVENT_WINDOW_EVENT_HANDLER_H
 #define GAME_ENGINE_EVENT_WINDOW_EVENT_HANDLER_H
 
-#include "event_handler.h"
+#include "event.h"
+
+#include <functional>
+#include <unordered_map>
+#include <vector>
 
 namespace game_engine {
-using WindowEventHandler = EventHandler;
+
+class WindowEventHandler {
+  public:
+  using EventCallback = std::function<void(const WindowEvent&)>;
+
+  void subscribe(WindowEventType eventType, const EventCallback& callback) {
+    m_subscribers_[eventType].push_back(callback);
+  }
+
+  void dispatch(const WindowEvent& event) {
+    auto it = m_subscribers_.find(event.event);
+    if (it != m_subscribers_.end()) {
+      for (auto& callback : it->second) {
+        handleEvent_(event, callback);
+      }
+    }
+  }
+
+  private:
+  void handleEvent_(const WindowEvent& event, const EventCallback& callback) {
+    callback(event);
+  }
+
+  std::unordered_map<WindowEventType, std::vector<EventCallback>>
+      m_subscribers_;
+};
+
 }  // namespace game_engine
 
 #endif  // GAME_ENGINE_EVENT_WINDOW_EVENT_HANDLER_H
