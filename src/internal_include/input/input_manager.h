@@ -6,12 +6,14 @@
 #include "event/mouse_event_handler.h"
 #include "utils/logger/global_logger.h"
 
+#include <memory>
+
 namespace game_engine {
 
 class InputManager {
   public:
-  InputManager(KeyboardEventHandler* keyboardHandler = nullptr,
-               MouseEventHandler*    mouseHandler    = nullptr)
+  InputManager(const std::shared_ptr<KeyboardEventHandler>& keyboardHandler = nullptr,
+               const std::shared_ptr<MouseEventHandler>&    mouseHandler    = nullptr)
       : m_keyboardHandler_(keyboardHandler)
       , m_mouseHandler_(mouseHandler) {}
 
@@ -23,7 +25,6 @@ class InputManager {
           m_keyboardHandler_->dispatch(event.key);
         }
         break;
-
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
         if (m_mouseHandler_) {
@@ -51,8 +52,8 @@ class InputManager {
   }
 
   private:
-  KeyboardEventHandler* m_keyboardHandler_;
-  MouseEventHandler*    m_mouseHandler_;
+  std::shared_ptr<KeyboardEventHandler> m_keyboardHandler_;
+  std::shared_ptr<MouseEventHandler>    m_mouseHandler_;
 };
 
 }  // namespace game_engine
