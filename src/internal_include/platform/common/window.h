@@ -1,8 +1,6 @@
 #ifndef GAME_ENGINE_WINDOW_H
 #define GAME_ENGINE_WINDOW_H
 
-#define SDL_MAIN_HANDLED
-
 #include <SDL.h>
 #include <math_library/dimension.h>
 #include <math_library/point.h>
