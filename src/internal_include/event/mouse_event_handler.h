@@ -12,7 +12,6 @@ namespace game_engine {
 
 class MouseEventHandler {
   public:
-
   class ButtonEventHandler {
     public:
     struct EventInfo {
@@ -24,15 +23,15 @@ class MouseEventHandler {
 
     void subscribe(const EventInfo& eventInfo, const EventCallback& callback) {
       auto& subscribers = (eventInfo.m_type == SDL_MOUSEBUTTONDOWN)
-                            ? m_mouseButtonDownSubscribers
-                            : m_mouseButtonUpSubscribers;
+                            ? m_mouseButtonDownSubscribers_
+                            : m_mouseButtonUpSubscribers_;
       subscribers[eventInfo.m_button].emplace_back(callback);
     }
 
     void dispatch(const MouseButtonEvent& event) {
       auto& subscribers = (event.type == SDL_MOUSEBUTTONDOWN)
-                            ? m_mouseButtonDownSubscribers
-                            : m_mouseButtonUpSubscribers;
+                            ? m_mouseButtonDownSubscribers_
+                            : m_mouseButtonUpSubscribers_;
       auto  it          = subscribers.find(event.button);
       if (it != subscribers.end()) {
         for (auto& callback : it->second) {
@@ -43,9 +42,9 @@ class MouseEventHandler {
 
     private:
     std::unordered_map<MouseButton, std::vector<EventCallback>>
-        m_mouseButtonDownSubscribers;
+        m_mouseButtonDownSubscribers_;
     std::unordered_map<MouseButton, std::vector<EventCallback>>
-        m_mouseButtonUpSubscribers;
+        m_mouseButtonUpSubscribers_;
   };
 
   class MotionEventHandler {
@@ -59,13 +58,13 @@ class MouseEventHandler {
 
     void subscribe(const EventInfo& eventInfo, const EventCallback& callback) {
       if (eventInfo.m_type == SDL_MOUSEMOTION) {
-        m_mouseMotionSubscribers[eventInfo.m_state].emplace_back(callback);
+        m_mouseMotionSubscribers_[eventInfo.m_state].emplace_back(callback);
       }
     }
 
     void dispatch(const MouseMotionEvent& event) {
-      auto it = m_mouseMotionSubscribers.find(event.state);
-      if (it != m_mouseMotionSubscribers.end()) {
+      auto it = m_mouseMotionSubscribers_.find(event.state);
+      if (it != m_mouseMotionSubscribers_.end()) {
         for (auto& callback : it->second) {
           callback(event);
         }
@@ -74,7 +73,7 @@ class MouseEventHandler {
 
     private:
     std::unordered_map<MouseMotionState, std::vector<EventCallback>>
-        m_mouseMotionSubscribers;
+        m_mouseMotionSubscribers_;
   };
 
   class WheelEventHandler {
@@ -87,18 +86,18 @@ class MouseEventHandler {
 
     void subscribe(const EventInfo& eventInfo, const EventCallback& callback) {
       if (eventInfo.m_type == SDL_MOUSEWHEEL) {
-        m_mouseWheelSubscribers.emplace_back(callback);
+        m_mouseWheelSubscribers_.emplace_back(callback);
       }
     }
 
     void dispatch(const MouseWheelEvent& event) {
-      for (auto& callback : m_mouseWheelSubscribers) {
+      for (auto& callback : m_mouseWheelSubscribers_) {
         callback(event);
       }
     }
 
     private:
-    std::vector<EventCallback> m_mouseWheelSubscribers;
+    std::vector<EventCallback> m_mouseWheelSubscribers_;
   };
 
   void subscribe(const ButtonEventHandler::EventInfo&     eventInfo,
