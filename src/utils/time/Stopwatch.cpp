@@ -33,13 +33,6 @@ void Stopwatch::reset() {
   m_pausedTime_ = TimePoint{};
 }
 
-auto Stopwatch::elapsedTime() const {
-  Duration currentElapsed = m_isRunning_ ? (Clock::now() - m_startTime_)
-                                         : (m_pausedTime_ - m_startTime_);
-  return std::chrono::duration_cast<std::chrono::milliseconds>(currentElapsed)
-      .count();
-}
-
 auto Stopwatch::isRunning() const -> bool {
   return m_isRunning_;
 }
