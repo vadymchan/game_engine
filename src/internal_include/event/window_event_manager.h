@@ -13,12 +13,13 @@ class WindowEventManager {
 
   void routeEvent(const Event& event) {
     if (event.type == SDL_WINDOWEVENT) {
-      m_windowHandler_->dispatch(event);
+      m_windowHandler_->dispatch(event.window);
     }
     // TODO: other window event
   }
 
   private:
+  // TODO : consider using unique_ptr
   WindowEventHandler* m_windowHandler_;
 };
 
