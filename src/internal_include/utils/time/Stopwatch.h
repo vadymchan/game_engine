@@ -21,7 +21,7 @@ class Stopwatch {
 
   private:
   TimePoint m_startTime_;
-  TimePoint m_pausedTime_ = TimePoint{};
+  TimePoint m_pausedTime_{}; // default init to epoch
   bool      m_isRunning_{false};
 };
 
