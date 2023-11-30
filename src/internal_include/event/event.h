@@ -12,6 +12,11 @@ using WindowEvent     = SDL_WindowEvent;
 using WindowEventType = Uint8;
 
 using KeyboardEvent = SDL_KeyboardEvent;
+
+using MouseButtonEvent = SDL_MouseButtonEvent;
+using MouseMotionEvent = SDL_MouseMotionEvent;
+using MouseWheelEvent  = SDL_MouseWheelEvent;
+
 }  // namespace game_engine
 
 #endif  // GAME_ENGINE_EVENT_H
