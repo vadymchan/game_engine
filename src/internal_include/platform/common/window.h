@@ -68,6 +68,11 @@ class Window {
 
   // clang-format on
 
+  void onResize(const WindowEvent& event) {
+    m_size_ = math::Dimension2Di(event.data1, event.data2);
+    SDL_SetWindowSize(m_window_, event.data1, event.data2);
+  }
+
   private:
   std::string        m_title_;
   math::Dimension2Di m_size_;
