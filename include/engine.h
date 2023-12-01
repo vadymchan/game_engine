@@ -10,12 +10,22 @@ namespace game_engine {
 
 class Engine {
   public:
-  bool init() {}
+  Engine() = default;
 
-  void run() { 
-	  SDL_Event e;
+  Engine(const Engine&)                     = delete;
+  auto operator=(const Engine&) -> Engine&  = delete;
+  Engine(Engine&&)                          = delete;
+  auto operator=(const Engine&&) -> Engine& = delete;
+
+  ~Engine() = default;
+
+  auto init() -> bool {
+    bool successfullyInited{true};
 	  m_inputManager_.routeEvent(e);
   
+    return successfullyInited;
+  }
+  void run() {
   }
 
   private:
