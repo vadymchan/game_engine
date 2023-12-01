@@ -1,119 +1,57 @@
-//#include "engine.h"
-//
-//namespace game_engine {
-//
-//#if defined(_WIN32) || defined(_WIN64)
-//  #include <Windows.h>
-//int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
-//                    _In_opt_ HINSTANCE hPrevInstance,
-//                    _In_ PWSTR         pCmdLine,
-//                    _In_ int           nCmdShow) {
-//#else
-//int main(int argc, char* argv[]) {
-//
-//#endif
-//
-//  return 0;
-//}
-//
-//}  // namespace game_engine
-
 #define SDL_MAIN_HANDLED
 
-#include <SDL.h>
+#include "engine.h"
 
+// ----------------------------------------------
+// Event system
+#include "event/event.h"
+#include "event/event_handler.h"
+#include "event/keyboard_event_handler.h"
+#include "event/mouse_event_handler.h"
+#include "event/window_event_handler.h"
+#include "event/window_event_manager.h"
 
-#include <iostream>
+// Input system
+#include "input/input_manager.h"
+#include "input/key.h"
+#include "input/mouse.h"
 
-//#include <Windows.h>
-//int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
-//                    _In_opt_ HINSTANCE hPrevInstance,
-//                    _In_ PWSTR         pCmdLine,
-//                    _In_ int           nCmdShow) { 
-  
-int main(int argc, char* argv[]) {
-    // Initialize SDL
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError()
-              << std::endl;
-    return 1;
+// Platform specific
+#include "platform/common/window.h"
+
+// Utilities
+#include "utils/logger/console_logger.h"
+#include "utils/logger/global_logger.h"
+#include "utils/logger/i_logger.h"
+#include "utils/time/stopwatch.h"
+
+// ----------------------------------------------
+
+#if (defined(_WIN32) || defined(_WIN64)) && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
+  #include <Windows.h>
+int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
+                    _In_opt_ HINSTANCE hPrevInstance,
+                    _In_ PWSTR         pCmdLine,
+                    _In_ int           nCmdShow) {
+#else
+auto main(int argc, char* argv[]) -> int {
+
+#endif
+  // Inform SDL that the program will handle its own initialization
+  SDL_SetMainReady();
+
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+    SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+    return EXIT_FAILURE;
   }
 
-  // Create a window
-  SDL_Window* window = SDL_CreateWindow("SDL Tutorial",
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        800,
-                                        600,
-                                        SDL_WINDOW_SHOWN);
-  if (window == nullptr) {
-    std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError()
-              << std::endl;
-    SDL_Quit();
-    return 1;
-  }
+  game_engine::Engine engine;
 
-  // Main loop flag
-  bool quit = false;
+  engine.init();
 
-  // Event handler
-  SDL_Event e;
+  engine.run();
 
-  // While application is running
-  while (!quit) {
-    // Handle events on queue
-    while (SDL_PollEvent(&e) != 0) {
-      // User requests quit
-      if (e.type == SDL_QUIT) {
-        quit = true;
-      }
-    }
-
-    // Your rendering and updating code goes here
-  }
-
-  // Destroy window
-  SDL_DestroyWindow(window);
-
-  // Quit SDL subsystems
   SDL_Quit();
 
-  return 0;
+  return EXIT_SUCCESS;
 }
-
-
-//
-//#include "utils/logger/global_logger.h"
-//#include "utils/logger/console_logger.h"
-//
-//#include <iostream>
-//
-//auto main() -> int {
-//  // Initialize a console logger
-//  auto consoleLogger = std::make_shared<game_engine::ConsoleLogger>(
-//      "TestLogger",
-//      game_engine::LogLevel::Debug,
-//      "%Y-%m-%d %H:%M:%S.%e %^[%l]%$ %v",
-//      game_engine::ConsoleStreamType::StdOut,
-//      true,
-//      true);
-//
-//  game_engine::ConsoleLogger give_me_a_name;
-//
-//  // Add the console logger to the global logger
-//  game_engine::GlobalLogger::AddLogger(consoleLogger);
-//
-//  // Log messages at different levels
-//  game_engine::GlobalLogger::Log(game_engine::LogLevel::Info,
-//                                 "This is an info message.");
-//  game_engine::GlobalLogger::Log(game_engine::LogLevel::Warning,
-//                                 "This is a warning message.");
-//  game_engine::GlobalLogger::Log(game_engine::LogLevel::Error,
-//                                 "This is an error message.");
-//
-//  consoleLogger->log(game_engine::LogLevel::Info, "This is local info message");
-//
-//  std::cout << "Check the console output for log messages." << '\n';
-//
-//  return 0;
-//}
