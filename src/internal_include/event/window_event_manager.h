@@ -5,7 +5,6 @@
 #include "window_event_handler.h"
 
 #include <memory>
-#include <utility>
 
 namespace game_engine {
 
