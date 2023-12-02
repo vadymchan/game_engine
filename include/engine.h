@@ -31,19 +31,26 @@ class Engine {
   auto init() -> bool {
     bool successfullyInited{true};
 
+    // logger
+    // ------------------------------------------------------------------------
     m_consoleLogger_ = std::make_shared<ConsoleLogger>();
     GlobalLogger::AddLogger(m_consoleLogger_);
 
+    // window
+    // ------------------------------------------------------------------------
     m_window_ = std::make_unique<Window>("My Window",
                                          math::Dimension2Di{800, 600},
                                          math::Point2Di{100, 100},
                                          game_engine::Window::Flags::Resizable);
 
+    // input event
+    // ------------------------------------------------------------------------
     m_keyboardEventHandler_ = std::make_shared<KeyboardEventHandler>();
     m_mouseEventHandler_    = std::make_shared<MouseEventHandler>();
     m_inputManager_ = std::make_unique<InputManager>(m_keyboardEventHandler_,
                                                      m_mouseEventHandler_);
-
+    // window event
+    // ------------------------------------------------------------------------
     m_windowEventHandler_ = std::make_shared<WindowEventHandler>();
     m_windowEventHandler_->subscribe(
         SDL_WINDOWEVENT_RESIZED,
@@ -51,6 +58,8 @@ class Engine {
     m_windowEventManager_
         = std::make_unique<WindowEventManager>(m_windowEventHandler_);
 
+    // application event
+    // ------------------------------------------------------------------------
     m_applicationEventHandler_ = std::make_shared<ApplicationEventHandler>();
     m_applicationEventHandler_->subscribe(
         SDL_QUIT, std::bind(&Engine::onClose, this, std::placeholders::_1));
@@ -103,12 +112,6 @@ class Engine {
 
   std::shared_ptr<ApplicationEventHandler> m_applicationEventHandler_;
   std::unique_ptr<ApplicationEventManager> m_applicationEventManager_;
-
-  // TODO: logger
-  // TODO: graphics
-  // TODO: time (clock, stopwatch)
-  // TODO: event
-  // TODO: intput
 
   // TODO: memory manager
 };
