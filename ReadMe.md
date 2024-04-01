@@ -1,144 +1,170 @@
 ## Dependencies
 
- 
 - LLVM + Clang Power Tools - for formatting and refactoring the code. Use `.clang-format`.
 
-
 ## The target architecture for the first triangle (draft):
+
 ```
 game_engine
+├── assets
+│   └── shaders
+│       ├── common.hlsli
+│       ├── deferred_rendering
+│       │   ├── gbuffer.ps.hlsl
+│       │   └── gbuffer.vs.hlsl
+│       ├── demo
+│       │   ├── first_triangle.ps.hlsl
+│       │   └── first_triangle.vs.hlsl
+│       ├── forward_rendering
+│       │   ├── shader.ps.hlsl
+│       │   ├── shader.vs.hlsl
+│       │   └── shader_instancing.vs.hlsl
+│       └── shperical_map.hlsl
 ├── include
-│   └── game_engine
-│       ├── application
-│       │   └── application.h
-│       ├── ecs
-│       │   ├── component
-│       │   │   └── component.h
-│       │   ├── entity
-│       │   │   └── entity.h
-│       │   └── system
-│       │       └── system.h
-│       ├── renderer
-│       │   ├── api_specific
-│       │   │   ├── dx11
-│       │   │   │   ├── shader
-│       │   │   │   │   ├── dx11_vertex_shader.h
-│       │   │   │   │   ├── dx11_fragment_shader.h
-│       │   │   │   │   ├── dx11_geometry_shader.h
-│       │   │   │   │   ├── dx11_hull_shader.h
-│       │   │   │   │   ├── dx11_domain_shader.h
-│       │   │   │   │   ├── dx11_compute_shader.h
-│       │   │   │   │   └── dx11_shader_program.h
-│       │   │   │   ├── device
-│       │   │   │   │   ├── dx11_device.h
-│       │   │   │   │   ├── dx11_swap_chain.h
-│       │   │   │   │   └── dx11_render_target_view.h
-│       │   │   │   ├── input
-│       │   │   │   │   ├── dx11_viewport.h
-│       │   │   │   │   └── dx11_input_layout.h
-│       │   │   │   ├── buffer
-│       │   │   │   │   ├── dx11_buffer.h
-│       │   │   │   │   ├── dx11_depth_stencil_view.h
-│       │   │   │   │   └── dx11_depth_stencil_state.h
-│       │   │   ├── dx12
-│       │   │   │   ├── shader
-│       │   │   │   │   ├── dx12_vertex_shader.h
-│       │   │   │   │   ├── dx12_fragment_shader.h
-│       │   │   │   │   ├── dx12_geometry_shader.h
-│       │   │   │   │   ├── dx12_hull_shader.h
-│       │   │   │   │   ├── dx12_domain_shader.h
-│       │   │   │   │   ├── dx12_compute_shader.h
-│       │   │   │   │   └── dx12_shader_program.h
-│       │   │   │   ├── device
-│       │   │   │   │   ├── dx12_device.h
-│       │   │   │   │   ├── dx12_swap_chain.h
-│       │   │   │   │   ├── dx12_descriptor_heap.h
-│       │   │   │   │   └── dx12_resource.h
-│       │   │   │   ├── command
-│       │   │   │   │   ├── dx12_command_allocator.h
-│       │   │   │   │   └── dx12_command_queue.h
-│       │   │   │   ├── pipeline
-│       │   │   │   │   ├── dx12_root_signature.h
-│       │   │   │   │   └── dx12_pipeline_state.h
-│       │   │   │   └── buffer
-│       │   │   │       ├── dx12_vertex_buffer_view.h
-│       │   │   │       ├── dx12_depth_stencil_view.h
-│       │   │   │       └── dx12_depth_stencil_state.h
-│       │   │   ├── vk
-│       │   │   │   ├── shader
-│       │   │   │   │   ├── vk_vertex_shader.h
-│       │   │   │   │   ├── vk_fragment_shader.h
-│       │   │   │   │   ├── vk_geometry_shader.h
-│       │   │   │   │   ├── vk_tessellation_control_shader.h
-│       │   │   │   │   ├── vk_tessellation_evaluation_shader.h
-│       │   │   │   │   ├── vk_compute_shader.h
-│       │   │   │   │   └── vk_shader_program.h
-│       │   │   │   ├── device
-│       │   │   │   │   ├── vk_device.h
-│       │   │   │   │   ├── vk_swap_chain.h
-│       │   │   │   │   └── vk_render_pass.h
-│       │   │   │   ├── pipeline
-│       │   │   │   │   ├── vk_pipeline_layout.h
-│       │   │   │   │   └── vk_graphics_pipeline.h
-│       │   │   │   ├── command
-│       │   │   │   │   ├── vk_command_pool.h
-│       │   │   │   │   └── vk_command_buffer.h
-│       │   │   │   ├── buffer
-│       │   │   │   │   ├── vk_buffer.h
-│       │   │   │   │   └── vk_image.h
-│       │   │   │   └── descriptor
-│       │   │   │       ├── vk_descriptor_set_layout.h
-│       │   │   │       ├── vk_descriptor_pool.h
-│       │   │   │       └── vk_descriptor_set.h
-│       │   │   ├── opengl
-│       │   │   │   ├── shader
-│       │   │   │   │   ├── gl_vertex_shader.h
-│       │   │   │   │   ├── gl_fragment_shader.h
-│       │   │   │   │   ├── gl_geometry_shader.h
-│       │   │   │   │   ├── gl_tessellation_control_shader.h
-│       │   │   │   │   ├── gl_tessellation_evaluation_shader.h
-│       │   │   │   │   ├── gl_compute_shader.h
-│       │   │   │   │   └── gl_shader_program.h
-│       │   │   │   ├── device
-│       │   │   │   │   ├── gl_device.h
-│       │   │   │   │   ├── gl_context.h
-│       │   │   │   │   └── gl_framebuffer.h
-│       │   │   │   ├── buffer
-│       │   │   │   │   ├── gl_vertex_buffer.h
-│       │   │   │   │   └── gl_index_buffer.h
-│       │   │   │   ├── texture
-│       │   │   │   │   ├── gl_texture_2d.h
-│       │   │   │   │   └── gl_texture_cube_map.h
-│       │   │   │   └── state
-│       │   │   │       ├── gl_blend_state.h
-│       │   │   │       ├── gl_depth_stencil_state.h
-│       │   │   │       └── gl_rasterizer_state.h
-│       │   │   └── interfaces
-│       │   │       ├── i_device.h
-│       │   │       ├── i_swap_chain.h
-│       │   │       ├── i_shader.h
-│       │   │       └── i_buffer.h
-│       │   └── renderer_factory.h
-│       ├── window
-│       │   ├── i_window.h
-│       │   ├── glfw_window.h
-│       │   ├── winapi_window.h
-│       │   └── window_factory.h
-│       └── utilities
-│           ├── log.h
-│           ├── timer.h
-│           └── config.h
-└── src ...
-
-
+│   └── engine.h
+└── src
+    ├── engine.cpp
+    ├── file_loader
+    │   └── file.cpp
+    ├── game.cpp
+    ├── gfx
+    │   ├── renderer
+    │   │   ├── draw_command.cpp
+    │   │   ├── material.cpp
+    │   │   └── primitive_util.cpp
+    │   ├── rhi
+    │   │   ├── name.cpp
+    │   │   └── vulkan
+    │   │       ├── buffer_vk.cpp
+    │   │       ├── command_buffer_vk.cpp
+    │   │       ├── command_pool_vk.cpp
+    │   │       ├── descriptor_pool_vk.cpp
+    │   │       ├── fence_vk.cpp
+    │   │       ├── frame_buffer_pool_vk.cpp
+    │   │       ├── frame_buffer_vk.cpp
+    │   │       ├── memory_pool_vk.cpp
+    │   │       ├── pipeline_state_info_vk.cpp
+    │   │       ├── render_frame_context_vk.cpp
+    │   │       ├── render_pass_vk.cpp
+    │   │       ├── render_target_pool_vk.cpp
+    │   │       ├── render_target_vk.cpp
+    │   │       ├── rhi_vk.cpp
+    │   │       ├── ring_buffer_vk.cpp
+    │   │       ├── semaphore_vk.cpp
+    │   │       ├── shader_binding_layout_vk.cpp
+    │   │       ├── shader_vk.cpp
+    │   │       ├── spirv_util.cpp
+    │   │       ├── swapchain_vk.cpp
+    │   │       ├── texture_vk.cpp
+    │   │       ├── uniform_buffer_object_vk.cpp
+    │   │       └── utils_vk.cpp
+    │   └── scene
+    │       ├── camera.cpp
+    │       ├── object.cpp
+    │       ├── render_object.cpp
+    │       └── view.cpp
+    ├── internal_include
+    │   ├── engine_internal.h
+    │   ├── event
+    │   │   ├── application_event_handler.h
+    │   │   ├── application_event_manager.h
+    │   │   ├── event.h
+    │   │   ├── event_handler.h
+    │   │   ├── keyboard_event_handler.h
+    │   │   ├── mouse_event_handler.h
+    │   │   ├── window_event_handler.h
+    │   │   └── window_event_manager.h
+    │   ├── file_loader
+    │   │   ├── file.h
+    │   │   └── image_file_loader.h
+    │   ├── game.h
+    │   ├── gfx
+    │   │   ├── renderer
+    │   │   │   ├── draw_command.h
+    │   │   │   ├── material.h
+    │   │   │   ├── primitive_util.h
+    │   │   │   └── renderer.h
+    │   │   ├── rhi
+    │   │   │   ├── i_uniform_buffer_block.h
+    │   │   │   ├── instant_struct.h
+    │   │   │   ├── lock.h
+    │   │   │   ├── mem_stack_allocator.h
+    │   │   │   ├── name.h
+    │   │   │   ├── resource_container.h
+    │   │   │   ├── resource_pool.h
+    │   │   │   ├── rhi_type.h
+    │   │   │   ├── shader_bindable_resource.h
+    │   │   │   └── vulkan
+    │   │   │       ├── buffer_vk.h
+    │   │   │       ├── command_buffer_vk.h
+    │   │   │       ├── command_pool_vk.h
+    │   │   │       ├── descriptor_pool_vk.h
+    │   │   │       ├── feature_switch_vk.h
+    │   │   │       ├── fence_vk.h
+    │   │   │       ├── frame_buffer_pool_vk.h
+    │   │   │       ├── frame_buffer_vk.h
+    │   │   │       ├── memory_pool_vk.h
+    │   │   │       ├── pipeline_state_info_vk.h
+    │   │   │       ├── pipeline_state_info_vk.inl
+    │   │   │       ├── render_frame_context_vk.h
+    │   │   │       ├── render_pass_vk.h
+    │   │   │       ├── render_target_pool_vk.h
+    │   │   │       ├── render_target_vk.h
+    │   │   │       ├── rhi_type_vk.h
+    │   │   │       ├── rhi_vk.h
+    │   │   │       ├── ring_buffer_vk.h
+    │   │   │       ├── semaphore_vk.h
+    │   │   │       ├── shader_binding_instance_combiner.h
+    │   │   │       ├── shader_binding_layout_vk.h
+    │   │   │       ├── shader_vk.h
+    │   │   │       ├── spirv_util.h
+    │   │   │       ├── swapchain_vk.h
+    │   │   │       ├── texture_vk.h
+    │   │   │       ├── uniform_buffer_object_vk.h
+    │   │   │       └── utils_vk.h
+    │   │   └── scene
+    │   │       ├── bound_primitive.h
+    │   │       ├── camera.h
+    │   │       ├── object.h
+    │   │       ├── render_object.h
+    │   │       └── view.h
+    │   ├── input
+    │   │   ├── input_manager.h
+    │   │   ├── key.h
+    │   │   └── mouse.h
+    │   ├── platform
+    │   │   └── common
+    │   │       └── window.h
+    │   └── utils
+    │       ├── enum
+    │       │   └── enum_util.h
+    │       ├── logger
+    │       │   ├── console_logger.h
+    │       │   ├── global_logger.h
+    │       │   └── i_logger.h
+    │       ├── math
+    │       │   ├── math_util.h
+    │       │   └── plane.h
+    │       ├── memory
+    │       │   └── memory_allocator.h
+    │       ├── third_party
+    │       │   └── xxhash_util.h
+    │       └── time
+    │           └── stopwatch.h
+    ├── platform
+    │   └── common
+    │       └── window.cpp
+    └── utils
+        ├── logger
+        │   ├── console_logger.cpp
+        │   └── global_logger.cpp
+        └── time
+            └── stopwatch.cpp
 ```
 
-P.S this is not final tree hirerarchy, i will update it as i implement first triangle.
-
 ## naming conventions for this project:
- 
- For refactoring naming conventions this project uses **clang-format**.
 
+For refactoring naming conventions this project uses **clang-format**.
 
 | Code Element                     | Naming Convention                                 | Example                                  |
 | -------------------------------- | ------------------------------------------------- | ---------------------------------------- |
@@ -170,7 +196,7 @@ P.S this is not final tree hirerarchy, i will update it as i implement first tri
 | Template Value                   | camelCase                                         | `defaultValue`                           |
 | Type Template                    | CamelCase                                         | `TypeParam`                              |
 
-P.S. for some elements i'm still not sure: 
+P.S. for some elements i'm still not sure:
+
 - for class methods do i really need to add `_s` prefix 🤔
 - do i need to add `s_k`, `g_k` prefixes 🤔
-
