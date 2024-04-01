@@ -37,6 +37,7 @@ option(BUILD_GLEW "Build the GLEW library" ON)
 option(BUILD_EIGEN "Include the Eigen library" OFF)
 option(BUILD_MATH_LIBRARY "Build the Math Library" ON)
 option(BUILD_EASTL "Build the EASTL library" ON)
+option(BUILD_XXHASH "Build the xxHash library" ON)
 
 if(BUILD_SDL)
     message(STATUS "Fetching SDL...")
@@ -180,6 +181,18 @@ if(BUILD_EASTL)
     )
 endif()
 
+if(BUILD_XXHASH)
+    message(STATUS "Fetching xxHash...")
+    FetchContent_Declare(
+        xxhash
+        GIT_REPOSITORY https://github.com/Cyan4973/xxHash.git
+        GIT_TAG        v0.8.0
+    )
+endif()
+
+
+
+
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
 file(GLOB_RECURSE HEADERS "include/*.h")
@@ -284,6 +297,23 @@ if(BUILD_EASTL)
     target_link_libraries(${PROJECT_NAME} EASTL)
 endif()
 
+if(BUILD_XXHASH)
+    FetchContent_MakeAvailable(xxhash)
+    # Optional - save previous state of BUILD_SHARED_LIBS
+    # Some additional steps for xxHash as it is unofficial
+    # xxHash messes with BUILD_SHARED_LIBS if it is empty
+    # set(SAVED_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
+    add_subdirectory(
+        "${xxhash_SOURCE_DIR}/cmake_unofficial"
+        "${xxhash_BINARY_DIR}"
+        EXCLUDE_FROM_ALL
+    )
+    # Optional - save previous state of BUILD_SHARED_LIBS (continue)
+    # Restore BUILD_SHARED_LIBS
+    # set(BUILD_SHARED_LIBS "${SAVED_BUILD_SHARED_LIBS}" CACHE BOOL "" FORCE)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${xxhash_SOURCE_DIR}/cmake_unofficial/..")
+    target_link_libraries(${PROJECT_NAME} xxhash)
+endif()
 
 option(USE_VULKAN "Use Vulkan for graphics" ON)
 option(USE_OPENGL "Use OpenGL for graphics" OFF)
