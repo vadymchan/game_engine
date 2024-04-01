@@ -1,186 +1,63 @@
-#include <iostream>
-#include <GLFW/glfw3.h>
-#include <d3d12.h>
-#include <dxgi1_4.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_sinks.h>
+#define SDL_MAIN_HANDLED
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "glfw3.lib")
+#include "engine.h"
 
-int main()
-{
-    // Initialize GLFW
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
+// ----------------------------------------------
+// Event system
+#include "event/event.h"
+#include "event/event_handler.h"
+#include "event/keyboard_event_handler.h"
+#include "event/mouse_event_handler.h"
+#include "event/window_event_handler.h"
+#include "event/window_event_manager.h"
 
-    // Set GLFW window hints for DirectX 12
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+// Input system
+#include "input/input_manager.h"
+#include "input/key.h"
+#include "input/mouse.h"
 
-    // Create GLFW window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "GLFW with DirectX 12", nullptr, nullptr);
-    if (!window)
-    {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+// Platform specific
+#include "platform/common/window.h"
 
-    // Create DirectX 12 device
-    ID3D12Device* device = nullptr;
-    HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-    if (FAILED(hr))
-    {
-        std::cerr << "Failed to create DirectX 12 device" << std::endl;
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return -1;
-    }
+// Utilities
+#include "gfx/rhi/vulkan/spirv_util.h"
+#include "utils/logger/console_logger.h"
+#include "utils/logger/global_logger.h"
+#include "utils/logger/i_logger.h"
+#include "utils/time/stopwatch.h"
 
-    auto consoleLogger = spdlog::stdout_logger_mt("console");
+// ----------------------------------------------
 
-    // Set the log level to display all messages
-    consoleLogger->set_level(spdlog::level::trace);
+#if (defined(_WIN32) || defined(_WIN64)) \
+    && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
+  #include <Windows.h>
+int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
+                    _In_opt_ HINSTANCE hPrevInstance,
+                    _In_ PWSTR         pCmdLine,
+                    _In_ int           nCmdShow) {
+#else
+auto main(int argc, char* argv[]) -> int {
 
-    // Log some messages with different log levels
-    consoleLogger->trace("This is a trace message");
-    consoleLogger->debug("This is a debug message");
-    consoleLogger->info("This is an info message");
-    consoleLogger->warn("This is a warning message");
-    consoleLogger->error("This is an error message");
-    consoleLogger->critical("This is a critical message");
+#endif
+  // Inform SDL that the program will handle its own initialization
+  SDL_SetMainReady();
 
-    // Flush the logger to ensure all messages are written
-    spdlog::drop_all();
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+    SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+    return EXIT_FAILURE;
+  }
 
-    // Run the main loop
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
-    }
+  game_engine::Engine engine;
 
-    // Cleanup
-    device->Release();
-    glfwDestroyWindow(window);
-    glfwTerminate();
+  engine.init();
 
-    return 0;
+  engine.run();
+
+  engine.release();
+
+  game_engine::g_rhi_vk->release();
+
+  SDL_Quit();
+
+  return EXIT_SUCCESS;
 }
-
-
-//#include "game_engine/window/window.h"
-//#include "game_engine/window/glfw_window.h"
-//#include "game_engine/renderer/render_api.h"
-//#include "game_engine/renderer/render_api_factory.h"
-//#include "game_engine/utils/error_codes.h"
-//
-//#include <GLFW/glfw3.h>
-//#include <iostream>
-//
-//#define USE_VULKAN
-//
-//#include <vulkan/vulkan.h>
-//
-//int main() 
-//{
-//    // Initialize GLFW
-//    if (!glfwInit()) {
-//        std::cerr << "Failed to initialize GLFW" << std::endl;
-//        return -1;
-//    }
-//
-//    // Set GLFW window hints
-//    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-//    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-//
-//    // Create GLFW window
-//    GLFWwindow* window = glfwCreateWindow(800, 600, "GLFW Window", nullptr, nullptr);
-//    if (!window) {
-//        std::cerr << "Failed to create GLFW window" << std::endl;
-//        glfwTerminate();
-//        return -1;
-//    }
-//
-//#ifdef USE_VULKAN
-//    // Initialize Vulkan
-//    VkInstance instance;
-//
-//    VkApplicationInfo appInfo = {};
-//    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-//    appInfo.pApplicationName = "My Vulkan App";
-//    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-//    appInfo.pEngineName = "My Vulkan Engine";
-//    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-//    appInfo.apiVersion = VK_API_VERSION_1_0;
-//
-//    VkInstanceCreateInfo createInfo = {};
-//    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-//    createInfo.pApplicationInfo = &appInfo;
-//
-//    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-//
-//    if (result != VK_SUCCESS) {
-//        std::cerr << "Failed to create Vulkan instance" << std::endl;
-//        glfwTerminate();
-//        return -1;
-//}
-//
-//
-//    // Do Vulkan stuff...
-//#else
-//    // Initialize DirectX 12
-//    ID3D12Device* device;
-//    HRESULT result = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
-//    if (FAILED(result)) {
-//        std::cerr << "Failed to create DirectX 12 device" << std::endl;
-//        glfwTerminate();
-//        return -1;
-//    }
-//
-//    // Do DirectX 12 stuff...
-//#endif
-//
-//    // Main loop
-//    while (!glfwWindowShouldClose(window)) {
-//        glfwPollEvents();
-//    }
-//
-//    // Clean up
-//#ifdef USE_VULKAN
-//    vkDestroyInstance(instance, nullptr);
-//#else
-//    device->Release();
-//#endif
-//    glfwDestroyWindow(window);
-//    glfwTerminate();
-//    return 0;
-//    //game_engine::window::GLFWWindow window(800, 600, "Game Engine");
-//
-//    //game_engine::utils::ErrorCode errorCode = window.Initialize();
-//    //if (errorCode != game_engine::utils::ErrorCode::Success) {
-//    //    // Handle the error
-//    //    return static_cast<int>(errorCode);
-//    //}
-//
-//    //auto renderAPI = game_engine::renderer::CreateRenderAPI<game_engine::renderer::DX11RenderAPI>();
-//    //renderAPI->Initialize();
-//    //if (errorCode != game_engine::utils::ErrorCode::Success) {
-//    //    // Handle the error
-//    //    return static_cast<int>(errorCode);
-//    //}
-//    //while (!window.ShouldClose()) {
-//    //    window.PollEvents();
-//
-//    //    renderAPI->DrawTriangle();
-//    //    renderAPI->Present();
-//    //}
-//
-//    ////window.Shutdown();
-//
-//    //return static_cast<int>(game_engine::utils::ErrorCode::Success);
-//}

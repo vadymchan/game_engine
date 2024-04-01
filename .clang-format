@@ -1,0 +1,126 @@
+BasedOnStyle: Google
+#IndentWidth: 4 
+#IndentCaseLabels: false
+AccessModifierOffset: 0
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound : true
+  PadOperators : true
+
+AlignConsecutiveBitFields:
+  Enabled:         true
+  AcrossEmptyLines: true
+  AcrossComments:  true
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: true
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+AlignOperands: AlignAfterOperator
+#AlignOperands: Align
+
+BreakBeforeBinaryOperators : All
+#BreakBeforeBinaryOperators : NonAssignment
+
+AlignTrailingComments: 
+  Kind: Always
+  OverEmptyLines: 2
+
+AllowShortFunctionsOnASingleLine : InlineOnly
+
+BinPackArguments : false
+BinPackParameters : false
+
+BracedInitializerIndentWidth : 2
+
+AlignArrayOfStructures : Right
+
+BreakConstructorInitializers: BeforeComma
+
+PackConstructorInitializers: Never
+
+#BreakInheritanceList: AfterComma  
+BreakInheritanceList: BeforeComma  
+
+#maybe google style is better
+#EmptyLineAfterAccessModifier : Always
+#EmptyLineBeforeAccessModifier : Always
+
+FixNamespaceComments : true
+
+ShortNamespaceLines : 0
+
+IndentPPDirectives : BeforeHash
+
+IndentWrappedFunctionNames : true
+
+#IndentRequiresClause : false
+
+#be careful with that
+InsertBraces : true 
+
+IntegerLiteralSeparator:
+  Binary: 4
+  #BinaryMinDigits : 6
+  Decimal: 3
+  DecimalMinDigits : 5
+  Hex: 2
+  #HexMinDigits : 4
+
+#NamespaceIndentation : All
+
+#idk the Right and Middle in my case works the same like Left (no diff)
+#PointerAlignment: Right
+
+#idk the Right and Middle in my case works the same like Left (no diff)
+#ReferenceAlignment : Pointer
+
+QualifierAlignment : Custom
+
+QualifierOrder: [ 'friend', 'static', 'inline', 'const', 'volatile', 'constexpr', 'type',  'restrict']
+
+RemoveParentheses : ReturnStatement
+
+RemoveSemicolon : true
+
+SeparateDefinitionBlocks : Always
+
+SortUsingDeclarations : Lexicographic
+
+AllowShortEnumsOnASingleLine : false
+
+#BEGIN:includes
+#----------------------------------
+
+SortIncludes: true  
+IncludeBlocks: Regroup  
+
+IncludeCategories:
+  # Header corresponding to the source file
+  - Regex:           '^"(.*\b|).*\.h"'
+    Priority:        0
+
+  # 1. Local headers with ".h" extension
+  - Regex:           '^".*\.h"'
+    Priority:        1
+
+  # C system headers
+  - Regex:           '^<.*\.h>'
+    Priority:        2
+
+  # C++ system headers
+  - Regex:           '^<[^.]+>$'
+    Priority:        3
+
+#END:includes
+#----------------------------------
+

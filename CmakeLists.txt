@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.26)
 
 project(game_engine)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -12,26 +12,44 @@ else()
 endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
-    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT game_engine)
+    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif()
 
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/game_engine.dir)
+# WIP - change build directory
+# set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/bin)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
+
+# set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/game_engine.dir)
 
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
 
-option(BUILD_GLFW "Build the GLFW library" ON)
-option(BUILD_SPDLOG "Build the SPDLOG library" OFF)
+option(BUILD_SDL "Build the SDL library" ON)
+option(BUILD_GLFW "Build the GLFW library" OFF)
+option(BUILD_SPDLOG "Build the SPDLOG library" ON)
 option(BUILD_BULLET "Build the Bullet library" OFF)
 option(BUILD_IMGUI "Build the ImGui library" OFF)
 option(BUILD_ASSIMP "Build the Assimp library" OFF)
 option(BUILD_STB "Build the STB library" OFF)
 option(BUILD_BOOST "Build the Boost library" OFF)
+option(BUILD_GLEW "Build the GLEW library" ON)
+option(BUILD_EIGEN "Include the Eigen library" OFF)
+option(BUILD_MATH_LIBRARY "Build the Math Library" ON)
+option(BUILD_EASTL "Build the EASTL library" ON)
+option(BUILD_XXHASH "Build the xxHash library" ON)
+
+if(BUILD_SDL)
+    message(STATUS "Fetching SDL...")
+    FetchContent_Declare(
+        sdl
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG release-2.28.5
+    )
+endif()
 
 if(BUILD_GLFW)
     message(STATUS "Fetching GLFW...")
@@ -53,7 +71,6 @@ message(STATUS "Fetching SPDLOG...")
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
         GIT_TAG v1.9.2
     )
-
 endif()
 
 if(BUILD_BULLET)
@@ -63,7 +80,6 @@ message(STATUS "Fetching BULLET-3...")
         GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
         GIT_TAG 3.09
     )
-
 endif()
 
 if(BUILD_IMGUI)
@@ -77,10 +93,17 @@ endif()
 
 if(BUILD_ASSIMP)
 message(STATUS "Fetching ASSIMP...")
+set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE) # Generation of shared libs (dll for windows, so for Linux). Set this to OFF to get a static lib.
+
     FetchContent_Declare(
         assimp
         GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v5.0.1
+        GIT_TAG v5.3.1
+        GIT_SHALLOW ON
+        GIT_PROGRESS ON
+        #FIND_PACKAGE_ARGS 5.3.1
     )
 endif()
 
@@ -103,47 +126,265 @@ message(STATUS "Fetching BOOST...")
     FetchContent_GetProperties(boost)
     if(NOT boost_POPULATED)
         FetchContent_Populate(boost)
-        include_directories(${boost_SOURCE_DIR})
+        target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${boost_SOURCE_DIR})
     endif()
-
 endif()
 
-include_directories(include)
+
+if(BUILD_GLEW)
+    message(STATUS "Fetching GLEW...")
+    FetchContent_Declare(
+      glew
+      GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
+      GIT_TAG master
+      CMAKE_ARGS -Dglew-cmake_BUILD_STATIC=ON
+    )
+    FetchContent_GetProperties(glew)
+    if(NOT glew_POPULATED)
+        FetchContent_Populate(glew)
+        add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR})
+    endif()
+endif()
+
+if(BUILD_EIGEN)
+    message(STATUS "Fetching Eigen...")
+    FetchContent_Declare(
+        eigen
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG 3.4.0
+    )
+    FetchContent_GetProperties(eigen)
+    if(NOT eigen_POPULATED)
+        FetchContent_Populate(eigen)
+        include_directories(${eigen_SOURCE_DIR})
+    endif()
+endif()
+
+if(BUILD_MATH_LIBRARY)
+    message(STATUS "Fetching Math Library...")
+    FetchContent_Declare(
+        math_library
+        GIT_REPOSITORY https://github.com/vadymchan/math_library.git
+        GIT_TAG main
+        # GIT_TAG v.0.0.2-beta
+    )
+endif()
+
+if(BUILD_EASTL)
+    message(STATUS "Fetching EASTL...")
+
+    # EASLT depends on EABase
+    FetchContent_Declare(
+        eabase
+        GIT_REPOSITORY https://github.com/electronicarts/EABase.git
+        GIT_TAG origin/master
+        GIT_PROGRESS TRUE
+        GIT_SUBMODULES ""
+    )
+
+    FetchContent_Declare(
+        eastl
+        GIT_REPOSITORY https://github.com/electronicarts/EASTL.git
+        GIT_TAG origin/master
+        GIT_PROGRESS TRUE
+        GIT_SUBMODULES ""
+    )
+endif()
+
+if(BUILD_XXHASH)
+    message(STATUS "Fetching xxHash...")
+    FetchContent_Declare(
+        xxhash
+        GIT_REPOSITORY https://github.com/Cyan4973/xxHash.git
+        GIT_TAG        v0.8.0
+    )
+endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
+file(GLOB_RECURSE INLINES "src/*.inl")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
-add_executable(game_engine ${SOURCES} ${HEADERS} main.cpp)
+option(GAME_ENGINE_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
+
+if(WIN32 AND GAME_ENGINE_USE_WINDOWS_SUBSYSTEM)
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} main.cpp)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC GAME_ENGINE_WINDOWS_SUBSYSTEM)
+else()
+    add_executable(${PROJECT_NAME} ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} main.cpp)
+endif()
+
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
+endif()
+
+target_include_directories(${PROJECT_NAME} PUBLIC  include)
+target_include_directories(${PROJECT_NAME} PRIVATE src/internal_include)
+
+if(BUILD_SDL)
+    FetchContent_MakeAvailable(sdl)
+    
+    set(SDL_BUILD_INCLUDE_DIR ${sdl_BINARY_DIR}/include)
+
+    if(EXISTS "${SDL_BUILD_INCLUDE_DIR}/SDL3")
+        set(SDL_VERSION_DIR "SDL3")
+    elseif(EXISTS "${SDL_BUILD_INCLUDE_DIR}/SDL2")
+        set(SDL_VERSION_DIR "SDL2")
+    else()
+        message(FATAL_ERROR "Wrong directory in ${SDL_BUILD_INCLUDE_DIR}")
+    endif()
+
+    # SDL's include directories are in the build directory (not the source directory   
+    # like other third parties in this project), due to SDL generating includes during build.
+
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+        $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
+        $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
+    )
+
+    target_link_libraries(${PROJECT_NAME} SDL2)
+endif()
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
-    target_link_libraries(game_engine glfw)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glfw_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} glfw)
 endif()
 
 if(BUILD_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
-    target_link_libraries(game_engine spdlog)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${spdlog_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} spdlog)
 endif()
 
 if(BUILD_BULLET)
     FetchContent_MakeAvailable(bullet)
-    target_link_libraries(game_engine BulletDynamics BulletCollision LinearMath)
+    target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath)
 endif()
 
 if(BUILD_IMGUI)
     FetchContent_MakeAvailable(imgui)
-    target_link_libraries(game_engine imgui)
+    target_link_libraries(${PROJECT_NAME} imgui)
 endif()
 
 if(BUILD_ASSIMP)
     FetchContent_MakeAvailable(assimp)
-    target_link_libraries(game_engine assimp)
+
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+        ${assimp_INCLUDE_DIRS}
+        ${assimp_SOURCE_DIR}/code/../include
+        ${assimp_BINARY_DIR}/code/../include
+    )
+
+    target_link_libraries(${PROJECT_NAME} assimp)
 endif()
 
 if(BUILD_STB)
     FetchContent_MakeAvailable(stb)
-    target_link_libraries(game_engine stb)
+    target_link_libraries(${PROJECT_NAME} stb)
 endif()
 
+if(BUILD_GLEW)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glew_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} libglew_static)
+endif()
+
+if(BUILD_EIGEN)
+    FetchContent_MakeAvailable(eigen)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eigen_SOURCE_DIR})
+endif()
+
+if(BUILD_MATH_LIBRARY)
+    set(MATH_LIBRARY_USE_NORMALIZE_IN_PLACE OFF CACHE BOOL "Use in-place normalization" FORCE)
+    FetchContent_MakeAvailable(math_library)
+    # if error with simd_define not generated occurs, uncomment this code
+    # add_dependencies(${PROJECT_NAME} math_library)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${math_library_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} math_library)
+endif()
+
+if(BUILD_EASTL)
+    FetchContent_MakeAvailable(eabase)
+    FetchContent_MakeAvailable(eastl)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eastl_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eabase_SOURCE_DIR}/include/Common)
+    target_link_libraries(${PROJECT_NAME} EASTL)
+endif()
+
+if(BUILD_XXHASH)
+    FetchContent_MakeAvailable(xxhash)
+    # Optional - save previous state of BUILD_SHARED_LIBS
+    # Some additional steps for xxHash as it is unofficial
+    # xxHash messes with BUILD_SHARED_LIBS if it is empty
+    # set(SAVED_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
+    add_subdirectory(
+        "${xxhash_SOURCE_DIR}/cmake_unofficial"
+        "${xxhash_BINARY_DIR}"
+        EXCLUDE_FROM_ALL
+    )
+    # Optional - save previous state of BUILD_SHARED_LIBS (continue)
+    # Restore BUILD_SHARED_LIBS
+    # set(BUILD_SHARED_LIBS "${SAVED_BUILD_SHARED_LIBS}" CACHE BOOL "" FORCE)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${xxhash_SOURCE_DIR}/cmake_unofficial/..")
+    target_link_libraries(${PROJECT_NAME} xxhash)
+endif()
+
+option(USE_VULKAN "Use Vulkan for graphics" ON)
+option(USE_OPENGL "Use OpenGL for graphics" OFF)
+option(USE_DIRECTX "Use DirectX for graphics" OFF)
+
+if(USE_VULKAN)
+# Find Vulkan package
 find_package(Vulkan REQUIRED)
-target_link_libraries(game_engine Vulkan::Vulkan)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Vulkan_INCLUDE_DIRS})
+
+# Find shaderc library
+find_library(Shaderc_LIBRARIES
+    NAMES shaderc_shared
+    HINTS "$ENV{VULKAN_SDK}/lib"
+)
+
+if(NOT Shaderc_LIBRARIES)
+    message(WARNING "Could not find shaderc_shared library. Fallback to shaderc_combined.")
+    find_library(Shaderc_LIBRARIES
+        NAMES shaderc_combined
+        HINTS "$ENV{VULKAN_SDK}/lib"
+    )
+endif()
+
+target_link_libraries(${PROJECT_NAME} ${Shaderc_LIBRARIES})
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "$ENV{VULKAN_SDK}/include")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN)
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
+endif()
+
+if(USE_OPENGL)
+    find_package(OpenGL QUIET COMPONENTS OpenGL EGL)
+if(NOT OpenGL_FOUND)
+    set(OpenGL_GL_PREFERENCE LEGACY)
+    find_package(OpenGL REQUIRED)
+endif()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE OPENGL)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${OPENGL_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY})
+endif()
+
+if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTXs)
+    message(FATAL_ERROR "At least one of Vulkan, OpenGL or DirectX must be selected for graphics API")
+endif()
+
+if(USE_DIRECTX AND NOT WIN32)
+    message(FATAL_ERROR "DirectX is only available on Windows!")
+endif()
+
+add_custom_command(TARGET ${PROJECT_NAME}
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E remove 
+                           "${CMAKE_SOURCE_DIR}/test_fs_support_case_sensitivity"
+                           "${CMAKE_SOURCE_DIR}/test_fs_support_CASE_sensitivity"
+                   COMMENT "Removing case sensitivity test files from " ${CMAKE_SOURCE_DIR}
+)

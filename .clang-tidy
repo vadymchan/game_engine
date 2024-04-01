@@ -1,0 +1,174 @@
+Checks: '-*,  readability-identifier-naming,  cppcoreguidelines-*,  llvm-*, -llvm-header-guard,  modernize-*,  bugprone-*,  performance-*,  portability-*'
+
+
+#BEGIN:name convention
+#----------------------------------
+
+CheckOptions:
+  # classes: CamelCase 
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+
+  # structures: CamelCase 
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+
+  # unions: CamelCase
+  - key: readability-identifier-naming.UnionCase
+    value: CamelCase
+
+  # functions/methods: camelCase 
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+
+  # functions/methods: camelCase 
+  - key: readability-identifier-naming.GlobalFunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalFunctionPrefix
+    value: 'g_'
+
+  # public member variables: camelCase with m_ prefix and _ postfix 
+  - key: readability-identifier-naming.PublicMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMemberPrefix
+    value: 'm_'
+
+  # private member variables: camelCase with m_ prefix and _ postfix 
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: 'm_'
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
+
+  # public methods: camelCase with _ postfix 
+  - key: readability-identifier-naming.PublicMethodCase
+    value: camelBack
+
+  # private methods: camelCase with _ postfix 
+  - key: readability-identifier-naming.PrivateMethodCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMethodSuffix
+    value: '_'
+
+  # protected member variables: camelCase with m_ prefix and _ postfix 
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMemberPrefix
+    value: 'm_'
+  - key: readability-identifier-naming.ProtectedMemberSuffix
+    value: '_'
+
+  # protected methods: camelCase with _ postfix 
+  - key: readability-identifier-naming.ProtectedMethodCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMethodSuffix
+    value: '_'
+
+  # enums, enum constants and enum class (scoped): CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.ScopedEnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+
+  # namespaces: lower_case with underscores 
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+
+  # interface classes: CamelCase with I prefix 
+  - key: readability-identifier-naming.AbstractClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.AbstractClassPrefix
+    value: 'I'
+
+  # boolean variables: camelCase with is/has prefix (e.g., isVisible, hasPowerUp) - unfortunately no for now((
+  # - key: readability-identifier-naming.VariableCase
+  #   value: camelBack
+  # - key: readability-identifier-naming.VariablePrefixBool
+  #   value: 'is'
+  # - key: readability-identifier-naming.VariablePrefixBool
+  #   value: 'has'
+
+  
+
+  # macros: UPPER_CASE_WITH_UNDERSCORES
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+
+  # typedefs and type aliases: CamelCase
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+
+  # static constant member variables: camelCase with s_k prefix
+  - key: readability-identifier-naming.StaticConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.StaticConstantPrefix
+    value: 's_k'
+
+  # class constant member variables: CamelCase with s_k prefix
+  - key: readability-identifier-naming.ClassConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ClassConstantPrefix
+    value: 's_k'
+
+  # constants: CamelCase with k prefix 
+  - key: readability-identifier-naming.ConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantPrefix
+    value: 'k'
+
+  # static variables: camelCase with s_ prefix 
+  - key: readability-identifier-naming.StaticVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.StaticVariablePrefix
+    value: 's_'
+
+  # global variables: camelCase with g_ prefix 
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalVariablePrefix
+    value: 'g_'
+
+  # global constant: camelCase with g_ prefix 
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: 'g_k'
+
+  # Class members: camelCase with s_ prefix
+  - key: readability-identifier-naming.ClassMember
+    value: camelBack
+  - key: readability-identifier-naming.ClassMemberPrefix
+    value: s_
+  
+  # class methods: CamelCase 
+  - key: readability-identifier-naming.ClassMethodCase
+    value: CamelCase
+
+  # template parameters: Single uppercase letters 
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+
+  #template value : CamelCase
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: CamelCase
+
+  #type template: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+
+  # function parameters: camelCase
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+
+  # constant parameters: CamelCase with k prefix
+  - key: readability-identifier-naming.ConstantParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantParameterPrefix
+    value: 'k'
+#END:name convention
+#----------------------------------
