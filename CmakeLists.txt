@@ -195,6 +195,7 @@ endif()
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
+file(GLOB_RECURSE INLINES "src/*.inl")
 file(GLOB_RECURSE HEADERS "include/*.h")
 
 option(GAME_ENGINE_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
