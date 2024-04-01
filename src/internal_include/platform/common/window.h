@@ -2,6 +2,7 @@
 #define GAME_ENGINE_WINDOW_H
 
 #include "event/event.h"
+#include "utils/enum/enum_util.h"
 
 #include <SDL.h>
 #include <math_library/dimension.h>
@@ -14,7 +15,8 @@ namespace game_engine {
 
 class Window {
   public:
-  enum class Flags {
+
+enum class Flags : uint32_t {
     None              = 0,
     Fullscreen        = SDL_WINDOW_FULLSCREEN,
     Shown             = SDL_WINDOW_SHOWN,
@@ -25,7 +27,9 @@ class Window {
     Vulkan            = SDL_WINDOW_VULKAN
   };
 
-  // YAGNI
+
+
+  //TODO: YAGNI - remove
   Window()
       : m_title_("")
       , m_size_(0, 0)
@@ -65,6 +69,14 @@ class Window {
   [[nodiscard]] auto getSize() const -> const math::Dimension2Di& { return m_size_; }
   [[nodiscard]] auto getPosition() const -> const math::Point2Di& { return m_position_; }
   [[nodiscard]] auto getFlags() const -> Flags { return m_flags_; }
+  /**
+ * This function provides access to the internal SDL_Window handle. 
+ * It is important to use this handle with caution as any modifications 
+ * or incorrect usage can lead to undefined behavior in the windowing 
+ * system. The handle should not be stored persistently, and it's discouraged 
+ * to modify the window state outside of the designed interface of the Window class.
+ */
+  [[nodiscard]] auto getNativeWindowHandle() const ->  SDL_Window* { return m_window_; }
 
   // clang-format on
 
@@ -80,6 +92,8 @@ class Window {
   Flags              m_flags_;
   SDL_Window*        m_window_{nullptr};
 };
+
+DECLARE_ENUM_BIT_OPERATORS(Window::Flags)
 
 }  // namespace game_engine
 
