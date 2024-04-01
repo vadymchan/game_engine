@@ -1,8 +1,12 @@
+## Screenshots
+
+![First Triangle Vulkan](screenshots/first_triangle_vulkan.png)
+
 ## Dependencies
 
 - LLVM + Clang Power Tools - for formatting and refactoring the code. Use `.clang-format`.
 
-## The target architecture for the first triangle (draft):
+## Tree hierarchy
 
 ```
 game_engine
@@ -22,6 +26,8 @@ game_engine
 │       └── shperical_map.hlsl
 ├── include
 │   └── engine.h
+├── screenshots
+│   └── first_triangle_vulkan.png
 └── src
     ├── engine.cpp
     ├── file_loader
