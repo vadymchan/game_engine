@@ -29,17 +29,17 @@ struct ReadWriteType {
   };
 };
 
-class jFile {
+class File {
   public:
   typedef char                      ELEMENT_TYPE;
   typedef std::vector<ELEMENT_TYPE> FILE_BUFFER;
 
 static uint64_t GetFileTimeStamp(const std::string& filename);
 
-  jFile()
+  File()
       : m_fp(nullptr) {}
 
-  ~jFile();
+  ~File();
 
   bool OpenFile(const std::string&  szFileName,
                 FileType::Enum      fileType      = FileType::BINARY,

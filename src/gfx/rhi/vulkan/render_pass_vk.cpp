@@ -260,7 +260,7 @@ bool RenderPassVk::CreateRenderPass() {
       ClearValues.push_back(clearValue);
     }
 
-    struct jSubpassAttachmentRefs {
+    struct SubpassAttachmentRefs {
       std::vector<VkAttachmentReference>   InputAttachmentRefs;
       std::vector<VkAttachmentReference>   OutputColorAttachmentRefs;
       std::optional<VkAttachmentReference> OutputDepthAttachmentRef;
@@ -269,7 +269,7 @@ bool RenderPassVk::CreateRenderPass() {
 
     assert(RenderPassInfo.Subpasses.size());
 
-    std::vector<jSubpassAttachmentRefs> subpassAttachmentRefs;
+    std::vector<SubpassAttachmentRefs> subpassAttachmentRefs;
     subpassAttachmentRefs.resize(RenderPassInfo.Subpasses.size());
 
     std::vector<VkSubpassDescription> SubpassDescs;

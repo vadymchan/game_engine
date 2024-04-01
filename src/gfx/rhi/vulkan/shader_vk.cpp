@@ -78,7 +78,7 @@ void Shader::StartAndRunCheckUpdateShaderThread() {
 
       // Backup previous data
       auto PreviousShaderStage = shader->ShaderStage;
-      // jCompiledShader* PreviousCompiledShader = shader->CompiledShader;
+      // CompiledShader* PreviousCompiledShader = shader->CompiledShader;
       auto PreviousPipelineStateHashes = gConnectedPipelineStateHash[shader];
       gConnectedPipelineStateHash[shader].clear();
 
@@ -121,7 +121,7 @@ void Shader::ReleaseCheckUpdateShaderThread() {
 bool Shader::UpdateShader() {
   auto checkTimeStampFunc = [this](const char* filename) -> uint64_t {
     if (filename) {
-      return jFile::GetFileTimeStamp(filename);
+      return File::GetFileTimeStamp(filename);
     }
     return 0;
   };

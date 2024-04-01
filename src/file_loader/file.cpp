@@ -4,17 +4,17 @@
 
 namespace game_engine {
 
-uint64_t jFile::GetFileTimeStamp(const std::string& filename) {
+uint64_t File::GetFileTimeStamp(const std::string& filename) {
   assert(!filename.empty());
   auto lastWriteTime = std::filesystem::last_write_time(filename);
   return static_cast<uint64_t>(lastWriteTime.time_since_epoch().count());
 }
 
-jFile::~jFile() {
+File::~File() {
   CloseFile();
 }
 
-bool jFile::OpenFile(const std::string&  szFileName,
+bool File::OpenFile(const std::string&  szFileName,
                      FileType::Enum      fileType,
                      ReadWriteType::Enum readWriteType) {
   std::string option;
@@ -54,7 +54,7 @@ bool jFile::OpenFile(const std::string&  szFileName,
   return m_fp != nullptr;
 }
 
-size_t jFile::ReadFileToBuffer(bool   appendToEndofBuffer,
+size_t File::ReadFileToBuffer(bool   appendToEndofBuffer,
                                size_t index,
                                size_t count) {
   size_t readSize = 0;
@@ -85,21 +85,21 @@ size_t jFile::ReadFileToBuffer(bool   appendToEndofBuffer,
   return readSize;
 }
 
-void jFile::CloseFile() {
+void File::CloseFile() {
   if (m_fp) {
     std::fclose(m_fp);
     m_fp = nullptr;
   }
 }
 
-const char* jFile::GetBuffer(size_t index, size_t count) const {
+const char* File::GetBuffer(size_t index, size_t count) const {
   if (m_buffer.empty()) {
     return nullptr;
   }
   return &m_buffer[0];
 }
 
-bool jFile::GetBuffer(FILE_BUFFER&       outBuffer,
+bool File::GetBuffer(FILE_BUFFER&       outBuffer,
                       const std::string& startToken,
                       const std::string& endToken) {
   if (m_buffer.empty()) {

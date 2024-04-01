@@ -32,7 +32,7 @@ namespace game_engine {
 // Shader Permutation. by using Shader Permutation Define, generate permutation
 // of defines and convert it to permutation id.
 template <typename... T>
-class jPermutation {
+class Permutation {
   public:
   static int GetPermutationCount() { return 1; }
 
@@ -62,10 +62,10 @@ class jPermutation {
 };
 
 template <typename T, typename... T1>
-class jPermutation<T, T1...> : public jPermutation<T1...> {
+class Permutation<T, T1...> : public Permutation<T1...> {
   public:
   using Type  = T;
-  using Super = jPermutation<T1...>;
+  using Super = Permutation<T1...>;
 
   static int GetPermutationCount() {
     return T::Count * Super::GetPermutationCount();
@@ -105,7 +105,7 @@ class jPermutation<T, T1...> : public jPermutation<T1...> {
       return;
     }
 
-    return jPermutation<T1...>::template SetIndex<K>(value);
+    return Permutation<T1...>::template SetIndex<K>(value);
   }
 
   int GetPermutationId() const {
@@ -255,7 +255,7 @@ struct Shader {
   virtual void GetPermutationDefines(std::string& OutResult) const {}
 
   // used VkPipelineShaderStageCreateInfo directly instead
-  // jCompiledShader* CompiledShader = nullptr;
+  // CompiledShader* CompiledShader = nullptr;
   // TODO: add abstraction (should be related to Vulkan)
   VkPipelineShaderStageCreateInfo ShaderStage{};
 };
@@ -362,10 +362,10 @@ struct ShaderForwardPixelShader : public Shader {
   DECLARE_DEFINE(USE_REVERSEZ, 0, 1);
 
   using ShaderPermutation
-      = jPermutation</*USE_VARIABLE_SHADING_RATE,*/ USE_REVERSEZ>;
-  ShaderPermutation Permutation;
+      = Permutation</*USE_VARIABLE_SHADING_RATE,*/ USE_REVERSEZ>;
+  ShaderPermutation permutation;
 
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, Permutation)
+  DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, permutation)
 };
 
 struct ShaderGBufferVertexShader : public Shader {
@@ -374,13 +374,13 @@ struct ShaderGBufferVertexShader : public Shader {
   DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
   DECLARE_DEFINE(USE_SPHERICAL_MAP, 0, 1);
 
-  using ShaderPermutation = jPermutation<USE_VERTEX_COLOR,
+  using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
                                          USE_VERTEX_BITANGENT,
                                          USE_ALBEDO_TEXTURE,
                                          USE_SPHERICAL_MAP>;
-  ShaderPermutation Permutation;
+  ShaderPermutation permutation;
 
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, Permutation)
+  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, permutation)
 };
 
 struct ShaderGBufferPixelShader : public Shader {
@@ -391,14 +391,14 @@ struct ShaderGBufferPixelShader : public Shader {
   // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
   DECLARE_DEFINE(USE_PBR, 0, 1);
 
-  using ShaderPermutation = jPermutation<USE_VERTEX_COLOR,
+  using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
                                          USE_ALBEDO_TEXTURE,
                                          USE_SRGB_ALBEDO_TEXTURE,
                                          /*USE_VARIABLE_SHADING_RATE,*/
                                          USE_PBR>;
-  ShaderPermutation Permutation;
+  ShaderPermutation permutation;
 
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, Permutation)
+  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, permutation)
 };
 
 // TODO: currently not used
@@ -407,11 +407,11 @@ struct ShaderGBufferPixelShader : public Shader {
 //  DECLARE_DEFINE(USE_SHADOW_MAP, 0, 1);
 //  DECLARE_DEFINE(USE_PBR, 0, 1);
 //
-//  using ShaderPermutation = jPermutation<USE_SUBPASS, USE_SHADOW_MAP,
-//  USE_PBR>; ShaderPermutation Permutation;
+//  using ShaderPermutation = Permutation<USE_SUBPASS, USE_SHADOW_MAP,
+//  USE_PBR>; ShaderPermutation permutation;
 //
 //  DECLARE_SHADER_WITH_PERMUTATION(ShaderDirectionalLightPixelShader,
-//                                  Permutation)
+//                                  permutation)
 //};
 //
 // struct ShaderPointLightPixelShader : public Shader {
@@ -419,10 +419,10 @@ struct ShaderGBufferPixelShader : public Shader {
 //  DECLARE_DEFINE(USE_SHADOW_MAP, 0, 1);
 //  DECLARE_DEFINE(USE_PBR, 0, 1);
 //
-//  using ShaderPermutation = jPermutation<USE_SUBPASS, USE_SHADOW_MAP,
-//  USE_PBR>; ShaderPermutation Permutation;
+//  using ShaderPermutation = Permutation<USE_SUBPASS, USE_SHADOW_MAP,
+//  USE_PBR>; ShaderPermutation permutation;
 //
-//  DECLARE_SHADER_WITH_PERMUTATION(ShaderPointLightPixelShader, Permutation)
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderPointLightPixelShader, permutation)
 //};
 //
 // struct ShaderSpotLightPixelShader : public Shader {
@@ -432,10 +432,10 @@ struct ShaderGBufferPixelShader : public Shader {
 //  DECLARE_DEFINE(USE_PBR, 0, 1);
 //
 //  using ShaderPermutation
-//      = jPermutation<USE_SUBPASS, USE_SHADOW_MAP, USE_REVERSEZ, USE_PBR>;
-//  ShaderPermutation Permutation;
+//      = Permutation<USE_SUBPASS, USE_SHADOW_MAP, USE_REVERSEZ, USE_PBR>;
+//  ShaderPermutation permutation;
 //
-//  DECLARE_SHADER_WITH_PERMUTATION(ShaderSpotLightPixelShader, Permutation)
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderSpotLightPixelShader, permutation)
 //};
 
 struct GraphicsPipelineShader {

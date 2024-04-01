@@ -414,8 +414,8 @@ bool RhiVk::init(const std::shared_ptr<Window>& window) {
   //  {
   //    check(PhysicalDevice);
   //    check(Surface);
-  //    jVulkanDeviceUtil::SwapChainSupportDetails swapChainSupport
-  //        = jVulkanDeviceUtil::QuerySwapChainSupport(PhysicalDevice, Surface);
+  //    SwapChainSupportDetails swapChainSupport
+  //        = QuerySwapChainSupport(PhysicalDevice, Surface);
   //
   //    for (auto it : swapChainSupport.PresentModes) {
   //      if (it == VK_PRESENT_MODE_IMMEDIATE_KHR) { // TODO: seems that i need
@@ -800,7 +800,7 @@ bool RhiVk::CreateShaderInternal(Shader*           OutShader,
       const bool isHLSL
           = !!strstr(shaderInfo.GetShaderFilepath().ToStr(), ".hlsl");
 
-      jFile ShaderFile;
+      File ShaderFile;
       if (!ShaderFile.OpenFile(shaderInfo.GetShaderFilepath().ToStr(),
                                FileType::TEXT,
                                ReadWriteType::READ)) {
@@ -862,7 +862,7 @@ bool RhiVk::CreateShaderInternal(Shader*           OutShader,
         IncludeFilePaths.push_back(Name(includeFilepath.c_str()));
 
         // Load include shader file
-        jFile IncludeShaderFile;
+        File IncludeShaderFile;
         if (!IncludeShaderFile.OpenFile(
                 includeFilepath.c_str(), FileType::TEXT, ReadWriteType::READ)) {
           return false;

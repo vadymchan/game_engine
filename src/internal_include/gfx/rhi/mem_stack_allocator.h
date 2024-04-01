@@ -228,7 +228,7 @@ class MemStackAllocator {
 #if ENABLE_ALLOCATOR_LOG
     pointer allocatedAddress = static_cast<pointer>(
         MemStack::Get()->Alloc(InNumOfElement * sizeof(T)));
-    std::cout << "Called jMemstackAllocator::allocate with 0x"
+    std::cout << "Called MemstackAllocator::allocate with 0x"
               << allocatedAddress << " address and " << InNumOfElement
               << " elements" << std::endl;
     return allocatedAddress;
@@ -240,7 +240,7 @@ class MemStackAllocator {
 
   void deallocate(pointer InAddress, size_t InNumOfElement) {
 #if ENABLE_ALLOCATOR_LOG
-    std::cout << "Called jMemstackAllocator::deallocate with 0x" << InAddress
+    std::cout << "Called MemstackAllocator::deallocate with 0x" << InAddress
               << " address and " << InNumOfElement << " elements" << std::endl;
 #endif
     // free(InAddress);
@@ -248,7 +248,7 @@ class MemStackAllocator {
 
   void construct(pointer InAddress, const const_reference InInitialValue) {
 #if ENABLE_ALLOCATOR_LOG
-    std::cout << "Called jMemstackAllocator::construct with 0x" << InAddress
+    std::cout << "Called MemstackAllocator::construct with 0x" << InAddress
               << " address and initial value " << InInitialValue << std::endl;
 #endif
     new (static_cast<void*>(InAddress)) T(InInitialValue);
@@ -256,7 +256,7 @@ class MemStackAllocator {
 
   void construct(pointer InAddress) {
 #if ENABLE_ALLOCATOR_LOG
-    std::cout << "Called jMemstackAllocator::construct with 0x" << InAddress
+    std::cout << "Called MemstackAllocator::construct with 0x" << InAddress
               << " address" << std::endl;
 #endif
     new (static_cast<void*>(InAddress)) T();
@@ -264,7 +264,7 @@ class MemStackAllocator {
 
   void destroy(pointer InAddress) {
 #if ENABLE_ALLOCATOR_LOG
-    std::cout << "Called jMemstackAllocator::destroy with 0x" << InAddress
+    std::cout << "Called MemstackAllocator::destroy with 0x" << InAddress
               << " address" << std::endl;
 #endif
     InAddress->~T();
