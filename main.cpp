@@ -20,6 +20,7 @@
 #include "platform/common/window.h"
 
 // Utilities
+#include "gfx/rhi/vulkan/spirv_util.h"
 #include "utils/logger/console_logger.h"
 #include "utils/logger/global_logger.h"
 #include "utils/logger/i_logger.h"
@@ -27,7 +28,8 @@
 
 // ----------------------------------------------
 
-#if (defined(_WIN32) || defined(_WIN64)) && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
+#if (defined(_WIN32) || defined(_WIN64)) \
+    && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
   #include <Windows.h>
 int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,
@@ -50,6 +52,10 @@ auto main(int argc, char* argv[]) -> int {
   engine.init();
 
   engine.run();
+
+  engine.release();
+
+  game_engine::g_rhi_vk->release();
 
   SDL_Quit();
 
