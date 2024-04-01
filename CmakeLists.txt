@@ -321,10 +321,30 @@ option(USE_OPENGL "Use OpenGL for graphics" OFF)
 option(USE_DIRECTX "Use DirectX for graphics" OFF)
 
 if(USE_VULKAN)
-    find_package(Vulkan REQUIRED)
-    target_compile_definitions(game_engine PRIVATE VULKAN)
-    target_include_directories(game_engine SYSTEM PRIVATE ${Vulkan_INCLUDE_DIRS})
-    target_link_libraries(game_engine ${Vulkan_LIBRARIES})
+# Find Vulkan package
+find_package(Vulkan REQUIRED)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Vulkan_INCLUDE_DIRS})
+
+# Find shaderc library
+find_library(Shaderc_LIBRARIES
+    NAMES shaderc_shared
+    HINTS "$ENV{VULKAN_SDK}/lib"
+)
+
+if(NOT Shaderc_LIBRARIES)
+    message(WARNING "Could not find shaderc_shared library. Fallback to shaderc_combined.")
+    find_library(Shaderc_LIBRARIES
+        NAMES shaderc_combined
+        HINTS "$ENV{VULKAN_SDK}/lib"
+    )
+endif()
+
+target_link_libraries(${PROJECT_NAME} ${Shaderc_LIBRARIES})
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "$ENV{VULKAN_SDK}/include")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN)
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
 endif()
 
 if(USE_OPENGL)
