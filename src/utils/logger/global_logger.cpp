@@ -8,6 +8,7 @@ void GlobalLogger::AddLogger(const std::shared_ptr<ILogger>& logger) {
 
 void GlobalLogger::Log(LogLevel logLevel, const std::string& message) {
   for (auto& logger : s_loggers) {
+      // TODO: consider using fmt::format or std::format
     logger->log(logLevel, message);
   }
 }
