@@ -12,7 +12,7 @@ else()
 endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
-    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT game_engine)
+    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif()
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
@@ -67,7 +67,6 @@ message(STATUS "Fetching SPDLOG...")
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
         GIT_TAG v1.9.2
     )
-
 endif()
 
 if(BUILD_BULLET)
@@ -77,7 +76,6 @@ message(STATUS "Fetching BULLET-3...")
         GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
         GIT_TAG 3.09
     )
-
 endif()
 
 if(BUILD_IMGUI)
@@ -117,7 +115,7 @@ message(STATUS "Fetching BOOST...")
     FetchContent_GetProperties(boost)
     if(NOT boost_POPULATED)
         FetchContent_Populate(boost)
-        target_include_directories(game_engine SYSTEM PRIVATE ${boost_SOURCE_DIR})
+        target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${boost_SOURCE_DIR})
     endif()
 endif()
 
@@ -168,18 +166,18 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 option(GAME_ENGINE_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
 
 if(WIN32 AND GAME_ENGINE_USE_WINDOWS_SUBSYSTEM)
-    add_executable(game_engine WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
-    target_compile_definitions(game_engine PUBLIC GAME_ENGINE_WINDOWS_SUBSYSTEM)
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} main.cpp)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC GAME_ENGINE_WINDOWS_SUBSYSTEM)
 else()
-    add_executable(game_engine ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} main.cpp)
+    add_executable(${PROJECT_NAME} ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} main.cpp)
 endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
-    set_target_properties(game_engine PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
+    set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
 endif()
 
-target_include_directories(game_engine PUBLIC  include)
-target_include_directories(game_engine PRIVATE src/internal_include)
+target_include_directories(${PROJECT_NAME} PUBLIC  include)
+target_include_directories(${PROJECT_NAME} PRIVATE src/internal_include)
 
 if(BUILD_SDL)
     FetchContent_MakeAvailable(sdl)
@@ -197,64 +195,64 @@ if(BUILD_SDL)
     # SDL's include directories are in the build directory (not the source directory   
     # like other third parties in this project), due to SDL generating includes during build.
 
-    target_include_directories(game_engine SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
-    target_include_directories(game_engine SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
-    target_include_directories(game_engine SYSTEM PRIVATE
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
         $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
         $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
     )
 
-    target_link_libraries(game_engine SDL2)
+    target_link_libraries(${PROJECT_NAME} SDL2)
 endif()
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
-    target_include_directories(game_engine SYSTEM PRIVATE ${glfw_SOURCE_DIR}/include)
-    target_link_libraries(game_engine glfw)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glfw_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} glfw)
 endif()
 
 if(BUILD_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
-    target_include_directories(game_engine SYSTEM PRIVATE ${spdlog_SOURCE_DIR}/include)
-    target_link_libraries(game_engine spdlog)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${spdlog_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} spdlog)
 endif()
 
 if(BUILD_BULLET)
     FetchContent_MakeAvailable(bullet)
-    target_link_libraries(game_engine BulletDynamics BulletCollision LinearMath)
+    target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath)
 endif()
 
 if(BUILD_IMGUI)
     FetchContent_MakeAvailable(imgui)
-    target_link_libraries(game_engine imgui)
+    target_link_libraries(${PROJECT_NAME} imgui)
 endif()
 
 if(BUILD_ASSIMP)
     FetchContent_MakeAvailable(assimp)
-    target_link_libraries(game_engine assimp)
+    target_link_libraries(${PROJECT_NAME} assimp)
 endif()
 
 if(BUILD_STB)
     FetchContent_MakeAvailable(stb)
-    target_link_libraries(game_engine stb)
+    target_link_libraries(${PROJECT_NAME} stb)
 endif()
 
 if(BUILD_GLEW)
-    target_include_directories(game_engine SYSTEM PRIVATE ${glew_SOURCE_DIR}/include)
-    target_link_libraries(game_engine libglew_static)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glew_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} libglew_static)
 endif()
 
 if(BUILD_EIGEN)
     FetchContent_MakeAvailable(eigen)
-    target_include_directories(game_engine SYSTEM PRIVATE ${eigen_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eigen_SOURCE_DIR})
 endif()
 
 if(BUILD_MATH_LIBRARY)
     FetchContent_MakeAvailable(math_library)
     # if error with simd_define not generated occurs, uncomment this code
-    # add_dependencies(game_engine math_library)
-    target_include_directories(game_engine SYSTEM PRIVATE ${math_library_SOURCE_DIR}/include)
-    target_link_libraries(game_engine math_library)
+    # add_dependencies(${PROJECT_NAME} math_library)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${math_library_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} math_library)
 endif()
 
 
@@ -276,9 +274,9 @@ if(NOT OpenGL_FOUND)
     set(OpenGL_GL_PREFERENCE LEGACY)
     find_package(OpenGL REQUIRED)
 endif()
-    target_compile_definitions(game_engine PRIVATE OPENGL)
-    target_include_directories(game_engine SYSTEM PRIVATE ${OPENGL_INCLUDE_DIR})
-    target_link_libraries(game_engine ${OPENGL_gl_LIBRARY})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE OPENGL)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${OPENGL_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY})
 endif()
 
 if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTXs)
@@ -289,7 +287,7 @@ if(USE_DIRECTX AND NOT WIN32)
     message(FATAL_ERROR "DirectX is only available on Windows!")
 endif()
 
-add_custom_command(TARGET game_engine
+add_custom_command(TARGET ${PROJECT_NAME}
                    POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E remove 
                            "${CMAKE_SOURCE_DIR}/test_fs_support_case_sensitivity"
