@@ -135,6 +135,12 @@ inline math::Vector3Df GetDirectionFromEulerAngle(
                                  math::g_rotateLh(eulerAngle));
 }
 
+// TODO: consider adding to math_library
+const math::Vector4Df ColorGreen = math::Vector4Df(0.0f, 1.0f, 0.0f, 1.0f);
+const math::Vector4Df ColorBlue  = math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f);
+const math::Vector4Df ColorWhite = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
+const math::Vector4Df ColorBlack = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+
 }  // namespace math
 
 #endif  // GAME_ENGINE_MATH_UTIL_H
