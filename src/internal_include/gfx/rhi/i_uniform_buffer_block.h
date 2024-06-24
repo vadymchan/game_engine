@@ -2,9 +2,8 @@
 #define GAME_ENGINE_I_UNIFORM_BUFFER_BLOCK_H
 
 #include "gfx/rhi/shader_bindable_resource.h"
-#include "gfx/rhi/vulkan/buffer_vk.h"
-#include "gfx/rhi/vulkan/ring_buffer_vk.h"
-#include "gfx/rhi/vulkan/shader_vk.h"
+#include "gfx/rhi/name.h"
+#include "gfx/rhi/shader.h"
 
 #include <cstdint>
 

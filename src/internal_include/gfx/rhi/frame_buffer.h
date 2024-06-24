@@ -1,0 +1,67 @@
+#ifndef GAME_ENGINE_FRAME_BUFFER_H
+#define GAME_ENGINE_FRAME_BUFFER_H
+
+#include "gfx/rhi/instant_struct.h"
+#include "gfx/rhi/rhi_type.h"
+#include "gfx/rhi/texture.h"
+
+#include <math_library/dimension.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+namespace game_engine {
+
+struct jFrameBufferInfo {
+
+  size_t GetHash() const {
+    return GETHASH_FROM_INSTANT_STRUCT(TextureType,
+                                       Format,
+                                       Extent.width(),
+                                       Extent.height(),
+                                       LayerCount,
+                                       IsGenerateMipmap,
+                                       SampleCount);
+  }
+
+  ETextureType       TextureType      = ETextureType::TEXTURE_2D;
+  ETextureFormat     Format           = ETextureFormat::RGB8;
+  math::Dimension2Di Extent           = math::Dimension2Di(0);
+  int32_t            LayerCount       = 1;
+  bool               IsGenerateMipmap = false;
+  int32_t            SampleCount      = 1;
+};
+
+struct jFrameBuffer : public std::enable_shared_from_this<jFrameBuffer> {
+  virtual ~jFrameBuffer() {}
+
+  // No need for now
+  //virtual jTexture* GetTexture(int32_t index = 0) const {
+  //  return Textures[index].get();
+  //}
+
+  //virtual jTexture* GetTextureDepth(int32_t index = 0) const {
+  //  return TextureDepth.get();
+  //}
+
+  //virtual ETextureType GetTextureType() const { return Info.TextureType; }
+
+  //virtual bool SetDepthAttachment(const std::shared_ptr<jTexture>& InDepth) {
+  //  TextureDepth = InDepth;
+  //  return true;
+  //}
+
+  //virtual void SetDepthMipLevel(int32_t InLevel) {}
+
+  //virtual bool FBOBegin(int index = 0, bool mrt = false) const { return true; }
+
+  //virtual void End() const {}
+
+  jFrameBufferInfo                        Info;
+  std::vector<std::shared_ptr<jTexture> > Textures;
+  std::shared_ptr<jTexture>               TextureDepth;
+};
+}  // namespace game_engine
+
+#endif  // GAME_ENGINE_FRAME_BUFFER_H
