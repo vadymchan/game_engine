@@ -1,6 +1,7 @@
 #ifndef GAME_ENGINE_RHI_TYPE_H
 #define GAME_ENGINE_RHI_TYPE_H
 
+#include "gfx/rhi/instant_struct.h"
 #include "utils/enum/enum_util.h"
 
 #include <math_library/graphics.h>
@@ -317,8 +318,7 @@ GENERATE_CONVERSION_FUNCTION(GetTexturePixelType,
     CONVERSION_TYPE_ELEMENT(ETextureFormat::BC7_UNORM, EFormatType::HALF)
 )
 
-// clang-format off
-
+// clang-format on
 
 DECLARE_ENUM_WITH_CONVERT_TO_STRING(EBlendFactor,
                                     uint8_t,
@@ -481,25 +481,23 @@ enum class EShaderAccessStageFlag : uint32_t {
 };
 DECLARE_ENUM_BIT_OPERATORS(EShaderAccessStageFlag)
 
-
-DECLARE_ENUM_WITH_CONVERT_TO_STRING(
-    EShaderBindingType,
-    uint32_t,
-    UNIFORMBUFFER,
-    UNIFORMBUFFER_DYNAMIC,  
-    TEXTURE_SAMPLER_SRV,
-    TEXTURE_SRV,
-    TEXTURE_UAV,
-    TEXTURE_ARRAY_SRV,
-    SAMPLER,
-    BUFFER_SRV,  // SSBO or StructuredBuffer
-    BUFFER_UAV,
-    BUFFER_UAV_DYNAMIC,
-    BUFFER_TEXEL_SRV,
-    BUFFER_TEXEL_UAV,
-    ACCELERATION_STRUCTURE_SRV,
-    SUBPASS_INPUT_ATTACHMENT,
-    MAX);
+DECLARE_ENUM_WITH_CONVERT_TO_STRING(EShaderBindingType,
+                                    uint32_t,
+                                    UNIFORMBUFFER,
+                                    UNIFORMBUFFER_DYNAMIC,
+                                    TEXTURE_SAMPLER_SRV,
+                                    TEXTURE_SRV,
+                                    TEXTURE_UAV,
+                                    TEXTURE_ARRAY_SRV,
+                                    SAMPLER,
+                                    BUFFER_SRV,  // SSBO or StructuredBuffer
+                                    BUFFER_UAV,
+                                    BUFFER_UAV_DYNAMIC,
+                                    BUFFER_TEXEL_SRV,
+                                    BUFFER_TEXEL_UAV,
+                                    ACCELERATION_STRUCTURE_SRV,
+                                    SUBPASS_INPUT_ATTACHMENT,
+                                    MAX);
 
 enum class EVulkanBufferBits : uint32_t {
   TRANSFER_SRC                                 = 0x00'00'00'01,
@@ -668,6 +666,105 @@ enum class ETextureCreateFlag : uint32_t {
   Memoryless   = 0x00'00'00'80,
 };
 DECLARE_ENUM_BIT_OPERATORS(ETextureCreateFlag)
+
+struct jDepthStencilClearType {
+  float    Depth;
+  uint32_t Stencil;
+};
+
+class jRTClearValue {
+  public:
+  static const jRTClearValue Invalid;
+
+  union jClearValueType {
+    float                  Color[4];
+    jDepthStencilClearType DepthStencil;
+  };
+
+  constexpr jRTClearValue() = default;
+
+  jRTClearValue(const math::Vector4Df& InColor)
+      : Type(ERTClearType::Color) {
+    ClearValue.Color[0] = InColor.x();
+    ClearValue.Color[1] = InColor.y();
+    ClearValue.Color[2] = InColor.z();
+    ClearValue.Color[3] = InColor.w();
+  }
+
+  constexpr jRTClearValue(float InR, float InG, float InB, float InA)
+      : Type(ERTClearType::Color) {
+    ClearValue.Color[0] = InR;
+    ClearValue.Color[1] = InG;
+    ClearValue.Color[2] = InB;
+    ClearValue.Color[3] = InA;
+  }
+
+  constexpr jRTClearValue(float InDepth, uint32_t InStencil)
+      : Type(ERTClearType::DepthStencil) {
+    ClearValue.DepthStencil.Depth   = InDepth;
+    ClearValue.DepthStencil.Stencil = InStencil;
+  }
+
+  void SetColor(const math::Vector4Df& InColor) {
+    Type                = ERTClearType::Color;
+    ClearValue.Color[0] = InColor.x();
+    ClearValue.Color[1] = InColor.y();
+    ClearValue.Color[2] = InColor.z();
+    ClearValue.Color[3] = InColor.w();
+  }
+
+  void SetDepthStencil(float InDepth, uint8_t InStencil) {
+    Type                            = ERTClearType::DepthStencil;
+    ClearValue.DepthStencil.Depth   = InDepth;
+    ClearValue.DepthStencil.Stencil = InStencil;
+  }
+
+  const float* GetCleraColor() const { return &ClearValue.Color[0]; }
+
+  jDepthStencilClearType GetCleraDepthStencil() const {
+    return ClearValue.DepthStencil;
+  }
+
+  float GetCleraDepth() const { return ClearValue.DepthStencil.Depth; }
+
+  uint32_t GetCleraStencil() const { return ClearValue.DepthStencil.Stencil; }
+
+  jClearValueType GetClearValue() const { return ClearValue; }
+
+  void ResetToNoneType() { Type = ERTClearType::None; }
+
+  ERTClearType GetType() const { return Type; }
+
+  size_t GetHash() const {
+    if (Type == ERTClearType::Color) {
+      return GETHASH_FROM_INSTANT_STRUCT(Type,
+                                         ClearValue.Color[0],
+                                         ClearValue.Color[1],
+                                         ClearValue.Color[2],
+                                         ClearValue.Color[3]);
+    }
+
+    return GETHASH_FROM_INSTANT_STRUCT(
+        Type, ClearValue.DepthStencil.Depth, ClearValue.DepthStencil.Stencil);
+  }
+
+  private:
+  ERTClearType    Type = ERTClearType::None;
+  jClearValueType ClearValue;
+};
+
+struct BaseVertex {
+  math::Vector3Df Pos       = math::g_zeroVector<float, 3>();
+  math::Vector3Df Normal    = math::g_zeroVector<float, 3>();
+  math::Vector3Df Tangent   = math::g_zeroVector<float, 3>();
+  math::Vector3Df Bitangent = math::g_zeroVector<float, 3>();
+  math::Vector2Df TexCoord  = math::g_zeroVector<float, 2>();
+};
+
+struct PositionOnlyVertex {
+  math::Vector3Df Pos = math::g_zeroVector<float, 3>();
+};
+
 
 }  // namespace game_engine
 
