@@ -5,6 +5,7 @@
 #define DEFAULT_ALIGNMENT    16
 
 #include "gfx/rhi/lock.h"
+#include "utils/memory/align.h"
 
 #include <cassert>
 
