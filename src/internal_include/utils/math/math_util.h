@@ -121,7 +121,7 @@ namespace math {
 inline math::Vector3Df GetEulerAngleFrom(math::Vector3Df direction) {
   // TODO: consider to document that direction should be normalized
   // and remove the code
-  direction = direction.normalize();
+  direction = direction.normalized();
 
   // Assumes up vector (0, 1, 0) as the base rotation vector direction.
   return math::Vector3Df(

@@ -21,7 +21,7 @@ struct Plane {
                                             const math::Vector3Df& p2) {
     const auto direction0 = p1 - p0;
     const auto direction1 = p2 - p0;
-    auto       normal = direction0.cross(direction1).normalize();
+    auto       normal = direction0.cross(direction1).normalized();
     const auto distance = p2.dot(normal);
     return Plane(normal, distance);
   }
