@@ -5,7 +5,7 @@
 
 #include "gfx/scene/view.h"
 
-#include "gfx/rhi/vulkan/rhi_vk.h"
+#include "gfx/rhi/rhi.h"
 
 namespace game_engine {
 
@@ -26,30 +26,30 @@ void View::PrepareViewUniformBufferShaderBindingInstance() {
   ubo.EyeWorld = Camera->Pos;
 
   ViewUniformBufferPtr = std::shared_ptr<IUniformBufferBlock>(
-      g_rhi_vk->CreateUniformBufferBlock(NameStatic("ViewUniformParameters"),
+      g_rhi->CreateUniformBufferBlock(NameStatic("ViewUniformParameters"),
                                          LifeTimeType::OneFrame,
                                          sizeof(ubo)));
   ViewUniformBufferPtr->UpdateBufferData(&ubo, sizeof(ubo));
 
   int32_t                              BindingPoint = 0;
-  ShaderBindingArray                   ShaderBindingArray;
-  ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
+  jShaderBindingArray                   ShaderBindingArray;
+  jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
   ShaderBindingArray.Add(
-      ShaderBindingVk(BindingPoint++,
+      jShaderBinding(BindingPoint++,
                       1,
                       EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
                       EShaderAccessStageFlag::ALL_GRAPHICS,
-                      ResourceInlineAllactor.Alloc<UniformBufferResource>(
+                      ResourceInlineAllactor.Alloc<jUniformBufferResource>(
                           ViewUniformBufferPtr.get())));
 
   ViewUniformBufferShaderBindingInstance
-      = g_rhi_vk->CreateShaderBindingInstance(
-          ShaderBindingArray, ShaderBindingInstanceType::SingleFrame);
+      = g_rhi->CreateShaderBindingInstance(
+          ShaderBindingArray, jShaderBindingInstanceType::SingleFrame);
 }
 
 void View::GetShaderBindingInstance(
-    ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
+    jShaderBindingInstanceArray& OutShaderBindingInstanceArray,
     bool                        InIsForwardRenderer ) const {
   OutShaderBindingInstanceArray.Add(
       ViewUniformBufferShaderBindingInstance.get());
@@ -69,7 +69,7 @@ void View::GetShaderBindingInstance(
 
 // TODO: currently not used
 void View::GetShaderBindingLayout(
-    ShaderBindingLayoutArrayVk& OutShaderBindingsLayoutArray,
+    jShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
     bool                        InIsForwardRenderer ) const {
   OutShaderBindingsLayoutArray.Add(
       ViewUniformBufferShaderBindingInstance->ShaderBindingsLayouts);
