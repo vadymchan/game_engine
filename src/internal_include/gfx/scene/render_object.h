@@ -8,8 +8,8 @@
 #define GAME_ENGINE_RENDER_OBJECT_H
 
 #include "gfx/renderer/material.h"
-#include "gfx/rhi/vulkan/buffer_vk.h"
-#include "gfx/rhi/vulkan/uniform_buffer_object_vk.h"
+#include "gfx/rhi/buffer.h"
+#include "gfx/rhi/i_uniform_buffer_block.h"
 #include "utils/math/math_util.h"
 
 #include <math_library/matrix.h>
@@ -76,13 +76,13 @@ class RenderObjectGeometryData {
   // Index buffer
   std::shared_ptr<IndexStreamData> IndexStreamPtr;
 
-  std::shared_ptr<VertexBufferVk> VertexBufferPtr;
-  std::shared_ptr<VertexBufferVk> VertexBuffer_PositionOnlyPtr;
-  std::shared_ptr<VertexBufferVk> VertexBuffer_InstanceDataPtr;
-  std::shared_ptr<IndexBufferVk>  IndexBufferPtr;
+  std::shared_ptr<jVertexBuffer> VertexBufferPtr;
+  std::shared_ptr<jVertexBuffer> VertexBuffer_PositionOnlyPtr;
+  std::shared_ptr<jVertexBuffer> VertexBuffer_InstanceDataPtr;
+  std::shared_ptr<jIndexBuffer>  IndexBufferPtr;
 
   // IndirectCommand buffer
-  std::shared_ptr<BufferVk> IndirectCommandBufferPtr;
+  std::shared_ptr<jBuffer> IndirectCommandBufferPtr;
 
   bool bHasVertexColor     = true;
   bool bHasVertexBiTangent = false;
@@ -102,7 +102,7 @@ class RenderObject {
   }
 
   virtual void Draw(
-      const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext,
+      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
       int32_t                                      startIndex,
       int32_t                                      indexCount,
       int32_t                                      startVertex,
@@ -110,7 +110,7 @@ class RenderObject {
       int32_t                                      instanceCount);
 
   virtual void Draw(
-      const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext,
+      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
       int32_t                                      instanceCount = 1) {
     Draw(InRenderFrameContext, 0, -1, 0, -1, instanceCount);
   }
@@ -120,9 +120,9 @@ class RenderObject {
   }
 
   virtual void BindBuffers(
-      const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext,
+      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
       bool                                         InPositionOnly,
-      const VertexBufferVk* InOverrideInstanceData = nullptr) const;
+      const jVertexBuffer* InOverrideInstanceData = nullptr) const;
 
   const std::vector<float>& GetVertices() const;
 
@@ -147,9 +147,9 @@ class RenderObject {
 
   std::shared_ptr<RenderObjectGeometryData> GeometryDataPtr;
 
-  std::shared_ptr<BufferVk> BottomLevelASBuffer;
-  std::shared_ptr<BufferVk> ScratchASBuffer;
-  std::shared_ptr<BufferVk> VertexAndIndexOffsetBuffer;
+  std::shared_ptr<jBuffer> BottomLevelASBuffer;
+  std::shared_ptr<jBuffer> ScratchASBuffer;
+  std::shared_ptr<jBuffer> VertexAndIndexOffsetBuffer;
 
   template <typename T>
   T* GetBottomLevelASBuffer() const {
@@ -199,13 +199,13 @@ class RenderObject {
 
   //////////////////////////////////////////////////////////////////////////
   // RenderObjectUniformBuffer
-  virtual const std::shared_ptr<ShaderBindingInstance>&
+  virtual const std::shared_ptr<jShaderBindingInstance>&
       CreateShaderBindingInstance();
 
   //////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Material> MaterialPtr;
-  std::shared_ptr<BufferVk> TestUniformBuffer;
+  std::shared_ptr<jMaterial> MaterialPtr;
+  std::shared_ptr<jBuffer>  TestUniformBuffer;
 
   private:
   enum EDirty : int8_t {
@@ -237,8 +237,8 @@ class RenderObject {
   math::Vector3Df Scale = math::Vector3Df(1);
 
   bool NeedToUpdateRenderObjectUniformParameters = false;
-  std::shared_ptr<IUniformBufferBlock>   RenderObjectUniformParametersPtr;
-  std::shared_ptr<ShaderBindingInstance> RenderObjectShaderBindingInstance;
+  std::shared_ptr<IUniformBufferBlock>     RenderObjectUniformParametersPtr;
+  std::shared_ptr<jShaderBindingInstance> RenderObjectShaderBindingInstance;
 
   // Special code for PBR test
   float LastMetallic  = 0.0f;
