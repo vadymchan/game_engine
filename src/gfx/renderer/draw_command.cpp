@@ -1,7 +1,9 @@
 
 #include "gfx/renderer/draw_command.h"
 
+#include "gfx/rhi/rhi.h"
 #include "gfx/rhi/vulkan/rhi_vk.h"
+
 
 namespace game_engine {
 
@@ -27,7 +29,7 @@ namespace game_engine {
     }
 
     // Gather ShaderBindings
-    ShaderBindingLayoutArrayVk ShaderBindingLayoutArray;
+    jShaderBindingLayoutArray ShaderBindingLayoutArray;
     for (int32_t i = 0; i < shaderBindingInstanceArray.NumOfData; ++i) {
       // Add DescriptorSetLayout data
       ShaderBindingLayoutArray.Add(
@@ -49,7 +51,7 @@ namespace game_engine {
 
     const auto& RenderObjectGeoDataPtr = RenderObject->GeometryDataPtr;
 
-    VertexBufferArrayVk VertexBufferArray;
+    jVertexBufferArray VertexBufferArray;
     VertexBufferArray.Add(
         InIsPositionOnly
             ? RenderObjectGeoDataPtr->VertexBuffer_PositionOnlyPtr.get()
@@ -63,7 +65,7 @@ namespace game_engine {
 
     // Create Pipeline
     CurrentPipelineStateInfo
-        = (PipelineStateInfoVk*)g_rhi_vk->CreatePipelineStateInfo(
+        = (jPipelineStateInfo*)g_rhi->CreatePipelineStateInfo(
             PipelineStateFixed,
             Shader,
             VertexBufferArray,
@@ -78,7 +80,7 @@ namespace game_engine {
   void DrawCommand::Draw() const {
     assert(RenderFrameContextPtr);
 
-    g_rhi_vk->BindGraphicsShaderBindingInstances(
+    g_rhi->BindGraphicsShaderBindingInstances(
         RenderFrameContextPtr->GetActiveCommandBuffer(),
         CurrentPipelineStateInfo,
         shaderBindingInstanceCombiner,
@@ -87,9 +89,10 @@ namespace game_engine {
     // Bind the image that contains the shading rate patterns
 #if USE_VARIABLE_SHADING_RATE_TIER2
     if (gOptions.UseVRS) {
-      g_rhi_vk->BindShadingRateImage(
+      // TODO: change g_rhi1_vk
+      g_rhi1_vk->BindShadingRateImage(
           RenderFrameContextPtr->GetActiveCommandBuffer(),
-          g_rhi_vk->GetSampleVRSTexture());
+          g_rhi1_vk->GetSampleVRSTexture());
     }
 #endif
 
@@ -97,13 +100,14 @@ namespace game_engine {
     CurrentPipelineStateInfo->Bind(RenderFrameContextPtr);
 
     // this is only for Vulkan for now
+    // TODO: add check to Vulkan
     if (PushConstant && PushConstant->IsValid()) {
-      const ResourceContainer<PushConstantRangeVk>* pushConstantRanges
+      const ResourceContainer<jPushConstantRange>* pushConstantRanges
           = PushConstant->GetPushConstantRanges();
       assert(pushConstantRanges);
       if (pushConstantRanges) {
         for (int32_t i = 0; i < pushConstantRanges->NumOfData; ++i) {
-          const PushConstantRangeVk& range = (*pushConstantRanges)[i];
+          const jPushConstantRange& range = (*pushConstantRanges)[i];
           vkCmdPushConstants(
               (VkCommandBuffer)RenderFrameContextPtr->GetActiveCommandBuffer()
                   ->GetNativeHandle(),
@@ -122,7 +126,7 @@ namespace game_engine {
 
     // Draw
     const auto& RenderObjectGeoDataPtr = RenderObject->GeometryDataPtr;
-    const VertexBufferVk* InstanceData
+    const jVertexBuffer* InstanceData
         = OverrideInstanceData
             ? OverrideInstanceData
             : RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr.get();
