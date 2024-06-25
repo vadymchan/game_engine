@@ -1,11 +1,11 @@
 
 #include "gfx/renderer/material.h"
 
-#include "gfx/rhi/vulkan/rhi_vk.h"
+#include "gfx/rhi/rhi.h"
 
 namespace game_engine {
 
-TextureVk* Material::GetTexture(EMaterialTextureType InType) const {
+jTexture* jMaterial::GetTexture(EMaterialTextureType InType) const {
   assert(EMaterialTextureType::Albedo <= InType);
   assert(EMaterialTextureType::Max > InType);
 
@@ -19,18 +19,18 @@ TextureVk* Material::GetTexture(EMaterialTextureType InType) const {
   return TexData[(int32_t)InType].Texture;
 }
 
-const std::shared_ptr<ShaderBindingInstance>&
-    Material::CreateShaderBindingInstance() {
+const std::shared_ptr<jShaderBindingInstance>&
+    jMaterial::CreateShaderBindingInstance() {
   if (NeedToUpdateShaderBindingInstance) {
     NeedToUpdateShaderBindingInstance = false;
 
     int32_t                              BindingPoint = 0;
-    ShaderBindingArray                   ShaderBindingArray;
-    ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
+    jShaderBindingArray                   ShaderBindingArray;
+    jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
     for (int32_t i = 0; i < (int32_t)EMaterialTextureType::Max; ++i) {
       const TextureData& TextureData = TexData[i];
-      const TextureVk*   Texture     = TextureData.GetTexture();
+      const jTexture*   Texture     = TextureData.GetTexture();
 
       if (!Texture) {
         if ((int32_t)EMaterialTextureType::Normal == i) {
@@ -42,20 +42,20 @@ const std::shared_ptr<ShaderBindingInstance>&
         }
       }
 
-      ShaderBindingArray.Add(ShaderBindingVk(
+      ShaderBindingArray.Add(jShaderBinding(
           BindingPoint++,
           1,
           EShaderBindingType::TEXTURE_SAMPLER_SRV,
           EShaderAccessStageFlag::ALL_GRAPHICS,
-          ResourceInlineAllactor.Alloc<TextureResource>(Texture, nullptr)));
+          ResourceInlineAllactor.Alloc<jTextureResource>(Texture, nullptr)));
     }
 
     if (ShaderBindingInstance) {
       ShaderBindingInstance->Free();
     }
 
-    ShaderBindingInstance = g_rhi_vk->CreateShaderBindingInstance(
-        ShaderBindingArray, ShaderBindingInstanceType::MultiFrame);
+    ShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
+        ShaderBindingArray, jShaderBindingInstanceType::MultiFrame);
   }
   return ShaderBindingInstance;
 }
