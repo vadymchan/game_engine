@@ -6,8 +6,8 @@
 #ifndef GAME_ENGINE_VIEW_H
 #define GAME_ENGINE_VIEW_H
 
-#include "gfx/rhi/vulkan/shader_binding_layout_vk.h"
-#include "gfx/rhi/vulkan/uniform_buffer_object_vk.h"
+#include "gfx/rhi/shader_binding_layout.h"
+#include "gfx/rhi/i_uniform_buffer_block.h" 
 #include "gfx/scene/camera.h"
 
 #include <vector>
@@ -30,19 +30,19 @@ class View {
   void PrepareViewUniformBufferShaderBindingInstance();
 
   void GetShaderBindingInstance(
-      ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
+      jShaderBindingInstanceArray& OutShaderBindingInstanceArray,
       bool                        InIsForwardRenderer = false) const;
 
   // TODO: currently not used
   void GetShaderBindingLayout(
-      ShaderBindingLayoutArrayVk& OutShaderBindingsLayoutArray,
+      jShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
       bool                        InIsForwardRenderer = false) const;
 
   const Camera*                         Camera = nullptr;
   //std::vector<ViewLight>                lights;
   //std::vector<ViewLight>                ShadowCasterLights;
   std::shared_ptr<IUniformBufferBlock>   ViewUniformBufferPtr;
-  std::shared_ptr<ShaderBindingInstance> ViewUniformBufferShaderBindingInstance;
+  std::shared_ptr<jShaderBindingInstance> ViewUniformBufferShaderBindingInstance;
 };
 
 }  // namespace game_engine
