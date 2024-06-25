@@ -49,7 +49,7 @@ enum class Flags : uint32_t {
                                    m_position_.y(),
                                    m_size_.width(),
                                    m_size_.height(),
-                                   static_cast<Uint32>(m_flags_))} {}
+                                   static_cast<std::uint32_t>(m_flags_))} {}
 
   Window(const Window&)                    = delete;
   auto operator=(const Window&) -> Window& = delete;
