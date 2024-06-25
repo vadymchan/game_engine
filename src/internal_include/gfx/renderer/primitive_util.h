@@ -3,9 +3,10 @@
 
 #include "gfx/scene/object.h"
 // TODO: consider removing this include
-#include "gfx/rhi/vulkan/buffer_vk.h"
-#include "gfx/rhi/vulkan/pipeline_state_info_vk.h"
-#include "gfx/rhi/vulkan/shader_vk.h"
+#include "gfx/rhi/buffer.h"
+#include "gfx/rhi/pipeline_state_info.h"
+#include "gfx/rhi/shader.h"
+
 #include "gfx/scene/camera.h"
 #include "utils/math/plane.h"
 
@@ -51,9 +52,9 @@ class UIQuadPrimitive : public Object {
   // InRenderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
-  void             SetTexture(const TextureVk* texture);
+  void             SetTexture(const jTexture* texture);
   void             SetUniformParams(const Shader* shader) const;
-  const TextureVk* GetTexture() const;
+  const jTexture* GetTexture() const;
 };
 
 class FullscreenQuadPrimitive : public Object {
@@ -64,8 +65,8 @@ class FullscreenQuadPrimitive : public Object {
   // override;
   void SetUniformBuffer(const Shader* shader) const;
   void SetTexture(int                       index,
-                  const TextureVk*          texture,
-                  const SamplerStateInfoVk* samplerState);
+                  const jTexture*          texture,
+                  const jSamplerStateInfo* samplerState);
 };
 
 class BoundBoxObject : public Object {
@@ -97,7 +98,7 @@ class SegmentPrimitive : public Object {
   }
 
   math::Vector3Df GetDirectionNormalized() const {
-    auto result = (End - Start).normalize();
+    auto result = (End - Start).normalized();
     return result;
   }
 
@@ -298,8 +299,8 @@ BillboardQuadPrimitive*  CreateBillobardQuad(const math::Vector3Df& pos,
                                              Camera*                camera);
 UIQuadPrimitive*         CreateUIQuad(const math::Vector2Df& pos,
                                       const math::Vector2Df& size,
-                                      TextureVk*             texture);
-FullscreenQuadPrimitive* CreateFullscreenQuad(TextureVk* texture);
+                                      jTexture*             texture);
+FullscreenQuadPrimitive* CreateFullscreenQuad(jTexture* texture);
 SegmentPrimitive*        CreateSegment(const math::Vector3Df& start,
                                        const math::Vector3Df& end,
                                        float                  time,
