@@ -8,8 +8,7 @@
 
 #include "utils/math/math_util.h"
 #include "utils/math/plane.h"
-#include "gfx/rhi/vulkan/feature_switch_vk.h"
-
+#include "gfx/rhi/feature_switch.h"
 
 #include <math_library/graphics.h>
 #include <math_library/matrix.h>
@@ -54,10 +53,10 @@ struct FrustumPlane {
 //math::Matrix4f CreateViewMatrix(const math::Vector3Df& pos,
 //                                const math::Vector3Df& target,
 //                                const math::Vector3Df& up) {
-//  const auto zAxis = (target - pos).normalize();
-//  auto       yAxis = (up - pos).normalize();
-//  const auto xAxis = yAxis.cross(zAxis).normalize();
-//  yAxis            = zAxis.cross(xAxis).normalize();
+//  const auto zAxis = (target - pos).normalized();
+//  auto       yAxis = (up - pos).normalized();
+//  const auto xAxis = yAxis.cross(zAxis).normalized();
+//  yAxis            = zAxis.cross(xAxis).normalized();
 //
 //  math::Matrix4f InvRot{IdentityType};
 //  InvRot.m[0][0] = xAxis.x();
@@ -333,7 +332,7 @@ class Camera {
       math::Vector3Df&       OutRight,
       math::Vector3Df&       OutUp,
       const math::Vector3Df& InEulerAngle) {
-    OutForward = math::GetDirectionFromEulerAngle(InEulerAngle).normalize();
+    OutForward = math::GetDirectionFromEulerAngle(InEulerAngle).normalized();
 
     const bool IsInvert
         = (InEulerAngle.x() < 0 || math::g_kPi < InEulerAngle.x());
@@ -343,14 +342,14 @@ class Camera {
     OutRight                       = (IsInvert ? math::g_downVector<float, 3>()
                                                : math::g_upVector<float, 3>())
                    .cross(OutForward)
-                   .normalize();
+                   .normalized();
     if (math::g_isNearlyZero(OutRight.magnitudeSquared())) {
       OutRight = (IsInvert ? math::g_backwardVector<float, 3>()
                            : math::g_forwardVector<float, 3>())
                      .cross(OutForward)
-                     .normalize();
+                     .normalized();
     }
-    OutUp = OutForward.cross(OutRight).normalize();
+    OutUp = OutForward.cross(OutRight).normalized();
   }
 
   static void SetCamera(Camera*               OutCamera,
@@ -407,15 +406,15 @@ class Camera {
   //}
 
   void UpdateCameraFrustum() {
-    auto       toTarget = (Target - Pos).normalize();
+    auto       toTarget = (Target - Pos).normalized();
     const auto length   = tanf(FOVRad) * Far;
     auto       toRight  = GetRightVector() * length;
     auto       toUp     = GetUpVector() * length;
 
-    auto rightUp   = (toTarget * Far + toRight + toUp).normalize();
-    auto leftUp    = (toTarget * Far - toRight + toUp).normalize();
-    auto rightDown = (toTarget * Far + toRight - toUp).normalize();
-    auto leftDown  = (toTarget * Far - toRight - toUp).normalize();
+    auto rightUp   = (toTarget * Far + toRight + toUp).normalized();
+    auto leftUp    = (toTarget * Far - toRight + toUp).normalized();
+    auto rightDown = (toTarget * Far + toRight - toUp).normalized();
+    auto leftDown  = (toTarget * Far - toRight - toUp).normalized();
 
     auto far_lt = Pos + leftUp * Far;
     auto far_rt = Pos + rightUp * Far;
@@ -584,10 +583,10 @@ class Camera {
     if (IsPerspectiveProjection) {
       const float     InvAspect = ((float)Width / (float)Height);
       const float     length    = tanf(FOVRad * 0.5f);
-      math::Vector3Df targetVec = GetForwardVector().normalize();
+      math::Vector3Df targetVec = GetForwardVector().normalized();
       math::Vector3Df rightVec
-          = GetRightVector().normalize() * length * InvAspect;
-      math::Vector3Df upVec = GetUpVector().normalize() * length;
+          = GetRightVector().normalized() * length * InvAspect;
+      math::Vector3Df upVec = GetUpVector().normalized() * length;
 
       math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
       math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
@@ -607,9 +606,9 @@ class Camera {
       const float w = (float)Width;
       const float h = (float)Height;
 
-      math::Vector3Df targetVec = GetForwardVector().normalize();
-      math::Vector3Df rightVec  = GetRightVector().normalize();
-      math::Vector3Df upVec     = GetUpVector().normalize();
+      math::Vector3Df targetVec = GetForwardVector().normalized();
+      math::Vector3Df rightVec  = GetRightVector().normalized();
+      math::Vector3Df upVec     = GetUpVector().normalized();
 
       far_lt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
       far_rt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
@@ -692,10 +691,10 @@ class Camera {
     if (IsPerspectiveProjection) {
       const float     InvAspect = ((float)Width / (float)Height);
       const float     length    = tanf(FOVRad * 0.5f);
-      math::Vector3Df targetVec = GetForwardVector().normalize();
+      math::Vector3Df targetVec = GetForwardVector().normalized();
       math::Vector3Df rightVec
-          = GetRightVector().normalize() * length * InvAspect;
-      math::Vector3Df upVec = GetUpVector().normalize() * length;
+          = GetRightVector().normalized() * length * InvAspect;
+      math::Vector3Df upVec = GetUpVector().normalized() * length;
 
       math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
       math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
@@ -715,9 +714,9 @@ class Camera {
       const float w = (float)Width;
       const float h = (float)Height;
 
-      math::Vector3Df targetVec = GetForwardVector().normalize();
-      math::Vector3Df rightVec  = GetRightVector().normalize();
-      math::Vector3Df upVec     = GetUpVector().normalize();
+      math::Vector3Df targetVec = GetForwardVector().normalized();
+      math::Vector3Df rightVec  = GetRightVector().normalized();
+      math::Vector3Df upVec     = GetUpVector().normalized();
 
       far_lt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
       far_rt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
