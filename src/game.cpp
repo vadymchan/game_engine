@@ -1,7 +1,7 @@
 
 #include "game.h"
 
-#include "gfx/rhi/vulkan/rhi_vk.h"
+#include "gfx/rhi/rhi.h"
 
 namespace game_engine {
 
@@ -47,7 +47,7 @@ void Game::Setup() {
   //}
   //});
 
-  g_rhi_vk->Finish();  // todo : Instead of this, it needs UAV barrier here
+  g_rhi->Finish();  // todo : Instead of this, it needs UAV barrier here
 }
 
 void Game::SpawnObjects(ESpawnedType spawnType) {
@@ -440,7 +440,7 @@ void Game::SpawnInstancingPrimitives() {
     GeometryDataPtr->VertexStream_InstanceDataPtr->streams.push_back(
         streamParam);
     GeometryDataPtr->VertexBuffer_InstanceDataPtr
-        = g_rhi_vk->CreateVertexBuffer(
+        = g_rhi->CreateVertexBuffer(
             GeometryDataPtr->VertexStream_InstanceDataPtr);
 
     Object::AddObject(obj);
@@ -520,10 +520,14 @@ void Game::SpawnIndirectDrawPrimitives() {
     GeometryDataPtr->VertexStream_InstanceDataPtr->streams.push_back(
         streamParam);
     GeometryDataPtr->VertexBuffer_InstanceDataPtr
-        = g_rhi_vk->CreateVertexBuffer(
+        = g_rhi->CreateVertexBuffer(
             GeometryDataPtr->VertexStream_InstanceDataPtr);
 
     // Create indirect draw buffer
+    // TODO: Refactor this code to decouple it from Vulkan-specific classes and
+    // functions (e.g., VkDrawIndirectCommand, g_rhi->CreateVertexBuffer).
+    // Consider using an abstract rendering interface to handle draw calls and
+    // resource management.
     {
       assert(GeometryDataPtr->VertexStream_InstanceDataPtr);
 
@@ -547,7 +551,7 @@ void Game::SpawnIndirectDrawPrimitives() {
 
       assert(!GeometryDataPtr->IndirectCommandBufferPtr);
       GeometryDataPtr->IndirectCommandBufferPtr
-          = g_rhi_vk->CreateStructuredBuffer(bufferSize,
+          = g_rhi->CreateStructuredBuffer(bufferSize,
                                              0,
                                              sizeof(VkDrawIndirectCommand),
                                              EBufferCreateFlag::IndirectCommand,
@@ -620,8 +624,8 @@ void Game::Update(float deltaTime) {
 
 void Game::Draw() {
   {
-    std::shared_ptr<RenderFrameContextVk> renderFrameContext
-        = g_rhi_vk->BeginRenderFrame();
+    std::shared_ptr<jRenderFrameContext> renderFrameContext
+        = g_rhi->BeginRenderFrame();
     if (!renderFrameContext) {
       // TODO: log error
       return;
@@ -633,7 +637,7 @@ void Game::Draw() {
     Renderer renderer(renderFrameContext, view, m_window_);
     renderer.Render();
 
-    g_rhi_vk->EndRenderFrame(renderFrameContext);
+    g_rhi->EndRenderFrame(renderFrameContext);
   }
   MemStack::Get()->Flush();
 }
@@ -646,7 +650,7 @@ void Game::Resize(int32_t width, int32_t height) {
 }
 
 void Game::Release() {
-  g_rhi_vk->Flush();
+  g_rhi->Flush();
 
   for (Object* iter : SpawnedObjects) {
     delete iter;
