@@ -8,6 +8,7 @@
 #include "event/window_event_handler.h"
 #include "event/window_event_manager.h"
 #include "game.h"
+#include "gfx/rhi/rhi.h"
 #include "gfx/rhi/vulkan/rhi_vk.h"
 #include "input/input_manager.h"
 #include "platform/common/window.h"
@@ -34,7 +35,6 @@ class Engine {
   auto init() -> bool {
     bool successfullyInited{true};
 
-
     // logger
     // ------------------------------------------------------------------------
     m_consoleLogger_ = std::make_shared<ConsoleLogger>();
@@ -43,7 +43,7 @@ class Engine {
     // window
     // ------------------------------------------------------------------------
     m_window_ = std::make_unique<Window>(
-        "First Triangle Vulkan",
+        "Generalized RHI",
         math::Dimension2Di{800, 600},
         math::Point2Di{100, 100},
         game_engine::Window::Flags::Resizable
@@ -66,7 +66,7 @@ class Engine {
         SDL_WINDOWEVENT_RESIZED, [this](const WindowEvent& event) {
           this->m_window_->onResize(event);
           this->m_game_->Resize(event.data1, event.data2);  // TODO: refactor
-          g_rhi_vk->OnHandleResized(
+          g_rhi->OnHandleResized(
               event.data1, event.data2, false);             // TODO: refactor
         });
     m_windowEventManager_
@@ -81,9 +81,9 @@ class Engine {
     m_applicationEventManager_
         = std::make_unique<ApplicationEventManager>(m_applicationEventHandler_);
 
-    g_rhi_vk = new RhiVk();
-    g_rhi_vk->init(m_window_);
-    g_rhi_vk->OnInitRHI();
+    g_rhi = new RhiVk();
+    g_rhi->init(m_window_);
+    g_rhi->OnInitRHI();
 
     m_game_->Setup();
 
