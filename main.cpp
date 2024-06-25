@@ -55,7 +55,8 @@ auto main(int argc, char* argv[]) -> int {
 
   engine.release();
 
-  game_engine::g_rhi_vk->release();
+  // TODO: move to other place
+  game_engine::g_rhi->release();
 
   SDL_Quit();
 
