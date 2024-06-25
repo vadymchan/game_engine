@@ -1,10 +1,14 @@
 ﻿
 #include "gfx/renderer/primitive_util.h"
 
+#include "gfx/rhi/rhi.h"
 #include "gfx/rhi/rhi_type.h"
-#include "gfx/rhi/vulkan/rhi_vk.h"
 #include "utils/logger/global_logger.h"
 #include "utils/math/math_util.h"
+
+// TODO: consider remove (currently useVulkanNdcYFlip is depended on this
+// header)
+#include "gfx/rhi/vulkan/pipeline_state_info_vk.h"
 
 #include <memory>
 
@@ -68,7 +72,7 @@ void CalculateTangents(math::Vector4Df*       OutTangentArray,
     const math::Vector3Df& n = InNormalArray[i];
 
     // perform the rejection of the normal component from the tangent
-    math::Vector3Df t_rejected = (t - n * t.dot(n)).normalize();
+    math::Vector3Df t_rejected = (t - n * t.dot(n)).normalized();
 
     OutTangentArray[i]     = math::Vector4Df(t_rejected.x(),
                                          t_rejected.y(),
@@ -89,7 +93,7 @@ void QuadPrimitive::SetPlane(const math::Plane& plane) {
 void BillboardQuadPrimitive::Update(float deltaTime) {
   if (camera) {
     const math::Vector3Df normalizedCameraDir
-        = (camera->Pos - RenderObjects[0]->GetPos()).normalize();
+        = (camera->Pos - RenderObjects[0]->GetPos()).normalized();
     const math::Vector3Df eularAngleOfCameraDir
         = math::GetEulerAngleFrom(normalizedCameraDir);
 
@@ -100,7 +104,7 @@ void BillboardQuadPrimitive::Update(float deltaTime) {
   }
 }
 
-void UIQuadPrimitive::SetTexture(const TextureVk* texture) {
+void UIQuadPrimitive::SetTexture(const jTexture* texture) {
   // Todo
   assert(0);
 }
@@ -110,7 +114,7 @@ void UIQuadPrimitive::SetUniformParams(const Shader* shader) const {
   assert(0);
 }
 
-const TextureVk* UIQuadPrimitive::GetTexture() const {
+const jTexture* UIQuadPrimitive::GetTexture() const {
   // Todo
   assert(0);
   return nullptr;
@@ -122,9 +126,7 @@ void FullscreenQuadPrimitive::SetUniformBuffer(const Shader* shader) const {
 }
 
 void FullscreenQuadPrimitive::SetTexture(
-    int                       index,
-    const TextureVk*          texture,
-    const SamplerStateInfoVk* samplerState) {
+    int index, const jTexture* texture, const jSamplerStateInfo* samplerState) {
   // Todo
   assert(0);
 }
@@ -1222,7 +1224,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
       } else {
         normal = math::Vector3Df(x, y, z);
       }
-      normal = normal.normalize();
+      normal = normal.normalized();
       normals.push_back(normal.x());
       normals.push_back(normal.y());
       normals.push_back(normal.z());
@@ -1755,7 +1757,7 @@ Object* CreateSphere(const math::Vector3Df& pos,
       const math::Vector3Df pos(x, z, y);  // swap z, y, because z is up vector.
 
       // Normalized vertex normal
-      math::Vector3Df normal = pos.normalize();
+      math::Vector3Df normal = pos.normalized();
 
       // Tangent and bitangent
       const math::Vector3Df tangent(
@@ -1902,7 +1904,7 @@ BillboardQuadPrimitive* CreateBillobardQuad(const math::Vector3Df& pos,
 
 UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
                               const math::Vector2Df& size,
-                              TextureVk*             texture) {
+                              jTexture*              texture) {
   float vertices[] = {
     0.0f,
     1.0f,
@@ -1952,7 +1954,7 @@ UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
   return object;
 }
 
-FullscreenQuadPrimitive* CreateFullscreenQuad(TextureVk* texture) {
+FullscreenQuadPrimitive* CreateFullscreenQuad(jTexture* texture) {
   float vertices[] = {0.0f, 1.0f, 2.0f};
 
   uint32_t elementCount = static_cast<uint32_t>(std::size(vertices));
@@ -2092,7 +2094,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //     const char*            textureFilename) {
 //   DirectionalLightPrimitive* object = new DirectionalLightPrimitive();
 //
-//   std::weak_ptr<jImageData> data
+//   std::weak_ptr<ImageData> data
 //       = ImageFileLoader::GetInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   object->BillboardObject = CreateBillobardQuad(pos,
@@ -2101,7 +2103,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
 //   if (data.lock()->imageBulkData.ImageData.size() > 0) {
-//     TextureVk* texture = ImageFileLoader::GetInstance()
+//     jTexture* texture = ImageFileLoader::GetInstance()
 //                              .LoadTextureFromFile(Name(textureFilename))
 //                              .lock()
 //                              .get();
@@ -2150,7 +2152,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                                             const char* textureFilename) {
 //   PointLightPrimitive* object = new PointLightPrimitive();
 //
-//   std::weak_ptr<jImageData> data
+//   std::weak_ptr<ImageData> data
 //       = ImageFileLoader::GetInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   const PointLightUniformBufferData& LightData = light->GetLightData();
@@ -2207,7 +2209,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                                           {
 //   SpotLightPrimitive* object = new SpotLightPrimitive();
 //
-//   std::weak_ptr<jImageData> data
+//   std::weak_ptr<ImageData> data
 //       = ImageFileLoader::GetInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   const SpotLightUniformBufferData& LightData = light->GetLightData();
@@ -2471,7 +2473,7 @@ void FrustumPrimitive::Update(float deltaTime) {
     const float InvAspect
         = ((float)TargetCamera->Width / (float)TargetCamera->Height);
     const float     length    = tanf(TargetCamera->FOVRad * 0.5f);
-    math::Vector3Df targetVec = TargetCamera->GetForwardVector().normalize();
+    math::Vector3Df targetVec = TargetCamera->GetForwardVector().normalized();
     math::Vector3Df rightVec
         = TargetCamera->GetRightVector() * length * InvAspect;
     math::Vector3Df upVec = TargetCamera->GetUpVector() * length;
@@ -2508,9 +2510,9 @@ void FrustumPrimitive::Update(float deltaTime) {
     const float w = (float)TargetCamera->Width;
     const float h = (float)TargetCamera->Height;
 
-    math::Vector3Df targetVec = TargetCamera->GetForwardVector().normalize();
-    math::Vector3Df rightVec  = TargetCamera->GetRightVector().normalize();
-    math::Vector3Df upVec     = TargetCamera->GetUpVector().normalize();
+    math::Vector3Df targetVec = TargetCamera->GetForwardVector().normalized();
+    math::Vector3Df rightVec  = TargetCamera->GetRightVector().normalized();
+    math::Vector3Df upVec     = TargetCamera->GetUpVector().normalized();
 
     far_lt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
     far_rt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
@@ -2741,11 +2743,11 @@ void Graph2D::UpdateBuffer() {
         const auto& p1         = ResultPoints[i];
         auto        right      = math::Vector3Df(p2 - p1, 0.0f);
         const float lineLength = right.magnitude();
-        right = right.normalize();  // here in-place normalize method would be
+        right = right.normalized();  // here in-place normalize method would be
                                     // better
         right.z() = 0.0f;
 
-        auto up = right.cross(math::g_forwardVector<float, 3>()).normalize();
+        auto up = right.cross(math::g_forwardVector<float, 3>()).normalized();
 
         math::Matrix4f& tr = ResultMatrices[i];
         tr                 = math::Matrix4f::Identity();
