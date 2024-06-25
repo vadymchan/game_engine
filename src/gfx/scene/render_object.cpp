@@ -6,7 +6,7 @@
 
 #include "gfx/scene/render_object.h"
 
-#include "gfx/rhi/vulkan/rhi_vk.h"
+#include "gfx/rhi/rhi.h"
 
 namespace game_engine {
 
@@ -31,10 +31,10 @@ void RenderObjectGeometryData::Create(
     VertexStream_PositionOnlyPtr->elementCount = VertexStreamPtr->elementCount;
   }
 
-  VertexBufferPtr = g_rhi_vk->CreateVertexBuffer(VertexStreamPtr);
+  VertexBufferPtr = g_rhi->CreateVertexBuffer(VertexStreamPtr);
   VertexBuffer_PositionOnlyPtr
-      = g_rhi_vk->CreateVertexBuffer(VertexStream_PositionOnlyPtr);
-  IndexBufferPtr = g_rhi_vk->CreateIndexBuffer(IndexStreamPtr);
+      = g_rhi->CreateVertexBuffer(VertexStream_PositionOnlyPtr);
+  IndexBufferPtr = g_rhi->CreateIndexBuffer(IndexStreamPtr);
 
   bHasVertexColor     = InHasVertexColor;
   bHasVertexBiTangent = InHasVertexBiTangent;
@@ -50,10 +50,10 @@ void RenderObjectGeometryData::CreateNew_ForRaytracing(
   VertexStream_PositionOnlyPtr = InVertexStream_PositionOnly;
   IndexStreamPtr               = InIndexStream;
 
-  VertexBufferPtr = g_rhi_vk->CreateVertexBuffer(VertexStreamPtr);
+  VertexBufferPtr = g_rhi->CreateVertexBuffer(VertexStreamPtr);
   VertexBuffer_PositionOnlyPtr
-      = g_rhi_vk->CreateVertexBuffer(VertexStream_PositionOnlyPtr);
-  IndexBufferPtr = g_rhi_vk->CreateIndexBuffer(IndexStreamPtr);
+      = g_rhi->CreateVertexBuffer(VertexStream_PositionOnlyPtr);
+  IndexBufferPtr = g_rhi->CreateIndexBuffer(IndexStreamPtr);
 
   bHasVertexColor     = InHasVertexColor;
   bHasVertexBiTangent = InHasVertexBiTangent;
@@ -79,7 +79,7 @@ void RenderObjectGeometryData::UpdateVertexStream(
 // ====================================================
 
 void RenderObject::Draw(
-    const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext,
+    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
     int32_t                                      startIndex,
     int32_t                                      indexCount,
     int32_t                                      startVertex,
@@ -95,7 +95,7 @@ void RenderObject::Draw(
   // const EPrimitiveType primitiveType = GetPrimitiveType();
   if (GeometryDataPtr->IndexBufferPtr) {
     if (GeometryDataPtr->IndirectCommandBufferPtr) {
-      g_rhi_vk->DrawElementsIndirect(
+      g_rhi->DrawElementsIndirect(
           InRenderFrameContext,
           // primitiveType, // TODO: remove (not used)
           GeometryDataPtr->IndirectCommandBufferPtr.get(),
@@ -106,7 +106,7 @@ void RenderObject::Draw(
       indexCount
           = indexCount != -1 ? indexCount : indexStreamData->elementCount;
       if (instanceCount <= 0) {
-        g_rhi_vk->DrawElementsBaseVertex(
+        g_rhi->DrawElementsBaseVertex(
             InRenderFrameContext,
             // primitiveType, // TODO: remove (not used)
             static_cast<int32_t>(indexStreamData->stream->GetElementSize()),
@@ -114,7 +114,7 @@ void RenderObject::Draw(
             indexCount,
             startVertex);
       } else {
-        g_rhi_vk->DrawElementsInstancedBaseVertex(
+        g_rhi->DrawElementsInstancedBaseVertex(
             InRenderFrameContext,
             // primitiveType, // TODO: remove (not used)
             static_cast<int32_t>(indexStreamData->stream->GetElementSize()),
@@ -126,7 +126,7 @@ void RenderObject::Draw(
     }
   } else {
     if (GeometryDataPtr->IndirectCommandBufferPtr) {
-      g_rhi_vk->DrawIndirect(InRenderFrameContext,
+      g_rhi->DrawIndirect(InRenderFrameContext,
                              // primitiveType, // TODO: remove (not used)
                              GeometryDataPtr->IndirectCommandBufferPtr.get(),
                              startVertex,
@@ -136,9 +136,9 @@ void RenderObject::Draw(
                       ? vertexCount
                       : GeometryDataPtr->VertexStreamPtr->elementCount;
       if (instanceCount <= 0) {
-        g_rhi_vk->DrawArrays(InRenderFrameContext, startVertex, vertexCount);
+        g_rhi->DrawArrays(InRenderFrameContext, startVertex, vertexCount);
       } else {
-        g_rhi_vk->DrawArraysInstanced(
+        g_rhi->DrawArraysInstanced(
             InRenderFrameContext,
             // primitiveType, // TODO: remove (not used
             startVertex,
@@ -150,9 +150,9 @@ void RenderObject::Draw(
 }
 
 void RenderObject::BindBuffers(
-    const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext,
+    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
     bool                                         InPositionOnly,
-    const VertexBufferVk* InOverrideInstanceData ) const {
+    const jVertexBuffer* InOverrideInstanceData ) const {
   if (InPositionOnly) {
     if (GeometryDataPtr->VertexBuffer_PositionOnlyPtr) {
       GeometryDataPtr->VertexBuffer_PositionOnlyPtr->Bind(InRenderFrameContext);
@@ -200,7 +200,7 @@ void RenderObject::UpdateWorldMatrix() {
   }
 }
 
-const std::shared_ptr<ShaderBindingInstance>&
+const std::shared_ptr<jShaderBindingInstance>&
     RenderObject::CreateShaderBindingInstance() {
   // Update uniform buffer if it need to.
   if (NeedToUpdateRenderObjectUniformParameters) {
@@ -211,13 +211,13 @@ const std::shared_ptr<ShaderBindingInstance>&
     ubo.InvM = ubo.M.inverse();
 
     RenderObjectUniformParametersPtr = std::shared_ptr<IUniformBufferBlock>(
-        g_rhi_vk->CreateUniformBufferBlock(
+        g_rhi->CreateUniformBufferBlock(
             NameStatic("RenderObjectUniformParameters"),
             LifeTimeType::MultiFrame,
             sizeof(RenderObjectUniformBuffer)));
     RenderObjectUniformParametersPtr->UpdateBufferData(&ubo, sizeof(ubo));
 
-    TestUniformBuffer = g_rhi_vk->CreateStructuredBuffer(
+    TestUniformBuffer = g_rhi->CreateStructuredBuffer(
         sizeof(ubo),
         0,
         sizeof(ubo),
@@ -227,23 +227,23 @@ const std::shared_ptr<ShaderBindingInstance>&
         sizeof(ubo));
 
     int32_t                              BindingPoint = 0;
-    ShaderBindingArray                   ShaderBindingArray;
-    ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
+    jShaderBindingArray                   ShaderBindingArray;
+    jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
     ShaderBindingArray.Add(
-        ShaderBindingVk(BindingPoint++,
+        jShaderBinding(BindingPoint++,
                         1,
                         EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
                         EShaderAccessStageFlag::ALL_GRAPHICS,
-                        ResourceInlineAllactor.Alloc<UniformBufferResource>(
+                        ResourceInlineAllactor.Alloc<jUniformBufferResource>(
                             RenderObjectUniformParametersPtr.get())));
 
     if (RenderObjectShaderBindingInstance) {
       RenderObjectShaderBindingInstance->Free();
     }
 
-    RenderObjectShaderBindingInstance = g_rhi_vk->CreateShaderBindingInstance(
-        ShaderBindingArray, ShaderBindingInstanceType::MultiFrame);
+    RenderObjectShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
+        ShaderBindingArray, jShaderBindingInstanceType::MultiFrame);
     assert(RenderObjectShaderBindingInstance.get());
   }
 
@@ -252,7 +252,7 @@ const std::shared_ptr<ShaderBindingInstance>&
   // VK_SHADER_STAGE_ALL_GRAPHICS 	,
   // ResourceInlineAllactor.Alloc<UniformBufferResource>(&RenderObjectUniformParameters));
 
-  //   return g_rhi_vk->CreateShaderBindingInstance(ShaderBindingArray);
+  //   return g_rhi->CreateShaderBindingInstance(ShaderBindingArray);
 
   return RenderObjectShaderBindingInstance;
 }
