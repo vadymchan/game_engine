@@ -1,6 +1,8 @@
 #ifndef GAME_ENGINE_FENCE_VK_H
 #define GAME_ENGINE_FENCE_VK_H
 
+#include "gfx/rhi/fence_manager.h"
+
 #include <vulkan/vulkan.h>
 
 #include <cassert>
@@ -8,17 +10,20 @@
 
 namespace game_engine {
 
-class FenceVk {
+class FenceVk : public jFence {
   public:
   FenceVk()
       : Fence(VK_NULL_HANDLE) {}
 
-  virtual ~FenceVk();
+  virtual ~FenceVk() override;
 
-  virtual void* GetHandle() const { return reinterpret_cast<void*>(Fence); }
+  virtual void* GetHandle() const override {
+    return reinterpret_cast<void*>(Fence);
+  }
 
-  void WaitForFence(uint64_t timeout = UINT64_MAX) const;
+  void WaitForFence(uint64_t timeout = UINT64_MAX) override;
 
+  // TODO: not used
   void ResetFence() const;
 
   // TODO
@@ -27,19 +32,19 @@ class FenceVk {
   VkFence Fence;
 };
 
-class FenceManagerVk {
+class FenceManagerVk : public jFenceManager {
   public:
   ~FenceManagerVk() { Release(); }
 
-  FenceVk* GetOrCreateFence();
+  jFence* GetOrCreateFence() override;
 
-  void ReturnFence(FenceVk* fence);
+  void ReturnFence(jFence* fence) override;
 
-  void Release();
+  void Release() override;
 
   private:
-  std::unordered_set<FenceVk*> UsingFences;
-  std::unordered_set<FenceVk*> PendingFences;
+  std::unordered_set<jFence*> UsingFences;
+  std::unordered_set<jFence*> PendingFences;
 };
 
 }  // namespace game_engine
