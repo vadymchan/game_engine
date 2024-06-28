@@ -1,6 +1,7 @@
 #ifndef GAME_ENGINE_TEXTURE_VK_H
 #define GAME_ENGINE_TEXTURE_VK_H
 
+#include "gfx/rhi/texture.h"
 #include "gfx/rhi/vulkan/utils_vk.h"
 
 #include <math_library/dimension.h>
@@ -10,18 +11,10 @@
 
 namespace game_engine {
 
-static VkSampler g_defaultSampler = nullptr;
-
-class TextureVk {
+class TextureVk : public jTexture {
   public:
   TextureVk()
-      : type(ETextureType::MAX)
-      , format(ETextureFormat::RGB8)
-      , extent(0, 0)
-      , mipLevels(1)
-      , layerCount(1)
-      , sampleCount(EMSAASamples::COUNT_1)
-      , sRGB(false) {}
+      : jTexture() {}
 
   // TODO: constructor is not complete
   TextureVk(ETextureType              type,
@@ -30,48 +23,32 @@ class TextureVk {
             uint32_t                  layerCount  = 1,
             EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
             bool                      InSRGB      = false)
-      : type(type)
-      , format(format)
-      , extent(extent)
-      , mipLevels(GetMipLevels(extent.width(), extent.height()))
-      , layerCount(layerCount)
-      , sampleCount(sampleCount)
-      , sRGB(InSRGB) {}
+      : jTexture(type, format, extent, layerCount, sampleCount, InSRGB) {}
 
   virtual ~TextureVk() { ReleaseInternal(); }
 
-  virtual void Release() { ReleaseInternal(); }
+  virtual void Release() override { ReleaseInternal(); }
 
   void ReleaseInternal();
 
-  static uint32_t GetMipLevels(uint32_t InWidth, uint32_t InHeight);
+  virtual void* GetHandle() const override { return image; }
 
-  virtual EResourceLayout GetLayout() const { return imageLayout; }
+  virtual void* GetSamplerStateHandle() const override { return sampler; }
+
+  virtual EResourceLayout GetLayout() const override { return imageLayout; }
 
   // TODO: clear resources
 
-  bool IsDepthFormat() const { return game_engine::IsDepthFormat(format); }
-
-  bool IsDepthOnlyFormat() const {
-    return game_engine::IsDepthOnlyFormat(format);
-  }
-
   static VkSampler CreateDefaultSamplerState();
+  static void      DestroyDefaultSamplerState();
 
   // private:
   VkImage     image = VK_NULL_HANDLE;  // TODO: consider using pool
   VkImageView imageView
-      = VK_NULL_HANDLE;     // TODO: consider several image views per VkImage
-  ETextureType       type;  // TODO: analog to VkImageViewType imageViewType
-  VkSampler          sampler = VK_NULL_HANDLE;
-  ETextureFormat     format;
-  math::Dimension2Di extent;
-  bool               sRGB;
-  uint32_t           mipLevels;
-  uint32_t           layerCount;
-  EMSAASamples       sampleCount;
-  EResourceLayout    imageLayout = EResourceLayout::UNDEFINED;
-  VkDeviceMemory     deviceMemory = VK_NULL_HANDLE;
+      = VK_NULL_HANDLE;  // TODO: consider several image views per VkImage
+  VkSampler       sampler      = VK_NULL_HANDLE;
+  EResourceLayout imageLayout  = EResourceLayout::UNDEFINED;
+  VkDeviceMemory  deviceMemory = VK_NULL_HANDLE;
 
   // TODO:
   // - UAV image view
