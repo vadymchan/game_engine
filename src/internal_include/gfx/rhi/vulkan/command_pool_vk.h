@@ -3,6 +3,8 @@
 
 #include "gfx/rhi/lock.h"
 #include "gfx/rhi/vulkan/command_buffer_vk.h"
+#include "gfx/rhi/command_buffer_manager.h"
+
 
 #include <vulkan/vulkan.h>
 
@@ -11,7 +13,7 @@
 namespace game_engine {
 
 // TODO: consider name CommandPoolVk
-class CommandBufferManagerVk {
+class CommandBufferManagerVk : public jCommandBufferManager {
   public:
   virtual ~CommandBufferManagerVk() { ReleaseInternal(); }
 
@@ -25,17 +27,17 @@ class CommandBufferManagerVk {
   //  vkDestroyCommandPool(g_rhi_vk->m_device_, commandPool, nullptr);
   //}
 
-  bool CreatePool(uint32_t QueueIndex);
+  virtual bool CreatePool(uint32_t QueueIndex);
 
-  void Release() { ReleaseInternal(); }
+  virtual void Release() override { ReleaseInternal(); }
 
   void ReleaseInternal();
 
   const VkCommandPool& GetPool() const { return CommandPool; }
 
-  CommandBufferVk* GetOrCreateCommandBuffer();
+  virtual jCommandBuffer* GetOrCreateCommandBuffer() override;
 
-  void ReturnCommandBuffer(CommandBufferVk* commandBuffer);
+  void ReturnCommandBuffer(jCommandBuffer* commandBuffer) override;
 
   private:
   
