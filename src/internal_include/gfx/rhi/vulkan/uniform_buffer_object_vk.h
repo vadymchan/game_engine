@@ -2,6 +2,7 @@
 #define GAME_ENGINE_UNIFORM_BUFFER_OBJECT_VK_H
 
 #include "gfx/rhi/i_uniform_buffer_block.h"
+#include "gfx/rhi/vulkan/buffer_vk.h"
 
 #include <cstdint>
 
