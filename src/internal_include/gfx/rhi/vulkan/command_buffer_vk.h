@@ -2,38 +2,42 @@
 #define GAME_ENGINE_COMMAND_BUFFER_VK_H
 
 #include "gfx/rhi/vulkan/fence_vk.h"
+#include "gfx/rhi/command_buffer_manager.h"
 
 #include <vulkan/vulkan.h>
 
 namespace game_engine {
 
-class CommandBufferVk {
+class CommandBufferVk : public jCommandBuffer {
   public:
   ~CommandBufferVk() {
     // Clean-up code if needed
   }
 
-  bool Begin();
+  virtual bool Begin() const override;
 
-  bool End();
+  virtual bool End() const override;
 
-  void Reset(VkCommandBufferResetFlags flags = 0);
+  // TODO: add flags parameter
+  virtual void Reset(/*VkCommandBufferResetFlags flags = 0*/) const override;
 
   VkCommandBuffer& GetRef() { return CommandBuffer; }
 
-  virtual VkCommandBuffer GetNativeHandle() const { return CommandBuffer; }
+  virtual void* GetNativeHandle() const override {
+    return CommandBuffer;
+  }
 
   // TODO: consider remove that
-  virtual void* GetFenceHandle() const {
+  virtual void* GetFenceHandle() const override {
     return Fence ? Fence->GetHandle() : nullptr;
   }
 
-  virtual FenceVk* GetFence() const { return Fence; }
+  virtual jFence* GetFence() const override { return Fence; }
 
-  virtual void SetFence(FenceVk* fence) { Fence = fence; }
+  virtual void SetFence(jFence* fence) { Fence = fence; }
 
   private:
-  FenceVk*        Fence         = nullptr;
+  jFence*         Fence         = nullptr;
   VkCommandBuffer CommandBuffer = nullptr;
 };
 
