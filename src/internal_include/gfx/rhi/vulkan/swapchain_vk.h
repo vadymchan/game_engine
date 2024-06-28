@@ -1,10 +1,10 @@
 #ifndef GAME_ENGINE_SWAPCHAIN_VK_H
 #define GAME_ENGINE_SWAPCHAIN_VK_H
 
+#include "gfx/rhi/swapchain.h"
+#include "gfx/rhi/vulkan/semaphore_vk.h"
 #include "gfx/rhi/vulkan/texture_vk.h"
 #include "gfx/rhi/vulkan/utils_vk.h"
-#include "platform/common/window.h"
-#include "gfx/rhi/vulkan/semaphore_vk.h"
 
 #include <math_library/dimension.h>
 
@@ -14,48 +14,58 @@
 
 namespace game_engine {
 
-class SwapchainImageVk {
+class SwapchainImageVk : public jSwapchainImage {
   public:
   virtual ~SwapchainImageVk() { ReleaseInternal(); }
 
-  virtual void Release() { ReleaseInternal(); }
+  virtual void Release() override { ReleaseInternal(); }
 
   void ReleaseInternal();
 
-  VkFence CommandBufferFence = nullptr;   // signal command buffer completion.
+  VkFence CommandBufferFence = nullptr;  // signal command buffer completion.
 
-  SemaphoreVk* Available      = nullptr;
-  SemaphoreVk* RenderFinished = nullptr;  // signal that rendering
-                                          // is finished and the image is ready
-                                          // for presentation.
-  SemaphoreVk* RenderFinishedAfterShadow   = nullptr;
-  SemaphoreVk* RenderFinishedAfterBasePass = nullptr;
+  // Semaphores are used to synchronize between GPUs. They allow multiple frames
+  // to be created simultaneously.
+  // Semaphores are designed for synchronizing commands within a command queue
+  // or between queues.
+  jSemaphore* Available
+      = nullptr;  // This is signaled (lock is released) when an image is
+                  // acquired and rendering preparation is complete.
+  jSemaphore* RenderFinished
+      = nullptr;  // This is signaled when rendering is finished and the image
+                  // is ready for presentation.
+  jSemaphore* RenderFinishedAfterShadow
+      = nullptr;  // This is signaled when rendering is finished after the
+                  // shadow pass and the image is ready for presentation.
+  jSemaphore* RenderFinishedAfterBasePass
+      = nullptr;  // This is signaled when rendering is finished after the base
+                  // pass and the image is ready for presentation.
 
-  std::shared_ptr<TextureVk>
-      m_texture_;  // TODO: sampler component not needed in swapchain image
+  // TODO: remove from texture
+  /*std::shared_ptr<TextureVk> m_texture_;*/
 };
 
-class SwapchainVk {
+class SwapchainVk : public jSwapchain {
   public:
-  bool Create(const std::shared_ptr<Window>& window, VkSurfaceKHR surface);
+  bool Create(const std::shared_ptr<Window>& window) override;
 
-  void Release() { ReleaseInternal(); }
+  void Release() override { ReleaseInternal(); }
 
   void ReleaseInternal();
 
-  void* GetHandle() const { return m_swapChain_; }
+  void* GetHandle() const override { return m_swapChain_; }
 
-  ETextureFormat GetFormat() const { return Format; }
+  ETextureFormat GetFormat() const override { return Format; }
 
-  const math::Dimension2Di& GetExtent() const { return Extent; }
+  const math::Dimension2Di& GetExtent() const override { return Extent; }
 
-  SwapchainImageVk* GetSwapchainImage(int32_t index) const {
+  SwapchainImageVk* GetSwapchainImage(int32_t index) const override {
     // Ensure index is within range
     assert(Images.size() > index);
     return Images[index];
   }
 
-  int32_t GetNumOfSwapchainImages() const {
+  int32_t GetNumOfSwapchainImages() const override {
     return static_cast<int32_t>(Images.size());
   }
 
