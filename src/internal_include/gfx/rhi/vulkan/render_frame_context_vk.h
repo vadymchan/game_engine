@@ -1,6 +1,8 @@
-#ifndef GAME_ENGINE_RENDER_FRAME_CONTEXT_H
-#define GAME_ENGINE_RENDER_FRAME_CONTEXT_H
+#ifndef GAME_ENGINE_RENDER_FRAME_CONTEXT_VK_H
+#define GAME_ENGINE_RENDER_FRAME_CONTEXT_VK_H
 
+#include "gfx/rhi/render_frame_context.h"
+#include "gfx/rhi/semaphore_manager.h"
 #include "gfx/rhi/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/vulkan/render_target_vk.h"
 
@@ -8,47 +10,26 @@
 
 namespace game_engine {
 
-struct RenderFrameContextVk
-    : public std::enable_shared_from_this<RenderFrameContextVk> {
-  enum ECurrentRenderPass {
-    None,
-    ShadowPass,
-    BasePass,
-  };
-
+struct RenderFrameContextVk : public jRenderFrameContext {
   RenderFrameContextVk() = default;
 
-  RenderFrameContextVk(CommandBufferVk* InCommandBuffer)
-      : CommandBuffer(InCommandBuffer) {}
+  RenderFrameContextVk(jCommandBuffer* InCommandBuffer)
+      : jRenderFrameContext(InCommandBuffer) {}
 
-  virtual ~RenderFrameContextVk() { Destroy(); }
-
-  virtual void Destroy();
-
-  virtual CommandBufferVk* GetActiveCommandBuffer() const {
-    return CommandBuffer;
-  }
-
-  virtual bool BeginActiveCommandBuffer();
-
-  virtual bool EndActiveCommandBuffer();
+  virtual ~RenderFrameContextVk() {}
 
   virtual void SubmitCurrentActiveCommandBuffer(
-      ECurrentRenderPass InCurrentRenderPass);
+      ECurrentRenderPass InCurrentRenderPass) override;
 
   virtual void QueueSubmitCurrentActiveCommandBuffer(
-      SemaphoreVk* InSignalSemaphore);
+      jSemaphore* InSignalSemaphore);
 
   public:
-  std::shared_ptr<SceneRenderTarget> SceneRenderTargetPtr       = nullptr;
-  uint32_t                           FrameIndex                 = -1;
-  bool                               UseForwardRenderer         = true;
-  bool                               IsBeginActiveCommandbuffer = false;
-  SemaphoreVk*                       CurrentWaitSemaphore       = nullptr;
+  jSemaphore* CurrentWaitSemaphore = nullptr;
 
   protected:
-  CommandBufferVk* CommandBuffer = nullptr;
+  jCommandBuffer* CommandBuffer = nullptr;
 };
 }  // namespace game_engine
 
-#endif  // GAME_ENGINE_RENDER_FRAME_CONTEXT_H
+#endif  // GAME_ENGINE_RENDER_FRAME_CONTEXT_VK_H
