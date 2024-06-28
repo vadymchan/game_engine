@@ -1,6 +1,8 @@
 #ifndef GAME_ENGINE_SEMAPHORE_VK_H
 #define GAME_ENGINE_SEMAPHORE_VK_H
 
+#include "gfx/rhi/semaphore_manager.h"
+
 #include <vulkan/vulkan.h>
 
 #include <cassert>
@@ -8,7 +10,7 @@
 
 namespace game_engine {
 
-class SemaphoreVk {
+class SemaphoreVk : public jSemaphore {
   public:
   SemaphoreVk()
       : Semaphore(VK_NULL_HANDLE) {}
@@ -23,19 +25,19 @@ class SemaphoreVk {
   VkSemaphore Semaphore;
 };
 
-class SemaphoreManagerVk {
+class SemaphoreManagerVk : public jSemaphoreManager {
   public:
   ~SemaphoreManagerVk() { Release(); }
 
-  SemaphoreVk* GetOrCreateSemaphore();
+  jSemaphore* GetOrCreateSemaphore() override;
 
-  void ReturnSemaphore(SemaphoreVk* semaphore);
+  void ReturnSemaphore(jSemaphore* semaphore) override;
 
   void Release();
 
   private:
-  std::unordered_set<SemaphoreVk*> UsingSemaphores;
-  std::unordered_set<SemaphoreVk*> PendingSemaphores;
+  std::unordered_set<jSemaphore*> UsingSemaphores;
+  std::unordered_set<jSemaphore*> PendingSemaphores;
 };
 
 }  // namespace game_engine
