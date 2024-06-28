@@ -2,14 +2,10 @@
 #ifndef GAME_ENGINE_BUFFER_VK_H
 #define GAME_ENGINE_BUFFER_VK_H
 
+#include "gfx/rhi/buffer.h"
+#include "gfx/rhi/memory_pool.h"
 #include "gfx/rhi/name.h"
 #include "gfx/rhi/resource_container.h"
-#include "gfx/rhi/vulkan/command_buffer_vk.h"
-#include "gfx/rhi/vulkan/memory_pool_vk.h"
-#include "gfx/rhi/vulkan/render_frame_context_vk.h"
-#include "gfx/rhi/vulkan/render_target_vk.h"
-#include "gfx/rhi/vulkan/shader_vk.h"
-#include "gfx/rhi/vulkan/swapchain_vk.h"
 #include "utils/third_party/xxhash_util.h"
 
 #include <vulkan/vulkan.h>
@@ -19,132 +15,13 @@
 #include <memory>
 #include <vector>
 
+// TODO: separate Buffer / VertexBuffer and IndexBuffer to different classes
+
 namespace game_engine {
-
-// enum class EBufferType {
-//   Static,
-//   Dynamic,
-//   Max
-// };
-
-class IBufferAttribute {
-  public:
-  struct Attribute {
-    Name               name;
-    // TODO: remove VkFormat (instead EBufferElementType and stride is used)
-    // VkFormat format;  // TODO: consider that index buffer use VkIndexType
-    // (currently in IndexBufferVk converts VkFormat to
-    // VkIndexType). Either use custom enums or union
-    EBufferElementType UnderlyingType;
-    int32_t            offset;
-    // The stride specifies the byte offset between consecutive elements of this
-    // attribute in the buffer.
-    int32_t            stride;
-
-    Attribute(EBufferElementType UnderlyingType = EBufferElementType::BYTE,
-              int32_t            offset         = 0,
-              int32_t            stride         = 0)
-        : UnderlyingType(UnderlyingType)
-        , offset(offset)
-        , stride(stride) {}
-
-    Attribute(const Name&        name,
-              EBufferElementType UnderlyingType = EBufferElementType::BYTE,
-              int32_t            offset         = 0,
-              int32_t            stride         = 0)
-        : name(name)
-        , UnderlyingType(UnderlyingType)
-        , offset(offset)
-        , stride(stride) {}
-  };
-
-  IBufferAttribute(const Name&                   name,
-                   EBufferType                   bufferType,
-                   // VkBufferUsageFlags            bufferUsage,
-                   int32_t                       stride,
-                   const std::vector<Attribute>& attributes
-                   //, VkVertexInputRate             inputRate
-                   )
-      : name(name)
-      , BufferType(bufferType)
-      //, BufferUsage(bufferUsage)
-      , Stride(stride)
-      , Attributes(attributes)
-  //, InputRate(inputRate)
-  {}
-
-  virtual ~IBufferAttribute() {}
-
-  virtual const void* GetBufferData() const  = 0;
-  virtual size_t      GetBufferSize() const  = 0;
-  virtual size_t      GetElementSize() const = 0;
-
-  // private:
-  Name                   name;
-  EBufferType            BufferType = EBufferType::Static;
-  // TODO: Not needed
-  // VkBufferUsageFlags     BufferUsage;
-  int32_t                Stride = 0;
-  std::vector<Attribute> Attributes;
-  // TODO: Not needed
-  // VkVertexInputRate      InputRate;
-};
-
-// TODO: create interface for this class, use custom enums for abstraction
-template <typename T>
-class BufferAttributeStream : public IBufferAttribute {
-  public:
-  BufferAttributeStream() = default;
-
-  BufferAttributeStream(const Name&                   name,
-                        EBufferType                   bufferType,
-                        // VkBufferUsageFlags            bufferUsage,
-                        int32_t                       stride,
-                        const std::vector<Attribute>& attributes,
-                        const std::vector<T>&         data
-                        //, VkVertexInputRate             inputRate
-                        //  = VK_VERTEX_INPUT_RATE_VERTEX
-                        )
-      : IBufferAttribute(
-          name, bufferType, /*bufferUsage,*/ stride, attributes /*, inputRate*/)
-      , Data(data) {}
-
-  virtual ~BufferAttributeStream() {}
-
-  virtual const void* GetBufferData() const { return Data.data(); }
-
-  virtual size_t GetBufferSize() const { return Data.size() * sizeof(T); }
-
-  virtual size_t GetElementSize() const { return sizeof(T); }
-
-  // private:
-  std::vector<T> Data;
-};
-
-class VertexStreamData {
-  public:
-  int32_t GetEndLocation() const;
-
-  // private:
-  // TODO: consider renaming stream(s)
-  std::vector<std::shared_ptr<IBufferAttribute>> streams;
-  EPrimitiveType   PrimitiveType   = EPrimitiveType::TRIANGLES;
-  EVertexInputRate VertexInputRate = EVertexInputRate::VERTEX;
-  int32_t          elementCount    = 0;
-  int32_t          bindingIndex    = 0;
-  int32_t          startLocation   = 0;
-};
-
-class IndexStreamData {
-  public:
-  // private:
-  IBufferAttribute* stream       = nullptr;
-  uint32_t          elementCount = 0;
-};
 
 // ================================================================================
 
-class BufferVk {
+class BufferVk : public jBuffer {
   public:
   BufferVk()
       : m_buffer(VK_NULL_HANDLE)
@@ -159,27 +36,25 @@ class BufferVk {
   BufferVk(VkDeviceSize      size,
            EVulkanBufferBits usage,
            EVulkanMemoryBits properties,
-           EResourceLayout   imageLayout)
-      : m_size(size)
-      , Layout(imageLayout) {
-    CreateBuffer(usage, properties, size, imageLayout);
-  }
+           EResourceLayout   imageLayout);
 
-  BufferVk(const MemoryVk& InMemory) { InitializeWithMemory(InMemory); }
+  BufferVk(const jMemory& InMemory) { InitializeWithMemory(InMemory); }
 
   ~BufferVk() { Release(); }
 
-  void InitializeWithMemory(const MemoryVk& InMemory);
+  void InitializeWithMemory(const jMemory& InMemory);
 
-  void Release();
+  virtual void Release() override;
 
-  void* Map(uint64_t offset = 0, uint64_t size = VK_WHOLE_SIZE);
+  virtual void* Map(uint64_t offset, uint64_t size) override;
 
-  void Unmap();
+  virtual void* Map() override;
 
-  void* GetMappedPointer() const { return MappedPointer; }
+  virtual void Unmap() override;
 
-  void UpdateBuffer(const void* data, uint64_t size);
+  virtual void* GetMappedPointer() const override { return MappedPointer; }
+
+  virtual void UpdateBuffer(const void* data, uint64_t size) override;
 
   // private:
   // TODO: consider remove it
@@ -232,19 +107,17 @@ class BufferVk {
   // TODO: log error
   //}
 
-  virtual void* GetHandle() const { return m_buffer; }
+  virtual void* GetHandle() const override { return m_buffer; }
 
-  virtual uint64_t GetAllocatedSize() const { return AllocatedSize; }
+  virtual uint64_t GetAllocatedSize() const override { return AllocatedSize; }
 
-  virtual uint64_t GetOffset() const { return Offset; }
+  virtual uint64_t GetOffset() const override { return Offset; }
 
-  // TODO:
+  virtual uint64_t GetBufferSize() const override { return RealBufferSize; }
 
-  virtual uint64_t GetBufferSize() const { return RealBufferSize; }
+  virtual EResourceLayout GetLayout() const override { return Layout; }
 
-  // virtual EResourceLayout GetLayout() const { return Layout; }
-
-  MemoryVk        Memory;
+  jMemory         Memory;
   VkBuffer        m_buffer = VK_NULL_HANDLE;
   VkDeviceMemory  m_memory = VK_NULL_HANDLE;
   VkDeviceSize    m_size;  // TODO: consider about placing to VertexBufferVk
@@ -259,6 +132,7 @@ class BufferVk {
 
 // ============== Vertex Buffer Vk =======================
 
+// TODO: consider make general
 struct VertexStreamVk {
   Name        name;
   EBufferType BufferType = EBufferType::Static;
@@ -272,7 +146,7 @@ struct VertexStreamVk {
 
 struct VertexBufferArrayVk;
 
-struct VertexBufferVk {
+struct VertexBufferVk : public jVertexBuffer {
   struct BindInfo {
     void Reset();
 
@@ -316,13 +190,13 @@ struct VertexBufferVk {
       VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
       std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
       std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-      const VertexBufferArrayVk&                      InVertexBufferArray);
+      const jVertexBufferArray&                       InVertexBufferArray);
 
   virtual int32_t GetElementCount() const {
     return vertexStreamData ? vertexStreamData->elementCount : 0;
   }
 
-  virtual size_t GetHash() const {
+  virtual size_t GetHash() const override {
     if (Hash) {
       return Hash;
     }
@@ -338,16 +212,20 @@ struct VertexBufferVk {
     return GETHASH_FROM_INSTANT_STRUCT(state);
   }
 
-  virtual void Bind(
-      const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext) const;
+  virtual void Bind(const std::shared_ptr<jRenderFrameContext>&
+                        InRenderFrameContext) const override;
 
   virtual bool Initialize(
-      const std::shared_ptr<VertexStreamData>& InStreamData);
+      const std::shared_ptr<VertexStreamData>& InStreamData) override;
 
-  mutable size_t                    Hash = 0;
-  BindInfo                          BindInfos;
-  std::vector<VertexStreamVk>       Streams;
-  std::shared_ptr<VertexStreamData> vertexStreamData;
+  jBuffer* GetBuffer(int32_t InStreamIndex) const override {
+    assert(Streams.size() > InStreamIndex);
+    return Streams[InStreamIndex].BufferPtr.get();
+  }
+
+  mutable size_t              Hash = 0;
+  BindInfo                    BindInfos;
+  std::vector<VertexStreamVk> Streams;
 };
 
 struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
@@ -370,27 +248,25 @@ struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
 
 // ================ Index Buffer Vk ===========================
 
-struct IndexBufferVk {
-  std::shared_ptr<BufferVk>        BufferPtr;
-  std::shared_ptr<IndexStreamData> indexStreamData;
+struct IndexBufferVk : public jIndexBuffer {
+  std::shared_ptr<BufferVk> BufferPtr;
 
   virtual int32_t GetElementCount() const {
     return indexStreamData ? indexStreamData->elementCount : 0;
   }
 
-  virtual void Bind(const Shader* shader) const {}
+  virtual void Bind(const std::shared_ptr<jRenderFrameContext>&
+                        InRenderFrameContext) const override;
+  virtual bool Initialize(
+      const std::shared_ptr<IndexStreamData>& InStreamData) override;
 
-  virtual void Bind(
-      const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext) const;
-  virtual bool Initialize(const std::shared_ptr<IndexStreamData>& InStreamData);
+  virtual BufferVk* GetBuffer() const override { return BufferPtr.get(); }
 
   uint32_t GetIndexCount() const { return indexStreamData->elementCount; }
 
   VkIndexType GetVulkanIndexFormat(EBufferElementType IndexType) const;
   uint32_t    GetVulkanIndexStride(EBufferElementType IndexType) const;
 };
-
-
 
 }  // namespace game_engine
 #endif  // GAME_ENGINE_BUFFER_VK_H
