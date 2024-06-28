@@ -1,6 +1,7 @@
 #ifndef GAME_ENGINE_RING_BUFFER_VK_H
 #define GAME_ENGINE_RING_BUFFER_VK_H
 
+#include "gfx/rhi/buffer.h"
 #include "gfx/rhi/lock.h"
 #include "gfx/rhi/vulkan/utils_vk.h"
 
@@ -8,7 +9,7 @@
 
 namespace game_engine {
 
-struct RingBufferVk {
+struct RingBufferVk : public jBuffer {
   RingBufferVk() = default;
 
   virtual ~RingBufferVk() { Release(); }
@@ -21,25 +22,26 @@ struct RingBufferVk {
 
   virtual uint64_t Alloc(uint64_t allocSize);
 
-  virtual void Release();
+  virtual void Release() override;
 
-  virtual void* GetMappedPointer() const { return MappedPointer; }
+  virtual void* GetMappedPointer() const override { return MappedPointer; }
 
-  virtual void* Map(uint64_t offset, uint64_t size);
+  // TODO: for map use 1 method (combine to 1)
+  virtual void* Map(uint64_t offset, uint64_t size) override;
 
-  virtual void* Map();
+  virtual void* Map() override;
 
-  virtual void Unmap();
+  virtual void Unmap() override;
 
-  virtual void UpdateBuffer(const void* data, uint64_t size);
+  virtual void UpdateBuffer(const void* data, uint64_t size) override;
 
-  virtual void* GetHandle() const { return Buffer; }
+  virtual void* GetHandle() const override { return Buffer; }
 
-  virtual uint64_t GetAllocatedSize() const { return RingBufferSize; }
+  virtual uint64_t GetAllocatedSize() const override { return RingBufferSize; }
 
-  virtual uint64_t GetBufferSize() const { return RingBufferSize; }
+  virtual uint64_t GetBufferSize() const override { return RingBufferSize; }
 
-  virtual uint64_t GetOffset() const { return RingBufferOffset; }
+  virtual uint64_t GetOffset() const override { return RingBufferOffset; }
 
   uint64_t       RingBufferOffset = 0;
   uint32_t       Alignment        = 16;
