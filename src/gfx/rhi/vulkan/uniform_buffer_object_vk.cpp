@@ -3,6 +3,8 @@
 #include "gfx/rhi/vulkan/uniform_buffer_object_vk.h"
 
 #include "gfx/rhi/vulkan/rhi_vk.h"
+#include "utils/memory/align.h"
+
 
 namespace game_engine {
 
