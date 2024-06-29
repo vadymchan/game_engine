@@ -715,9 +715,9 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
   auto BufferPtr            = std::make_shared<BufferVk>();
   BufferPtr->RealBufferSize = InSize;
 #if USE_VK_MEMORY_POOL
-  assert(g_rhi_vk->GetMemoryPool());
-  const MemoryVk& Memory
-      = g_rhi_vk->GetMemoryPool()->Alloc(InUsage, InProperties, InSize);
+  assert(g_rhi->GetMemoryPool());
+  const jMemory& Memory
+      = g_rhi->GetMemoryPool()->Alloc(InUsage, InProperties, InSize);
   BufferPtr->InitializeWithMemory(Memory);
 #else
   if (!CreateBuffer_LowLevel(g_rhi_vk->m_device_,
@@ -736,7 +736,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
   // TODO: consider whether it's needed to use transition layout for buffer for
   // now
   /*if (BufferPtr->Layout != InResourceLayout) {
-    g_rhi_vk->TransitionLayoutImmediate(BufferPtr.get(), InResourceLayout);
+    g_rhi->TransitionLayoutImmediate(BufferPtr.get(), InResourceLayout);
   }*/
 
   return BufferPtr;
