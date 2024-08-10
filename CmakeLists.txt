@@ -228,6 +228,7 @@ endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
+    set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIRECTORY}")
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC  include)
