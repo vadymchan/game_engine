@@ -5,85 +5,6 @@
 
 namespace game_engine {
 
-// SubpassVk
-// =======================================================================
-
-void SubpassVk::Initialize(int32_t            InSourceSubpassIndex,
-                           int32_t            InDestSubpassIndex,
-                           EPipelineStageMask InAttachmentProducePipelineBit,
-                           EPipelineStageMask InAttachmentConsumePipelineBit) {
-  SourceSubpassIndex           = InSourceSubpassIndex;
-  DestSubpassIndex             = InDestSubpassIndex;
-  AttachmentProducePipelineBit = InAttachmentProducePipelineBit;
-  AttachmentConsumePipelineBit = InAttachmentConsumePipelineBit;
-}
-
-bool SubpassVk::IsSubpassForExecuteInOrder() const {
-  if ((SourceSubpassIndex == -1) && (DestSubpassIndex == -1)) {
-    return true;
-  }
-
-  if (SourceSubpassIndex != -1 && DestSubpassIndex != -1) {
-    return false;
-  }
-
-  // Subpass indices have to be either -1 for all or not for all.
-  // This is an error condition and should be handled appropriately.
-  return false;
-}
-
-// RenderPassInfoVk
-// =======================================================================
-
-// If both SourceSubpass and DstSubpass of all subpasses are -1, subpasses
-// will be executed in order
-bool RenderPassInfoVk::IsSubpassForExecuteInOrder() const {
-  assert(Subpasses.size());
-
-  int32_t i                       = 0;
-  bool isSubpassForExecuteInOrder = Subpasses[i++].IsSubpassForExecuteInOrder();
-  for (; i < (int32_t)Subpasses.size(); ++i) {
-    // All isSubpassForExecuteInOrder of subpasses must be same.
-    assert(isSubpassForExecuteInOrder
-           == Subpasses[i].IsSubpassForExecuteInOrder());
-
-    if (isSubpassForExecuteInOrder
-        != Subpasses[i].IsSubpassForExecuteInOrder()) {
-      return false;
-    }
-  }
-  return isSubpassForExecuteInOrder;
-}
-
-bool RenderPassInfoVk::Validate() const {
-  for (const auto& iter : Subpasses) {
-    for (const auto& inputIndex : iter.InputAttachments) {
-      if (!Attachments.size() > inputIndex) {
-        return false;
-      }
-    }
-    for (const auto& outputIndex : iter.OutputColorAttachments) {
-      if (!Attachments.size() > outputIndex) {
-        return false;
-      }
-    }
-    if (iter.OutputDepthAttachment) {
-      if (!Attachments.size() > iter.OutputDepthAttachment.value()) {
-        return false;
-      }
-    }
-    if (iter.OutputResolveAttachment) {
-      if (!Attachments.size() > iter.OutputResolveAttachment.value()) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-// RenderPassVk
-// =======================================================================
-
 void RenderPassVk::Release() {
   if (FrameBuffer != VK_NULL_HANDLE) {
     vkDestroyFramebuffer(g_rhi_vk->m_device_, FrameBuffer, nullptr);
@@ -95,57 +16,15 @@ void RenderPassVk::Release() {
   }
 }
 
-void RenderPassVk::SetAttachment(
-    const std::vector<AttachmentVk>&   colorAttachments,
-    const std::optional<AttachmentVk>& depthAttachment        ,
-    const std::optional<AttachmentVk>& colorResolveAttachment ) {
-  // Add output color attachments
-  int32_t startIndex = static_cast<int32_t>(RenderPassInfo.Attachments.size());
-  RenderPassInfo.Attachments.insert(RenderPassInfo.Attachments.end(),
-                                    colorAttachments.begin(),
-                                    colorAttachments.end());
-
-  // Ensure at least one subpass exists
-  if (RenderPassInfo.Subpasses.empty()) {
-    RenderPassInfo.Subpasses.resize(1);
-  }
-
-  // Add indices for output color attachments
-  for (int32_t i = 0; i < static_cast<int32_t>(colorAttachments.size()); ++i) {
-    RenderPassInfo.Subpasses[0].OutputColorAttachments.push_back(startIndex
-                                                                 + i);
-  }
-
-  // Add output depth attachment if provided
-  if (depthAttachment) {
-    startIndex = static_cast<int32_t>(RenderPassInfo.Attachments.size());
-    RenderPassInfo.Attachments.push_back(*depthAttachment);
-    RenderPassInfo.Subpasses[0].OutputDepthAttachment = startIndex;
-  }
-
-  // Add output resolve attachment if provided
-  if (colorResolveAttachment) {
-    startIndex = static_cast<int32_t>(RenderPassInfo.Attachments.size());
-    RenderPassInfo.Attachments.push_back(*colorResolveAttachment);
-    RenderPassInfo.Subpasses[0].OutputResolveAttachment = startIndex;
-  }
-}
-
-void RenderPassVk::SetRenderArea(const math::Vector2Di& offset,
-                                 const math::Vector2Di& extent) {
-  RenderOffset = offset;
-  RenderExtent = extent;
-}
-
 void RenderPassVk::SetFinalLayoutToAttachment(
-    const AttachmentVk& attachment) const {
+    const jAttachment& attachment) const {
   assert(attachment.RenderTargetPtr);
   TextureVk* texture_vk = (TextureVk*)attachment.RenderTargetPtr->GetTexture();
   texture_vk->imageLayout = attachment.FinalLayout;
 }
 
-bool RenderPassVk::BeginRenderPass(const CommandBufferVk* commandBuffer,
-                                   VkSubpassContents      subpassContents
+bool RenderPassVk::BeginRenderPass(const jCommandBuffer* commandBuffer
+                                   /*, VkSubpassContents      subpassContents*/
                                    ) {
   assert(commandBuffer);
 
@@ -156,7 +35,7 @@ bool RenderPassVk::BeginRenderPass(const CommandBufferVk* commandBuffer,
 
   vkCmdBeginRenderPass((VkCommandBuffer)commandBuffer->GetNativeHandle(),
                        &RenderPassBeginInfo,
-                       subpassContents);
+                       /*subpassContents*/ VK_SUBPASS_CONTENTS_INLINE);
   return true;
 }
 
@@ -167,7 +46,7 @@ void RenderPassVk::EndRenderPass() {
   vkCmdEndRenderPass((VkCommandBuffer)CommandBuffer->GetNativeHandle());
 
   // Apply layout to attachments
-  for (AttachmentVk& iter : RenderPassInfo.Attachments) {
+  for (jAttachment& iter : RenderPassInfo.Attachments) {
     assert(iter.IsValid());
     SetFinalLayoutToAttachment(iter);
   }
@@ -216,7 +95,7 @@ bool RenderPassVk::CreateRenderPass() {
     std::vector<VkAttachmentDescription> AttachmentDescs;
     AttachmentDescs.resize(RenderPassInfo.Attachments.size());
     for (int32_t i = 0; i < (int32_t)RenderPassInfo.Attachments.size(); ++i) {
-      const AttachmentVk& attachment = RenderPassInfo.Attachments[i];
+      const jAttachment& attachment = RenderPassInfo.Attachments[i];
       assert(attachment.IsValid());
 
       const auto& RTInfo = attachment.RenderTargetPtr->Info;
@@ -231,9 +110,9 @@ bool RenderPassVk::CreateRenderPass() {
                                      attachmentDesc.stencilStoreOp,
                                      attachment.StencilLoadStoreOp);
 
-      assert(
-          (attachment.IsResolveAttachment && ((int32_t)RTInfo.SampleCount > 1))
-          || (!attachment.IsResolveAttachment
+      assert((attachment.IsResolveAttachment()
+              && ((int32_t)RTInfo.SampleCount > 1))
+          || (!attachment.IsResolveAttachment()
               && (int32_t)RTInfo.SampleCount == 1));
       const bool IsInvalidSampleCountAndLayerCount
           = (SampleCount == 0) || (LayerCount == 0);
@@ -298,7 +177,7 @@ bool RenderPassVk::CreateRenderPass() {
     ++DependencyIndex;
 
     for (int32_t i = 0; i < (int32_t)RenderPassInfo.Subpasses.size(); ++i) {
-      const SubpassVk& subPass = RenderPassInfo.Subpasses[i];
+      const jSubpass& subPass = RenderPassInfo.Subpasses[i];
 
       std::vector<VkAttachmentReference>& InputAttachmentRefs
           = subpassAttachmentRefs[i].InputAttachmentRefs;
