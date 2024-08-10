@@ -7,7 +7,7 @@
 
 namespace game_engine {
 
-bool CommandBufferVk::Begin() {
+bool CommandBufferVk::Begin() const {
   VkCommandBufferBeginInfo beginInfo{};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = 0;  // TODO: consider making this configurable
@@ -22,7 +22,7 @@ bool CommandBufferVk::Begin() {
   return true;
 }
 
-bool CommandBufferVk::End() {
+bool CommandBufferVk::End() const {
   if (vkEndCommandBuffer(CommandBuffer) != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to end command buffer");
     return false;
@@ -31,8 +31,8 @@ bool CommandBufferVk::End() {
   return true;
 }
 
-void CommandBufferVk::Reset(VkCommandBufferResetFlags flags) {
-  vkResetCommandBuffer(CommandBuffer, flags);
+void CommandBufferVk::Reset(/*VkCommandBufferResetFlags flags*/) const{
+  vkResetCommandBuffer(CommandBuffer, /*flags*/ 0);
 }
 
 }  // namespace game_engine
