@@ -2,25 +2,25 @@
 
 #include "gfx/rhi/vulkan/buffer_vk.h"
 
+#include "gfx/rhi/rhi.h"
+#include "gfx/rhi/vulkan/render_frame_context_vk.h"  // TODO: redundant (consider either remove or remain for clarification what files is used)
 #include "gfx/rhi/vulkan/rhi_vk.h"
+#include "gfx/rhi/vulkan/utils_vk.h"
 
 namespace game_engine {
-
-// VertexStreamData
-// ============================================================================
-
-int32_t VertexStreamData::GetEndLocation() const {
-  int32_t endLocation = startLocation;
-  for (const auto& stream : streams) {
-    endLocation += static_cast<int32_t>(stream->Attributes.size());
-  }
-  return endLocation;
-}
 
 // BufferVk
 // ================================================================================
 
-void BufferVk::InitializeWithMemory(const MemoryVk& InMemory) {
+BufferVk::BufferVk(VkDeviceSize      size,
+                   EVulkanBufferBits usage,
+                   EVulkanMemoryBits properties,
+                   EResourceLayout   imageLayout)
+    : m_size(size)
+    , Layout(imageLayout) {
+  CreateBuffer(usage, properties, size, imageLayout);
+}
+
 void BufferVk::InitializeWithMemory(const jMemory& InMemory) {
   assert(InMemory.IsValid());
   HasBufferOwnership = false;
@@ -69,6 +69,10 @@ void* BufferVk::Map(uint64_t offset, uint64_t size) {
   }
   vkMapMemory(g_rhi_vk->m_device_, m_memory, offset, size, 0, &MappedPointer);
   return MappedPointer;
+}
+
+void* BufferVk::Map() {
+  return Map(0, VK_WHOLE_SIZE);
 }
 
 void BufferVk::Unmap() {
