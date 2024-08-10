@@ -537,8 +537,9 @@ class Renderer {
             // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->GetTexture(),
             RenderFrameContextPtr->SceneRenderTargetPtr->FinalColorPtr
                 ->GetTexture(),
-            // EResourceLayout::COLOR_ATTACHMENT);
-            EResourceLayout::PRESENT_SRC);
+            EResourceLayout::COLOR_ATTACHMENT);
+            // TODO: worked for Vulkan
+            // EResourceLayout::PRESENT_SRC);
       } else {
         // TODO: not used for now
         /*for (int32_t i = 0;
