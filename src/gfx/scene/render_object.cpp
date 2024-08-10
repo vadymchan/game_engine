@@ -16,8 +16,8 @@ namespace game_engine {
 void RenderObjectGeometryData::Create(
     const std::shared_ptr<VertexStreamData>& InVertexStream,
     const std::shared_ptr<IndexStreamData>&  InIndexStream,
-    bool                                     InHasVertexColor     ,
-    bool                                     InHasVertexBiTangent ) {
+    bool                                     InHasVertexColor,
+    bool                                     InHasVertexBiTangent) {
   VertexStreamPtr = InVertexStream;
   IndexStreamPtr  = InIndexStream;
 
@@ -44,8 +44,8 @@ void RenderObjectGeometryData::CreateNew_ForRaytracing(
     const std::shared_ptr<VertexStreamData>& InVertexStream,
     const std::shared_ptr<VertexStreamData>& InVertexStream_PositionOnly,
     const std::shared_ptr<IndexStreamData>&  InIndexStream,
-    bool                                     InHasVertexColor     ,
-    bool                                     InHasVertexBiTangent ) {
+    bool                                     InHasVertexColor,
+    bool                                     InHasVertexBiTangent) {
   VertexStreamPtr              = InVertexStream;
   VertexStream_PositionOnlyPtr = InVertexStream_PositionOnly;
   IndexStreamPtr               = InIndexStream;
@@ -80,11 +80,11 @@ void RenderObjectGeometryData::UpdateVertexStream(
 
 void RenderObject::Draw(
     const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
-    int32_t                                      startIndex,
-    int32_t                                      indexCount,
-    int32_t                                      startVertex,
-    int32_t                                      vertexCount,
-    int32_t                                      instanceCount) {
+    int32_t                                     startIndex,
+    int32_t                                     indexCount,
+    int32_t                                     startVertex,
+    int32_t                                     vertexCount,
+    int32_t                                     instanceCount) {
   if (!GeometryDataPtr) {
     return;
   }
@@ -127,10 +127,10 @@ void RenderObject::Draw(
   } else {
     if (GeometryDataPtr->IndirectCommandBufferPtr) {
       g_rhi->DrawIndirect(InRenderFrameContext,
-                             // primitiveType, // TODO: remove (not used)
-                             GeometryDataPtr->IndirectCommandBufferPtr.get(),
-                             startVertex,
-                             instanceCount);
+                          // primitiveType, // TODO: remove (not used)
+                          GeometryDataPtr->IndirectCommandBufferPtr.get(),
+                          startVertex,
+                          instanceCount);
     } else {
       vertexCount = vertexCount != -1
                       ? vertexCount
@@ -138,12 +138,11 @@ void RenderObject::Draw(
       if (instanceCount <= 0) {
         g_rhi->DrawArrays(InRenderFrameContext, startVertex, vertexCount);
       } else {
-        g_rhi->DrawArraysInstanced(
-            InRenderFrameContext,
-            // primitiveType, // TODO: remove (not used
-            startVertex,
-            vertexCount,
-            instanceCount);
+        g_rhi->DrawArraysInstanced(InRenderFrameContext,
+                                   // primitiveType, // TODO: remove (not used
+                                   startVertex,
+                                   vertexCount,
+                                   instanceCount);
       }
     }
   }
@@ -151,8 +150,8 @@ void RenderObject::Draw(
 
 void RenderObject::BindBuffers(
     const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
-    bool                                         InPositionOnly,
-    const jVertexBuffer* InOverrideInstanceData ) const {
+    bool                                        InPositionOnly,
+    const jVertexBuffer*                        InOverrideInstanceData) const {
   if (InPositionOnly) {
     if (GeometryDataPtr->VertexBuffer_PositionOnlyPtr) {
       GeometryDataPtr->VertexBuffer_PositionOnlyPtr->Bind(InRenderFrameContext);
@@ -210,8 +209,8 @@ const std::shared_ptr<jShaderBindingInstance>&
     ubo.M    = World;
     ubo.InvM = ubo.M.inverse();
 
-    RenderObjectUniformParametersPtr = std::shared_ptr<IUniformBufferBlock>(
-        g_rhi->CreateUniformBufferBlock(
+    RenderObjectUniformParametersPtr
+        = std::shared_ptr<IUniformBufferBlock>(g_rhi->CreateUniformBufferBlock(
             NameStatic("RenderObjectUniformParameters"),
             LifeTimeType::MultiFrame,
             sizeof(RenderObjectUniformBuffer)));
@@ -226,17 +225,18 @@ const std::shared_ptr<jShaderBindingInstance>&
         &ubo,
         sizeof(ubo));
 
-    int32_t                              BindingPoint = 0;
+    int32_t                               BindingPoint = 0;
     jShaderBindingArray                   ShaderBindingArray;
     jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
     ShaderBindingArray.Add(
         jShaderBinding(BindingPoint++,
-                        1,
-                        EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
+                       1,
+                       EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
                         EShaderAccessStageFlag::ALL_GRAPHICS,
-                        ResourceInlineAllactor.Alloc<jUniformBufferResource>(
-                            RenderObjectUniformParametersPtr.get())));
+                       EShaderAccessStageFlag::ALL_GRAPHICS,
+                       ResourceInlineAllactor.Alloc<jUniformBufferResource>(
+                           RenderObjectUniformParametersPtr.get())));
 
     if (RenderObjectShaderBindingInstance) {
       RenderObjectShaderBindingInstance->Free();
