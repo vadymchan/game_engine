@@ -2,6 +2,7 @@
 #include "gfx/rhi/vulkan/ring_buffer_vk.h"
 
 #include "gfx/rhi/vulkan/rhi_vk.h"
+#include "utils/memory/align.h"
 
 #include <cstdint>
 
