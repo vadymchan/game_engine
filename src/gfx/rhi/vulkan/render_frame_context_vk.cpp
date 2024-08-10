@@ -5,37 +5,12 @@
 
 namespace game_engine {
 
-void RenderFrameContextVk::Destroy() {
-  if (SceneRenderTargetPtr) {
-    SceneRenderTargetPtr->Return();
-    SceneRenderTargetPtr.reset();
-  }
 
-  if (CommandBuffer) {
-    assert(g_rhi_vk->GetCommandBufferManager());
-    g_rhi_vk->GetCommandBufferManager()->ReturnCommandBuffer(CommandBuffer);
-    CommandBuffer = nullptr;
-  }
-
-  FrameIndex = -1;
-}
-
-bool RenderFrameContextVk::BeginActiveCommandBuffer() {
-  assert(!IsBeginActiveCommandbuffer);
-  IsBeginActiveCommandbuffer = true;
-  return CommandBuffer->Begin();
-}
-
-bool RenderFrameContextVk::EndActiveCommandBuffer() {
-  assert(IsBeginActiveCommandbuffer);
-  IsBeginActiveCommandbuffer = false;
-  return CommandBuffer->End();
-}
 
 void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
     ECurrentRenderPass InCurrentRenderPass) {
   SwapchainImageVk* swapchainImageVk
-      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_.GetSwapchainImage(FrameIndex);
+      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_->GetSwapchainImage(FrameIndex);
 
   switch (InCurrentRenderPass) {
     case RenderFrameContextVk::ShadowPass:
@@ -52,7 +27,7 @@ void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
 }
 
 void RenderFrameContextVk::QueueSubmitCurrentActiveCommandBuffer(
-    SemaphoreVk* InSignalSemaphore) {
+    jSemaphore* InSignalSemaphore) {
   if (CommandBuffer) {
     // TODO: temoporary removed
     // CommandBuffer->End();
@@ -62,7 +37,7 @@ void RenderFrameContextVk::QueueSubmitCurrentActiveCommandBuffer(
 
     // get new command buffer
     CommandBuffer = g_rhi_vk->CommandBufferManager->GetOrCreateCommandBuffer();
-    g_rhi_vk->m_swapchain_.GetSwapchainImage(FrameIndex)->CommandBufferFence
+    g_rhi_vk->m_swapchain_->GetSwapchainImage(FrameIndex)->CommandBufferFence
         = (VkFence)CommandBuffer->GetFenceHandle();
   }
 }
