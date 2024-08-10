@@ -25,7 +25,7 @@ void CommandBufferManagerVk::ReleaseInternal() {
   ScopedLock s(&CommandListLock);
 
   // vkFreeCommandBuffers(device, CommandBufferManager.GetPool(),
-  // static_cast<uint32>(commandBuffers.size()), commandBuffers.data());
+  // static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
   for (auto& iter : UsingCommandBuffers) {
     iter->GetFence()->WaitForFence();
@@ -47,7 +47,7 @@ void CommandBufferManagerVk::ReleaseInternal() {
   }
 }
 
-CommandBufferVk* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
+jCommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
   ScopedLock s(&CommandListLock);
 
   CommandBufferVk* SelectedCommandBuffer = nullptr;
@@ -104,7 +104,7 @@ CommandBufferVk* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
 }
 
 void CommandBufferManagerVk::ReturnCommandBuffer(
-    CommandBufferVk* commandBuffer) {
+    jCommandBuffer* commandBuffer) {
   ScopedLock s(&CommandListLock);
   // auto       it = std::find(
   //     UsingCommandBuffers.begin(), UsingCommandBuffers.end(), commandBuffer);
