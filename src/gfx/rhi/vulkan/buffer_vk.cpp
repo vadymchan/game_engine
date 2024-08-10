@@ -21,6 +21,7 @@ int32_t VertexStreamData::GetEndLocation() const {
 // ================================================================================
 
 void BufferVk::InitializeWithMemory(const MemoryVk& InMemory) {
+void BufferVk::InitializeWithMemory(const jMemory& InMemory) {
   assert(InMemory.IsValid());
   HasBufferOwnership = false;
   m_buffer           = (VkBuffer)InMemory.GetBuffer();
@@ -144,7 +145,7 @@ VkPipelineVertexInputStateCreateInfo
 }
 
 void VertexBufferVk::Bind(
-    const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext) const {
+    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
   assert(InRenderFrameContext);
   assert(InRenderFrameContext->GetActiveCommandBuffer());
   vkCmdBindVertexBuffers(
@@ -230,7 +231,7 @@ bool VertexBufferVk::Initialize(
       // BindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
 
       VkDeviceSize bufferSize = iter->GetBufferSize();
-      stream.BufferPtr        = g_rhi_vk->CreateStructuredBuffer(
+      stream.BufferPtr        = g_rhi->CreateStructuredBuffer<BufferVk>(
           bufferSize,
           stream.Stride,
           stream.Stride,
@@ -431,11 +432,12 @@ void VertexBufferVk::CreateVertexInputState(
     VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
     std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
     std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-    const VertexBufferArrayVk&                      InVertexBufferArray) {
+    const jVertexBufferArray&                       InVertexBufferArray) {
   for (int32_t i = 0; i < InVertexBufferArray.NumOfData; ++i) {
     // TODO: consider replace assertion
     assert(InVertexBufferArray[i] != nullptr);
-    const auto& bindInfo = InVertexBufferArray[i]->BindInfos;
+    const auto& bindInfo
+        = ((const VertexBufferVk*)InVertexBufferArray[i])->BindInfos;
     OutBindingDescriptions.insert(OutBindingDescriptions.end(),
                                   bindInfo.InputBindingDescriptions.begin(),
                                   bindInfo.InputBindingDescriptions.end());
@@ -458,7 +460,7 @@ void VertexBufferVk::CreateVertexInputState(
 // IndexBufferVk
 // ================================================================================
 void IndexBufferVk::Bind(
-    const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext) const {
+    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
   // TODO: old code (remove)
   // assert(indexStreamData->stream->Attributes.size() != 0);
   // VkIndexType IndexType
@@ -575,7 +577,7 @@ bool IndexBufferVk::Initialize(
   const EBufferCreateFlag BufferCreateFlag
       = EBufferCreateFlag::IndexBuffer | EBufferCreateFlag::UAV
       | EBufferCreateFlag::AccelerationStructureBuildInput;
-  BufferPtr = g_rhi_vk->CreateStructuredBuffer(
+  BufferPtr = g_rhi->CreateStructuredBuffer<BufferVk>(
       bufferSize,
       0,
       GetVulkanIndexStride(
