@@ -396,6 +396,112 @@ if(USE_OPENGL)
     endif()
 endif()
 
+include(CMakeDependentOption)
+
+cmake_dependent_option(USE_DIRECTX_AGILITY         "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
+cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
+
+
+# BEGIN: DirectX 12 Agility SDK
+#--------------------------------------------------------------------------------
+if(USE_DIRECTX_AGILITY AND USE_VCPKG)
+
+    # BEGIN: cmake_modules (FindWindowsSDK) -> D3D12_LIB
+    # ---------------------------------------------------------------------------
+    message(STATUS "Fetching cmake_modules (for fetching )...")
+    FetchContent_Declare(
+      cmake_modules
+      GIT_REPOSITORY https://github.com/rpavlik/cmake-modules
+      GIT_TAG main
+    )
+    FetchContent_MakeAvailable(cmake_modules)
+    file(COPY ${cmake_modules_SOURCE_DIR}/FindWindowsSDK.cmake DESTINATION ${CMAKE_SOURCE_DIR}/cmake)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+    include(FindWindowsSDK)
+
+    find_package(WindowsSDK REQUIRED)
+
+    list(GET WINDOWSSDK_DIRS 0 LATEST_SDK_DIR)
+
+    get_windowssdk_library_dirs(${LATEST_SDK_DIR} latest_sdk_lib_dirs)
+    find_library(D3D12_LIB NAMES d3d12 PATHS ${latest_sdk_lib_dirs} NO_DEFAULT_PATH)
+    # END: cmake_modules (FindWindowsSDK) -> D3D12_LIB
+    # ---------------------------------------------------------------------------
+
+    message(STATUS "Fetching directx12-agility...")
+
+    # TODO: remove (deprecated)
+    # adds DirectX utility headers (e.g. d3dx12.h)
+    # if(USE_DIRECTX_HEADERS)
+    #     message(STATUS "Fetching DirectX-Headers...")
+    #     FetchContent_Declare(
+    #         DirectX-Headers
+    #         GIT_REPOSITORY https://github.com/microsoft/DirectX-Headers.git
+    #         # GIT_TAG v1.606.4
+    #         GIT_TAG v1.614.0 # probably version 1.614.0 DirectX Agility SDK required
+    #     )
+    #     FetchContent_MakeAvailable(DirectX-Headers)
+    #     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${DirectX-Headers_SOURCE_DIR}/include)
+    # endif()
+
+    # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
+    # vcpkg_add_package(directx12-agility)
+    # find_package(directx-headers CONFIG REQUIRED)
+    # find_package(directx12-agility CONFIG REQUIRED)
+
+    find_package(directx-headers QUIET)
+    find_package(directx12-agility QUIET)
+    if(NOT directx12-agility_FOUND AND NOT directx-headers_FOUND)
+        vcpkg_add_package(directx12-agility)
+        find_package(directx-headers CONFIG REQUIRED)
+        find_package(directx12-agility CONFIG REQUIRED)
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectX-Headers Microsoft::DirectX-Guids Microsoft::DirectX12-Agility)
+
+    if(TARGET Microsoft::DirectX12-Agility)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/D3D12
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:Microsoft::DirectX12-Core,IMPORTED_LOCATION_RELEASE> $<TARGET_FILE_DIR:${PROJECT_NAME}>/D3D12
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:Microsoft::DirectX12-Layers,IMPORTED_LOCATION_DEBUG> $<TARGET_FILE_DIR:${PROJECT_NAME}>/D3D12
+            COMMAND_EXPAND_LISTS
+        )
+    endif()
+endif()
+# END: DirectX 12 Agility SDK
+# -------------------------------------------------------------------------------------
+
+# BEGIN: DirectXShaderCompiler
+# -------------------------------------------------------------------------------------
+if(USE_DIRECTX_SHADER_COMPILER AND USE_VCPKG)
+    message(STATUS "Fetching directx-dxc...")
+
+    # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
+    # vcpkg_add_package(directx-dxc)
+    # find_package(directx-dxc CONFIG REQUIRED)
+
+    find_package(directx-dxc QUIET)
+    if(NOT directx-dxc_FOUND)
+        vcpkg_add_package(directx-dxc)
+        find_package(directx-dxc CONFIG REQUIRED)
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DXIL Microsoft::DirectXShaderCompiler)
+
+    if(TARGET Microsoft::DirectXShaderCompiler)
+        get_target_property(DXC_IMPORTED_LOCATION Microsoft::DirectXShaderCompiler IMPORTED_LOCATION)
+        get_target_property(DXIL_IMPORTED_LOCATION Microsoft::DXIL IMPORTED_LOCATION)
+        
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DXC_IMPORTED_LOCATION} $<TARGET_FILE_DIR:${PROJECT_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DXIL_IMPORTED_LOCATION} $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+    endif()
+endif()
+# END: DirectXShaderCompiler
+# -------------------------------------------------------------------------------------
+
 if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTX)
     message(FATAL_ERROR "At least one of Vulkan, OpenGL or DirectX must be selected for graphics API")
 endif()
