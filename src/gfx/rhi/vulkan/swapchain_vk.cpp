@@ -8,7 +8,7 @@ namespace game_engine {
 // SwapchainImageVk
 // =============================================
 void SwapchainImageVk::ReleaseInternal() {
-  m_texture_ = nullptr;
+  TexturePtr = nullptr;
   if (Available) {
     g_rhi_vk->GetSemaphoreManager()->ReturnSemaphore(Available);
     Available = nullptr;
@@ -33,10 +33,9 @@ void SwapchainImageVk::ReleaseInternal() {
 // SwapchainVk
 // =============================================
 
-bool SwapchainVk::Create(const std::shared_ptr<Window>& window,
-                         VkSurfaceKHR                   surface) {
-  SwapChainSupportDetails swapChainSupport
-      = QuerySwapChainSupport(g_rhi_vk->m_physicalDevice_, surface);
+bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
+  SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(
+      g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
 
   // Choose the surface format
   VkSurfaceFormatKHR surfaceFormat{};
@@ -98,7 +97,7 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window,
 
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType           = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  createInfo.surface         = surface;
+  createInfo.surface         = g_rhi_vk->m_surface_;
   createInfo.minImageCount   = imageCount;
   createInfo.imageFormat     = surfaceFormat.format;
   createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -108,7 +107,7 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window,
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
   QueueFamilyIndices indices
-      = FindQueueFamilies(g_rhi_vk->m_physicalDevice_, surface);
+      = FindQueueFamilies(g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
   uint32_t queueFamilyIndices[]
       = {indices.GraphicsFamily.value(), indices.PresentFamily.value()};
   if (indices.GraphicsFamily != indices.PresentFamily) {
@@ -139,12 +138,12 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window,
     // TODO: Destroy old image views
     for (int32_t i = 0; i < (int32_t)Images.size(); i++) {
       SwapchainImageVk* SwapchainImage = Images[i];
-      TextureVk* textureVk = (TextureVk*)SwapchainImage->m_texture_.get();
+      TextureVk* textureVk = (TextureVk*)SwapchainImage->TexturePtr.get();
       if (textureVk->imageView) {
         vkDestroyImageView(g_rhi_vk->m_device_, textureVk->imageView, nullptr);
         textureVk->imageView = nullptr;
       }
-      SwapchainImage->m_texture_.reset();
+      SwapchainImage->TexturePtr.reset();
       // delete Images[i];
     }
     vkDestroySwapchainKHR(g_rhi_vk->m_device_, oldSwapChain, nullptr);
@@ -232,15 +231,20 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window,
     }
 
     // Create TextureVk object with the new image view
-    SwapchainImage->m_texture_ = std::make_shared<TextureVk>(
+
+    SwapchainImage->TexturePtr = std::make_shared<TextureVk>(
         ETextureType::TEXTURE_2D,
         GetVulkanTextureFormat(surfaceFormat.format),
         math::Dimension2Di{static_cast<int>(extent.width),
                            static_cast<int>(extent.height)});
-    SwapchainImage->m_texture_->imageView = imageView;
-    SwapchainImage->m_texture_->image     = swapChainImages[i];
-    SwapchainImage->m_texture_->sampler   = textureSampler;
-    SwapchainImage->m_texture_->mipLevels = 1; // TODO: temporal hot-fix
+
+    std::shared_ptr<TextureVk> swapchainImageTextureVk
+        = std::static_pointer_cast<TextureVk>(SwapchainImage->TexturePtr);
+
+    swapchainImageTextureVk->imageView = imageView;
+    swapchainImageTextureVk->image     = swapChainImages[i];
+    swapchainImageTextureVk->sampler   = textureSampler;
+    swapchainImageTextureVk->mipLevels = 1;  // TODO: temporal hot-fix
   }
 
   g_rhi_vk->RenderPassPool.Release();
