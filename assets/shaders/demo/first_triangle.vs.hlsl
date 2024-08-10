@@ -33,6 +33,7 @@ VSOutput main(VSInput input)
 
 #else
 
+// TODO: this is for Vulkan (need somehow to get rid of it)
 struct VSInput
 {
     [[vk::location(0)]] float3 Position : POSITION;
@@ -41,6 +42,17 @@ struct VSInput
     [[vk::location(3)]] float3 Tangent : TANGENT;
     [[vk::location(4)]] float2 TexCoord : TEXCOORD;
 };
+
+
+//struct VSInput
+//{
+//    float3 Position : POSITION;
+//    float4 Color : COLOR;
+//    float3 Normal : NORMAL;
+//    float3 Tangent : TANGENT;
+//    float2 TexCoord : TEXCOORD;
+//};
+
 
 cbuffer ViewParam : register(b0, space0)
 {
