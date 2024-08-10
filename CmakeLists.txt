@@ -249,54 +249,50 @@ if(BUILD_SDL)
 
     # SDL's include directories are in the build directory (not the source directory   
     # like other third parties in this project), due to SDL generating includes during build.
-
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
         $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
         $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
     )
-
-    target_link_libraries(${PROJECT_NAME} SDL2)
+    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
 endif()
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glfw_SOURCE_DIR}/include)
-    target_link_libraries(${PROJECT_NAME} glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 endif()
 
 if(BUILD_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${spdlog_SOURCE_DIR}/include)
-    target_link_libraries(${PROJECT_NAME} spdlog)
+    target_link_libraries(${PROJECT_NAME} PRIVATE spdlog)
 endif()
 
 if(BUILD_BULLET)
     FetchContent_MakeAvailable(bullet)
-    target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath)
+    target_link_libraries(${PROJECT_NAME} PRIVATE BulletDynamics BulletCollision LinearMath)
 endif()
 
 if(BUILD_IMGUI)
     FetchContent_MakeAvailable(imgui)
-    target_link_libraries(${PROJECT_NAME} imgui)
+    target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
 endif()
 
 if(BUILD_ASSIMP)
     FetchContent_MakeAvailable(assimp)
-
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
         ${assimp_INCLUDE_DIRS}
         ${assimp_SOURCE_DIR}/code/../include
         ${assimp_BINARY_DIR}/code/../include
     )
-
-    target_link_libraries(${PROJECT_NAME} assimp)
+    target_link_libraries(${PROJECT_NAME} PRIVATE assimp)
 endif()
 
 if(BUILD_STB)
     FetchContent_MakeAvailable(stb)
-    target_link_libraries(${PROJECT_NAME} stb)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stb)
 endif()
 
 if(BUILD_EIGEN)
@@ -310,15 +306,18 @@ if(BUILD_MATH_LIBRARY)
     # if error with simd_define not generated occurs, uncomment this code
     # add_dependencies(${PROJECT_NAME} math_library)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${math_library_SOURCE_DIR}/include)
-    target_link_libraries(${PROJECT_NAME} math_library)
+    target_link_libraries(${PROJECT_NAME} PRIVATE math_library)
 endif()
 
 if(BUILD_EASTL)
-    FetchContent_MakeAvailable(eabase)
+    # FetchContent_MakeAvailable(eabase)
+    set(SAVED_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
     FetchContent_MakeAvailable(eastl)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eastl_SOURCE_DIR}/include)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eabase_SOURCE_DIR}/include/Common)
-    target_link_libraries(${PROJECT_NAME} EASTL)
+    target_link_libraries(${PROJECT_NAME} PRIVATE EASTL)
+    set(BUILD_SHARED_LIBS ${SAVED_BUILD_SHARED_LIBS})
 endif()
 
 if(BUILD_XXHASH)
@@ -336,7 +335,7 @@ if(BUILD_XXHASH)
     # Restore BUILD_SHARED_LIBS
     # set(BUILD_SHARED_LIBS "${SAVED_BUILD_SHARED_LIBS}" CACHE BOOL "" FORCE)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${xxhash_SOURCE_DIR}/cmake_unofficial/..")
-    target_link_libraries(${PROJECT_NAME} xxhash)
+    target_link_libraries(${PROJECT_NAME} PRIVATE xxhash)
 endif()
 
 option(USE_VULKAN "Use Vulkan for graphics" ON)
@@ -344,29 +343,27 @@ option(USE_OPENGL "Use OpenGL for graphics" OFF)
 option(USE_DIRECTX "Use DirectX for graphics" OFF)
 
 if(USE_VULKAN)
-# Find Vulkan package
-find_package(Vulkan REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Vulkan_INCLUDE_DIRS})
-
-# Find shaderc library
-find_library(Shaderc_LIBRARIES
-    NAMES shaderc_shared
-    HINTS "$ENV{VULKAN_SDK}/lib"
-)
-
-if(NOT Shaderc_LIBRARIES)
-    message(WARNING "Could not find shaderc_shared library. Fallback to shaderc_combined.")
+    # Find Vulkan package
+    find_package(Vulkan REQUIRED)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Vulkan_INCLUDE_DIRS})
+    # Find shaderc library
     find_library(Shaderc_LIBRARIES
-        NAMES shaderc_combined
+        NAMES shaderc_shared
         HINTS "$ENV{VULKAN_SDK}/lib"
     )
-endif()
+    if(NOT Shaderc_LIBRARIES)
+        message(WARNING "Could not find shaderc_shared library. Fallback to shaderc_combined.")
+        find_library(Shaderc_LIBRARIES
+            NAMES shaderc_combined
+            HINTS "$ENV{VULKAN_SDK}/lib"
+        )
+    endif()
 
-target_link_libraries(${PROJECT_NAME} ${Shaderc_LIBRARIES})
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "$ENV{VULKAN_SDK}/include")
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${Shaderc_LIBRARIES})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "$ENV{VULKAN_SDK}/include")
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN)
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 
 endif()
 
@@ -378,7 +375,7 @@ if(USE_OPENGL)
     endif()
     target_compile_definitions(${PROJECT_NAME} PRIVATE OPENGL)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${OPENGL_INCLUDE_DIR})
-    target_link_libraries(${PROJECT_NAME} ${OPENGL_gl_LIBRARY})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_gl_LIBRARY})
 
     option(BUILD_GLEW "Build the GLEW library" ON)
     if(BUILD_GLEW)
@@ -395,7 +392,7 @@ if(USE_OPENGL)
             add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR})
         endif()
         target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glew_SOURCE_DIR}/include)
-        target_link_libraries(${PROJECT_NAME} libglew_static)
+        target_link_libraries(${PROJECT_NAME} PRIVATE libglew_static)
     endif()
 endif()
 
