@@ -39,7 +39,7 @@ void View::PrepareViewUniformBufferShaderBindingInstance() {
       jShaderBinding(BindingPoint++,
                      1,
                      EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
-                      EShaderAccessStageFlag::ALL_GRAPHICS,
+                     false,
                      EShaderAccessStageFlag::ALL_GRAPHICS,
                      ResourceInlineAllactor.Alloc<jUniformBufferResource>(
                          ViewUniformBufferPtr.get())));
