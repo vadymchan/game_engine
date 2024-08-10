@@ -3,6 +3,8 @@
 
 namespace game_engine {
 
+static VkSampler g_defaultSampler = nullptr;
+
 void TextureVk::ReleaseInternal() {
   // If the image is created from a swapchain, the memory is nullptr, so there's
   // no need to destroy the image and memory. However, since the view is
@@ -63,6 +65,13 @@ VkSampler TextureVk::CreateDefaultSamplerState() {
   }
 
   return g_defaultSampler;
+}
+
+void TextureVk::DestroyDefaultSamplerState() {
+  if (g_defaultSampler) {
+    vkDestroySampler(g_rhi_vk->m_device_, g_defaultSampler, nullptr);
+    g_defaultSampler = nullptr;
+  }
 }
 
 }  // namespace game_engine
