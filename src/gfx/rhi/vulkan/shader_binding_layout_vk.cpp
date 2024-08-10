@@ -12,65 +12,65 @@ MutexRWLock ShaderBindingLayoutVk::PipelineLayoutPoolLock;
 std::unordered_map<uint64_t, VkPipelineLayout>
     ShaderBindingLayoutVk::PipelineLayoutPool;
 
-// ShaderBindingVk
-// =========================================================
-size_t ShaderBindingVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-  Hash = GETHASH_FROM_INSTANT_STRUCT(
-      IsInline, BindingPoint, NumOfDescriptors, BindingType, AccessStageFlags);
-  return Hash;
-}
-
-void ShaderBindingVk::CloneWithoutResource(ShaderBindingVk& OutReslut) const {
-  OutReslut.IsInline         = IsInline;
-  OutReslut.BindingPoint     = BindingPoint;
-  OutReslut.NumOfDescriptors = NumOfDescriptors;
-  OutReslut.BindingType      = BindingType;
-  OutReslut.AccessStageFlags = AccessStageFlags;
-  OutReslut.Hash             = Hash;
-}
-
-// =========================================================
-
-// ShaderBindingArray
-// =========================================================
-size_t ShaderBindingArray::GetHash() const {
-  size_t           Hash    = 0;
-  ShaderBindingVk* Address = (ShaderBindingVk*)&Data[0];
-  for (int32_t i = 0; i < NumOfData; ++i) {
-    Hash ^= ((Address + i)->GetHash() << i);
-  }
-  return Hash;
-}
-
-ShaderBindingArray& ShaderBindingArray::operator=(
-    const ShaderBindingArray& In) {
-  memcpy(&Data[0], &In.Data[0], sizeof(ShaderBindingVk) * In.NumOfData);
-  NumOfData = In.NumOfData;
-  return *this;
-}
-
-const ShaderBindingVk* ShaderBindingArray::operator[](int32_t InIndex) const {
-  assert(InIndex < NumOfData);
-  return (ShaderBindingVk*)(&Data[InIndex]);
-}
-
-void ShaderBindingArray::CloneWithoutResource(
-    ShaderBindingArray& OutResult) const {
-  memcpy(&OutResult.Data[0], &Data[0], sizeof(ShaderBindingVk) * NumOfData);
-
-  for (int32_t i = 0; i < NumOfData; ++i) {
-    ShaderBindingVk* SrcAddress = (ShaderBindingVk*)&Data[i];
-    ShaderBindingVk* DstAddress = (ShaderBindingVk*)&OutResult.Data[i];
-    SrcAddress->CloneWithoutResource(*DstAddress);
-  }
-  OutResult.NumOfData = NumOfData;
-}
-
-// =========================================================
+//// ShaderBindingVk
+//// =========================================================
+//size_t ShaderBindingVk::GetHash() const {
+//  if (Hash) {
+//    return Hash;
+//  }
+//
+//  Hash = GETHASH_FROM_INSTANT_STRUCT(
+//      IsInline, BindingPoint, NumOfDescriptors, BindingType, AccessStageFlags);
+//  return Hash;
+//}
+//
+//void ShaderBindingVk::CloneWithoutResource(ShaderBindingVk& OutReslut) const {
+//  OutReslut.IsInline         = IsInline;
+//  OutReslut.BindingPoint     = BindingPoint;
+//  OutReslut.NumOfDescriptors = NumOfDescriptors;
+//  OutReslut.BindingType      = BindingType;
+//  OutReslut.AccessStageFlags = AccessStageFlags;
+//  OutReslut.Hash             = Hash;
+//}
+//
+//// =========================================================
+//
+//// ShaderBindingArray
+//// =========================================================
+//size_t ShaderBindingArray::GetHash() const {
+//  size_t           Hash    = 0;
+//  ShaderBindingVk* Address = (ShaderBindingVk*)&Data[0];
+//  for (int32_t i = 0; i < NumOfData; ++i) {
+//    Hash ^= ((Address + i)->GetHash() << i);
+//  }
+//  return Hash;
+//}
+//
+//ShaderBindingArray& ShaderBindingArray::operator=(
+//    const ShaderBindingArray& In) {
+//  memcpy(&Data[0], &In.Data[0], sizeof(ShaderBindingVk) * In.NumOfData);
+//  NumOfData = In.NumOfData;
+//  return *this;
+//}
+//
+//const ShaderBindingVk* ShaderBindingArray::operator[](int32_t InIndex) const {
+//  assert(InIndex < NumOfData);
+//  return (ShaderBindingVk*)(&Data[InIndex]);
+//}
+//
+//void ShaderBindingArray::CloneWithoutResource(
+//    ShaderBindingArray& OutResult) const {
+//  memcpy(&OutResult.Data[0], &Data[0], sizeof(ShaderBindingVk) * NumOfData);
+//
+//  for (int32_t i = 0; i < NumOfData; ++i) {
+//    ShaderBindingVk* SrcAddress = (ShaderBindingVk*)&Data[i];
+//    ShaderBindingVk* DstAddress = (ShaderBindingVk*)&OutResult.Data[i];
+//    SrcAddress->CloneWithoutResource(*DstAddress);
+//  }
+//  OutResult.NumOfData = NumOfData;
+//}
+//
+//// =========================================================
 
 // WriteDescriptorSet
 // =========================================================
@@ -83,7 +83,7 @@ void WriteDescriptorSet::Reset() {
 }
 
 void WriteDescriptorSet::SetWriteDescriptorInfo(
-    int32_t InIndex, const ShaderBindingVk* InShaderBinding) {
+    int32_t InIndex, const jShaderBinding* InShaderBinding) {
   assert(InShaderBinding);
   assert(InShaderBinding->Resource);
   const bool IsBindless = InShaderBinding->Resource->IsBindless();
@@ -91,8 +91,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
   switch (InShaderBinding->BindingType) {
     case EShaderBindingType::UNIFORMBUFFER: {
       if (IsBindless) {
-        const UniformBufferResourceBindless* ubor
-            = reinterpret_cast<const UniformBufferResourceBindless*>(
+        const jUniformBufferResourceBindless* ubor
+            = reinterpret_cast<const jUniformBufferResourceBindless*>(
                 InShaderBinding->Resource);
         assert(ubor);
 
@@ -109,8 +109,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           }
         }
       } else {
-        const UniformBufferResource* ubor
-            = reinterpret_cast<const UniformBufferResource*>(
+        const jUniformBufferResource* ubor
+            = reinterpret_cast<const jUniformBufferResource*>(
                 InShaderBinding->Resource);
         assert(ubor && ubor->UniformBuffer);
 
@@ -128,8 +128,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
     }
     case EShaderBindingType::UNIFORMBUFFER_DYNAMIC: {
       if (IsBindless) {
-        const UniformBufferResourceBindless* ubor
-            = reinterpret_cast<const UniformBufferResourceBindless*>(
+        const jUniformBufferResourceBindless* ubor
+            = reinterpret_cast<const jUniformBufferResourceBindless*>(
                 InShaderBinding->Resource);
         assert(ubor);
 
@@ -148,8 +148,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           }
         }
       } else {
-        const UniformBufferResource* ubor
-            = reinterpret_cast<const UniformBufferResource*>(
+        const jUniformBufferResource* ubor
+            = reinterpret_cast<const jUniformBufferResource*>(
                 InShaderBinding->Resource);
         assert(ubor && ubor->UniformBuffer);
 
@@ -170,8 +170,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
     case EShaderBindingType::TEXTURE_SAMPLER_SRV:
     case EShaderBindingType::TEXTURE_SRV: {
       if (IsBindless) {
-        const TextureResourceBindless* tbor
-            = reinterpret_cast<const TextureResourceBindless*>(
+        const jTextureResourceBindless* tbor
+            = reinterpret_cast<const jTextureResourceBindless*>(
                 InShaderBinding->Resource);
         assert(tbor);
 
@@ -199,7 +199,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           }
         }
       } else {
-        const TextureResource* tbor = reinterpret_cast<const TextureResource*>(
+        const jTextureResource* tbor = reinterpret_cast<const jTextureResource*>(
             InShaderBinding->Resource);
         assert(tbor && tbor->Texture);
 
@@ -223,8 +223,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
       break;
     }
     case EShaderBindingType::TEXTURE_ARRAY_SRV: {
-      const TextureArrayResource* tbor
-          = reinterpret_cast<const TextureArrayResource*>(
+      const jTextureArrayResource* tbor
+          = reinterpret_cast<const jTextureArrayResource*>(
               InShaderBinding->Resource);
       assert(tbor && tbor->TextureArray);
       if (tbor && tbor->TextureArray) {
@@ -235,8 +235,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
     }
     case EShaderBindingType::SUBPASS_INPUT_ATTACHMENT: {
       if (IsBindless) {
-        const TextureResourceBindless* tbor
-            = reinterpret_cast<const TextureResourceBindless*>(
+        const jTextureResourceBindless* tbor
+            = reinterpret_cast<const jTextureResourceBindless*>(
                 InShaderBinding->Resource);
         assert(tbor);
 
@@ -264,7 +264,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           }
         }
       } else {
-        const TextureResource* tbor = reinterpret_cast<const TextureResource*>(
+        const jTextureResource* tbor = reinterpret_cast<const jTextureResource*>(
             InShaderBinding->Resource);
         assert(tbor && tbor->Texture);
 
@@ -287,8 +287,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
       assert(0);
       // TODO: WIP
       // if (IsBindless) {
-      //  const TextureResourceBindless* tbor
-      //      = reinterpret_cast<const TextureResourceBindless*>(
+      //  const jTextureResourceBindless* tbor
+      //      = reinterpret_cast<const jTextureResourceBindless*>(
       //          InShaderBinding->Resource);
       //  assert(tbor);
 
@@ -334,8 +334,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
       //    }
       //  }
       //} else {
-      //  const TextureResource* tbor
-      //      = reinterpret_cast<const TextureResource*>(
+      //  const jTextureResource* tbor
+      //      = reinterpret_cast<const jTextureResource*>(
       //          InShaderBinding->Resource);
       //  assert(tbor && tbor->Texture);
 
@@ -379,8 +379,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
     }
     case EShaderBindingType::SAMPLER: {
       if (IsBindless) {
-        const SamplerResourceBindless* sr
-            = reinterpret_cast<const SamplerResourceBindless*>(
+        const jSamplerResourceBindless* sr
+            = reinterpret_cast<const jSamplerResourceBindless*>(
                 InShaderBinding->Resource);
         assert(sr);
 
@@ -396,7 +396,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           }
         }
       } else {
-        const SamplerResource* sr = reinterpret_cast<const SamplerResource*>(
+        const jSamplerResource* sr = reinterpret_cast<const jSamplerResource*>(
             InShaderBinding->Resource);
         assert(sr && sr->SamplerState);
 
@@ -416,8 +416,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
     case EShaderBindingType::BUFFER_UAV:
     case EShaderBindingType::BUFFER_UAV_DYNAMIC: {
       if (IsBindless) {
-        const BufferResourceBindless* br
-            = reinterpret_cast<const BufferResourceBindless*>(
+        const jBufferResourceBindless* br
+            = reinterpret_cast<const jBufferResourceBindless*>(
                 InShaderBinding->Resource);
         for (auto Buffer : br->Buffers) {
           assert(Buffer);
@@ -430,7 +430,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           WriteDescriptorInfos.push_back(WriteDescriptorInfo(bufferInfo));
         }
       } else {
-        const BufferResource* br = reinterpret_cast<const BufferResource*>(
+        const jBufferResource* br = reinterpret_cast<const jBufferResource*>(
             InShaderBinding->Resource);
         assert(br && br->Buffer);
         if (br && br->Buffer) {
@@ -447,8 +447,8 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
     // Not needed for now (RTX stuff)
     /*case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR: {
       if (IsBindless) {
-        const BufferResourceBindless* br
-            = reinterpret_cast<const BufferResourceBindless*>(
+        const jBufferResourceBindless* br
+            = reinterpret_cast<const jBufferResourceBindless*>(
                 InShaderBinding->Resource);
         for (auto Buffer : br->Buffers) {
           assert(Buffer);
@@ -466,7 +466,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
               WriteDescriptorInfo(AccelerationStructureKHR));
         }
       } else {
-        const BufferResource* br = reinterpret_cast<const BufferResource*>(
+        const jBufferResource* br = reinterpret_cast<const jBufferResource*>(
             InShaderBinding->Resource);
         assert(br && br->Buffer);
         if (br && br->Buffer) {
@@ -496,10 +496,10 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
 // ShaderBindingInstance
 // =========================================================
 
-void ShaderBindingInstance::CreateWriteDescriptorSet(
-    WriteDescriptorSet&       OutDescriptorWrites,
-    const VkDescriptorSet     InDescriptorSet,
-    const ShaderBindingArray& InShaderBindingArray) {
+void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
+    WriteDescriptorSet&        OutDescriptorWrites,
+    const VkDescriptorSet      InDescriptorSet,
+    const jShaderBindingArray& InShaderBindingArray) {
   //  assert(InShaderBindingArray.NumOfData);
   //
   //  OutDescriptorWrites.Reset();
@@ -590,9 +590,9 @@ void ShaderBindingInstance::CreateWriteDescriptorSet(
   OutDescriptorWrites.IsInitialized = true;
 }
 
-void ShaderBindingInstance::UpdateWriteDescriptorSet(
-    WriteDescriptorSet&       OutDescriptorWrites,
-    const ShaderBindingArray& InShaderBindingArray) {
+void ShaderBindingInstanceVk::UpdateWriteDescriptorSet(
+    WriteDescriptorSet&        OutDescriptorWrites,
+    const jShaderBindingArray& InShaderBindingArray) {
   assert(InShaderBindingArray.NumOfData
          == OutDescriptorWrites.DescriptorWrites.size());
 
@@ -602,8 +602,8 @@ void ShaderBindingInstance::UpdateWriteDescriptorSet(
   }
 }
 
-void ShaderBindingInstance::Initialize(
-    const ShaderBindingArray& InShaderBindingArray) {
+void ShaderBindingInstanceVk::Initialize(
+    const jShaderBindingArray& InShaderBindingArray) {
   // if (!writeDescriptorSet.IsInitialized) {
   CreateWriteDescriptorSet(
       writeDescriptorSet, DescriptorSet, InShaderBindingArray);
@@ -620,8 +620,8 @@ void ShaderBindingInstance::Initialize(
       nullptr);
 }
 
-void ShaderBindingInstance::UpdateShaderBindings(
-    const ShaderBindingArray& InShaderBindingArray) {
+void ShaderBindingInstanceVk::UpdateShaderBindings(
+    const jShaderBindingArray& InShaderBindingArray) {
   assert(ShaderBindingsLayouts->GetShaderBindingsLayout().NumOfData
          == InShaderBindingArray.NumOfData);
   assert(InShaderBindingArray.NumOfData);
@@ -641,8 +641,8 @@ void ShaderBindingInstance::UpdateShaderBindings(
       nullptr);
 }
 
-void ShaderBindingInstance::Free() {
-  if (GetType() == ShaderBindingInstanceType::MultiFrame) {
+void ShaderBindingInstanceVk::Free() {
+  if (GetType() == jShaderBindingInstanceType::MultiFrame) {
     g_rhi_vk->GetDescriptorPoolMultiFrame()->Free(shared_from_this());
   }
 }
@@ -653,32 +653,32 @@ void ShaderBindingInstance::Free() {
 // =========================================================
 
 bool ShaderBindingLayoutVk::Initialize(
-    const ShaderBindingArray& InShaderBindingArray) {
+    const jShaderBindingArray& InShaderBindingArray) {
   InShaderBindingArray.CloneWithoutResource(shaderBindingArray);
   DescriptorSetLayout = CreateDescriptorSetLayout(shaderBindingArray);
 
   return !!DescriptorSetLayout;
 }
 
-std::shared_ptr<ShaderBindingInstance>
+std::shared_ptr<jShaderBindingInstance>
     ShaderBindingLayoutVk::CreateShaderBindingInstance(
-        const ShaderBindingArray&       InShaderBindingArray,
-        const ShaderBindingInstanceType InType) const {
+        const jShaderBindingArray&       InShaderBindingArray,
+        const jShaderBindingInstanceType InType) const {
   DescriptorPoolVk* DescriptorPool = nullptr;
   switch (InType) {
-    case ShaderBindingInstanceType::SingleFrame:
+    case jShaderBindingInstanceType::SingleFrame:
       DescriptorPool = g_rhi_vk->GetDescriptorPoolForSingleFrame();
       break;
-    case ShaderBindingInstanceType::MultiFrame:
+    case jShaderBindingInstanceType::MultiFrame:
       DescriptorPool = g_rhi_vk->GetDescriptorPoolMultiFrame();
       break;
-    case ShaderBindingInstanceType::Max:
+    case jShaderBindingInstanceType::Max:
     default:
       assert(0);
       break;
   }
 
-  std::shared_ptr<ShaderBindingInstance> DescriptorSet
+  std::shared_ptr<jShaderBindingInstance> DescriptorSet
       = DescriptorPool->AllocateDescriptorSet(DescriptorSetLayout);
 
   assert(DescriptorSet && "DescriptorSet allocation failed");
@@ -748,7 +748,7 @@ std::vector<VkDescriptorPoolSize>
 }
 
 VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
-    const ShaderBindingArray& InShaderBindingArray) {
+    const jShaderBindingArray& InShaderBindingArray) {
   VkDescriptorSetLayout DescriptorSetLayout = nullptr;
   size_t                hash                = InShaderBindingArray.GetHash();
   assert(hash);
@@ -769,7 +769,7 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
     for (int32_t i = 0; i < (int32_t)InShaderBindingArray.NumOfData; ++i) {
       VkDescriptorSetLayoutBinding binding = {};
       if (InShaderBindingArray[i]->BindingPoint
-          != ShaderBindingVk::APPEND_LAST) {
+          != jShaderBinding::APPEND_LAST) {
         binding.binding  = InShaderBindingArray[i]->BindingPoint;
         LastBindingIndex = InShaderBindingArray[i]->BindingPoint + 1;
       } else {
@@ -805,8 +805,8 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
 }
 
 VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
-    const ShaderBindingLayoutArrayVk& InShaderBindingLayoutArray,
-    const PushConstantVk*             pushConstant) {
+    const jShaderBindingLayoutArray& InShaderBindingLayoutArray,
+    const jPushConstant*             pushConstant) {
   if (InShaderBindingLayoutArray.NumOfData <= 0) {
     GlobalLogger::Log(LogLevel::Warning,
                       "Shader binding layout array is empty");
@@ -850,13 +850,13 @@ VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
 
     std::vector<VkPushConstantRange> PushConstantRanges;
     if (pushConstant) {
-      const ResourceContainer<PushConstantRangeVk>* pushConstantRanges
+      const ResourceContainer<jPushConstantRange>* pushConstantRanges
           = pushConstant->GetPushConstantRanges();
       assert(pushConstantRanges);
       if (pushConstantRanges) {
         PushConstantRanges.reserve(pushConstantRanges->NumOfData);
         for (int32_t i = 0; i < pushConstantRanges->NumOfData; ++i) {
-          const PushConstantRangeVk& range = (*pushConstantRanges)[i];
+          const jPushConstantRange& range = (*pushConstantRanges)[i];
 
           VkPushConstantRange pushConstantRange{};
           pushConstantRange.stageFlags
@@ -904,10 +904,5 @@ void ShaderBindingLayoutVk::ClearPipelineLayout() {
   }
 }
 
-// =========================================================
-
-uint32_t test::GetCurrentFrameNumber() {
-  return g_rhi_vk->GetCurrentFrameNumber();
-}
 
 }  // namespace game_engine
