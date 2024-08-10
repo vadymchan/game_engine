@@ -20,12 +20,6 @@ void TextureVk::ReleaseInternal() {
   }
 }
 
-uint32_t TextureVk::GetMipLevels(uint32_t InWidth, uint32_t InHeight) {
-  return 1
-       + static_cast<uint32_t>(
-             std::floor(std::log2(std::max(InWidth, InHeight))));
-}
-
 VkSampler TextureVk::CreateDefaultSamplerState() {
   if (g_defaultSampler) {
     return g_defaultSampler;
