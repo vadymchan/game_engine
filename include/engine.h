@@ -8,6 +8,7 @@
 #include "event/window_event_handler.h"
 #include "event/window_event_manager.h"
 #include "game.h"
+#include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/rhi.h"
 #include "gfx/rhi/vulkan/rhi_vk.h"
 #include "input/input_manager.h"
@@ -43,7 +44,7 @@ class Engine {
     // window
     // ------------------------------------------------------------------------
     m_window_ = std::make_unique<Window>(
-        "Generalized RHI",
+        "First Triangle DirectX 12",
         math::Dimension2Di{800, 600},
         math::Point2Di{100, 100},
         game_engine::Window::Flags::Resizable
@@ -81,7 +82,7 @@ class Engine {
     m_applicationEventManager_
         = std::make_unique<ApplicationEventManager>(m_applicationEventHandler_);
 
-    g_rhi = new RhiVk();
+    g_rhi = new jRHI_DX12();
     g_rhi->init(m_window_);
     g_rhi->OnInitRHI();
 
