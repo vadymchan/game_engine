@@ -10,6 +10,7 @@
 
 namespace game_engine {
 
+// TODO: override IsComplete methods
 class FenceVk : public jFence {
   public:
   FenceVk()
