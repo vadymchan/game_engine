@@ -6,13 +6,14 @@
 
 #include <math_library/dimension.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 
 namespace game_engine {
 
-struct jTexture
-    : public ShaderBindableResource {
+struct jTexture : public ShaderBindableResource {
   jTexture()
       : type(ETextureType::MAX)
       , format(ETextureFormat::RGB8)
@@ -41,7 +42,9 @@ struct jTexture
   static int32_t GetMipLevels(int32_t InWidth, int32_t InHeight) {
     return 1
          + static_cast<uint32_t>(
-               std::floor(std::log2(std::max(InWidth, InHeight))));
+               // TODO: instead of using (std::max) consider undefine max macro
+               // from Window.h
+               std::floor(std::log2((std::max)(InWidth, InHeight))));
   }
 
   virtual void* GetHandle() const { return nullptr; }
