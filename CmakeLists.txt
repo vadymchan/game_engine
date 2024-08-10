@@ -404,6 +404,10 @@ if(USE_DIRECTX AND NOT WIN32)
     message(FATAL_ERROR "DirectX is only available on Windows!")
 endif()
 
+if(USE_DIRECTX AND WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE d3d12 dxgi)
+endif()
+
 add_custom_command(TARGET ${PROJECT_NAME}
                    POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E remove 
