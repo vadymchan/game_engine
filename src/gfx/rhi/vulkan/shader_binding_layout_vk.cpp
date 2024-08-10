@@ -765,6 +765,11 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
     ScopeWriteLock sw(&DescriptorLayoutPoolLock);
 
     std::vector<VkDescriptorSetLayoutBinding> bindings;
+    bindings.reserve(InShaderBindingArray.NumOfData);
+
+    std::vector<VkDescriptorBindingFlagsEXT> bindingFlags;
+    bindingFlags.reserve(InShaderBindingArray.NumOfData);
+
     int32_t                                   LastBindingIndex = 0;
     for (int32_t i = 0; i < (int32_t)InShaderBindingArray.NumOfData; ++i) {
       VkDescriptorSetLayoutBinding binding = {};
@@ -782,12 +787,27 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
           InShaderBindingArray[i]->AccessStageFlags);
       binding.pImmutableSamplers = nullptr;
       bindings.push_back(binding);
+      bindingFlags.push_back(
+          InShaderBindingArray[i]->Resource->IsBindless()
+              ? (VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
+                 | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT)
+              : 0);
     }
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     layoutInfo.pBindings    = bindings.data();
+
+    // for bindless resources
+    if (bindingFlags.size() > 0) {
+      VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags{};
+      setLayoutBindingFlags.sType
+          = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+      setLayoutBindingFlags.bindingCount  = (uint32_t)bindingFlags.size();
+      setLayoutBindingFlags.pBindingFlags = bindingFlags.data();
+      layoutInfo.pNext                    = &setLayoutBindingFlags;
+    }
 
     if (vkCreateDescriptorSetLayout(
             g_rhi_vk->m_device_, &layoutInfo, nullptr, &DescriptorSetLayout)

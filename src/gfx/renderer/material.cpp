@@ -46,6 +46,7 @@ const std::shared_ptr<jShaderBindingInstance>&
           BindingPoint++,
           1,
           EShaderBindingType::TEXTURE_SAMPLER_SRV,
+          false,
           EShaderAccessStageFlag::ALL_GRAPHICS,
           ResourceInlineAllactor.Alloc<jTextureResource>(Texture, nullptr)));
     }

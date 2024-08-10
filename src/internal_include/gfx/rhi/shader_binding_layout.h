@@ -251,18 +251,24 @@ struct jShaderBinding {
   jShaderBinding(const int32_t                 InBindingPoint,
                  const int32_t                 InNumOfDescriptors,
                  const EShaderBindingType      InBindingType,
+                 const bool                    InIsBindless,
                  const EShaderAccessStageFlag  InAccessStageFlags,
                  const jShaderBindingResource* InResource = nullptr,
                  bool                          InIsInline = false)
       : BindingPoint(InBindingPoint)
       , NumOfDescriptors(InNumOfDescriptors)
       , BindingType(InBindingType)
+      , IsBindless(InIsBindless)
       , AccessStageFlags(InAccessStageFlags)
       , Resource(InResource)
       , IsInline(InIsInline) {
     // SubpassInputAttachment must have the stageflag 0.
     assert(EShaderBindingType::SUBPASS_INPUT_ATTACHMENT != InBindingType
            || InAccessStageFlags == EShaderAccessStageFlag::FRAGMENT);
+
+    if (InResource) {
+      assert(InResource->IsBindless() == InIsBindless);
+    }
 
     GetHash();
   }
@@ -276,7 +282,8 @@ struct jShaderBinding {
                                        BindingPoint,
                                        NumOfDescriptors,
                                        BindingType,
-                                       AccessStageFlags);
+                                       AccessStageFlags,
+                                       IsBindless);
     return Hash;
   }
 
@@ -286,15 +293,14 @@ struct jShaderBinding {
     OutReslut.NumOfDescriptors = NumOfDescriptors;
     OutReslut.BindingType      = BindingType;
     OutReslut.AccessStageFlags = AccessStageFlags;
-    // OutReslut.IsBindless       = IsBindless;
+    OutReslut.IsBindless       = IsBindless;
     OutReslut.Hash = Hash;
   }
 
   mutable size_t Hash = 0;
 
-  // TODO: no IsBindless field
   bool                   IsInline = false;
-  // bool                   IsBindless       = false;
+  bool                   IsBindless       = false;
   int32_t                BindingPoint     = 0;
   int32_t                NumOfDescriptors = 1;
   EShaderBindingType     BindingType      = EShaderBindingType::UNIFORMBUFFER;
