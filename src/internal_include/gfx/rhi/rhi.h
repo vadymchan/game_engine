@@ -522,6 +522,7 @@ class jRHI {
     return nullptr;
   }
 
+  // TODO: consider use Dimension or Point instead of Vector2Di
   virtual jRenderPass* GetOrCreateRenderPass(
       const std::vector<jAttachment>& colorAttachments,
       const math::Vector2Di&          offset,
@@ -529,6 +530,7 @@ class jRHI {
     return nullptr;
   }
 
+  // TODO: consider use Dimension or Point instead of Vector2Di
   virtual jRenderPass* GetOrCreateRenderPass(
       const std::vector<jAttachment>& colorAttachments,
       const jAttachment&              depthAttachment,
@@ -537,6 +539,7 @@ class jRHI {
     return nullptr;
   }
 
+  // TODO: consider use Dimension or Point instead of Vector2Di
   virtual jRenderPass* GetOrCreateRenderPass(
       const std::vector<jAttachment>& colorAttachments,
       const jAttachment&              depthAttachment,
@@ -546,6 +549,7 @@ class jRHI {
     return nullptr;
   }
 
+  // TODO: consider use Dimension or Point instead of Vector2Di
   virtual jRenderPass* GetOrCreateRenderPass(
       const jRenderPassInfo& renderPassInfo,
       const math::Vector2Di& offset,
