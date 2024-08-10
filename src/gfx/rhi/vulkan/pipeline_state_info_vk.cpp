@@ -58,71 +58,6 @@ void SamplerStateInfoVk::Release() {
   }
 }
 
-size_t SamplerStateInfoVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-   Hash = GETHASH_FROM_INSTANT_STRUCT(Minification,
-                                      Magnification,
-                                      AddressU,
-                                      AddressV,
-                                      AddressW,
-                                      MipLODBias,
-                                      MaxAnisotropy,
-                                      TextureComparisonMode,
-                                      IsEnableComparisonMode,
-                                      ComparisonFunc,
-                                      BorderColor,
-                                      MinLOD,
-                                      MaxLOD);
-  return Hash;
-}
-
-// No need for now
-std::string SamplerStateInfoVk::ToString() const {
-  std::string Result;
-  Result += EnumToString(Minification);
-  Result += ",";
-  Result += EnumToString(Magnification);
-  Result += ",";
-  Result += EnumToString(AddressU);
-  Result += ",";
-  Result += EnumToString(AddressV);
-  Result += ",";
-  Result += EnumToString(AddressW);
-  Result += std::to_string(MipLODBias);
-  Result += ",";
-  Result += std::to_string(MaxAnisotropy);
-  Result += ",";
-  Result += EnumToString(TextureComparisonMode);
-  Result += ",";
-  Result += std::to_string(IsEnableComparisonMode);
-  Result += ",";
-  Result += EnumToString(ComparisonFunc);
-  Result += ",";
-  Result += std::to_string(MaxAnisotropy);
-  Result += ",";
-
-  Result += "(";
-  Result += std::to_string(BorderColor.x());
-  Result += ",";
-  Result += std::to_string(BorderColor.y());
-  Result += ",";
-  Result += std::to_string(BorderColor.z());
-  Result += ",";
-  Result += std::to_string(BorderColor.w());
-  Result += ")";
-  Result += ",";
-
-  Result += std::to_string(MinLOD);
-  Result += ",";
-  Result += std::to_string(MinLOD);
-  Result += ",";
-
-  return Result;
-}
-
 // RasterizationStateInfoVk
 // ======================================================================
 
@@ -163,29 +98,6 @@ void RasterizationStateInfoVk::Initialize() {
   MultisampleStateInfo.alphaToOneEnable = AlphaToOneEnable;  // Optional
 }
 
-size_t RasterizationStateInfoVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-  Hash = GETHASH_FROM_INSTANT_STRUCT(PolygonMode,
-                                     CullMode,
-                                     FrontFace,
-                                     DepthBiasEnable,
-                                     DepthBiasConstantFactor,
-                                     DepthBiasClamp,
-                                     DepthBiasSlopeFactor,
-                                     LineWidth,
-                                     DepthClampEnable,
-                                     RasterizerDiscardEnable,
-                                     SampleCount,
-                                     SampleShadingEnable,
-                                     MinSampleShading,
-                                     AlphaToCoverageEnable,
-                                     AlphaToOneEnable);
-  return Hash;
-}
-
 // StencilOpStateInfoVk
 // ======================================================================
 
@@ -199,21 +111,6 @@ void StencilOpStateInfoVk::Initialize() {
   StencilOpStateInfo.compareMask = CompareMask;
   StencilOpStateInfo.writeMask   = WriteMask;
   StencilOpStateInfo.reference   = Reference;
-}
-
-size_t StencilOpStateInfoVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-   Hash = GETHASH_FROM_INSTANT_STRUCT(FailOp,
-                                      PassOp,
-                                      DepthFailOp,
-                                      CompareOp,
-                                      CompareMask,
-                                      WriteMask,
-                                      Reference);
-  return Hash;
 }
 
 // DepthStencilStateInfoVk
@@ -241,23 +138,6 @@ void DepthStencilStateInfoVk::Initialize() {
   }
 }
 
-size_t DepthStencilStateInfoVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-   Hash = GETHASH_FROM_INSTANT_STRUCT(DepthTestEnable,
-                                      DepthWriteEnable,
-                                      DepthCompareOp,
-                                      DepthBoundsTestEnable,
-                                      StencilTestEnable,
-                                      (Front ? Front->GetHash() : 0),
-                                      (Back ? Back->GetHash() : 0),
-                                      MinDepthBounds,
-                                      MaxDepthBounds);
-  return Hash;
-}
-
 // BlendingStateInfoVk
 // ======================================================================
 
@@ -275,126 +155,83 @@ void BlendingStateInfoVk::Initialize() {
   ColorBlendAttachmentInfo.colorWriteMask = GetVulkanColorMask(ColorWriteMask);
 }
 
-size_t BlendingStateInfoVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-   Hash = GETHASH_FROM_INSTANT_STRUCT(BlendEnable,
-                                      Src,
-                                      Dest,
-                                      BlendOp,
-                                      SrcAlpha,
-                                      DestAlpha,
-                                      AlphaBlendOp,
-                                      ColorWriteMask);
-  return Hash;
-}
-
 // PipelineStateFixedInfoVk
 // ======================================================================
 
-size_t PipelineStateFixedInfoVk::CreateHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-  Hash = 0;
-  for (int32_t i = 0; i < Viewports.size(); ++i) {
-    Hash ^= (Viewports[i].GetHash() ^ (i + 1));
-  }
-
-  for (int32_t i = 0; i < Scissors.size(); ++i) {
-    Hash ^= (Scissors[i].GetHash() ^ (i + 1));
-  }
-
-  if (DynamicStates.size() > 0) {
-    Hash = ::XXH64(&DynamicStates[0],
-                   sizeof(EPipelineDynamicState) * DynamicStates.size(),
-                   Hash);
-  }
-
-  // 아래 내용들도 해시를 만들 수 있어야 함, todo
-  Hash ^= RasterizationState->GetHash();
-  Hash ^= DepthStencilState->GetHash();
-  Hash ^= BlendingState->GetHash();
-  Hash ^= (uint64_t)IsUseVRS;
-
-  return Hash;
-}
-
-// PushConstantVk
-// ======================================================================
-
-PushConstantVk::PushConstantVk(const PushConstantVk& InPushConstant) {
-  assert(InPushConstant.UsedSize < 256);
-
-  UsedSize = InPushConstant.UsedSize;
-  memcpy(Data, InPushConstant.Data, InPushConstant.UsedSize);
-  PushConstantRanges = InPushConstant.PushConstantRanges;
-  Hash               = InPushConstant.Hash;
-}
-
-PushConstantVk::PushConstantVk(const char*            InData,
-                               int32_t                InSize,
-                               EShaderAccessStageFlag InShaderAccessStageFlag) {
-  assert(InSize < 256);
-
-  UsedSize = InSize;
-  memcpy(Data, InData, InSize);
-  PushConstantRanges.Add(
-      PushConstantRangeVk(InShaderAccessStageFlag, 0, InSize));
-  GetHash();
-}
-
-PushConstantVk::PushConstantVk(const char*                InData,
-                               int32_t                    InSize,
-                               const PushConstantRangeVk& InPushConstantRange) {
-  assert(InSize < 256);
-
-  UsedSize = InSize;
-  memcpy(Data, InData, InSize);
-  PushConstantRanges.Add(InPushConstantRange);
-  GetHash();
-}
-
-PushConstantVk::PushConstantVk(
-    const char*                                   InData,
-    int32_t                                       InSize,
-    const ResourceContainer<PushConstantRangeVk>& InPushConstantRanges)
-    : PushConstantRanges(InPushConstantRanges) {
-  assert(InSize < 256);
-
-  UsedSize = InSize;
-  memcpy(Data, InData, InSize);
-  GetHash();
-}
-
-PushConstantVk& PushConstantVk::operator=(
-    const PushConstantVk& InPushConstant) {
-  assert(InPushConstant.UsedSize < 256);
-
-  UsedSize = InPushConstant.UsedSize;
-  memcpy(Data, InPushConstant.Data, InPushConstant.UsedSize);
-  PushConstantRanges = InPushConstant.PushConstantRanges;
-  Hash               = InPushConstant.Hash;
-  return *this;
-}
-
-size_t PushConstantVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-  Hash = 0;
-  if (PushConstantRanges.NumOfData > 0) {
-    Hash = ::XXH64(&PushConstantRanges[0],
-                   sizeof(PushConstantRangeVk) * PushConstantRanges.NumOfData,
-                   Hash);
-  }
-
-  return Hash;
-}
+//// PushConstantVk
+//// ======================================================================
+//
+// PushConstantVk::PushConstantVk(const PushConstantVk& InPushConstant) {
+//  assert(InPushConstant.UsedSize < 256);
+//
+//  UsedSize = InPushConstant.UsedSize;
+//  memcpy(Data, InPushConstant.Data, InPushConstant.UsedSize);
+//  PushConstantRanges = InPushConstant.PushConstantRanges;
+//  Hash               = InPushConstant.Hash;
+//}
+//
+// PushConstantVk::PushConstantVk(const char*            InData,
+//                               int32_t                InSize,
+//                               EShaderAccessStageFlag InShaderAccessStageFlag)
+//                               {
+//  assert(InSize < 256);
+//
+//  UsedSize = InSize;
+//  memcpy(Data, InData, InSize);
+//  PushConstantRanges.Add(
+//      PushConstantRangeVk(InShaderAccessStageFlag, 0, InSize));
+//  GetHash();
+//}
+//
+// PushConstantVk::PushConstantVk(const char*                InData,
+//                               int32_t                    InSize,
+//                               const PushConstantRangeVk& InPushConstantRange)
+//                               {
+//  assert(InSize < 256);
+//
+//  UsedSize = InSize;
+//  memcpy(Data, InData, InSize);
+//  PushConstantRanges.Add(InPushConstantRange);
+//  GetHash();
+//}
+//
+// PushConstantVk::PushConstantVk(
+//    const char*                                   InData,
+//    int32_t                                       InSize,
+//    const ResourceContainer<PushConstantRangeVk>& InPushConstantRanges)
+//    : PushConstantRanges(InPushConstantRanges) {
+//  assert(InSize < 256);
+//
+//  UsedSize = InSize;
+//  memcpy(Data, InData, InSize);
+//  GetHash();
+//}
+//
+// PushConstantVk& PushConstantVk::operator=(
+//    const PushConstantVk& InPushConstant) {
+//  assert(InPushConstant.UsedSize < 256);
+//
+//  UsedSize = InPushConstant.UsedSize;
+//  memcpy(Data, InPushConstant.Data, InPushConstant.UsedSize);
+//  PushConstantRanges = InPushConstant.PushConstantRanges;
+//  Hash               = InPushConstant.Hash;
+//  return *this;
+//}
+//
+// size_t PushConstantVk::GetHash() const {
+//  if (Hash) {
+//    return Hash;
+//  }
+//
+//  Hash = 0;
+//  if (PushConstantRanges.NumOfData > 0) {
+//    Hash = ::XXH64(&PushConstantRanges[0],
+//                   sizeof(PushConstantRangeVk) * PushConstantRanges.NumOfData,
+//                   Hash);
+//  }
+//
+//  return Hash;
+//}
 
 // PipelineStateInfoVk
 // ======================================================================
@@ -422,41 +259,6 @@ void PipelineStateInfoVk::Release() {
   vkPipelineLayout = nullptr;
 }
 
-size_t PipelineStateInfoVk::GetHash() const {
-  if (Hash) {
-    return Hash;
-  }
-
-  Hash = 0;
-  if (PipelineType == EPipelineType::Graphics) {
-    assert(PipelineStateFixed);
-    Hash ^= PipelineStateFixed->CreateHash();
-    Hash ^= VertexBufferArray.GetHash();
-    Hash ^= RenderPass->GetHash();
-    Hash ^= GraphicsShader.GetHash();
-  } else if (PipelineType == EPipelineType::Compute) {
-    assert(ComputeShader);
-    Hash ^= ComputeShader->shaderInfo.GetHash();
-  } else if (PipelineType == EPipelineType::RayTracing) {
-    // TODO: not needed for now (remove)
-    // for (int32_t i = 0; i < (int32_t)RaytracingShaders.size(); ++i) {
-    //  Hash ^= RaytracingShaders[i].GetHash();
-    //}
-    // Hash ^= RaytracingPipelineData.GetHash();
-  } else {
-    assert(0);
-  }
-
-  Hash ^= ShaderBindingLayoutArray.GetHash();
-
-  if (PushConstant) {
-    Hash ^= PushConstant->GetHash();
-  }
-  Hash ^= SubpassIndex;
-
-  return Hash;
-}
-
 void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   if (vkPipeline) {
     return vkPipeline;
@@ -480,7 +282,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   VkPipelineInputAssemblyStateCreateInfo inputAssembly
       = ((VertexBufferVk*)VertexBufferArray[0])->CreateInputAssemblyState();
 
-  const auto&             Viewports = PipelineStateFixed->Viewports;
+  const auto&             Viewports = PipelineStateFixed->viewports;
   std::vector<VkViewport> vkViewports;
   vkViewports.resize(Viewports.size());
   for (int32_t i = 0; i < vkViewports.size(); ++i) {
@@ -503,7 +305,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
     vkViewports[i].maxDepth = Viewports[i].MaxDepth;
   }
 
-  const auto&           Scissors = PipelineStateFixed->Scissors;
+  const auto&           Scissors = PipelineStateFixed->scissors;
   std::vector<VkRect2D> vkScissor;
   vkScissor.resize(Scissors.size());
   for (int32_t i = 0; i < vkScissor.size(); ++i) {
@@ -530,7 +332,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
 
   int32_t ColorAttachmentCountInSubpass = 0;
   assert(RenderPass->RenderPassInfo.Subpasses.size() > SubpassIndex);
-  const SubpassVk& SelectedSubpass
+  const jSubpass& SelectedSubpass
       = RenderPass->RenderPassInfo.Subpasses[SubpassIndex];
   for (int32_t i = 0;
        i < (int32_t)SelectedSubpass.OutputColorAttachments.size();
@@ -540,7 +342,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
         = !RenderPass->RenderPassInfo.Attachments[AttachmentIndex]
                .IsDepthAttachment()
        && !RenderPass->RenderPassInfo.Attachments[AttachmentIndex]
-               .IsResolveAttachment;
+               .IsResolveAttachment();
     if (IsColorAttachment) {
       ++ColorAttachmentCountInSubpass;
     }
@@ -595,14 +397,19 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   VkPipelineShaderStageCreateInfo ShaderStages[5];
   uint32_t                        ShaderStageIndex = 0;
   if (GraphicsShader.VertexShader) {
-    ShaderStages[ShaderStageIndex++] = GraphicsShader.VertexShader->ShaderStage;
+    ShaderStages[ShaderStageIndex++]
+        = ((CompiledShaderVk*)GraphicsShader.VertexShader->GetCompiledShader())
+              ->ShaderStage;
   }
   if (GraphicsShader.GeometryShader) {
     ShaderStages[ShaderStageIndex++]
-        = GraphicsShader.GeometryShader->ShaderStage;
+        = ((CompiledShaderVk*)GraphicsShader.GeometryShader)->ShaderStage;
   }
   if (GraphicsShader.PixelShader) {
-    ShaderStages[ShaderStageIndex++] = GraphicsShader.PixelShader->ShaderStage;
+    ShaderStages[ShaderStageIndex++]
+        //= ((CompiledShaderVk*)GraphicsShader.PixelShader)->ShaderStage;
+        = ((CompiledShaderVk*)GraphicsShader.PixelShader->GetCompiledShader())
+			  ->ShaderStage;
   }
 
   assert(ShaderStageIndex > 0);
@@ -712,7 +519,8 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
       = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
   computePipelineCreateInfo.layout = vkPipelineLayout;
   computePipelineCreateInfo.flags  = 0;
-  computePipelineCreateInfo.stage  = ComputeShader->ShaderStage;
+  computePipelineCreateInfo.stage
+      = ((CompiledShaderVk*)ComputeShader->GetCompiledShader())->ShaderStage;
 
   if (vkCreateComputePipelines(g_rhi_vk->m_device_,
                                g_rhi_vk->PipelineCache,
@@ -737,7 +545,7 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
 }
 
 void PipelineStateInfoVk::Bind(
-    const std::shared_ptr<RenderFrameContextVk>& InRenderFrameContext) const {
+    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
   assert(vkPipeline);
   if (PipelineType == EPipelineType::Graphics) {
     vkCmdBindPipeline(
