@@ -413,10 +413,11 @@ class jRHI {
 
   virtual void EndDebugEvent() const {}
 
-  virtual void BeginDebugEvent(jCommandBuffer*        InCommandBuffer,
-                               const char*            InName,
-                               const math::Vector4Df& InColor
-                               = math::ColorGreen) const {}
+  // TODO: implement
+  //virtual void BeginDebugEvent(jCommandBuffer*        InCommandBuffer,
+  //                             const char*            InName,
+  //                             const math::Vector4Df& InColor
+  //                             = math::ColorGreen) const {}
 
   virtual void EndDebugEvent(jCommandBuffer* InCommandBuffer) const {}
 
