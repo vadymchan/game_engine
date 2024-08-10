@@ -27,30 +27,30 @@ void View::PrepareViewUniformBufferShaderBindingInstance() {
 
   ViewUniformBufferPtr = std::shared_ptr<IUniformBufferBlock>(
       g_rhi->CreateUniformBufferBlock(NameStatic("ViewUniformParameters"),
-                                         LifeTimeType::OneFrame,
-                                         sizeof(ubo)));
+                                      LifeTimeType::OneFrame,
+                                      sizeof(ubo)));
   ViewUniformBufferPtr->UpdateBufferData(&ubo, sizeof(ubo));
 
-  int32_t                              BindingPoint = 0;
+  int32_t                               BindingPoint = 0;
   jShaderBindingArray                   ShaderBindingArray;
   jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
   ShaderBindingArray.Add(
       jShaderBinding(BindingPoint++,
-                      1,
-                      EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
+                     1,
+                     EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
                       EShaderAccessStageFlag::ALL_GRAPHICS,
-                      ResourceInlineAllactor.Alloc<jUniformBufferResource>(
-                          ViewUniformBufferPtr.get())));
+                     EShaderAccessStageFlag::ALL_GRAPHICS,
+                     ResourceInlineAllactor.Alloc<jUniformBufferResource>(
+                         ViewUniformBufferPtr.get())));
 
-  ViewUniformBufferShaderBindingInstance
-      = g_rhi->CreateShaderBindingInstance(
-          ShaderBindingArray, jShaderBindingInstanceType::SingleFrame);
+  ViewUniformBufferShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
+      ShaderBindingArray, jShaderBindingInstanceType::SingleFrame);
 }
 
 void View::GetShaderBindingInstance(
     jShaderBindingInstanceArray& OutShaderBindingInstanceArray,
-    bool                        InIsForwardRenderer ) const {
+    bool                         InIsForwardRenderer) const {
   OutShaderBindingInstanceArray.Add(
       ViewUniformBufferShaderBindingInstance.get());
 
@@ -70,7 +70,7 @@ void View::GetShaderBindingInstance(
 // TODO: currently not used
 void View::GetShaderBindingLayout(
     jShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
-    bool                        InIsForwardRenderer ) const {
+    bool                       InIsForwardRenderer) const {
   OutShaderBindingsLayoutArray.Add(
       ViewUniformBufferShaderBindingInstance->ShaderBindingsLayouts);
 
