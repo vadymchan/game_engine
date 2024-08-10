@@ -13,11 +13,12 @@ class jFence {
   // virtual void  Release()                                          = 0;
   virtual void  WaitForFence(uint64_t InTimeoutNanoSec = UINT64_MAX) = 0;
 
-  //virtual bool IsValid() const { return false; }
+  // TODO: consider making them pure virtual 
+  virtual bool IsValid() const { return false; }
 
-  //virtual bool IsComplete(uint64_t InFenceValue) const { return false; }
+  virtual bool IsComplete(uint64_t InFenceValue) const { return false; }
 
-  //virtual bool IsComplete() const { return false; }
+  virtual bool IsComplete() const { return false; }
 };
 
 class jFenceManager {
