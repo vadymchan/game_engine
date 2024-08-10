@@ -42,6 +42,12 @@
 
 namespace game_engine {
 
+// TODO:
+// - UAVBarrier / UAVBarrierImmediate
+// - TransitionLayoutImmediate
+// - GetSwapchainImage
+// - etc. find fro general rhi
+
 class RhiVk : public jRHI {
   public:
   RhiVk();
@@ -477,8 +483,8 @@ class RhiVk : public jRHI {
   std::shared_ptr<SwapchainVk> m_swapchain_ = std::make_shared<SwapchainVk>();
   // const bool  isVSyncEnabled{true};
 
-  std::shared_ptr<Window>
-      m_window_;  // TODO: consider whether need in this place
+  // TODO: consider whether need in this place
+  std::shared_ptr<Window> m_window_;
 
   CommandBufferManagerVk* CommandBufferManager = nullptr;
   FenceManagerVk*         FenceManager         = nullptr;
