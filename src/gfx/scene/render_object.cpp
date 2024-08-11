@@ -79,7 +79,7 @@ void RenderObjectGeometryData::UpdateVertexStream(
 // ====================================================
 
 void RenderObject::Draw(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     int32_t                                     startIndex,
     int32_t                                     indexCount,
     int32_t                                     startVertex,
@@ -149,9 +149,9 @@ void RenderObject::Draw(
 }
 
 void RenderObject::BindBuffers(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     bool                                        InPositionOnly,
-    const jVertexBuffer*                        InOverrideInstanceData) const {
+    const VertexBuffer*                        InOverrideInstanceData) const {
   if (InPositionOnly) {
     if (GeometryDataPtr->VertexBuffer_PositionOnlyPtr) {
       GeometryDataPtr->VertexBuffer_PositionOnlyPtr->Bind(InRenderFrameContext);
@@ -199,7 +199,7 @@ void RenderObject::UpdateWorldMatrix() {
   }
 }
 
-const std::shared_ptr<jShaderBindingInstance>&
+const std::shared_ptr<ShaderBindingInstance>&
     RenderObject::CreateShaderBindingInstance() {
   // Update uniform buffer if it need to.
   if (NeedToUpdateRenderObjectUniformParameters) {
@@ -226,16 +226,16 @@ const std::shared_ptr<jShaderBindingInstance>&
         sizeof(ubo));
 
     int32_t                               BindingPoint = 0;
-    jShaderBindingArray                   ShaderBindingArray;
-    jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
+    ShaderBindingArray                   shaderBindingArray;
+    ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
-    ShaderBindingArray.Add(
-        jShaderBinding(BindingPoint++,
+    shaderBindingArray.Add(
+        ShaderBinding(BindingPoint++,
                        1,
                        EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
                        false,
                        EShaderAccessStageFlag::ALL_GRAPHICS,
-                       ResourceInlineAllactor.Alloc<jUniformBufferResource>(
+                       ResourceInlineAllactor.Alloc<UniformBufferResource>(
                            RenderObjectUniformParametersPtr.get())));
 
     if (RenderObjectShaderBindingInstance) {
@@ -243,16 +243,16 @@ const std::shared_ptr<jShaderBindingInstance>&
     }
 
     RenderObjectShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
-        ShaderBindingArray, jShaderBindingInstanceType::MultiFrame);
+        shaderBindingArray, ShaderBindingInstanceType::MultiFrame);
     assert(RenderObjectShaderBindingInstance.get());
   }
 
-  // ShaderBindingArray.Add(BindingPoint++, 1,
+  // shaderBindingArray.Add(BindingPoint++, 1,
   // VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
   // VK_SHADER_STAGE_ALL_GRAPHICS 	,
   // ResourceInlineAllactor.Alloc<UniformBufferResource>(&RenderObjectUniformParameters));
 
-  //   return g_rhi->CreateShaderBindingInstance(ShaderBindingArray);
+  //   return g_rhi->CreateShaderBindingInstance(shaderBindingArray);
 
   return RenderObjectShaderBindingInstance;
 }
