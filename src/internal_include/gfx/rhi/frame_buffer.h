@@ -13,7 +13,7 @@
 
 namespace game_engine {
 
-struct jFrameBufferInfo {
+struct FrameBufferInfo {
 
   size_t GetHash() const {
     return GETHASH_FROM_INSTANT_STRUCT(TextureType,
@@ -33,21 +33,21 @@ struct jFrameBufferInfo {
   int32_t            SampleCount      = 1;
 };
 
-struct jFrameBuffer : public std::enable_shared_from_this<jFrameBuffer> {
-  virtual ~jFrameBuffer() {}
+struct FrameBuffer : public std::enable_shared_from_this<FrameBuffer> {
+  virtual ~FrameBuffer() {}
 
   // No need for now
-  //virtual jTexture* GetTexture(int32_t index = 0) const {
+  //virtual Texture* GetTexture(int32_t index = 0) const {
   //  return Textures[index].get();
   //}
 
-  //virtual jTexture* GetTextureDepth(int32_t index = 0) const {
+  //virtual Texture* GetTextureDepth(int32_t index = 0) const {
   //  return TextureDepth.get();
   //}
 
   //virtual ETextureType GetTextureType() const { return Info.TextureType; }
 
-  //virtual bool SetDepthAttachment(const std::shared_ptr<jTexture>& InDepth) {
+  //virtual bool SetDepthAttachment(const std::shared_ptr<Texture>& InDepth) {
   //  TextureDepth = InDepth;
   //  return true;
   //}
@@ -58,9 +58,9 @@ struct jFrameBuffer : public std::enable_shared_from_this<jFrameBuffer> {
 
   //virtual void End() const {}
 
-  jFrameBufferInfo                        Info;
-  std::vector<std::shared_ptr<jTexture> > Textures;
-  std::shared_ptr<jTexture>               TextureDepth;
+  FrameBufferInfo                        Info;
+  std::vector<std::shared_ptr<Texture> > Textures;
+  std::shared_ptr<Texture>               TextureDepth;
 };
 }  // namespace game_engine
 
