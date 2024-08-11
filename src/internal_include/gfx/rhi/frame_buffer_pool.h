@@ -10,30 +10,30 @@
 
 namespace game_engine {
 
-class jFrameBufferPool {
+class FrameBufferPool {
   public:
-  jFrameBufferPool();
-  ~jFrameBufferPool();
+  FrameBufferPool();
+  ~FrameBufferPool();
 
-  static std::shared_ptr<jFrameBuffer> GetFrameBuffer(
-      const jFrameBufferInfo& info);
-  static void ReturnFrameBuffer(jFrameBuffer* renderTarget);
+  static std::shared_ptr<FrameBuffer> GetFrameBuffer(
+      const FrameBufferInfo& info);
+  static void ReturnFrameBuffer(FrameBuffer* renderTarget);
 
   static void Release() {
     FrameBufferResourceMap.clear();
     FrameBufferHashVariableMap.clear();
   }
 
-  struct jFrameBufferPoolResource {
-    bool                          IsUsing = false;
-    std::shared_ptr<jFrameBuffer> FrameBufferPtr;
+  struct FrameBufferPoolResource {
+    bool                         IsUsing = false;
+    std::shared_ptr<FrameBuffer> FrameBufferPtr;
   };
 
-  static std::map<size_t, std::list<jFrameBufferPoolResource> >
-                                         FrameBufferResourceMap;
-  static std::map<jFrameBuffer*, size_t> FrameBufferHashVariableMap;
+  static std::map<size_t, std::list<FrameBufferPoolResource> >
+                                        FrameBufferResourceMap;
+  static std::map<FrameBuffer*, size_t> FrameBufferHashVariableMap;
 
-  //static struct jTexture* GetNullTexture(ETextureType type);
+  // static struct Texture* GetNullTexture(ETextureType type);
 };
 
 }  // namespace game_engine
