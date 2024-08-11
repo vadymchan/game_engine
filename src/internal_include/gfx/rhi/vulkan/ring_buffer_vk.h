@@ -9,7 +9,7 @@
 
 namespace game_engine {
 
-struct RingBufferVk : public jBuffer {
+struct RingBufferVk : public Buffer {
   RingBufferVk() = default;
 
   virtual ~RingBufferVk() { Release(); }
