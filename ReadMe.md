@@ -1,6 +1,6 @@
 ## Screenshots
 
-![First Triangle Vulkan](screenshots/first_triangle_vulkan.png)
+![First Triangle Generalized RHI](screenshots/first_triangle_generalized_rhi.png)
 
 ## Dependencies
 
