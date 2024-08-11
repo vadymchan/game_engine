@@ -40,7 +40,7 @@ void SubMemoryAllocatorVk::Initialize(EVulkanBufferBits InUsage,
 
 
 
-jSubMemoryAllocator* MemoryPoolVk::CreateSubMemoryAllocator() const {
+SubMemoryAllocator* MemoryPoolVk::CreateSubMemoryAllocator() const {
   return new SubMemoryAllocatorVk();
 }
 
