@@ -21,15 +21,15 @@ BufferVk::BufferVk(VkDeviceSize      size,
   CreateBuffer(usage, properties, size, imageLayout);
 }
 
-void BufferVk::InitializeWithMemory(const jMemory& InMemory) {
+void BufferVk::InitializeWithMemory(const Memory& InMemory) {
   assert(InMemory.IsValid());
   HasBufferOwnership = false;
   m_buffer           = (VkBuffer)InMemory.GetBuffer();
   MappedPointer      = InMemory.GetMappedPointer();
-  m_memory           = (VkDeviceMemory)InMemory.GetMemory();
-  Offset             = InMemory.Range.Offset;
-  AllocatedSize      = InMemory.Range.DataSize;
-  Memory             = InMemory;
+  m_deviceMemory           = (VkDeviceMemory)InMemory.GetMemory();
+  Offset             = InMemory.m_range.Offset;
+  AllocatedSize      = InMemory.m_range.DataSize;
+  m_memory          = InMemory;
 }
 
 void BufferVk::Release() {
@@ -37,8 +37,8 @@ void BufferVk::Release() {
 
   if (!HasBufferOwnership) {
     // Return an allocated memory to vulkan memory pool
-    if (Memory.IsValid()) {
-      Memory.Free();
+    if (m_memory.IsValid()) {
+      m_memory.Free();
     }
 
     return;
@@ -47,11 +47,11 @@ void BufferVk::Release() {
   if (m_buffer != VK_NULL_HANDLE) {
     vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer, nullptr);
   }
-  if (m_memory != VK_NULL_HANDLE) {
-    vkFreeMemory(g_rhi_vk->m_device_, m_memory, nullptr);
+  if (m_deviceMemory != VK_NULL_HANDLE) {
+    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory, nullptr);
   }
 
-  m_memory = nullptr;
+  m_deviceMemory = nullptr;
 
   AllocatedSize = 0;
   MappedPointer = nullptr;
@@ -67,7 +67,7 @@ void* BufferVk::Map(uint64_t offset, uint64_t size) {
         "Failed to map buffer: Invalid buffer ownership or already mapped");
     return nullptr;
   }
-  vkMapMemory(g_rhi_vk->m_device_, m_memory, offset, size, 0, &MappedPointer);
+  vkMapMemory(g_rhi_vk->m_device_, m_deviceMemory, offset, size, 0, &MappedPointer);
   return MappedPointer;
 }
 
@@ -79,7 +79,7 @@ void BufferVk::Unmap() {
   if (!HasBufferOwnership || !MappedPointer) {
     return;
   }
-  vkUnmapMemory(g_rhi_vk->m_device_, m_memory);
+  vkUnmapMemory(g_rhi_vk->m_device_, m_deviceMemory);
   MappedPointer = nullptr;
 }
 
@@ -149,7 +149,7 @@ VkPipelineVertexInputStateCreateInfo
 }
 
 void VertexBufferVk::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
   assert(InRenderFrameContext);
   assert(InRenderFrameContext->GetActiveCommandBuffer());
   vkCmdBindVertexBuffers(
@@ -436,7 +436,7 @@ void VertexBufferVk::CreateVertexInputState(
     VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
     std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
     std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-    const jVertexBufferArray&                       InVertexBufferArray) {
+    const VertexBufferArray&                       InVertexBufferArray) {
   for (int32_t i = 0; i < InVertexBufferArray.NumOfData; ++i) {
     // TODO: consider replace assertion
     assert(InVertexBufferArray[i] != nullptr);
@@ -464,7 +464,7 @@ void VertexBufferVk::CreateVertexInputState(
 // IndexBufferVk
 // ================================================================================
 void IndexBufferVk::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
   // TODO: old code (remove)
   // assert(indexStreamData->stream->Attributes.size() != 0);
   // VkIndexType IndexType
