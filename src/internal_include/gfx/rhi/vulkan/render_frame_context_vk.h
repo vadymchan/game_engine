@@ -10,11 +10,11 @@
 
 namespace game_engine {
 
-struct RenderFrameContextVk : public jRenderFrameContext {
+struct RenderFrameContextVk : public RenderFrameContext {
   RenderFrameContextVk() = default;
 
-  RenderFrameContextVk(jCommandBuffer* InCommandBuffer)
-      : jRenderFrameContext(InCommandBuffer) {}
+  RenderFrameContextVk(CommandBuffer* InCommandBuffer)
+      : RenderFrameContext(InCommandBuffer) {}
 
   virtual ~RenderFrameContextVk() {}
 
@@ -22,13 +22,13 @@ struct RenderFrameContextVk : public jRenderFrameContext {
       ECurrentRenderPass InCurrentRenderPass) override;
 
   virtual void QueueSubmitCurrentActiveCommandBuffer(
-      jSemaphore* InSignalSemaphore);
+      Semaphore* InSignalSemaphore);
 
   public:
-  jSemaphore* CurrentWaitSemaphore = nullptr;
+  Semaphore* CurrentWaitSemaphore = nullptr;
 
   protected:
-  jCommandBuffer* CommandBuffer = nullptr;
+  CommandBuffer* m_commandBuffer_ = nullptr;
 };
 }  // namespace game_engine
 
