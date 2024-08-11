@@ -6,32 +6,32 @@
 
 namespace game_engine {
 
-jRenderFrameContext::~jRenderFrameContext() {
+RenderFrameContext::~RenderFrameContext() {
   Destroy();
 }
 
-bool jRenderFrameContext::BeginActiveCommandBuffer() {
+bool RenderFrameContext::BeginActiveCommandBuffer() {
   assert(!IsBeginActiveCommandbuffer);
   IsBeginActiveCommandbuffer = true;
-  return CommandBuffer->Begin();
+  return m_commandBuffer_->Begin();
 }
 
-bool jRenderFrameContext::EndActiveCommandBuffer() {
+bool RenderFrameContext::EndActiveCommandBuffer() {
   assert(IsBeginActiveCommandbuffer);
   IsBeginActiveCommandbuffer = false;
-  return CommandBuffer->End();
+  return m_commandBuffer_->End();
 }
 
-void jRenderFrameContext::Destroy() {
+void RenderFrameContext::Destroy() {
   if (SceneRenderTargetPtr) {
     SceneRenderTargetPtr->Return();
     SceneRenderTargetPtr.reset();
   }
 
-  if (CommandBuffer) {
+  if (m_commandBuffer_) {
     assert(g_rhi->GetCommandBufferManager());
-    g_rhi->GetCommandBufferManager()->ReturnCommandBuffer(CommandBuffer);
-    CommandBuffer = nullptr;
+    g_rhi->GetCommandBufferManager()->ReturnCommandBuffer(m_commandBuffer_);
+    m_commandBuffer_ = nullptr;
   }
 
   FrameIndex = -1;
