@@ -11,10 +11,10 @@
 
 namespace game_engine {
 
-class TextureVk : public jTexture {
+class TextureVk : public Texture {
   public:
   TextureVk()
-      : jTexture() {}
+      : Texture() {}
 
   // TODO: constructor is not complete
   TextureVk(ETextureType              type,
@@ -23,7 +23,7 @@ class TextureVk : public jTexture {
             uint32_t                  layerCount  = 1,
             EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
             bool                      InSRGB      = false)
-      : jTexture(type, format, extent, layerCount, sampleCount, InSRGB) {}
+      : Texture(type, format, extent, layerCount, sampleCount, InSRGB) {}
 
   virtual ~TextureVk() { ReleaseInternal(); }
 
