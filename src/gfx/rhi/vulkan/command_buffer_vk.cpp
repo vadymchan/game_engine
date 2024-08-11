@@ -14,7 +14,7 @@ bool CommandBufferVk::Begin() const {
   beginInfo.pInheritanceInfo
       = nullptr;        // Only necessary for secondary command buffers
 
-  if (vkBeginCommandBuffer(CommandBuffer, &beginInfo) != VK_SUCCESS) {
+  if (vkBeginCommandBuffer(m_commandBuffer_, &beginInfo) != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to begin command buffer");
     return false;
   }
@@ -23,7 +23,7 @@ bool CommandBufferVk::Begin() const {
 }
 
 bool CommandBufferVk::End() const {
-  if (vkEndCommandBuffer(CommandBuffer) != VK_SUCCESS) {
+  if (vkEndCommandBuffer(m_commandBuffer_) != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to end command buffer");
     return false;
   }
@@ -32,7 +32,7 @@ bool CommandBufferVk::End() const {
 }
 
 void CommandBufferVk::Reset(/*VkCommandBufferResetFlags flags*/) const{
-  vkResetCommandBuffer(CommandBuffer, /*flags*/ 0);
+  vkResetCommandBuffer(m_commandBuffer_, /*flags*/ 0);
 }
 
 }  // namespace game_engine
