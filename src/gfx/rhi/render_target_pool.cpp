@@ -3,28 +3,28 @@
 
 namespace game_engine {
 
-// std::shared_ptr<jRenderTarget> g_EyeAdaptationARTPtr;
-// std::shared_ptr<jRenderTarget> g_EyeAdaptationBRTPtr;
+// std::shared_ptr<RenderTarget> g_EyeAdaptationARTPtr;
+// std::shared_ptr<RenderTarget> g_EyeAdaptationBRTPtr;
 
-std::map<size_t, std::list<jRenderTargetPool::jRenderTargetPoolResource> >
-                                 jRenderTargetPool::RenderTargetResourceMap;
-std::map<jRenderTarget*, size_t> jRenderTargetPool::RenderTargetHashVariableMap;
+std::map<size_t, std::list<RenderTargetPool::RenderTargetPoolResource> >
+                                 RenderTargetPool::RenderTargetResourceMap;
+std::map<RenderTarget*, size_t> RenderTargetPool::RenderTargetHashVariableMap;
 
-// struct jTexture* jRenderTargetPool::GetNullTexture(ETextureType type) {
-//   static std::shared_ptr<jRenderTarget> RTPtr
-//       = jRenderTargetPool::GetRenderTarget(
+// struct Texture* RenderTargetPool::GetNullTexture(ETextureType type) {
+//   static std::shared_ptr<RenderTarget> RTPtr
+//       = RenderTargetPool::GetRenderTarget(
 //           {type, ETextureFormat::RGBA8, 2, 2, 1});
 //   return RTPtr->GetTexture();
 // }
 
-jRenderTargetPool::jRenderTargetPool() {
+RenderTargetPool::RenderTargetPool() {
 }
 
-jRenderTargetPool::~jRenderTargetPool() {
+RenderTargetPool::~RenderTargetPool() {
 }
 
-std::shared_ptr<jRenderTarget> jRenderTargetPool::GetRenderTarget(
-    const jRenderTargetInfo& info) {
+std::shared_ptr<RenderTarget> RenderTargetPool::GetRenderTarget(
+    const RenderTargetInfo& info) {
   auto hash = info.GetHash();
 
   auto it_find = RenderTargetResourceMap.find(hash);
@@ -48,7 +48,7 @@ std::shared_ptr<jRenderTarget> jRenderTargetPool::GetRenderTarget(
   return renderTargetPtr;
 }
 
-void jRenderTargetPool::ReturnRenderTarget(jRenderTarget* renderTarget) {
+void RenderTargetPool::ReturnRenderTarget(RenderTarget* renderTarget) {
   auto it_find = RenderTargetHashVariableMap.find(renderTarget);
   if (RenderTargetHashVariableMap.end() == it_find) {
     return;
