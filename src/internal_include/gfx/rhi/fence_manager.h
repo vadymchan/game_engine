@@ -5,15 +5,15 @@
 
 namespace game_engine {
 
-class jFence {
+class Fence {
   public:
-  virtual ~jFence() {}
+  virtual ~Fence() {}
 
   virtual void* GetHandle() const = 0;
   // virtual void  Release()                                          = 0;
   virtual void  WaitForFence(uint64_t InTimeoutNanoSec = UINT64_MAX) = 0;
 
-  // TODO: consider making them pure virtual 
+  // TODO: consider making them pure virtual
   virtual bool IsValid() const { return false; }
 
   virtual bool IsComplete(uint64_t InFenceValue) const { return false; }
@@ -21,13 +21,13 @@ class jFence {
   virtual bool IsComplete() const { return false; }
 };
 
-class jFenceManager {
+class FenceManager {
   public:
-  virtual ~jFenceManager() {}
+  virtual ~FenceManager() {}
 
-  virtual jFence* GetOrCreateFence()         = 0;
-  virtual void    ReturnFence(jFence* fence) = 0;
-  virtual void    Release()                  = 0;
+  virtual Fence* GetOrCreateFence()        = 0;
+  virtual void   ReturnFence(Fence* fence) = 0;
+  virtual void   Release()                 = 0;
 };
 
 }  // namespace game_engine
