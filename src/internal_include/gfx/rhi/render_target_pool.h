@@ -9,17 +9,17 @@
 #include <memory>
 
 namespace game_engine {
-//extern std::shared_ptr<jRenderTarget> g_EyeAdaptationARTPtr;
-//extern std::shared_ptr<jRenderTarget> g_EyeAdaptationBRTPtr;
+//extern std::shared_ptr<RenderTarget> g_EyeAdaptationARTPtr;
+//extern std::shared_ptr<RenderTarget> g_EyeAdaptationBRTPtr;
 
-class jRenderTargetPool {
+class RenderTargetPool {
   public:
-  jRenderTargetPool();
-  ~jRenderTargetPool();
+  RenderTargetPool();
+  ~RenderTargetPool();
 
-  static std::shared_ptr<jRenderTarget> GetRenderTarget(
-      const jRenderTargetInfo& info);
-  static void ReturnRenderTarget(jRenderTarget* renderTarget);
+  static std::shared_ptr<RenderTarget> GetRenderTarget(
+      const RenderTargetInfo& info);
+  static void ReturnRenderTarget(RenderTarget* renderTarget);
 
   static void ReleaseForRecreateSwapchain() {
     RenderTargetResourceMap.clear();
@@ -40,16 +40,16 @@ class jRenderTargetPool {
     RenderTargetHashVariableMap.clear();
   }
 
-  struct jRenderTargetPoolResource {
+  struct RenderTargetPoolResource {
     bool                           IsUsing = false;
-    std::shared_ptr<jRenderTarget> RenderTargetPtr;
+    std::shared_ptr<RenderTarget> RenderTargetPtr;
   };
 
-  static std::map<size_t, std::list<jRenderTargetPoolResource> >
+  static std::map<size_t, std::list<RenderTargetPoolResource> >
                                           RenderTargetResourceMap;
-  static std::map<jRenderTarget*, size_t> RenderTargetHashVariableMap;
+  static std::map<RenderTarget*, size_t> RenderTargetHashVariableMap;
 
-  //static struct jTexture* GetNullTexture(ETextureType type);
+  //static struct Texture* GetNullTexture(ETextureType type);
 };
 
 }  // namespace game_engine
