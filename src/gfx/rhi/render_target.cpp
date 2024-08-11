@@ -3,22 +3,22 @@
 
 namespace game_engine {
 
-void jRenderTarget::Return() {
+void RenderTarget::Return() {
   if (bCreatedFromRenderTargetPool) {
-    jRenderTargetPool::ReturnRenderTarget(this);
+    RenderTargetPool::ReturnRenderTarget(this);
   }
 }
 
 
 void SceneRenderTarget::Create(std::shared_ptr<Window> window,
-                               const jSwapchainImage* InSwapchain) {
+                               const SwapchainImage* InSwapchain) {
   constexpr EMSAASamples MsaaSamples         = EMSAASamples::COUNT_1;
   constexpr uint32_t     layerCount          = 1;
   constexpr bool         IsGenerateMipmap    = false;
   constexpr bool         IsUseAsSubpassInput = false;
   constexpr bool         IsMemoryless        = false;
 
-  jRenderTargetInfo ColorRTInfo = {
+  RenderTargetInfo ColorRTInfo = {
     ETextureType::TEXTURE_2D,
     ETextureFormat::R11G11B10F,  // VK_FORMAT_B10G11R11_UFLOAT_PACK32 for HDR
     window->getSize(),
@@ -27,13 +27,13 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
     MsaaSamples,  // SampleCount
     IsUseAsSubpassInput,
     IsMemoryless,
-    jRTClearValue(0.0f, 0.0f, 0.0f, 1.0f)
+    RTClearValue(0.0f, 0.0f, 0.0f, 1.0f)
     //, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT  // TODO: remove
   };
   // ColorRTInfo.ResourceName = TEXT("ColorPtr");
-  ColorPtr = jRenderTargetPool::GetRenderTarget(ColorRTInfo);
+  ColorPtr = RenderTargetPool::GetRenderTarget(ColorRTInfo);
 
-  jRenderTargetInfo DepthRTInfo = {
+  RenderTargetInfo DepthRTInfo = {
     ETextureType::TEXTURE_2D,
     ETextureFormat::D24_S8,  // Assuming D24_S8 format
     window->getSize(),
@@ -42,19 +42,19 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
     MsaaSamples,  // SampleCount
     IsUseAsSubpassInput,
     IsMemoryless,
-    jRTClearValue(1.0f, 0)
+    RTClearValue(1.0f, 0)
     //, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT  // TODO: remove
   };
   // DepthRTInfo.ResourceName = TEXT("DepthPtr");
-  DepthPtr = jRenderTargetPool::GetRenderTarget(DepthRTInfo);
+  DepthPtr = RenderTargetPool::GetRenderTarget(DepthRTInfo);
 
   if ((int32_t)MsaaSamples > 1) {
     assert(InSwapchain);
-    ResolvePtr = jRenderTarget::CreateFromTexture(InSwapchain->TexturePtr);
+    ResolvePtr = RenderTarget::CreateFromTexture(InSwapchain->TexturePtr);
   }
 
   if (!FinalColorPtr) {
-    FinalColorPtr = jRenderTarget::CreateFromTexture(InSwapchain->TexturePtr);
+    FinalColorPtr = RenderTarget::CreateFromTexture(InSwapchain->TexturePtr);
   }
 }
 
