@@ -48,7 +48,7 @@ namespace game_engine {
 // - GetSwapchainImage
 // - etc. find fro general rhi
 
-class RhiVk : public jRHI {
+class RhiVk : public RHI {
   public:
   RhiVk();
   RhiVk(const RhiVk&)                    = delete;
@@ -62,84 +62,84 @@ class RhiVk : public jRHI {
 
   virtual void release() override;
 
-  virtual std::shared_ptr<jVertexBuffer> CreateVertexBuffer(
+  virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(
       const std::shared_ptr<VertexStreamData>& streamData) const override;
 
-  virtual std::shared_ptr<jIndexBuffer> CreateIndexBuffer(
+  virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(
       const std::shared_ptr<IndexStreamData>& streamData) const override;
 
-  virtual std::shared_ptr<jTexture> CreateTextureFromData(
+  virtual std::shared_ptr<Texture> CreateTextureFromData(
       const ImageData* InImageData) const override;
 
   virtual bool CreateShaderInternal(
       Shader* OutShader, const ShaderInfo& shaderInfo) const override;
 
-  virtual jFrameBuffer* CreateFrameBuffer(
-      const jFrameBufferInfo& info) const override;
+  virtual FrameBuffer* CreateFrameBuffer(
+      const FrameBufferInfo& info) const override;
 
-  virtual std::shared_ptr<jRenderTarget> CreateRenderTarget(
-      const jRenderTargetInfo& info) const override;
+  virtual std::shared_ptr<RenderTarget> CreateRenderTarget(
+      const RenderTargetInfo& info) const override;
 
-  virtual jSamplerStateInfo* CreateSamplerState(
-      const jSamplerStateInfo& initializer) const override {
+  virtual SamplerStateInfo* CreateSamplerState(
+      const SamplerStateInfo& initializer) const override {
     return SamplerStatePool.GetOrCreate(initializer);
   }
 
-  virtual jRasterizationStateInfo* CreateRasterizationState(
-      const jRasterizationStateInfo& initializer) const override {
+  virtual RasterizationStateInfo* CreateRasterizationState(
+      const RasterizationStateInfo& initializer) const override {
     return RasterizationStatePool.GetOrCreate(initializer);
   }
 
-  virtual jStencilOpStateInfo* CreateStencilOpStateInfo(
-      const jStencilOpStateInfo& initializer) const override {
+  virtual StencilOpStateInfo* CreateStencilOpStateInfo(
+      const StencilOpStateInfo& initializer) const override {
     return StencilOpStatePool.GetOrCreate(initializer);
   }
 
-  virtual jDepthStencilStateInfo* CreateDepthStencilState(
-      const jDepthStencilStateInfo& initializer) const override {
+  virtual DepthStencilStateInfo* CreateDepthStencilState(
+      const DepthStencilStateInfo& initializer) const override {
     return DepthStencilStatePool.GetOrCreate(initializer);
   }
 
-  virtual jBlendingStateInfo* CreateBlendingState(
-      const jBlendingStateInfo& initializer) const override {
+  virtual BlendingStateInfo* CreateBlendingState(
+      const BlendingStateInfo& initializer) const override {
     return BlendingStatePool.GetOrCreate(initializer);
   }
 
-  virtual jShaderBindingLayout* CreateShaderBindings(
-      const jShaderBindingArray& InShaderBindingArray) const override;
+  virtual ShaderBindingLayout* CreateShaderBindings(
+      const ShaderBindingArray& InShaderBindingArray) const override;
 
-  virtual std::shared_ptr<jShaderBindingInstance> CreateShaderBindingInstance(
-      const jShaderBindingArray&       InShaderBindingArray,
-      const jShaderBindingInstanceType InType) const override;
+  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+      const ShaderBindingArray&       InShaderBindingArray,
+      const ShaderBindingInstanceType InType) const override;
 
-  virtual jPipelineStateInfo* CreatePipelineStateInfo(
-      const jPipelineStateFixedInfo*   pipelineStateFixed,
-      const GraphicsPipelineShader     shader,
-      const jVertexBufferArray&        InVertexBufferArray,
-      const jRenderPass*               renderPass,
-      const jShaderBindingLayoutArray& InShaderBindingArray,
-      const jPushConstant*             InPushConstant,
-      std::int32_t                     InSubpassIndex) const override {
+  virtual PipelineStateInfo* CreatePipelineStateInfo(
+      const PipelineStateFixedInfo*   pipelineStateFixed,
+      const GraphicsPipelineShader    shader,
+      const VertexBufferArray&        InVertexBufferArray,
+      const RenderPass*               renderPass,
+      const ShaderBindingLayoutArray& InShaderBindingArray,
+      const PushConstant*             InPushConstant,
+      std::int32_t                    InSubpassIndex) const override {
     return PipelineStatePool.GetOrCreateMove(
-        std::move(jPipelineStateInfo(pipelineStateFixed,
-                                     shader,
-                                     InVertexBufferArray,
-                                     renderPass,
-                                     InShaderBindingArray,
-                                     InPushConstant,
-                                     InSubpassIndex)));
+        std::move(PipelineStateInfo(pipelineStateFixed,
+                                    shader,
+                                    InVertexBufferArray,
+                                    renderPass,
+                                    InShaderBindingArray,
+                                    InPushConstant,
+                                    InSubpassIndex)));
   }
 
-  virtual jPipelineStateInfo* CreateComputePipelineStateInfo(
-      const Shader*                    shader,
-      const jShaderBindingLayoutArray& InShaderBindingArray,
-      const jPushConstant*             pushConstant) const override {
+  virtual PipelineStateInfo* CreateComputePipelineStateInfo(
+      const Shader*                   shader,
+      const ShaderBindingLayoutArray& InShaderBindingArray,
+      const PushConstant*             pushConstant) const override {
     return PipelineStatePool.GetOrCreateMove(std::move(
-        jPipelineStateInfo(shader, InShaderBindingArray, pushConstant)));
+        PipelineStateInfo(shader, InShaderBindingArray, pushConstant)));
   }
 
   // Create Buffers
-  std::shared_ptr<jBuffer> CreateBufferInternal(
+  std::shared_ptr<Buffer> CreateBufferInternal(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       EBufferCreateFlag InBufferCreateFlag,
@@ -148,7 +148,7 @@ class RhiVk : public jRHI {
       std::uint64_t     InDataSize = 0
       /*, const wchar_t*    InResourceName = nullptr*/) const;
 
-  virtual std::shared_ptr<jBuffer> CreateStructuredBuffer(
+  virtual std::shared_ptr<Buffer> CreateStructuredBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       std::uint64_t     InStride,
@@ -164,7 +164,7 @@ class RhiVk : public jRHI {
                                 InDataSize);
   }
 
-  virtual std::shared_ptr<jBuffer> CreateRawBuffer(
+  virtual std::shared_ptr<Buffer> CreateRawBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       EBufferCreateFlag InBufferCreateFlag,
@@ -179,7 +179,7 @@ class RhiVk : public jRHI {
                                 InDataSize);
   }
 
-  virtual std::shared_ptr<jBuffer> CreateFormattedBuffer(
+  virtual std::shared_ptr<Buffer> CreateFormattedBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       ETextureFormat    InFormat,
@@ -207,7 +207,7 @@ class RhiVk : public jRHI {
   VkMemoryPropertyFlagBits GetMemoryPropertyFlagBits(
       ETextureCreateFlag InTextureCreateFlag) const;
 
-  virtual std::shared_ptr<jTexture> Create2DTexture(
+  virtual std::shared_ptr<Texture> Create2DTexture(
       uint32_t             InWidth,
       uint32_t             InHeight,
       uint32_t             InArrayLayers,
@@ -216,10 +216,10 @@ class RhiVk : public jRHI {
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const jRTClearValue& InClearValue    = jRTClearValue::Invalid,
+      const RTClearValue&  InClearValue    = RTClearValue::Invalid,
       const wchar_t*       InResourceName  = nullptr) const override;
 
-  virtual std::shared_ptr<jTexture> CreateCubeTexture(
+  virtual std::shared_ptr<Texture> CreateCubeTexture(
       uint32_t             InWidth,
       uint32_t             InHeight,
       uint32_t             InMipLevels,
@@ -227,36 +227,36 @@ class RhiVk : public jRHI {
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const jRTClearValue& InClearValue    = jRTClearValue::Invalid,
+      const RTClearValue&  InClearValue    = RTClearValue::Invalid,
       const wchar_t*       InResourceName  = nullptr) const override;
 
   void RemovePipelineStateInfo(size_t InHash) {
     PipelineStatePool.Release(InHash);
   }
 
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const std::vector<jAttachment>& colorAttachments,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const override {
+  virtual RenderPass* GetOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
     return RenderPassPool.GetOrCreate(
         RenderPassVk(colorAttachments, offset, extent));
   }
 
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const std::vector<jAttachment>& colorAttachments,
-      const jAttachment&              depthAttachment,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const override {
+  virtual RenderPass* GetOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
     return RenderPassPool.GetOrCreate(
         RenderPassVk(colorAttachments, depthAttachment, offset, extent));
   }
 
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const std::vector<jAttachment>& colorAttachments,
-      const jAttachment&              depthAttachment,
-      const jAttachment&              colorResolveAttachment,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const override {
+  virtual RenderPass* GetOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const Attachment&              colorResolveAttachment,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
     return RenderPassPool.GetOrCreate(RenderPassVk(colorAttachments,
                                                    depthAttachment,
                                                    colorResolveAttachment,
@@ -264,15 +264,15 @@ class RhiVk : public jRHI {
                                                    extent));
   }
 
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const jRenderPassInfo& renderPassInfo,
+  virtual RenderPass* GetOrCreateRenderPass(
+      const RenderPassInfo&  renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const override {
     return RenderPassPool.GetOrCreate(
         RenderPassVk(renderPassInfo, offset, extent));
   }
 
-  virtual MemoryPoolVk* GetMemoryPool() const override { return MemoryPool; }
+  virtual MemoryPoolVk* GetMemoryPool() const override { return m_memoryPool; }
 
   DescriptorPoolVk* GetDescriptorPoolForSingleFrame() const {
     return DescriptorPoolsSingleFrame[CurrentFrameIndex];
@@ -287,16 +287,16 @@ class RhiVk : public jRHI {
   }
 
   virtual CommandBufferManagerVk* GetCommandBufferManager() const override {
-    return CommandBufferManager;
+    return m_commandBufferManager_;
   }
 
   virtual SemaphoreManagerVk* GetSemaphoreManager() override {
-    return &SemaphoreManager;
+    return &m_semaphoreManager;
   }
 
-  virtual FenceManagerVk* GetFenceManager() override { return FenceManager; }
+  virtual FenceManagerVk* GetFenceManager() override { return m_fenceManager; }
 
-  virtual std::shared_ptr<jSwapchain> GetSwapchain() const override {
+  virtual std::shared_ptr<Swapchain> GetSwapchain() const override {
     return m_swapchain_;
   }
 
@@ -328,77 +328,77 @@ class RhiVk : public jRHI {
   virtual void IncrementFrameNumber() { ++CurrentFrameNumber; }
 
   void DrawArrays(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     vertStartIndex,
-      int32_t                                     vertCount) const override;
+      int32_t                                    vertStartIndex,
+      int32_t                                    vertCount) const override;
 
   void DrawArraysInstanced(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     vertStartIndex,
-      int32_t                                     vertCount,
-      int32_t                                     instanceCount) const override;
+      int32_t                                    vertStartIndex,
+      int32_t                                    vertCount,
+      int32_t                                    instanceCount) const override;
 
   void DrawElements(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount) const override;
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount) const override;
 
   void DrawElementsInstanced(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount,
-      int32_t                                     instanceCount) const override;
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
+      int32_t                                    instanceCount) const override;
 
   void DrawElementsBaseVertex(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount,
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
       int32_t baseVertexIndex) const override;
 
   void DrawElementsInstancedBaseVertex(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount,
-      int32_t                                     baseVertexIndex,
-      int32_t                                     instanceCount) const override;
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
+      int32_t                                    baseVertexIndex,
+      int32_t                                    instanceCount) const override;
 
   void DrawIndirect(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      jBuffer*                                    buffer,
-      int32_t                                     startIndex,
-      int32_t                                     drawCount) const override;
+      Buffer*                                    buffer,
+      int32_t                                    startIndex,
+      int32_t                                    drawCount) const override;
 
   void DrawElementsIndirect(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      jBuffer*                                    buffer,
-      int32_t                                     startIndex,
-      int32_t                                     drawCount) const override;
+      Buffer*                                    buffer,
+      int32_t                                    startIndex,
+      int32_t                                    drawCount) const override;
 
   void DispatchCompute(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
-      uint32_t                                    numGroupsX,
-      uint32_t                                    numGroupsY,
-      uint32_t                                    numGroupsZ) const override;
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      uint32_t                                   numGroupsX,
+      uint32_t                                   numGroupsY,
+      uint32_t                                   numGroupsZ) const override;
 
   void Flush() const override;
 
@@ -406,22 +406,22 @@ class RhiVk : public jRHI {
 
   void RecreateSwapChain() override;
 
-  virtual std::shared_ptr<jRenderFrameContext> BeginRenderFrame() override;
+  virtual std::shared_ptr<RenderFrameContext> BeginRenderFrame() override;
 
-  virtual void EndRenderFrame(const std::shared_ptr<jRenderFrameContext>&
+  virtual void EndRenderFrame(const std::shared_ptr<RenderFrameContext>&
                                   renderFrameContextPtr) override;
 
   void QueueSubmit(
-      const std::shared_ptr<jRenderFrameContext>& renderFrameContextPtr,
-      jSemaphore*                                 InSignalSemaphore) override;
+      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
+      Semaphore*                                 InSignalSemaphore) override;
 
   virtual CommandBufferVk* BeginSingleTimeCommands() const override;
 
-  void EndSingleTimeCommands(jCommandBuffer* commandBuffer) const override;
+  void EndSingleTimeCommands(CommandBuffer* commandBuffer) const override;
 
   virtual void BindGraphicsShaderBindingInstances(
-      const jCommandBuffer*                InCommandBuffer,
-      const jPipelineStateInfo*            InPiplineState,
+      const CommandBuffer*                 InCommandBuffer,
+      const PipelineStateInfo*             InPiplineState,
       const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
       std::uint32_t                        InFirstSet) const override;
 
@@ -435,18 +435,18 @@ class RhiVk : public jRHI {
                         VkImageLayout   oldLayout,
                         VkImageLayout   newLayout) const;
 
-  virtual bool TransitionLayout(jCommandBuffer* commandBuffer,
-                                jTexture*       texture,
+  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+                                Texture*        texture,
                                 EResourceLayout newLayout) const override;
 
   virtual void BindComputeShaderBindingInstances(
-      const jCommandBuffer*                InCommandBuffer,
-      const jPipelineStateInfo*            InPiplineState,
+      const CommandBuffer*                 InCommandBuffer,
+      const PipelineStateInfo*             InPiplineState,
       const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
       std::uint32_t                        InFirstSet) const override;
 
   // TODO: currently not used
-  virtual void NextSubpass(const jCommandBuffer* commandBuffer) const override;
+  virtual void NextSubpass(const CommandBuffer* commandBuffer) const override;
 
   // TODO: uncomment
   // private:
@@ -486,13 +486,13 @@ class RhiVk : public jRHI {
   // TODO: consider whether need in this place
   std::shared_ptr<Window> m_window_;
 
-  CommandBufferManagerVk* CommandBufferManager = nullptr;
-  FenceManagerVk*         FenceManager         = nullptr;
-  SemaphoreManagerVk      SemaphoreManager;
+  CommandBufferManagerVk* m_commandBufferManager_ = nullptr;
+  FenceManagerVk*         m_fenceManager          = nullptr;
+  SemaphoreManagerVk      m_semaphoreManager;
 
   VkPipelineCache PipelineCache = nullptr;
 
-  MemoryPoolVk* MemoryPool = nullptr;
+  MemoryPoolVk* m_memoryPool = nullptr;
 
   // FrameIndex is swapchain number that is currently used
   uint32_t CurrentFrameIndex = 0;
