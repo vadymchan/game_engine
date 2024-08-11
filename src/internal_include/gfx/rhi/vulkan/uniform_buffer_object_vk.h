@@ -27,7 +27,7 @@ struct UniformBufferBlockVk : public IUniformBufferBlock {
 
   virtual void* GetLowLevelResource() const override { return Buffer.m_buffer; }
 
-  virtual void* GetLowLevelMemory() const override { return Buffer.m_memory; }
+  virtual void* GetLowLevelMemory() const override { return Buffer.m_deviceMemory; }
 
   virtual size_t GetBufferSize() const override { return Buffer.AllocatedSize; }
 
