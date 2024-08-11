@@ -7,34 +7,34 @@
 
 namespace game_engine {
 
-void* jMemory::GetMappedPointer() const {
-  return SubMemoryAllocator->GetMappedPointer();
+void* Memory::GetMappedPointer() const {
+  return m_subMemoryAllocator->GetMappedPointer();
 }
 
-void* jMemory::GetMemory() const {
-  return SubMemoryAllocator->GetMemory();
+void* Memory::GetMemory() const {
+  return m_subMemoryAllocator->GetMemory();
 }
 
 //////////////////////////////////////////////////////////////////////////
-// jMemory
-void jMemory::Free() {
+// Memory
+void Memory::Free() {
   g_rhi->GetMemoryPool()->Free(*this);
   Reset();
 }
 
-void jMemory::Reset() {
+void Memory::Reset() {
   Buffer             = nullptr;
-  Range.Offset       = 0;
-  Range.DataSize     = 0;
-  SubMemoryAllocator = nullptr;
+  m_range.Offset       = 0;
+  m_range.DataSize     = 0;
+  m_subMemoryAllocator = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
-// jSubMemoryAllocator
-jMemory jSubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
+// SubMemoryAllocator
+Memory SubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
   ScopedLock s(&Lock);
 
-  jMemory        AllocMem;
+  Memory        AllocMem;
   const uint64_t AlignedRequestedSize
       = (Alignment > 0) ? Align(InRequstedSize, Alignment) : InRequstedSize;
 
@@ -43,9 +43,9 @@ jMemory jSubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
       AllocMem.Buffer = GetBuffer();
       assert(AllocMem.Buffer);
 
-      AllocMem.Range.Offset       = FreeLists[i].Offset;
-      AllocMem.Range.DataSize     = AlignedRequestedSize;
-      AllocMem.SubMemoryAllocator = this;
+      AllocMem.m_range.Offset       = FreeLists[i].Offset;
+      AllocMem.m_range.DataSize     = AlignedRequestedSize;
+      AllocMem.m_subMemoryAllocator = this;
       FreeLists.erase(FreeLists.begin() + i);
       return AllocMem;
     }
@@ -56,42 +56,42 @@ jMemory jSubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
     AllocMem.Buffer = GetBuffer();
     assert(AllocMem.Buffer);
 
-    AllocMem.Range.Offset       = (Alignment > 0)
+    AllocMem.m_range.Offset       = (Alignment > 0)
                                     ? Align(SubMemoryRange.Offset, Alignment)
                                     : SubMemoryRange.Offset;
-    AllocMem.Range.DataSize     = AlignedRequestedSize;
-    AllocMem.SubMemoryAllocator = this;
+    AllocMem.m_range.DataSize     = AlignedRequestedSize;
+    AllocMem.m_subMemoryAllocator = this;
 
     SubMemoryRange.Offset += AlignedRequestedSize;
-    AllAllocatedLists.push_back(AllocMem.Range);
+    AllAllocatedLists.push_back(AllocMem.m_range);
 
-    assert(AllocMem.Range.Offset + AllocMem.Range.DataSize
+    assert(AllocMem.m_range.Offset + AllocMem.m_range.DataSize
           <= SubMemoryRange.DataSize);
   }
   return AllocMem;
 }
 
-jMemory jMemoryPool::Alloc(EVulkanBufferBits InUsages,
+Memory MemoryPool::Alloc(EVulkanBufferBits InUsages,
                            EVulkanMemoryBits InProperties,
                            uint64_t          InSize) {
   ScopedLock         s(&Lock);
   const EPoolSizeType PoolSizeType = GetPoolSizeType(InSize);
 
-  std::vector<jSubMemoryAllocator*>& SubMemoryAllocators
+  std::vector<SubMemoryAllocator*>& SubMemoryAllocators
       = MemoryPools[(int32_t)PoolSizeType];
   for (auto& iter : SubMemoryAllocators) {
     if (!iter->IsMatchType(InUsages, InProperties)) {
       continue;
     }
 
-    const jMemory& alloc = iter->Alloc(InSize);
+    const Memory& alloc = iter->Alloc(InSize);
     if (alloc.IsValid()) {
       return alloc;
     }
   }
 
   // Add new memory
-  jSubMemoryAllocator* NewSubMemoryAllocator = CreateSubMemoryAllocator();
+  SubMemoryAllocator* NewSubMemoryAllocator = CreateSubMemoryAllocator();
   SubMemoryAllocators.push_back(NewSubMemoryAllocator);
 
   // Use the entire SubMemoryAllocator that exceeds the maximum supported memory
@@ -103,13 +103,13 @@ jMemory jMemoryPool::Alloc(EVulkanBufferBits InUsages,
 
   NewSubMemoryAllocator->Initialize(
       InUsages, InProperties, SubMemoryAllocatorSize);
-  const jMemory& alloc = NewSubMemoryAllocator->Alloc(InSize);
+  const Memory& alloc = NewSubMemoryAllocator->Alloc(InSize);
   assert(alloc.IsValid());
 
   return alloc;
 }
 
-void jMemoryPool::Free(const jMemory& InFreeMemory) {
+void MemoryPool::Free(const Memory& InFreeMemory) {
   ScopedLock s(&Lock);
 
   const int32_t CurrentFrameNumber = g_rhi->GetCurrentFrameNumber();
@@ -123,14 +123,14 @@ void jMemoryPool::Free(const jMemory& InFreeMemory) {
       // Release pending memory
       int32_t i = 0;
       for (; i < PendingFree.size(); ++i) {
-        jPendingFreeMemory& PendingFreeMemory = PendingFree[i];
-        if (PendingFreeMemory.FrameIndex < OldestFrameToKeep) {
-          assert(PendingFreeMemory.Memory.SubMemoryAllocator);
-          PendingFreeMemory.Memory.SubMemoryAllocator->Free(
-              PendingFreeMemory.Memory);
+        PendingFreeMemory& pendingFreeMemory = PendingFree[i];
+        if (pendingFreeMemory.FrameIndex < OldestFrameToKeep) {
+          assert(pendingFreeMemory.m_memory.m_subMemoryAllocator);
+          pendingFreeMemory.m_memory.m_subMemoryAllocator->Free(
+              pendingFreeMemory.m_memory);
         } else {
           CanReleasePendingFreeMemoryFrameNumber
-              = PendingFreeMemory.FrameIndex + NumOfFramesToWaitBeforeReleasing
+              = pendingFreeMemory.FrameIndex + NumOfFramesToWaitBeforeReleasing
               + 1;
           break;
         }
@@ -140,7 +140,7 @@ void jMemoryPool::Free(const jMemory& InFreeMemory) {
         if (RemainingSize > 0) {
           memcpy(&PendingFree[0],
                  &PendingFree[i],
-                 sizeof(jPendingFreeMemory) * RemainingSize);
+                 sizeof(PendingFreeMemory) * RemainingSize);
         }
         PendingFree.resize(RemainingSize);
       }
@@ -148,7 +148,7 @@ void jMemoryPool::Free(const jMemory& InFreeMemory) {
   }
 
   PendingFree.emplace_back(
-      jPendingFreeMemory(CurrentFrameNumber, InFreeMemory));
+      PendingFreeMemory(CurrentFrameNumber, InFreeMemory));
 }
 
 }  // namespace game_engine
