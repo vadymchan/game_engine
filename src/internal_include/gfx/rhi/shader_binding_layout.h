@@ -16,12 +16,12 @@
 
 namespace game_engine {
 
-struct jSamplerStateInfo;
+struct SamplerStateInfo;
 
 // Single resources
-struct jShaderBindingResource
-/*: public std::enable_shared_from_this<jShaderBindingResource>*/ {
-  virtual ~jShaderBindingResource() {}
+struct ShaderBindingResource
+/*: public std::enable_shared_from_this<ShaderBindingResource>*/ {
+  virtual ~ShaderBindingResource() {}
 
   virtual const void* GetResource() const { return nullptr; }
 
@@ -30,92 +30,92 @@ struct jShaderBindingResource
   virtual bool IsBindless() const { return false; }
 };
 
-struct jUniformBufferResource : public jShaderBindingResource {
-  jUniformBufferResource() = default;
+struct UniformBufferResource : public ShaderBindingResource {
+  UniformBufferResource() = default;
 
-  jUniformBufferResource(const IUniformBufferBlock* InUniformBuffer)
+  UniformBufferResource(const IUniformBufferBlock* InUniformBuffer)
       : UniformBuffer(InUniformBuffer) {}
 
-  virtual ~jUniformBufferResource() {}
+  virtual ~UniformBufferResource() {}
 
   virtual const void* GetResource() const override { return UniformBuffer; }
 
   const IUniformBufferBlock* UniformBuffer = nullptr;
 };
 
-struct jBufferResource : public jShaderBindingResource {
-  jBufferResource() = default;
+struct BufferResource : public ShaderBindingResource {
+  BufferResource() = default;
 
-  jBufferResource(const jBuffer* InBuffer)
+  BufferResource(const Buffer* InBuffer)
       : Buffer(InBuffer) {}
 
-  virtual ~jBufferResource() {}
+  virtual ~BufferResource() {}
 
   virtual const void* GetResource() const override { return Buffer; }
 
-  const jBuffer* Buffer = nullptr;
+  const Buffer* Buffer = nullptr;
 };
 
-struct jSamplerResource : public jShaderBindingResource {
-  jSamplerResource() = default;
+struct SamplerResource : public ShaderBindingResource {
+  SamplerResource() = default;
 
-  jSamplerResource(const jSamplerStateInfo* InSamplerState)
+  SamplerResource(const SamplerStateInfo* InSamplerState)
       : SamplerState(InSamplerState) {}
 
-  virtual ~jSamplerResource() {}
+  virtual ~SamplerResource() {}
 
   virtual const void* GetResource() const override { return SamplerState; }
 
-  const jSamplerStateInfo* SamplerState = nullptr;
+  const SamplerStateInfo* SamplerState = nullptr;
 };
 
-struct jTextureResource : public jSamplerResource {
-  jTextureResource() = default;
+struct TextureResource : public SamplerResource {
+  TextureResource() = default;
 
-  jTextureResource(const jTexture*          InTexture,
-                   const jSamplerStateInfo* InSamplerState,
+  TextureResource(const Texture*          InTexture,
+                   const SamplerStateInfo* InSamplerState,
                    int32_t                  InMipLevel = 0)
-      : jSamplerResource(InSamplerState)
-      , Texture(InTexture)
+      : SamplerResource(InSamplerState)
+      , m_texture(InTexture)
       , MipLevel(InMipLevel) {}
 
-  virtual ~jTextureResource() {}
+  virtual ~TextureResource() {}
 
-  virtual const void* GetResource() const override { return Texture; }
+  virtual const void* GetResource() const override { return m_texture; }
 
-  const jTexture* Texture  = nullptr;
+  const Texture* m_texture  = nullptr;
   const int32_t   MipLevel = 0;
 };
 
-struct jTextureArrayResource : public jShaderBindingResource {
-  jTextureArrayResource() = default;
+struct TextureArrayResource : public ShaderBindingResource {
+  TextureArrayResource() = default;
 
-  jTextureArrayResource(const jTexture** InTextureArray,
+  TextureArrayResource(const Texture** InTextureArray,
                         const int32_t    InNumOfTexure)
       : TextureArray(InTextureArray)
       , NumOfTexure(InNumOfTexure) {}
 
-  virtual ~jTextureArrayResource() {}
+  virtual ~TextureArrayResource() {}
 
   virtual const void* GetResource() const override { return TextureArray; }
 
   virtual int32_t NumOfResource() const override { return NumOfTexure; }
 
-  const jTexture** TextureArray = nullptr;
+  const Texture** TextureArray = nullptr;
   const int32_t    NumOfTexure  = 1;
 };
 
 //////////////////////////////////////////////////////////////////////////
 
 // Bindless resources, It contain multiple resources at once.
-struct jUniformBufferResourceBindless : public jShaderBindingResource {
-  jUniformBufferResourceBindless() = default;
+struct UniformBufferResourceBindless : public ShaderBindingResource {
+  UniformBufferResourceBindless() = default;
 
-  jUniformBufferResourceBindless(
+  UniformBufferResourceBindless(
       const std::vector<const IUniformBufferBlock*>& InUniformBuffers)
       : UniformBuffers(InUniformBuffers) {}
 
-  virtual ~jUniformBufferResourceBindless() {}
+  virtual ~UniformBufferResourceBindless() {}
 
   virtual const void* GetResource(int32_t InIndex) const {
     return UniformBuffers[InIndex];
@@ -130,13 +130,13 @@ struct jUniformBufferResourceBindless : public jShaderBindingResource {
   std::vector<const IUniformBufferBlock*> UniformBuffers;
 };
 
-struct jBufferResourceBindless : public jShaderBindingResource {
-  jBufferResourceBindless() = default;
+struct BufferResourceBindless : public ShaderBindingResource {
+  BufferResourceBindless() = default;
 
-  jBufferResourceBindless(const std::vector<const jBuffer*>& InBuffers)
+  BufferResourceBindless(const std::vector<const Buffer*>& InBuffers)
       : Buffers(InBuffers) {}
 
-  virtual ~jBufferResourceBindless() {}
+  virtual ~BufferResourceBindless() {}
 
   virtual const void* GetResource(int32_t InIndex) const {
     return Buffers[InIndex];
@@ -144,17 +144,17 @@ struct jBufferResourceBindless : public jShaderBindingResource {
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<const jBuffer*> Buffers;
+  std::vector<const Buffer*> Buffers;
 };
 
-struct jSamplerResourceBindless : public jShaderBindingResource {
-  jSamplerResourceBindless() = default;
+struct SamplerResourceBindless : public ShaderBindingResource {
+  SamplerResourceBindless() = default;
 
-  jSamplerResourceBindless(
-      const std::vector<const jSamplerStateInfo*>& InSamplerStates)
+  SamplerResourceBindless(
+      const std::vector<const SamplerStateInfo*>& InSamplerStates)
       : SamplerStates(InSamplerStates) {}
 
-  virtual ~jSamplerResourceBindless() {}
+  virtual ~SamplerResourceBindless() {}
 
   virtual const void* GetResource(int32_t InIndex) const {
     return SamplerStates[InIndex];
@@ -162,32 +162,32 @@ struct jSamplerResourceBindless : public jShaderBindingResource {
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<const jSamplerStateInfo*> SamplerStates;
+  std::vector<const SamplerStateInfo*> SamplerStates;
 };
 
-struct jTextureResourceBindless : public jShaderBindingResource {
-  struct jTextureBindData {
-    jTextureBindData() = default;
+struct TextureResourceBindless : public ShaderBindingResource {
+  struct TextureBindData {
+    TextureBindData() = default;
 
-    jTextureBindData(jTexture*          InTexture,
-                     jSamplerStateInfo* InSamplerState,
+    TextureBindData(Texture*          InTexture,
+                     SamplerStateInfo* InSamplerState,
                      int32_t            InMipLevel = 0)
-        : Texture(InTexture)
+        : m_texture(InTexture)
         , SamplerState(InSamplerState)
         , MipLevel(InMipLevel) {}
 
-    jTexture*          Texture      = nullptr;
-    jSamplerStateInfo* SamplerState = nullptr;
+    Texture*          m_texture      = nullptr;
+    SamplerStateInfo* SamplerState = nullptr;
     int32_t            MipLevel     = 0;
   };
 
-  jTextureResourceBindless() = default;
+  TextureResourceBindless() = default;
 
-  jTextureResourceBindless(
-      const std::vector<jTextureBindData>& InTextureBindData)
+  TextureResourceBindless(
+      const std::vector<TextureBindData>& InTextureBindData)
       : TextureBindDatas(InTextureBindData) {}
 
-  virtual ~jTextureResourceBindless() {}
+  virtual ~TextureResourceBindless() {}
 
   virtual const void* GetResource(int32_t InIndex) const {
     return &TextureBindDatas[0];
@@ -195,22 +195,22 @@ struct jTextureResourceBindless : public jShaderBindingResource {
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<jTextureBindData> TextureBindDatas;
+  std::vector<TextureBindData> TextureBindDatas;
 };
 
-struct jTextureArrayResourceBindless : public jShaderBindingResource {
-  struct jTextureArrayBindData {
-    jTexture** TextureArray  = nullptr;
+struct TextureArrayResourceBindless : public ShaderBindingResource {
+  struct TextureArrayBindData {
+    Texture** TextureArray  = nullptr;
     int32_t    InNumOfTexure = 0;
   };
 
-  jTextureArrayResourceBindless() = default;
+  TextureArrayResourceBindless() = default;
 
-  jTextureArrayResourceBindless(
-      const std::vector<jTextureArrayBindData>& InTextureArrayBindDatas)
+  TextureArrayResourceBindless(
+      const std::vector<TextureArrayBindData>& InTextureArrayBindDatas)
       : TextureArrayBindDatas(InTextureArrayBindDatas) {}
 
-  virtual ~jTextureArrayResourceBindless() {}
+  virtual ~TextureArrayResourceBindless() {}
 
   virtual const void* GetResource(int32_t InIndex) const {
     return &TextureArrayBindDatas[InIndex];
@@ -222,12 +222,12 @@ struct jTextureArrayResourceBindless : public jShaderBindingResource {
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<jTextureArrayBindData> TextureArrayBindDatas;
+  std::vector<TextureArrayBindData> TextureArrayBindDatas;
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-struct jShaderBindingResourceInlineAllocator {
+struct ShaderBindingResourceInlineAllocator {
   template <typename T, typename... T1>
   T* Alloc(T1... args) {
     assert((Offset + sizeof(T)) < sizeof(Data));
@@ -243,17 +243,17 @@ struct jShaderBindingResourceInlineAllocator {
   int32_t Offset = 0;
 };
 
-struct jShaderBinding {
+struct ShaderBinding {
   static constexpr int32_t APPEND_LAST = -1;  // BindingPoint is appending last
 
-  jShaderBinding() = default;
+  ShaderBinding() = default;
 
-  jShaderBinding(const int32_t                 InBindingPoint,
+  ShaderBinding(const int32_t                 InBindingPoint,
                  const int32_t                 InNumOfDescriptors,
                  const EShaderBindingType      InBindingType,
                  const bool                    InIsBindless,
                  const EShaderAccessStageFlag  InAccessStageFlags,
-                 const jShaderBindingResource* InResource = nullptr,
+                 const ShaderBindingResource* InResource = nullptr,
                  bool                          InIsInline = false)
       : BindingPoint(InBindingPoint)
       , NumOfDescriptors(InNumOfDescriptors)
@@ -287,7 +287,7 @@ struct jShaderBinding {
     return Hash;
   }
 
-  void CloneWithoutResource(jShaderBinding& OutReslut) const {
+  void CloneWithoutResource(ShaderBinding& OutReslut) const {
     OutReslut.IsInline         = IsInline;
     OutReslut.BindingPoint     = BindingPoint;
     OutReslut.NumOfDescriptors = NumOfDescriptors;
@@ -307,25 +307,25 @@ struct jShaderBinding {
   EShaderAccessStageFlag AccessStageFlags
       = EShaderAccessStageFlag::ALL_GRAPHICS;
 
-  const jShaderBindingResource* Resource = nullptr;
+  const ShaderBindingResource* Resource = nullptr;
 };
 
-struct jShaderBindingArray {
+struct ShaderBindingArray {
   static constexpr int32_t NumOfInlineData = 10;
 
   template <typename... T>
   void Add(T... args) {
-    static_assert(std::is_trivially_copyable<jShaderBinding>::value,
-                  "jShaderBinding should be trivially copyable");
+    static_assert(std::is_trivially_copyable<ShaderBinding>::value,
+                  "ShaderBinding should be trivially copyable");
 
     assert(NumOfInlineData > NumOfData);
-    new (&Data[NumOfData]) jShaderBinding(args...);
+    new (&Data[NumOfData]) ShaderBinding(args...);
     ++NumOfData;
   }
 
-  void Add(const jShaderBinding& args) {
-    static_assert(std::is_trivially_copyable<jShaderBinding>::value,
-                  "jShaderBinding should be trivially copyable");
+  void Add(const ShaderBinding& args) {
+    static_assert(std::is_trivially_copyable<ShaderBinding>::value,
+                  "ShaderBinding should be trivially copyable");
 
     assert(NumOfInlineData > NumOfData);
     Data[NumOfData] = args;
@@ -334,54 +334,54 @@ struct jShaderBindingArray {
 
   size_t GetHash() const {
     size_t          Hash    = 0;
-    jShaderBinding* Address = (jShaderBinding*)&Data[0];
+    ShaderBinding* Address = (ShaderBinding*)&Data[0];
     for (int32_t i = 0; i < NumOfData; ++i) {
       Hash ^= ((Address + i)->GetHash() << i);
     }
     return Hash;
   }
 
-  jShaderBindingArray& operator=(const jShaderBindingArray& In) {
-    memcpy(&Data[0], &In.Data[0], sizeof(jShaderBinding) * In.NumOfData);
+  ShaderBindingArray& operator=(const ShaderBindingArray& In) {
+    memcpy(&Data[0], &In.Data[0], sizeof(ShaderBinding) * In.NumOfData);
     NumOfData = In.NumOfData;
     return *this;
   }
 
-  const jShaderBinding* operator[](int32_t InIndex) const {
+  const ShaderBinding* operator[](int32_t InIndex) const {
     assert(InIndex < NumOfData);
-    return (jShaderBinding*)(&Data[InIndex]);
+    return (ShaderBinding*)(&Data[InIndex]);
   }
 
-  void CloneWithoutResource(jShaderBindingArray& OutResult) const {
-    memcpy(&OutResult.Data[0], &Data[0], sizeof(jShaderBinding) * NumOfData);
+  void CloneWithoutResource(ShaderBindingArray& OutResult) const {
+    memcpy(&OutResult.Data[0], &Data[0], sizeof(ShaderBinding) * NumOfData);
 
     for (int32_t i = 0; i < NumOfData; ++i) {
-      jShaderBinding* SrcAddress = (jShaderBinding*)&Data[i];
-      jShaderBinding* DstAddress = (jShaderBinding*)&OutResult.Data[i];
+      ShaderBinding* SrcAddress = (ShaderBinding*)&Data[i];
+      ShaderBinding* DstAddress = (ShaderBinding*)&OutResult.Data[i];
       SrcAddress->CloneWithoutResource(*DstAddress);
     }
     OutResult.NumOfData = NumOfData;
   }
 
-  jShaderBinding Data[NumOfInlineData];
+  ShaderBinding Data[NumOfInlineData];
   int32_t        NumOfData = 0;
 };
 
 template <typename T>
-struct TShaderBinding : public jShaderBinding {
+struct TShaderBinding : public ShaderBinding {
   TShaderBinding(const int32_t                InBindingPoint,
                  const int32_t                InNumOfDescriptors,
                  const EShaderBindingType     InBindingType,
                  const EShaderAccessStageFlag InAccessStageFlags,
                  const T&                     InData)
-      : jShaderBinding(
+      : ShaderBinding(
           InBindingPoint, InNumOfDescriptors, InBindingType, InAccessStageFlags)
       , Data(InData) {}
 
   T Data = T();
 };
 
-// struct jShaderBindingArray {
+// struct ShaderBindingArray {
 //   static constexpr int32_t NumOfInlineBindings = 10;
 //
 //   struct Allocator {
@@ -410,22 +410,22 @@ struct TShaderBinding : public jShaderBinding {
 //   }
 // };
 
-enum class jShaderBindingInstanceType : uint8_t {
+enum class ShaderBindingInstanceType : uint8_t {
   SingleFrame = 0,
   MultiFrame,
   Max
 };
 
-struct jShaderBindingInstance
-    : public std::enable_shared_from_this<jShaderBindingInstance> {
-  virtual ~jShaderBindingInstance() {}
+struct ShaderBindingInstance
+    : public std::enable_shared_from_this<ShaderBindingInstance> {
+  virtual ~ShaderBindingInstance() {}
 
-  const struct jShaderBindingLayout* ShaderBindingsLayouts = nullptr;
+  const struct ShaderBindingLayout* ShaderBindingsLayouts = nullptr;
 
-  virtual void Initialize(const jShaderBindingArray& InShaderBindingArray) {}
+  virtual void Initialize(const ShaderBindingArray& InShaderBindingArray) {}
 
   virtual void UpdateShaderBindings(
-      const jShaderBindingArray& InShaderBindingArray) {}
+      const ShaderBindingArray& InShaderBindingArray) {}
 
   virtual void* GetHandle() const { return nullptr; }
 
@@ -435,32 +435,32 @@ struct jShaderBindingInstance
 
   virtual void Free() {}
 
-  virtual jShaderBindingInstanceType GetType() const { return Type; }
+  virtual ShaderBindingInstanceType GetType() const { return Type; }
 
-  virtual void SetType(const jShaderBindingInstanceType InType) {
+  virtual void SetType(const ShaderBindingInstanceType InType) {
     Type = InType;
   }
 
   private:
-  jShaderBindingInstanceType Type = jShaderBindingInstanceType::SingleFrame;
+  ShaderBindingInstanceType Type = ShaderBindingInstanceType::SingleFrame;
 };
 
-// todo : MemStack for jShaderBindingInstanceArray to allocate fast memory
-using jShaderBindingInstanceArray
-    = ResourceContainer<const jShaderBindingInstance*>;
-using jShaderBindingInstancePtrArray
-    = std::vector<std::shared_ptr<jShaderBindingInstance>>;
+// todo : MemStack for ShaderBindingInstanceArray to allocate fast memory
+using ShaderBindingInstanceArray
+    = ResourceContainer<const ShaderBindingInstance*>;
+using ShaderBindingInstancePtrArray
+    = std::vector<std::shared_ptr<ShaderBindingInstance>>;
 
-struct jShaderBindingLayout {
-  virtual ~jShaderBindingLayout() {}
+struct ShaderBindingLayout {
+  virtual ~ShaderBindingLayout() {}
 
-  virtual bool Initialize(const jShaderBindingArray& InShaderBindingArray) {
+  virtual bool Initialize(const ShaderBindingArray& InShaderBindingArray) {
     return false;
   }
 
-  virtual std::shared_ptr<jShaderBindingInstance> CreateShaderBindingInstance(
-      const jShaderBindingArray&       InShaderBindingArray,
-      const jShaderBindingInstanceType InType) const {
+  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+      const ShaderBindingArray&       InShaderBindingArray,
+      const ShaderBindingInstanceType InType) const {
     return nullptr;
   }
 
@@ -469,12 +469,12 @@ struct jShaderBindingLayout {
       return Hash;
     }
 
-    Hash = ShaderBindingArray.GetHash();
+    Hash = m_shaderBindingArray_.GetHash();
     return Hash;
   }
 
-  virtual const jShaderBindingArray& GetShaderBindingsLayout() const {
-    return ShaderBindingArray;
+  virtual const ShaderBindingArray& GetShaderBindingsLayout() const {
+    return m_shaderBindingArray_;
   }
 
   virtual void* GetHandle() const { return nullptr; }
@@ -482,11 +482,11 @@ struct jShaderBindingLayout {
   mutable size_t Hash = 0;
 
   protected:
-  jShaderBindingArray ShaderBindingArray;  // Resource information is empty
+  ShaderBindingArray m_shaderBindingArray_;  // Resource information is empty
 };
 
-using jShaderBindingLayoutArray
-    = ResourceContainer<const jShaderBindingLayout*>;
+using ShaderBindingLayoutArray
+    = ResourceContainer<const ShaderBindingLayout*>;
 
 // TODO: rename namespace + consider anonymous namespace. Also write doxygen
 // comments explaining why to use this
@@ -495,15 +495,15 @@ uint32_t GetCurrentFrameNumber();
 }  // namespace test
 
 // To pending deallocation for MultiFrame GPU Data, Because Avoding deallocation
-// inflighting GPU Data (ex. jShaderBindingInstance, IUniformBufferBlock)
+// inflighting GPU Data (ex. ShaderBindingInstance, IUniformBufferBlock)
 template <typename T>
-struct jDeallocatorMultiFrameResource {
+struct DeallocatorMultiFrameResource {
   static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
 
-  struct jPendingFreeData {
-    jPendingFreeData() = default;
+  struct PendingFreeData {
+    PendingFreeData() = default;
 
-    jPendingFreeData(int32_t InFrameIndex, std::shared_ptr<T> InDataPtr)
+    PendingFreeData(int32_t InFrameIndex, std::shared_ptr<T> InDataPtr)
         : FrameIndex(InFrameIndex)
         , DataPtr(InDataPtr) {}
 
@@ -511,7 +511,7 @@ struct jDeallocatorMultiFrameResource {
     std::shared_ptr<T> DataPtr    = nullptr;
   };
 
-  std::vector<jPendingFreeData> PendingFree;
+  std::vector<PendingFreeData> PendingFree;
   int32_t                       CanReleasePendingFreeDataFrameNumber = 0;
   std::function<void(std::shared_ptr<T>)> FreeDelegate;
 
@@ -527,15 +527,15 @@ struct jDeallocatorMultiFrameResource {
         // Release pending memory
         int32_t i = 0;
         for (; i < PendingFree.size(); ++i) {
-          jPendingFreeData& PendingFreeData = PendingFree[i];
-          if (PendingFreeData.FrameIndex < OldestFrameToKeep) {
+          PendingFreeData& pendingFreeData = PendingFree[i];
+          if (pendingFreeData.FrameIndex < OldestFrameToKeep) {
             // Return to pending descriptor set
             if (FreeDelegate) {
-              FreeDelegate(PendingFreeData.DataPtr);
+              FreeDelegate(pendingFreeData.DataPtr);
             }
           } else {
             CanReleasePendingFreeDataFrameNumber
-                = PendingFreeData.FrameIndex + NumOfFramesToWaitBeforeReleasing
+                = pendingFreeData.FrameIndex + NumOfFramesToWaitBeforeReleasing
                 + 1;
             break;
           }
@@ -552,14 +552,14 @@ struct jDeallocatorMultiFrameResource {
       }
     }
 
-    PendingFree.emplace_back(jPendingFreeData(CurrentFrameNumber, InDataPtr));
+    PendingFree.emplace_back(PendingFreeData(CurrentFrameNumber, InDataPtr));
   }
 };
 
-using jDeallocatorMultiFrameShaderBindingInstance
-    = jDeallocatorMultiFrameResource<jShaderBindingInstance>;
-// using jDeallocatorMultiFrameUniformBufferBlock
-//     = jDeallocatorMultiFrameResource<IUniformBufferBlock>;
+using DeallocatorMultiFrameShaderBindingInstance
+    = DeallocatorMultiFrameResource<ShaderBindingInstance>;
+// using DeallocatorMultiFrameUniformBufferBlock
+//     = DeallocatorMultiFrameResource<IUniformBufferBlock>;
 
 }  // namespace game_engine
 
