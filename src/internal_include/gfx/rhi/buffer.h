@@ -105,10 +105,10 @@ class BufferAttributeStream : public IBufferAttribute {
   std::vector<T> Data;
 };
 
-struct jBuffer
+struct Buffer
     : public ShaderBindableResource
-    , public std::enable_shared_from_this<jBuffer> {
-  virtual ~jBuffer() {}
+    , public std::enable_shared_from_this<Buffer> {
+  virtual ~Buffer() {}
 
   virtual void Release() = 0;
 
@@ -151,17 +151,17 @@ class VertexStreamData {
   int32_t          startLocation   = 0;
 };
 
-struct jVertexBuffer {
+struct VertexBuffer {
   std::shared_ptr<VertexStreamData> vertexStreamData;
 
-  virtual ~jVertexBuffer() {}
+  virtual ~VertexBuffer() {}
 
   virtual Name GetName() const { return Name::Invalid; }
 
   virtual size_t GetHash() const { return 0; }
 
   virtual void Bind(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {}
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {}
 
   virtual int32_t GetElementCount() const {
     return vertexStreamData ? vertexStreamData->elementCount : 0;
@@ -174,7 +174,7 @@ struct jVertexBuffer {
 
   //virtual bool IsSupportRaytracing() const { return false; }
 
-  virtual jBuffer* GetBuffer(int32_t InStreamIndex) const { return nullptr; }
+  virtual Buffer* GetBuffer(int32_t InStreamIndex) const { return nullptr; }
 };
 
 class IndexStreamData {
@@ -186,15 +186,15 @@ class IndexStreamData {
   uint32_t          elementCount = 0;
 };
 
-struct jIndexBuffer {
+struct IndexBuffer {
   std::shared_ptr<IndexStreamData> indexStreamData;
 
-  virtual ~jIndexBuffer() {}
+  virtual ~IndexBuffer() {}
 
   virtual Name GetName() const { return Name::Invalid; }
 
   virtual void Bind(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {}
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {}
 
   virtual int32_t GetElementCount() const {
     return indexStreamData ? indexStreamData->elementCount : 0;
@@ -205,10 +205,10 @@ struct jIndexBuffer {
     return false;
   }
 
-  virtual jBuffer* GetBuffer() const { return nullptr; }
+  virtual Buffer* GetBuffer() const { return nullptr; }
 };
 
-struct jVertexBufferArray : public ResourceContainer<const jVertexBuffer*> {
+struct VertexBufferArray : public ResourceContainer<const VertexBuffer*> {
   size_t GetHash() const {
     if (Hash) {
       return Hash;
