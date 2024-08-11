@@ -16,7 +16,7 @@
 namespace game_engine {
 
 
-class SubMemoryAllocatorVk : public jSubMemoryAllocator {
+class SubMemoryAllocatorVk : public SubMemoryAllocator {
   public:
 
   virtual ~SubMemoryAllocatorVk() {}
@@ -33,11 +33,11 @@ class SubMemoryAllocatorVk : public jSubMemoryAllocator {
   VkDeviceMemory DeviceMemory = nullptr;
 };
 
-class MemoryPoolVk : public jMemoryPool {
+class MemoryPoolVk : public MemoryPool {
   public:
   virtual ~MemoryPoolVk() {}
 
-  virtual jSubMemoryAllocator* CreateSubMemoryAllocator() const override;
+  virtual SubMemoryAllocator* CreateSubMemoryAllocator() const override;
 
 };
 
