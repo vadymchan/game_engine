@@ -32,24 +32,24 @@ void View::PrepareViewUniformBufferShaderBindingInstance() {
   ViewUniformBufferPtr->UpdateBufferData(&ubo, sizeof(ubo));
 
   int32_t                               BindingPoint = 0;
-  jShaderBindingArray                   ShaderBindingArray;
-  jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
+  ShaderBindingArray                   shaderBindingArray;
+  ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
-  ShaderBindingArray.Add(
-      jShaderBinding(BindingPoint++,
+  shaderBindingArray.Add(
+      ShaderBinding(BindingPoint++,
                      1,
                      EShaderBindingType::UNIFORMBUFFER_DYNAMIC,
                      false,
                      EShaderAccessStageFlag::ALL_GRAPHICS,
-                     ResourceInlineAllactor.Alloc<jUniformBufferResource>(
+                     ResourceInlineAllactor.Alloc<UniformBufferResource>(
                          ViewUniformBufferPtr.get())));
 
   ViewUniformBufferShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
-      ShaderBindingArray, jShaderBindingInstanceType::SingleFrame);
+      shaderBindingArray, ShaderBindingInstanceType::SingleFrame);
 }
 
 void View::GetShaderBindingInstance(
-    jShaderBindingInstanceArray& OutShaderBindingInstanceArray,
+    ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
     bool                         InIsForwardRenderer) const {
   OutShaderBindingInstanceArray.Add(
       ViewUniformBufferShaderBindingInstance.get());
@@ -59,9 +59,9 @@ void View::GetShaderBindingInstance(
   //  for (int32_t i = 0; i < lights.size(); ++i) {
   //    const ViewLight& viewLight = lights[i];
   //    if (viewLight.Light) {
-  //      assert(viewLight.ShaderBindingInstance);
+  //      assert(viewLight.m_shaderBindingInstance);
   //      OutShaderBindingInstanceArray.Add(
-  //          viewLight.ShaderBindingInstance.get());
+  //          viewLight.m_shaderBindingInstance.get());
   //    }
   //  }
   //}
@@ -69,7 +69,7 @@ void View::GetShaderBindingInstance(
 
 // TODO: currently not used
 void View::GetShaderBindingLayout(
-    jShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
+    ShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
     bool                       InIsForwardRenderer) const {
   OutShaderBindingsLayoutArray.Add(
       ViewUniformBufferShaderBindingInstance->ShaderBindingsLayouts);
@@ -79,9 +79,9 @@ void View::GetShaderBindingLayout(
   //  for (int32_t i = 0; i < lights.size(); ++i) {
   //    const ViewLight& viewLight = lights[i];
   //    if (viewLight.Light) {
-  //      assert(viewLight.ShaderBindingInstance);
+  //      assert(viewLight.m_shaderBindingInstance);
   //      OutShaderBindingsLayoutArray.Add(
-  //          viewLight.ShaderBindingInstance->ShaderBindingsLayouts);
+  //          viewLight.m_shaderBindingInstance->ShaderBindingsLayouts);
   //    }
   //  }
   //}
