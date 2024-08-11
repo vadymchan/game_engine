@@ -6,32 +6,32 @@
 namespace game_engine {
 
 void RenderPassVk::Release() {
-  if (FrameBuffer != VK_NULL_HANDLE) {
-    vkDestroyFramebuffer(g_rhi_vk->m_device_, FrameBuffer, nullptr);
-    FrameBuffer = VK_NULL_HANDLE;
+  if (m_frameBuffer != VK_NULL_HANDLE) {
+    vkDestroyFramebuffer(g_rhi_vk->m_device_, m_frameBuffer, nullptr);
+    m_frameBuffer = VK_NULL_HANDLE;
   }
-  if (RenderPass != VK_NULL_HANDLE) {
-    vkDestroyRenderPass(g_rhi_vk->m_device_, RenderPass, nullptr);
-    FrameBuffer = VK_NULL_HANDLE;
+  if (m_renderPass != VK_NULL_HANDLE) {
+    vkDestroyRenderPass(g_rhi_vk->m_device_, m_renderPass, nullptr);
+    m_frameBuffer = VK_NULL_HANDLE;
   }
 }
 
 void RenderPassVk::SetFinalLayoutToAttachment(
-    const jAttachment& attachment) const {
+    const Attachment& attachment) const {
   assert(attachment.RenderTargetPtr);
   TextureVk* texture_vk = (TextureVk*)attachment.RenderTargetPtr->GetTexture();
   texture_vk->imageLayout = attachment.FinalLayout;
 }
 
-bool RenderPassVk::BeginRenderPass(const jCommandBuffer* commandBuffer
+bool RenderPassVk::BeginRenderPass(const CommandBuffer* commandBuffer
                                    /*, VkSubpassContents      subpassContents*/
                                    ) {
   assert(commandBuffer);
 
-  CommandBuffer = commandBuffer;
+  m_CommandBuffer = commandBuffer;
 
-  assert(FrameBuffer);
-  RenderPassBeginInfo.framebuffer = FrameBuffer;
+  assert(m_frameBuffer);
+  RenderPassBeginInfo.framebuffer = m_frameBuffer;
 
   vkCmdBeginRenderPass((VkCommandBuffer)commandBuffer->GetNativeHandle(),
                        &RenderPassBeginInfo,
@@ -40,25 +40,25 @@ bool RenderPassVk::BeginRenderPass(const jCommandBuffer* commandBuffer
 }
 
 void RenderPassVk::EndRenderPass() {
-  assert(CommandBuffer);
+  assert(m_CommandBuffer);
 
   // Finishing up
-  vkCmdEndRenderPass((VkCommandBuffer)CommandBuffer->GetNativeHandle());
+  vkCmdEndRenderPass((VkCommandBuffer)m_CommandBuffer->GetNativeHandle());
 
   // Apply layout to attachments
-  for (jAttachment& iter : RenderPassInfo.Attachments) {
+  for (Attachment& iter : m_renderPassInfo.Attachments) {
     assert(iter.IsValid());
     SetFinalLayoutToAttachment(iter);
   }
 
-  CommandBuffer = nullptr;
+  m_CommandBuffer = nullptr;
 }
 
 bool RenderPassVk::CreateRenderPass() {
   //  std::vector<VkAttachmentDescription> attachmentDescs;
-  //  attachmentDescs.reserve(RenderPassInfo.Attachments.size());
+  //  attachmentDescs.reserve(m_renderPassInfo.Attachments.size());
 
-  //  for (const auto& attachment : RenderPassInfo.Attachments) {
+  //  for (const auto& attachment : m_renderPassInfo.Attachments) {
   //    VkAttachmentDescription desc = {};
   //    desc.format                  =
   //    attachment.RenderTargetPtr->Info.Format; desc.samples        =
@@ -90,12 +90,12 @@ bool RenderPassVk::CreateRenderPass() {
   int32_t SampleCount = 0;
   int32_t LayerCount  = 0;
 
-  // Create RenderPass
+  // Create m_renderPass
   {
     std::vector<VkAttachmentDescription> AttachmentDescs;
-    AttachmentDescs.resize(RenderPassInfo.Attachments.size());
-    for (int32_t i = 0; i < (int32_t)RenderPassInfo.Attachments.size(); ++i) {
-      const jAttachment& attachment = RenderPassInfo.Attachments[i];
+    AttachmentDescs.resize(m_renderPassInfo.Attachments.size());
+    for (int32_t i = 0; i < (int32_t)m_renderPassInfo.Attachments.size(); ++i) {
+      const Attachment& attachment = m_renderPassInfo.Attachments[i];
       assert(attachment.IsValid());
 
       const auto& RTInfo = attachment.RenderTargetPtr->Info;
@@ -127,11 +127,11 @@ bool RenderPassVk::CreateRenderPass() {
           = GetVulkanImageLayout(attachment.InitialLayout);
       attachmentDesc.finalLayout = GetVulkanImageLayout(attachment.FinalLayout);
 
-      const auto&  RTClearColor = attachment.RTClearValue.GetCleraColor();
+      const auto&  RTClearColor = attachment.m_rtClearValue.GetCleraColor();
       VkClearValue clearValue   = {};
       if (attachment.IsDepthAttachment()) {
-        clearValue.depthStencil = {attachment.RTClearValue.GetCleraDepth(),
-                                   attachment.RTClearValue.GetCleraStencil()};
+        clearValue.depthStencil = {attachment.m_rtClearValue.GetCleraDepth(),
+                                   attachment.m_rtClearValue.GetCleraStencil()};
       } else {
         clearValue.color = {
           RTClearColor[0], RTClearColor[1], RTClearColor[2], RTClearColor[3]};
@@ -146,19 +146,19 @@ bool RenderPassVk::CreateRenderPass() {
       std::optional<VkAttachmentReference> OutputResolveAttachmentRef;
     };
 
-    assert(RenderPassInfo.Subpasses.size());
+    assert(m_renderPassInfo.Subpasses.size());
 
     std::vector<SubpassAttachmentRefs> subpassAttachmentRefs;
-    subpassAttachmentRefs.resize(RenderPassInfo.Subpasses.size());
+    subpassAttachmentRefs.resize(m_renderPassInfo.Subpasses.size());
 
     std::vector<VkSubpassDescription> SubpassDescs;
-    SubpassDescs.resize(RenderPassInfo.Subpasses.size());
+    SubpassDescs.resize(m_renderPassInfo.Subpasses.size());
 
     std::vector<VkSubpassDependency> SubpassDependencies;
-    SubpassDependencies.resize(RenderPassInfo.Subpasses.size() + 1);
+    SubpassDependencies.resize(m_renderPassInfo.Subpasses.size() + 1);
 
     const bool IsSubpassForExecuteInOrder
-        = RenderPassInfo.IsSubpassForExecuteInOrder();
+        = m_renderPassInfo.IsSubpassForExecuteInOrder();
 
     int32_t DependencyIndex                         = 0;
     SubpassDependencies[DependencyIndex].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -176,8 +176,8 @@ bool RenderPassVk::CreateRenderPass() {
         = VK_DEPENDENCY_BY_REGION_BIT;
     ++DependencyIndex;
 
-    for (int32_t i = 0; i < (int32_t)RenderPassInfo.Subpasses.size(); ++i) {
-      const jSubpass& subPass = RenderPassInfo.Subpasses[i];
+    for (int32_t i = 0; i < (int32_t)m_renderPassInfo.Subpasses.size(); ++i) {
+      const Subpass& subPass = m_renderPassInfo.Subpasses[i];
 
       std::vector<VkAttachmentReference>& InputAttachmentRefs
           = subpassAttachmentRefs[i].InputAttachmentRefs;
@@ -281,7 +281,7 @@ bool RenderPassVk::CreateRenderPass() {
     renderPassCreateInfo.pDependencies   = SubpassDependencies.data();
 
     if (vkCreateRenderPass(
-            g_rhi_vk->m_device_, &renderPassCreateInfo, nullptr, &RenderPass)
+            g_rhi_vk->m_device_, &renderPassCreateInfo, nullptr, &m_renderPass)
         != VK_SUCCESS) {
       return false;
     }
@@ -290,7 +290,7 @@ bool RenderPassVk::CreateRenderPass() {
   // Create RenderPassBeginInfo
   RenderPassBeginInfo            = {};
   RenderPassBeginInfo.sType      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  RenderPassBeginInfo.renderPass = RenderPass;
+  RenderPassBeginInfo.renderPass = m_renderPass;
 
   RenderPassBeginInfo.renderArea.offset = {RenderOffset.x(), RenderOffset.y()};
   RenderPassBeginInfo.renderArea.extent
@@ -304,10 +304,10 @@ bool RenderPassVk::CreateRenderPass() {
   {
     std::vector<VkImageView> ImageViews;
 
-    for (int32_t k = 0; k < RenderPassInfo.Attachments.size(); ++k) {
-      assert(RenderPassInfo.Attachments[k].IsValid());
+    for (int32_t k = 0; k < m_renderPassInfo.Attachments.size(); ++k) {
+      assert(m_renderPassInfo.Attachments[k].IsValid());
 
-      const auto* RT = RenderPassInfo.Attachments[k].RenderTargetPtr.get();
+      const auto* RT = m_renderPassInfo.Attachments[k].RenderTargetPtr.get();
       assert(RT);
 
       const TextureVk* texture_vk = (const TextureVk*)RT->GetTexture();
@@ -318,7 +318,7 @@ bool RenderPassVk::CreateRenderPass() {
 
     VkFramebufferCreateInfo framebufferInfo = {};
     framebufferInfo.sType      = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = RenderPass;
+    framebufferInfo.renderPass = m_renderPass;
 
     framebufferInfo.attachmentCount = static_cast<uint32_t>(ImageViews.size());
     framebufferInfo.pAttachments    = ImageViews.data();
@@ -328,7 +328,7 @@ bool RenderPassVk::CreateRenderPass() {
     framebufferInfo.layers = LayerCount;
 
     if (vkCreateFramebuffer(
-            g_rhi_vk->m_device_, &framebufferInfo, nullptr, &FrameBuffer)
+            g_rhi_vk->m_device_, &framebufferInfo, nullptr, &m_frameBuffer)
         != VK_SUCCESS) {
       return false;
     }
