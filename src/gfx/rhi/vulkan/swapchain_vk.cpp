@@ -137,13 +137,13 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
   if (oldSwapChain != VK_NULL_HANDLE) {
     // TODO: Destroy old image views
     for (int32_t i = 0; i < (int32_t)Images.size(); i++) {
-      SwapchainImageVk* SwapchainImage = Images[i];
-      TextureVk* textureVk = (TextureVk*)SwapchainImage->TexturePtr.get();
+      SwapchainImageVk* swapchainImage = Images[i];
+      TextureVk* textureVk = (TextureVk*)swapchainImage->TexturePtr.get();
       if (textureVk->imageView) {
         vkDestroyImageView(g_rhi_vk->m_device_, textureVk->imageView, nullptr);
         textureVk->imageView = nullptr;
       }
-      SwapchainImage->TexturePtr.reset();
+      swapchainImage->TexturePtr.reset();
       // delete Images[i];
     }
     vkDestroySwapchainKHR(g_rhi_vk->m_device_, oldSwapChain, nullptr);
@@ -162,22 +162,22 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
   // ImageView
   Images.resize(swapChainImages.size());
   for (int32_t i = 0; i < Images.size(); ++i) {
-    SwapchainImageVk* SwapchainImage = nullptr;
+    SwapchainImageVk* swapchainImage = nullptr;
     if (oldSwapChain) {
-      SwapchainImage = Images[i];
+      swapchainImage = Images[i];
     } else {
-      SwapchainImage = new SwapchainImageVk();
-      SwapchainImage->Available
+      swapchainImage = new SwapchainImageVk();
+      swapchainImage->Available
           = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
-      SwapchainImage->RenderFinished
+      swapchainImage->RenderFinished
           = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
-      SwapchainImage->RenderFinishedAfterShadow
+      swapchainImage->RenderFinishedAfterShadow
           = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
-      SwapchainImage->RenderFinishedAfterBasePass
+      swapchainImage->RenderFinishedAfterBasePass
           = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
-      SwapchainImage->CommandBufferFence = nullptr;
+      swapchainImage->CommandBufferFence = nullptr;
 
-      Images[i] = SwapchainImage;
+      Images[i] = swapchainImage;
     }
 
     VkImageViewCreateInfo viewInfo{};
@@ -232,14 +232,14 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
 
     // Create TextureVk object with the new image view
 
-    SwapchainImage->TexturePtr = std::make_shared<TextureVk>(
+    swapchainImage->TexturePtr = std::make_shared<TextureVk>(
         ETextureType::TEXTURE_2D,
         GetVulkanTextureFormat(surfaceFormat.format),
         math::Dimension2Di{static_cast<int>(extent.width),
                            static_cast<int>(extent.height)});
 
     std::shared_ptr<TextureVk> swapchainImageTextureVk
-        = std::static_pointer_cast<TextureVk>(SwapchainImage->TexturePtr);
+        = std::static_pointer_cast<TextureVk>(swapchainImage->TexturePtr);
 
     swapchainImageTextureVk->imageView = imageView;
     swapchainImageTextureVk->image     = swapChainImages[i];
