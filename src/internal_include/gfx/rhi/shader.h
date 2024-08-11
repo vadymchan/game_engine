@@ -221,8 +221,8 @@ struct ShaderInfo {
   uint32_t               PermutationId = 0;
 };
 
-struct jCompiledShader {
-  virtual ~jCompiledShader() {}
+struct CompiledShader {
+  virtual ~CompiledShader() {}
 };
 
 struct Shader {
@@ -248,7 +248,7 @@ struct Shader {
   uint64_t   TimeStamp = 0;
   ShaderInfo shaderInfo;
 
-  jCompiledShader* GetCompiledShader() const { return CompiledShader; }
+  CompiledShader* GetCompiledShader() const { return m_compiledShader; }
 
   virtual void SetPermutationId(int32_t InPermutaitonId) {}
 
@@ -258,7 +258,7 @@ struct Shader {
 
   virtual void GetPermutationDefines(std::string& OutResult) const {}
 
-  jCompiledShader* CompiledShader = nullptr;
+  CompiledShader* m_compiledShader = nullptr;
   // TODO: add abstraction (should be related to Vulkan)
 
 };
