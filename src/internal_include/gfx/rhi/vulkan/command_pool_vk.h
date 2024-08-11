@@ -13,7 +13,7 @@
 namespace game_engine {
 
 // TODO: consider name CommandPoolVk
-class CommandBufferManagerVk : public jCommandBufferManager {
+class CommandBufferManagerVk : public CommandBufferManager {
   public:
   virtual ~CommandBufferManagerVk() { ReleaseInternal(); }
 
@@ -35,9 +35,9 @@ class CommandBufferManagerVk : public jCommandBufferManager {
 
   const VkCommandPool& GetPool() const { return CommandPool; }
 
-  virtual jCommandBuffer* GetOrCreateCommandBuffer() override;
+  virtual CommandBuffer* GetOrCreateCommandBuffer() override;
 
-  void ReturnCommandBuffer(jCommandBuffer* commandBuffer) override;
+  void ReturnCommandBuffer(CommandBuffer* commandBuffer) override;
 
   private:
   
