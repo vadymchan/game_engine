@@ -5,9 +5,9 @@
 
 namespace game_engine {
 
-class jCommandBuffer {
+class CommandBuffer {
   public:
-  virtual ~jCommandBuffer() {}
+  virtual ~CommandBuffer() {}
 
   virtual void* GetNativeHandle() const { return nullptr; }
 
@@ -21,17 +21,17 @@ class jCommandBuffer {
 
   virtual void Reset() const {}
 
-  virtual jFence* GetFence() const { return nullptr; }
+  virtual Fence* GetFence() const { return nullptr; }
 };
 
-class jCommandBufferManager {
+class CommandBufferManager {
   public:
-  virtual ~jCommandBufferManager() {}
+  virtual ~CommandBufferManager() {}
 
   virtual void Release() = 0;
 
-  virtual jCommandBuffer* GetOrCreateCommandBuffer()              = 0;
-  virtual void ReturnCommandBuffer(jCommandBuffer* commandBuffer) = 0;
+  virtual CommandBuffer* GetOrCreateCommandBuffer()              = 0;
+  virtual void ReturnCommandBuffer(CommandBuffer* commandBuffer) = 0;
 };
 
 }  // namespace game_engine
