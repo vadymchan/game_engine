@@ -11,7 +11,7 @@
 namespace game_engine {
 
 struct ShaderBindingInstanceCombiner {
-  const jShaderBindingInstanceArray* shaderBindingInstanceArray = nullptr;
+  const ShaderBindingInstanceArray* shaderBindingInstanceArray = nullptr;
 
   ResourceContainer<void*>    DescriptorSetHandles;
   ResourceContainer<uint32_t> DynamicOffsets;
