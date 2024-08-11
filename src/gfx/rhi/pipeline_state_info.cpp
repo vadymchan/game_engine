@@ -4,7 +4,7 @@
 
 namespace game_engine {
 
-size_t jPipelineStateInfo::GetHash() const {
+size_t PipelineStateInfo::GetHash() const {
   if (Hash) {
     return Hash;
   }
@@ -13,8 +13,8 @@ size_t jPipelineStateInfo::GetHash() const {
   if (PipelineType == EPipelineType::Graphics) {
     assert(PipelineStateFixed);
     Hash ^= PipelineStateFixed->CreateHash();
-    Hash ^= VertexBufferArray.GetHash();
-    Hash ^= RenderPass->GetHash();
+    Hash ^= m_vertexBufferArray.GetHash();
+    Hash ^= m_renderPass->GetHash();
     Hash ^= GraphicsShader.GetHash();
   } else if (PipelineType == EPipelineType::Compute) {
     assert(ComputeShader);
@@ -30,10 +30,10 @@ size_t jPipelineStateInfo::GetHash() const {
     assert(0);
   }
 
-  Hash ^= ShaderBindingLayoutArray.GetHash();
+  Hash ^= m_shaderBindingLayoutArray.GetHash();
 
-  if (PushConstant) {
-    Hash ^= PushConstant->GetHash();
+  if (m_pushConstant) {
+    Hash ^= m_pushConstant->GetHash();
   }
   Hash ^= SubpassIndex;
 
