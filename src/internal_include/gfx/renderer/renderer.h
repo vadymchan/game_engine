@@ -40,7 +40,7 @@ class Renderer {
   public:
   Renderer() = default;
 
-  Renderer(const std::shared_ptr<jRenderFrameContext>& InRenderFrameContextPtr,
+  Renderer(const std::shared_ptr<RenderFrameContext>& InRenderFrameContextPtr,
            const View&                                  InView,
            std::shared_ptr<Window>                      window)
       : RenderFrameContextPtr(InRenderFrameContextPtr)
@@ -65,14 +65,14 @@ class Renderer {
     //              viewLight.Light);
     //    }
 
-    //    viewLight.ShaderBindingInstance
+    //    viewLight.m_shaderBindingInstance
     //        = viewLight.Light->PrepareShaderBindingInstance(
     //            viewLight.ShadowMapPtr ? viewLight.ShadowMapPtr->GetTexture()
     //                                   : nullptr);
 
     //    if (viewLight.Light->IsShadowCaster) {
     //      ViewLight NewViewLight = viewLight;
-    //      NewViewLight.ShaderBindingInstance
+    //      NewViewLight.m_shaderBindingInstance
     //          = viewLight.Light->PrepareShaderBindingInstance(nullptr);
     //      view.ShadowCasterLights.push_back(NewViewLight);
     //    }
@@ -94,7 +94,7 @@ class Renderer {
 
     // Prepare basepass pipeline
     // TODO: refactor code to create RasterizationState
-    jRasterizationStateInfo* RasterizationState = nullptr;
+    RasterizationStateInfo* RasterizationState = nullptr;
     switch (g_rhi->GetSelectedMSAASamples()) {
       case EMSAASamples::COUNT_1:
         RasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
@@ -185,8 +185,8 @@ class Renderer {
                                             EBlendOp::ADD,
                                             EColorMask::ALL>::Create();
 
-    jPipelineStateFixedInfo BasePassPipelineStateFixed
-        = jPipelineStateFixedInfo(
+    PipelineStateFixedInfo BasePassPipelineStateFixed
+        = PipelineStateFixedInfo(
             RasterizationState,
             DepthStencilState,
             BlendingState,
@@ -205,8 +205,8 @@ class Renderer {
     //                         EBlendFactor::ZERO,
     //                         EBlendOp::ADD,
     //                         EColorMask::ALL>::Create();
-    // jPipelineStateFixedInfo TranslucentPassPipelineStateFixed
-    //    = jPipelineStateFixedInfo(
+    // PipelineStateFixedInfo TranslucentPassPipelineStateFixed
+    //    = PipelineStateFixedInfo(
     //        RasterizationState,
     //        DepthStencilState,
     //        TranslucentBlendingState,
@@ -215,21 +215,21 @@ class Renderer {
     //        gOptions.UseVRS);
     // -----------------------------------------------------
 
-    const jRTClearValue ClearColor = jRTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
-    const jRTClearValue ClearDepth = jRTClearValue(1.0f, 0);
+    const RTClearValue ClearColor = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+    const RTClearValue ClearDepth = RTClearValue(1.0f, 0);
 
-    jAttachment depth
-        = jAttachment(RenderFrameContextPtr->SceneRenderTargetPtr->DepthPtr,
+    Attachment depth
+        = Attachment(RenderFrameContextPtr->SceneRenderTargetPtr->DepthPtr,
                       EAttachmentLoadStoreOp::CLEAR_STORE,
                       EAttachmentLoadStoreOp::CLEAR_STORE,
                       ClearDepth,
                       EResourceLayout::UNDEFINED,
                       EResourceLayout::DEPTH_STENCIL_ATTACHMENT);
-    jAttachment resolve;
+    Attachment resolve;
 
     if (UseForwardRenderer) {
       if ((int32_t)g_rhi->GetSelectedMSAASamples() > 1) {
-        resolve = jAttachment(
+        resolve = Attachment(
             RenderFrameContextPtr->SceneRenderTargetPtr->ResolvePtr,
             EAttachmentLoadStoreOp::DONTCARE_STORE,
             EAttachmentLoadStoreOp::DONTCARE_DONTCARE,
@@ -241,13 +241,13 @@ class Renderer {
     }
 
     // Setup attachment
-    jRenderPassInfo renderPassInfo;
+    RenderPassInfo renderPassInfo;
     if (!UseForwardRenderer) {
       // TODO: not used for now
       /*for (int32_t i = 0;
          i < std::size(RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer);
          ++i) {
-      jAttachment color = jAttachment(
+      Attachment color = Attachment(
           RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i],
           EAttachmentLoadStoreOp::CLEAR_STORE,
           EAttachmentLoadStoreOp::DONTCARE_DONTCARE,
@@ -263,8 +263,8 @@ class Renderer {
 
     // TODO: pay attention to UseSubpass
     if (UseForwardRenderer /*|| gOptions.UseSubpass*/) {
-      jAttachment color
-          = jAttachment(/*RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr,*/
+      Attachment color
+          = Attachment(/*RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr,*/
                         RenderFrameContextPtr->SceneRenderTargetPtr
                             ->FinalColorPtr,
                         EAttachmentLoadStoreOp::CLEAR_STORE,
@@ -292,7 +292,7 @@ class Renderer {
     // Setup subpass of BasePass
     {
       // First subpass, Geometry pass
-      jSubpass subpass;
+      Subpass subpass;
       subpass.Initialize(0,
                          1,
                          EPipelineStageMask::COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -318,7 +318,7 @@ class Renderer {
     // TODO: not used for now
     // if (!UseForwardRenderer && gOptions.UseSubpass) {
     //   // Second subpass, Lighting pass
-    //   jSubpass subpass;
+    //   Subpass subpass;
     //   subpass.Initialize(1,
     //                      2,
     //                      EPipelineStageMask::COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -339,7 +339,7 @@ class Renderer {
     //  renderPassInfo.Subpasses.push_back(subpass);
     //}
     //////////////////////////////////////////////////////////////////////////
-    BaseRenderPass = (jRenderPass*)g_rhi->GetOrCreateRenderPass(
+    BaseRenderPass = (RenderPass*)g_rhi->GetOrCreateRenderPass(
         renderPassInfo, {0, 0}, {screenWidth, screenHeight});
 
     auto GetOrCreateShaderFunc = [UseForwardRenderer
@@ -463,8 +463,8 @@ class Renderer {
     // SimplePushConstantData.ShowVRSArea = gOptions.ShowVRSArea;
     // SimplePushConstantData.ShowGrid    = gOptions.ShowGrid;
 
-    jPushConstant* SimplePushConstant
-        = new (MemStack::Get()->Alloc<jPushConstant>()) jPushConstant(
+    PushConstant* SimplePushConstant
+        = new (MemStack::Get()->Alloc<PushConstant>()) PushConstant(
             SimplePushConstantData, EShaderAccessStageFlag::FRAGMENT);
 
 #if PARALLELFOR_WITH_PASSSETUP
@@ -473,7 +473,7 @@ class Renderer {
         MaxPassSetupTaskPerThreadCount,
         Object::GetStaticRenderObject(),
         [&](size_t InIndex, RenderObject* InRenderObject) {
-          jMaterial* material = nullptr;
+          Material* material = nullptr;
           if (InRenderObject->MaterialPtr) {
             material = InRenderObject->MaterialPtr.get();
           } else {
@@ -498,7 +498,7 @@ class Renderer {
     BasePasses.resize(Object::GetStaticRenderObject().size());
     int32_t i = 0;
     for (auto iter : Object::GetStaticRenderObject()) {
-      jMaterial* material = nullptr;
+      Material* material = nullptr;
       if (iter->MaterialPtr) {
         material = iter->MaterialPtr.get();
       } else {
@@ -596,7 +596,7 @@ class Renderer {
     // if (gOptions.QueueSubmitAfterBasePass) {
     // RenderFrameContextPtr->GetActiveCommandBuffer()->End();
     RenderFrameContextPtr->SubmitCurrentActiveCommandBuffer(
-        jRenderFrameContext::BasePass);
+        RenderFrameContext::BasePass);
     // RenderFrameContextPtr->GetActiveCommandBuffer()->Begin();
     //}
 
@@ -605,7 +605,7 @@ class Renderer {
 
   bool UseForwardRenderer = true;
 
-  std::shared_ptr<jRenderFrameContext> RenderFrameContextPtr;
+  std::shared_ptr<RenderFrameContext> RenderFrameContextPtr;
   View                                  view;
 
   std::future<void> ShadowPassSetupCompleteEvent;
@@ -613,7 +613,7 @@ class Renderer {
 
   std::vector<DrawCommand> BasePasses;
 
-  jRenderPass* BaseRenderPass = nullptr;
+  RenderPass* BaseRenderPass = nullptr;
 
   // Current FrameIndex
   int32_t FrameIndex = 0;
