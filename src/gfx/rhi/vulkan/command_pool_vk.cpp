@@ -24,7 +24,7 @@ bool CommandBufferManagerVk::CreatePool(uint32_t QueueIndex) {
 void CommandBufferManagerVk::ReleaseInternal() {
   ScopedLock s(&CommandListLock);
 
-  // vkFreeCommandBuffers(device, CommandBufferManager.GetPool(),
+  // vkFreeCommandBuffers(device, m_commandBufferManager_.GetPool(),
   // static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
   for (auto& iter : UsingCommandBuffers) {
@@ -47,7 +47,7 @@ void CommandBufferManagerVk::ReleaseInternal() {
   }
 }
 
-jCommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
+CommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
   ScopedLock s(&CommandListLock);
 
   CommandBufferVk* SelectedCommandBuffer = nullptr;
@@ -93,7 +93,7 @@ jCommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
 
     auto newCommandBuffer      = new CommandBufferVk();
     newCommandBuffer->GetRef() = vkCommandBuffer;
-    newCommandBuffer->SetFence(g_rhi_vk->FenceManager->GetOrCreateFence());
+    newCommandBuffer->SetFence(g_rhi_vk->m_fenceManager->GetOrCreateFence());
 
     UsingCommandBuffers.push_back(newCommandBuffer);
 
@@ -104,7 +104,7 @@ jCommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
 }
 
 void CommandBufferManagerVk::ReturnCommandBuffer(
-    jCommandBuffer* commandBuffer) {
+    CommandBuffer* commandBuffer) {
   ScopedLock s(&CommandListLock);
   // auto       it = std::find(
   //     UsingCommandBuffers.begin(), UsingCommandBuffers.end(), commandBuffer);
