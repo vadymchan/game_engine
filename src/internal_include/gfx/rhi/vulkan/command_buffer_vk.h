@@ -8,7 +8,7 @@
 
 namespace game_engine {
 
-class CommandBufferVk : public jCommandBuffer {
+class CommandBufferVk : public CommandBuffer {
   public:
   ~CommandBufferVk() {
     // Clean-up code if needed
@@ -21,10 +21,10 @@ class CommandBufferVk : public jCommandBuffer {
   // TODO: add flags parameter
   virtual void Reset(/*VkCommandBufferResetFlags flags = 0*/) const override;
 
-  VkCommandBuffer& GetRef() { return CommandBuffer; }
+  VkCommandBuffer& GetRef() { return m_commandBuffer_; }
 
   virtual void* GetNativeHandle() const override {
-    return CommandBuffer;
+    return m_commandBuffer_;
   }
 
   // TODO: consider remove that
@@ -32,13 +32,13 @@ class CommandBufferVk : public jCommandBuffer {
     return Fence ? Fence->GetHandle() : nullptr;
   }
 
-  virtual jFence* GetFence() const override { return Fence; }
+  virtual Fence* GetFence() const override { return Fence; }
 
-  virtual void SetFence(jFence* fence) { Fence = fence; }
+  virtual void SetFence(Fence* fence) { Fence = fence; }
 
   private:
-  jFence*         Fence         = nullptr;
-  VkCommandBuffer CommandBuffer = nullptr;
+  Fence*         Fence         = nullptr;
+  VkCommandBuffer m_commandBuffer_ = nullptr;
 };
 
 }  // namespace game_engine
