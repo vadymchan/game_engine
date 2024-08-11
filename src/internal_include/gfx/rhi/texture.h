@@ -11,9 +11,9 @@
 
 namespace game_engine {
 
-struct jTexture
+struct Texture
     : public ShaderBindableResource {
-  jTexture()
+  Texture()
       : type(ETextureType::MAX)
       , format(ETextureFormat::RGB8)
       , extent(0, 0)
@@ -22,7 +22,7 @@ struct jTexture
       , sampleCount(EMSAASamples::COUNT_1)
       , sRGB(false) {}
 
-  jTexture(ETextureType              type,
+  Texture(ETextureType              type,
            ETextureFormat            format,
            const math::Dimension2Di& extent,
            uint32_t                  layerCount  = 1,
@@ -36,7 +36,7 @@ struct jTexture
       , sampleCount(sampleCount)
       , sRGB(InSRGB) {}
 
-  virtual ~jTexture() {}
+  virtual ~Texture() {}
 
   static int32_t GetMipLevels(int32_t InWidth, int32_t InHeight) {
     return 1
