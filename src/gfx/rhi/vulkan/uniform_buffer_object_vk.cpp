@@ -32,7 +32,7 @@ void UniformBufferBlockVk::UpdateBufferData(const void* InData, size_t InSize) {
     Buffer.Offset            = ringBuffer->Alloc(InSize);
     Buffer.AllocatedSize     = InSize;
     Buffer.m_buffer          = ringBuffer->Buffer;
-    Buffer.m_memory          = ringBuffer->BufferMemory;
+    Buffer.m_deviceMemory          = ringBuffer->BufferMemory;
 
     if (ringBuffer->MappedPointer) {
       uint8_t* startAddr
@@ -57,10 +57,10 @@ void UniformBufferBlockVk::UpdateBufferData(const void* InData, size_t InSize) {
       }
     }
 #else
-    if (Buffer.m_buffer && Buffer.m_memory) {
+    if (Buffer.m_buffer && Buffer.m_deviceMemory) {
       void* data = nullptr;
       vkMapMemory(g_rhi_vk->m_device_,
-                  Buffer.m_memory,
+                  Buffer.m_deviceMemory,
                   Buffer.Offset,
                   Buffer.AllocatedSize,
                   0,
@@ -70,7 +70,7 @@ void UniformBufferBlockVk::UpdateBufferData(const void* InData, size_t InSize) {
       } else {
         memset(data, 0, InSize);
       }
-      vkUnmapMemory(g_rhi_vk->m_device_, Buffer.m_memory);
+      vkUnmapMemory(g_rhi_vk->m_device_, Buffer.m_deviceMemory);
     }
 #endif
   }
@@ -82,7 +82,7 @@ void UniformBufferBlockVk::ClearBuffer(int32_t clearValue) {
     Buffer.Offset            = ringBuffer->Alloc(Buffer.AllocatedSize);
     Buffer.AllocatedSize     = Buffer.AllocatedSize;
     Buffer.m_buffer          = ringBuffer->Buffer;
-    Buffer.m_memory          = ringBuffer->BufferMemory;
+    Buffer.m_deviceMemory          = ringBuffer->BufferMemory;
 
     if (ringBuffer->MappedPointer) {
       memset(((uint8_t*)ringBuffer->MappedPointer) + Buffer.Offset,
@@ -100,16 +100,16 @@ void UniformBufferBlockVk::ClearBuffer(int32_t clearValue) {
              Buffer.AllocatedSize);
     }
 #else
-    if (Buffer.m_buffer && Buffer.m_memory) {
+    if (Buffer.m_buffer && Buffer.m_deviceMemory) {
       void* data = nullptr;
       vkMapMemory(g_rhi_vk->m_device_,
-                  Buffer.m_memory,
+                  Buffer.m_deviceMemory,
                   Buffer.Offset,
                   Buffer.AllocatedSize,
                   0,
                   &data);
       memset(data, clearValue, Buffer.AllocatedSize);
-      vkUnmapMemory(g_rhi_vk->m_device_, Buffer.m_memory);
+      vkUnmapMemory(g_rhi_vk->m_device_, Buffer.m_deviceMemory);
     }
 #endif
   }
@@ -124,7 +124,7 @@ void UniformBufferBlockVk::AllocBufferFromGlobalMemory(size_t size) {
       VkDeviceSize(size)));
 
 
-  assert(Buffer.Memory.IsValid());
+  assert(Buffer.m_memory.IsValid());
 }
 
 }  // namespace game_engine  
