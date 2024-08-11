@@ -21,11 +21,11 @@ namespace game_engine {
 
 // ================================================================================
 
-class BufferVk : public jBuffer {
+class BufferVk : public Buffer {
   public:
   BufferVk()
       : m_buffer(VK_NULL_HANDLE)
-      , m_memory(VK_NULL_HANDLE)
+      , m_deviceMemory(VK_NULL_HANDLE)
       , m_size(0)
       , MappedPointer(nullptr)
       , Offset(0)
@@ -38,11 +38,11 @@ class BufferVk : public jBuffer {
            EVulkanMemoryBits properties,
            EResourceLayout   imageLayout);
 
-  BufferVk(const jMemory& InMemory) { InitializeWithMemory(InMemory); }
+  BufferVk(const Memory& InMemory) { InitializeWithMemory(InMemory); }
 
   ~BufferVk() { Release(); }
 
-  void InitializeWithMemory(const jMemory& InMemory);
+  void InitializeWithMemory(const Memory& InMemory);
 
   virtual void Release() override;
 
@@ -82,12 +82,13 @@ class BufferVk : public jBuffer {
   //  allocInfo.memoryTypeIndex
   //      = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-  //  if (vkAllocateMemory(g_rhi_vk->m_device_, &allocInfo, nullptr, &m_memory)
+  //  if (vkAllocateMemory(g_rhi_vk->m_device_, &allocInfo, nullptr,
+  //  &m_deviceMemory)
   //      != VK_SUCCESS) {
   //    // TODO: log error
   //  }
 
-  //  vkBindBufferMemory(g_rhi_vk->m_device_, m_buffer, m_memory, 0);
+  //  vkBindBufferMemory(g_rhi_vk->m_device_, m_buffer, m_deviceMemory, 0);
   //}
 
   // TODO: consider remove it
@@ -117,9 +118,10 @@ class BufferVk : public jBuffer {
 
   virtual EResourceLayout GetLayout() const override { return Layout; }
 
-  jMemory         Memory;
-  VkBuffer        m_buffer = VK_NULL_HANDLE;
-  VkDeviceMemory  m_memory = VK_NULL_HANDLE;
+  // TODO: consider descriptive names for Memory and VkDeviceMemory
+  Memory          m_memory;
+  VkBuffer        m_buffer       = VK_NULL_HANDLE;
+  VkDeviceMemory  m_deviceMemory = VK_NULL_HANDLE;
   VkDeviceSize    m_size;  // TODO: consider about placing to VertexBufferVk
   void*           MappedPointer      = nullptr;
   size_t          Offset             = 0;
@@ -146,7 +148,7 @@ struct VertexStreamVk {
 
 struct VertexBufferArrayVk;
 
-struct VertexBufferVk : public jVertexBuffer {
+struct VertexBufferVk : public VertexBuffer {
   struct BindInfo {
     void Reset();
 
@@ -190,7 +192,7 @@ struct VertexBufferVk : public jVertexBuffer {
       VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
       std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
       std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-      const jVertexBufferArray&                       InVertexBufferArray);
+      const VertexBufferArray&                        InVertexBufferArray);
 
   virtual int32_t GetElementCount() const {
     return vertexStreamData ? vertexStreamData->elementCount : 0;
@@ -212,13 +214,13 @@ struct VertexBufferVk : public jVertexBuffer {
     return GETHASH_FROM_INSTANT_STRUCT(state);
   }
 
-  virtual void Bind(const std::shared_ptr<jRenderFrameContext>&
+  virtual void Bind(const std::shared_ptr<RenderFrameContext>&
                         InRenderFrameContext) const override;
 
   virtual bool Initialize(
       const std::shared_ptr<VertexStreamData>& InStreamData) override;
 
-  jBuffer* GetBuffer(int32_t InStreamIndex) const override {
+  Buffer* GetBuffer(int32_t InStreamIndex) const override {
     assert(Streams.size() > InStreamIndex);
     return Streams[InStreamIndex].BufferPtr.get();
   }
@@ -248,14 +250,14 @@ struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
 
 // ================ Index Buffer Vk ===========================
 
-struct IndexBufferVk : public jIndexBuffer {
+struct IndexBufferVk : public IndexBuffer {
   std::shared_ptr<BufferVk> BufferPtr;
 
   virtual int32_t GetElementCount() const {
     return indexStreamData ? indexStreamData->elementCount : 0;
   }
 
-  virtual void Bind(const std::shared_ptr<jRenderFrameContext>&
+  virtual void Bind(const std::shared_ptr<RenderFrameContext>&
                         InRenderFrameContext) const override;
   virtual bool Initialize(
       const std::shared_ptr<IndexStreamData>& InStreamData) override;
