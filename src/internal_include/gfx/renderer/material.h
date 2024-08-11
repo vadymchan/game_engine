@@ -9,9 +9,9 @@
 
 namespace game_engine {
 
-class jMaterial {
+class Material {
   public:
-  virtual ~jMaterial() {}
+  virtual ~Material() {}
 
   enum class EMaterialTextureType : int8_t {
     Albedo = 0,
@@ -23,26 +23,26 @@ class jMaterial {
   struct TextureData {
     Name                name;
     Name                FilePath;
-    jTexture*          Texture             = nullptr;
+    Texture*          m_texture             = nullptr;
     ETextureAddressMode TextureAddressModeU = ETextureAddressMode::REPEAT;
     ETextureAddressMode TextureAddressModeV = ETextureAddressMode::REPEAT;
 
-    const jTexture* GetTexture() const { return Texture; }
+    const Texture* GetTexture() const { return m_texture; }
   };
 
   bool HasAlbedoTexture() const {
-    return TexData[(int32_t)EMaterialTextureType::Albedo].Texture;
+    return TexData[(int32_t)EMaterialTextureType::Albedo].m_texture;
   }
 
   bool IsUseSphericalMap() const { return bUseSphericalMap; }
 
   bool IsUseSRGBAlbedoTexture() const {
-    return TexData[(int32_t)EMaterialTextureType::Albedo].Texture
-             ? TexData[(int32_t)EMaterialTextureType::Albedo].Texture->sRGB
+    return TexData[(int32_t)EMaterialTextureType::Albedo].m_texture
+             ? TexData[(int32_t)EMaterialTextureType::Albedo].m_texture->sRGB
              : false;
   }
 
-  jTexture* GetTexture(EMaterialTextureType InType) const;
+  Texture* GetTexture(EMaterialTextureType InType) const;
 
   template <typename T>
   T* GetTexture(EMaterialTextureType InType) const {
@@ -52,9 +52,9 @@ class jMaterial {
   TextureData TexData[static_cast<int32_t>(EMaterialTextureType::Max)];
   bool        bUseSphericalMap = false;
 
-  const std::shared_ptr<jShaderBindingInstance>& CreateShaderBindingInstance();
+  const std::shared_ptr<ShaderBindingInstance>& CreateShaderBindingInstance();
 
-  std::shared_ptr<jShaderBindingInstance> ShaderBindingInstance = nullptr;
+  std::shared_ptr<ShaderBindingInstance> m_shaderBindingInstance = nullptr;
   mutable bool NeedToUpdateShaderBindingInstance                 = true;
 };
 
