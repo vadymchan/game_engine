@@ -13,28 +13,28 @@
 
 namespace game_engine {
 
-struct jAttachment {
-  jAttachment() = default;
+struct Attachment {
+  Attachment() = default;
 
-  jAttachment(const std::shared_ptr<jRenderTarget>& InRTPtr,
+  Attachment(const std::shared_ptr<RenderTarget>& InRTPtr,
               EAttachmentLoadStoreOp                InLoadStoreOp
               = EAttachmentLoadStoreOp::CLEAR_STORE,
               EAttachmentLoadStoreOp InStencilLoadStoreOp
               = EAttachmentLoadStoreOp::CLEAR_STORE,
-              jRTClearValue RTClearValue
-              = jRTClearValue(0.0f, 0.0f, 0.0f, 1.0f),
+              RTClearValue rtClearValue
+              = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f),
               EResourceLayout InInitialLayout = EResourceLayout::UNDEFINED,
               EResourceLayout InFinalLayout = EResourceLayout::SHADER_READ_ONLY,
               bool            InIsResolveAttachment = false)
       : RenderTargetPtr(InRTPtr)
       , LoadStoreOp(InLoadStoreOp)
       , StencilLoadStoreOp(InStencilLoadStoreOp)
-      , RTClearValue(RTClearValue)
+      , m_rtClearValue(rtClearValue)
       , InitialLayout(InInitialLayout)
       , FinalLayout(InFinalLayout)
       , bResolveAttachment(InIsResolveAttachment) {}
 
-  std::shared_ptr<jRenderTarget> RenderTargetPtr;
+  std::shared_ptr<RenderTarget> RenderTargetPtr;
 
   // The two options below determine what to do with the data in the attachment
   // before and after rendering.
@@ -54,7 +54,7 @@ struct jAttachment {
   EAttachmentLoadStoreOp StencilLoadStoreOp
       = EAttachmentLoadStoreOp::CLEAR_STORE;
 
-  jRTClearValue RTClearValue = jRTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+  RTClearValue m_rtClearValue = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
 
   EResourceLayout InitialLayout = EResourceLayout::UNDEFINED;
   EResourceLayout FinalLayout   = EResourceLayout::SHADER_READ_ONLY;
@@ -72,7 +72,7 @@ struct jAttachment {
         (RenderTargetPtr ? RenderTargetPtr->GetHash() : 0),
         LoadStoreOp,
         StencilLoadStoreOp,
-        RTClearValue,
+        m_rtClearValue,
         InitialLayout,
         FinalLayout);
     return Hash;
@@ -88,7 +88,7 @@ struct jAttachment {
   mutable size_t Hash = 0;
 };
 
-struct jSubpass {
+struct Subpass {
   void Initialize(int32_t            InSourceSubpassIndex,
                   int32_t            InDestSubpassIndex,
                   EPipelineStageMask InAttachmentProducePipelineBit,
@@ -162,10 +162,10 @@ struct jSubpass {
   }
 };
 
-struct jRenderPassInfo {
-  std::vector<jAttachment> Attachments;
-  jAttachment              ResolveAttachment;
-  std::vector<jSubpass>    Subpasses;
+struct RenderPassInfo {
+  std::vector<Attachment> Attachments;
+  Attachment              ResolveAttachment;
+  std::vector<Subpass>    Subpasses;
 
   void Reset() {
     Attachments.clear();
@@ -238,108 +238,108 @@ struct jRenderPassInfo {
   }
 };
 
-class jRenderPass {
+class RenderPass {
   public:
-  virtual ~jRenderPass() {}
+  virtual ~RenderPass() {}
 
-  jRenderPass() = default;
+  RenderPass() = default;
 
-  jRenderPass(const std::vector<jAttachment>& colorAttachments,
+  RenderPass(const std::vector<Attachment>& colorAttachments,
               const math::Vector2Di&          offset,
               const math::Vector2Di&          extent) {
     SetAttachemnt(colorAttachments);
     SetRenderArea(offset, extent);
   }
 
-  jRenderPass(const std::vector<jAttachment>& colorAttachments,
-              const jAttachment&              depthAttachment,
+  RenderPass(const std::vector<Attachment>& colorAttachments,
+              const Attachment&              depthAttachment,
               const math::Vector2Di&          offset,
               const math::Vector2Di&          extent) {
     SetAttachemnt(colorAttachments, depthAttachment);
     SetRenderArea(offset, extent);
   }
 
-  jRenderPass(const std::vector<jAttachment>& colorAttachments,
-              const jAttachment&              depthAttachment,
-              const jAttachment&              colorResolveAttachment,
+  RenderPass(const std::vector<Attachment>& colorAttachments,
+              const Attachment&              depthAttachment,
+              const Attachment&              colorResolveAttachment,
               const math::Vector2Di&          offset,
               const math::Vector2Di&          extent) {
     SetAttachemnt(colorAttachments, depthAttachment, colorResolveAttachment);
     SetRenderArea(offset, extent);
   }
 
-  void SetAttachemnt(const std::vector<jAttachment>& colorAttachments) {
+  void SetAttachemnt(const std::vector<Attachment>& colorAttachments) {
     // Add output color attachment
-    const int32_t startColorIndex = (int32_t)RenderPassInfo.Attachments.size();
-    RenderPassInfo.Attachments.insert(RenderPassInfo.Attachments.end(),
+    const int32_t startColorIndex = (int32_t)m_renderPassInfo.Attachments.size();
+    m_renderPassInfo.Attachments.insert(m_renderPassInfo.Attachments.end(),
                                       colorAttachments.begin(),
                                       colorAttachments.end());
 
-    if (RenderPassInfo.Subpasses.empty()) {
-      RenderPassInfo.Subpasses.resize(1);
+    if (m_renderPassInfo.Subpasses.empty()) {
+      m_renderPassInfo.Subpasses.resize(1);
     }
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
-      RenderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
+      m_renderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
           startColorIndex + i);
     }
   }
 
-  void SetAttachemnt(const std::vector<jAttachment>& colorAttachments,
-                     const jAttachment&              depthAttachment) {
+  void SetAttachemnt(const std::vector<Attachment>& colorAttachments,
+                     const Attachment&              depthAttachment) {
     // Add output color attachment
-    const int32_t startColorIndex = (int32_t)RenderPassInfo.Attachments.size();
-    RenderPassInfo.Attachments.insert(RenderPassInfo.Attachments.end(),
+    const int32_t startColorIndex = (int32_t)m_renderPassInfo.Attachments.size();
+    m_renderPassInfo.Attachments.insert(m_renderPassInfo.Attachments.end(),
                                       colorAttachments.begin(),
                                       colorAttachments.end());
 
-    if (RenderPassInfo.Subpasses.empty()) {
-      RenderPassInfo.Subpasses.resize(1);
+    if (m_renderPassInfo.Subpasses.empty()) {
+      m_renderPassInfo.Subpasses.resize(1);
     }
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
-      RenderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
+      m_renderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
           startColorIndex + i);
     }
 
     // Add output depth attachment
-    const int32_t startDepthIndex = (int32_t)RenderPassInfo.Attachments.size();
-    RenderPassInfo.Attachments.push_back(depthAttachment);
+    const int32_t startDepthIndex = (int32_t)m_renderPassInfo.Attachments.size();
+    m_renderPassInfo.Attachments.push_back(depthAttachment);
 
-    RenderPassInfo.Subpasses[0].OutputDepthAttachment = startDepthIndex;
+    m_renderPassInfo.Subpasses[0].OutputDepthAttachment = startDepthIndex;
   }
 
   // TODO: consider using  std::optional and std::nullopt
-  void SetAttachemnt(const std::vector<jAttachment>& colorAttachments,
-                     const jAttachment&              depthAttachment,
-                     const jAttachment&              colorResolveAttachment) {
+  void SetAttachemnt(const std::vector<Attachment>& colorAttachments,
+                     const Attachment&              depthAttachment,
+                     const Attachment&              colorResolveAttachment) {
     // Add output color attachment
-    const int32_t startColorIndex = (int32_t)RenderPassInfo.Attachments.size();
-    RenderPassInfo.Attachments.insert(RenderPassInfo.Attachments.end(),
+    const int32_t startColorIndex = (int32_t)m_renderPassInfo.Attachments.size();
+    m_renderPassInfo.Attachments.insert(m_renderPassInfo.Attachments.end(),
                                       colorAttachments.begin(),
                                       colorAttachments.end());
 
-    if (RenderPassInfo.Subpasses.empty()) {
-      RenderPassInfo.Subpasses.resize(1);
+    if (m_renderPassInfo.Subpasses.empty()) {
+      m_renderPassInfo.Subpasses.resize(1);
     }
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
-      RenderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
+      m_renderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
           startColorIndex + i);
     }
 
     // Add output depth attachment
-    const int32_t startDepthIndex = (int32_t)RenderPassInfo.Attachments.size();
-    RenderPassInfo.Attachments.push_back(depthAttachment);
+    const int32_t startDepthIndex = (int32_t)m_renderPassInfo.Attachments.size();
+    m_renderPassInfo.Attachments.push_back(depthAttachment);
 
-    RenderPassInfo.Subpasses[0].OutputDepthAttachment = startDepthIndex;
+    m_renderPassInfo.Subpasses[0].OutputDepthAttachment = startDepthIndex;
 
     // Add output resolve attachment
     const int32_t startResolveIndex
-        = (int32_t)RenderPassInfo.Attachments.size();
-    RenderPassInfo.Attachments.push_back(colorResolveAttachment);
+        = (int32_t)m_renderPassInfo.Attachments.size();
+    m_renderPassInfo.Attachments.push_back(colorResolveAttachment);
 
-    RenderPassInfo.Subpasses[0].OutputResolveAttachment = startResolveIndex;
+    m_renderPassInfo.Subpasses[0].OutputResolveAttachment = startResolveIndex;
   }
 
   void SetRenderArea(const math::Vector2Di& offset,
@@ -348,14 +348,14 @@ class jRenderPass {
     RenderExtent = extent;
   }
 
-  jRenderPass(const jRenderPassInfo& renderPassInfo,
+  RenderPass(const RenderPassInfo& renderPassInfo,
               const math::Vector2Di& offset,
               const math::Vector2Di& extent) {
-    RenderPassInfo = renderPassInfo;
+    m_renderPassInfo = renderPassInfo;
     SetRenderArea(offset, extent);
   }
 
-  virtual bool BeginRenderPass(const jCommandBuffer* commandBuffer) {
+  virtual bool BeginRenderPass(const CommandBuffer* commandBuffer) {
     return false;
   }
 
@@ -367,7 +367,7 @@ class jRenderPass {
     }
 
     Hash = GETHASH_FROM_INSTANT_STRUCT(
-        RenderPassInfo.GetHash(), RenderOffset, RenderExtent);
+        m_renderPassInfo.GetHash(), RenderOffset, RenderExtent);
     return Hash;
   }
 
@@ -375,11 +375,11 @@ class jRenderPass {
 
   virtual void* GetFrameBuffer() const { return nullptr; }
 
-  jRenderPassInfo RenderPassInfo;
+  RenderPassInfo m_renderPassInfo;
 
-  // std::vector<jAttachment> ColorAttachments;
-  // jAttachment DepthAttachment;
-  // jAttachment ColorAttachmentResolve;
+  // std::vector<Attachment> ColorAttachments;
+  // Attachment DepthAttachment;
+  // Attachment ColorAttachmentResolve;
 
   // TODO: consider using Dimension2Di
   math::Vector2Di RenderOffset;
