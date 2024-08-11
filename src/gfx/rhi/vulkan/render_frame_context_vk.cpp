@@ -27,18 +27,18 @@ void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
 }
 
 void RenderFrameContextVk::QueueSubmitCurrentActiveCommandBuffer(
-    jSemaphore* InSignalSemaphore) {
-  if (CommandBuffer) {
+    Semaphore* InSignalSemaphore) {
+  if (m_commandBuffer_) {
     // TODO: temoporary removed
-    // CommandBuffer->End();
+    // m_commandBuffer_->End();
 
     g_rhi_vk->QueueSubmit(shared_from_this(), InSignalSemaphore);
-    g_rhi_vk->GetCommandBufferManager()->ReturnCommandBuffer(CommandBuffer);
+    g_rhi_vk->GetCommandBufferManager()->ReturnCommandBuffer(m_commandBuffer_);
 
     // get new command buffer
-    CommandBuffer = g_rhi_vk->CommandBufferManager->GetOrCreateCommandBuffer();
+    m_commandBuffer_ = g_rhi_vk->m_commandBufferManager_->GetOrCreateCommandBuffer();
     g_rhi_vk->m_swapchain_->GetSwapchainImage(FrameIndex)->CommandBufferFence
-        = (VkFence)CommandBuffer->GetFenceHandle();
+        = (VkFence)m_commandBuffer_->GetFenceHandle();
   }
 }
 
