@@ -4,24 +4,24 @@
 
 namespace game_engine {
 
-std::map<size_t, std::list<jFrameBufferPool::jFrameBufferPoolResource> >
-                                jFrameBufferPool::FrameBufferResourceMap;
-std::map<jFrameBuffer*, size_t> jFrameBufferPool::FrameBufferHashVariableMap;
+std::map<size_t, std::list<FrameBufferPool::FrameBufferPoolResource> >
+                                FrameBufferPool::FrameBufferResourceMap;
+std::map<FrameBuffer*, size_t> FrameBufferPool::FrameBufferHashVariableMap;
 
-//struct jTexture* jFrameBufferPool::GetNullTexture(ETextureType type) {
+//struct Texture* FrameBufferPool::GetNullTexture(ETextureType type) {
 //  switch (type) {
 //    case ETextureType::TEXTURE_2D: {
-//      static auto temp = jFrameBufferPool::GetFrameBuffer(
+//      static auto temp = FrameBufferPool::GetFrameBuffer(
 //          {ETextureType::TEXTURE_2D, ETextureFormat::RGBA8, 2, 2, 1});
 //      return temp->GetTexture();
 //    }
 //    case ETextureType::TEXTURE_2D_ARRAY: {
-//      static auto temp = jFrameBufferPool::GetFrameBuffer(
+//      static auto temp = FrameBufferPool::GetFrameBuffer(
 //          {ETextureType::TEXTURE_2D_ARRAY, ETextureFormat::RGBA8, 2, 2, 1});
 //      return temp->GetTexture();
 //    }
 //    case ETextureType::TEXTURE_CUBE: {
-//      static auto temp = jFrameBufferPool::GetFrameBuffer(
+//      static auto temp = FrameBufferPool::GetFrameBuffer(
 //          {ETextureType::TEXTURE_CUBE, ETextureFormat::RGBA8, 2, 2, 1});
 //      return temp->GetTexture();
 //    }
@@ -33,14 +33,14 @@ std::map<jFrameBuffer*, size_t> jFrameBufferPool::FrameBufferHashVariableMap;
 //  return nullptr;
 //}
 
-jFrameBufferPool::jFrameBufferPool() {
+FrameBufferPool::FrameBufferPool() {
 }
 
-jFrameBufferPool::~jFrameBufferPool() {
+FrameBufferPool::~FrameBufferPool() {
 }
 
-std::shared_ptr<jFrameBuffer> jFrameBufferPool::GetFrameBuffer(
-    const jFrameBufferInfo& info) {
+std::shared_ptr<FrameBuffer> FrameBufferPool::GetFrameBuffer(
+    const FrameBufferInfo& info) {
   auto hash = info.GetHash();
 
   auto it_find = FrameBufferResourceMap.find(hash);
@@ -55,7 +55,7 @@ std::shared_ptr<jFrameBuffer> jFrameBufferPool::GetFrameBuffer(
   }
 
   auto renderTargetPtr
-      = std::shared_ptr<jFrameBuffer>(g_rhi->CreateFrameBuffer(info));
+      = std::shared_ptr<FrameBuffer>(g_rhi->CreateFrameBuffer(info));
   if (renderTargetPtr) {
     FrameBufferResourceMap[hash].push_back({true, renderTargetPtr});
     FrameBufferHashVariableMap[renderTargetPtr.get()] = hash;
@@ -64,7 +64,7 @@ std::shared_ptr<jFrameBuffer> jFrameBufferPool::GetFrameBuffer(
   return renderTargetPtr;
 }
 
-void jFrameBufferPool::ReturnFrameBuffer(jFrameBuffer* renderTarget) {
+void FrameBufferPool::ReturnFrameBuffer(FrameBuffer* renderTarget) {
   auto it_find = FrameBufferHashVariableMap.find(renderTarget);
   if (FrameBufferHashVariableMap.end() == it_find) {
     return;
