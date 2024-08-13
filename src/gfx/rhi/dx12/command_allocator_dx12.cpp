@@ -7,7 +7,7 @@
 
 namespace game_engine {
 
-void jCommandBufferManager_DX12::Release() {
+void CommandBufferManagerDx12::Release() {
   ScopedLock s(&CommandListLock);
 
   for (auto& iter : UsingCommandBuffers) {
@@ -25,10 +25,10 @@ void jCommandBufferManager_DX12::Release() {
   AvailableCommandLists.clear();
 }
 
-jCommandBuffer_DX12* jCommandBufferManager_DX12::GetOrCreateCommandBuffer() {
+CommandBufferDx12* CommandBufferManagerDx12::GetOrCreateCommandBuffer() {
   ScopedLock s(&CommandListLock);
 
-  jCommandBuffer_DX12* SelectedCmdBuffer = nullptr;
+  CommandBufferDx12* SelectedCmdBuffer = nullptr;
   for (int32_t i = 0; i < AvailableCommandLists.size(); ++i) {
     if (AvailableCommandLists[i]->IsCompleteForWaitFence()) {
       SelectedCmdBuffer = AvailableCommandLists[i];
@@ -47,21 +47,21 @@ jCommandBuffer_DX12* jCommandBufferManager_DX12::GetOrCreateCommandBuffer() {
   return SelectedCmdBuffer;
 }
 
-void jCommandBufferManager_DX12::ReturnCommandBuffer(
-    jCommandBuffer* commandBuffer) {
+void CommandBufferManagerDx12::ReturnCommandBuffer(
+    CommandBuffer* commandBuffer) {
   ScopedLock s(&CommandListLock);
 
   for (int32_t i = 0; i < UsingCommandBuffers.size(); ++i) {
     if (UsingCommandBuffers[i]->GetNativeHandle()
         == commandBuffer->GetNativeHandle()) {
       UsingCommandBuffers.erase(UsingCommandBuffers.begin() + i);
-      AvailableCommandLists.push_back((jCommandBuffer_DX12*)commandBuffer);
+      AvailableCommandLists.push_back((CommandBufferDx12*)commandBuffer);
       return;
     }
   }
 }
 
-bool jCommandBufferManager_DX12::Initialize(ComPtr<ID3D12Device>    InDevice,
+bool CommandBufferManagerDx12::Initialize(ComPtr<ID3D12Device>    InDevice,
                                             D3D12_COMMAND_LIST_TYPE InType) {
   assert(InDevice);
   Device = InDevice;
@@ -81,13 +81,13 @@ bool jCommandBufferManager_DX12::Initialize(ComPtr<ID3D12Device>    InDevice,
     }
   }
 
-  Fence = (jFence_DX12*)g_rhi_dx12->FenceManager.GetOrCreateFence();
+  m_fence = (FenceDx12*)g_rhi_dx12->m_fenceManager_.GetOrCreateFence();
 
   return true;
 }
 
-void jCommandBufferManager_DX12::ExecuteCommandList(
-    jCommandBuffer_DX12* InCommandList, bool bWaitUntilExecuteComplete) {
+void CommandBufferManagerDx12::ExecuteCommandList(
+    CommandBufferDx12* InCommandList, bool bWaitUntilExecuteComplete) {
   if (!InCommandList->End()) {
     return;
   }
@@ -95,7 +95,7 @@ void jCommandBufferManager_DX12::ExecuteCommandList(
   ID3D12CommandList* pCommandLists[] = {InCommandList->Get()};
   CommandQueue->ExecuteCommandLists(1, pCommandLists);
 
-  auto* fence = InCommandList->Owner->Fence;
+  auto* fence = InCommandList->Owner->m_fence;
   assert(fence);
 
   if (fence) {
@@ -104,8 +104,8 @@ void jCommandBufferManager_DX12::ExecuteCommandList(
   }
 }
 
-jCommandBuffer_DX12* jCommandBufferManager_DX12::CreateCommandList() const {
-  jCommandBuffer_DX12* commandBuffer = new jCommandBuffer_DX12();
+CommandBufferDx12* CommandBufferManagerDx12::CreateCommandList() const {
+  CommandBufferDx12* commandBuffer = new CommandBufferDx12();
   commandBuffer->Owner               = this;
   commandBuffer->CommandAllocator    = CreateCommandAllocator();
   if (FAILED(Device->CreateCommandList(
