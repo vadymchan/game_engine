@@ -624,7 +624,7 @@ void Game::Update(float deltaTime) {
 
 void Game::Draw() {
   {
-    std::shared_ptr<jRenderFrameContext> renderFrameContext
+    std::shared_ptr<RenderFrameContext> renderFrameContext
         = g_rhi->BeginRenderFrame();
     if (!renderFrameContext) {
       // TODO: log error
