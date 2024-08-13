@@ -4,7 +4,7 @@
 
 namespace game_engine {
 
-void jRingBuffer_DX12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
+void RingBufferDx12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
   ScopedLock s(&Lock);
 
   Release();
@@ -27,11 +27,11 @@ void jRingBuffer_DX12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
   desc.Alignment           = 0;
 
   assert(g_rhi_dx12);
-  Buffer = g_rhi_dx12->CreateUploadResource(&desc,
+  m_buffer = g_rhi_dx12->CreateUploadResource(&desc,
                                             D3D12_RESOURCE_STATE_GENERIC_READ);
 
   // TODO: refactor
-  auto resource = Buffer->Resource;
+  auto resource = m_buffer->Resource;
   assert(resource);
 
   if (!resource) {
@@ -43,14 +43,14 @@ void jRingBuffer_DX12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
     CBV = g_rhi_dx12->DescriptorHeaps.Alloc();
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC Desc;
-    Desc.BufferLocation = Buffer->GetGPUVirtualAddress();
+    Desc.BufferLocation = m_buffer->GetGPUVirtualAddress();
     Desc.SizeInBytes    = (uint32_t)RingBufferSize;
 
     g_rhi_dx12->Device->CreateConstantBufferView(&Desc, CBV.CPUHandle);
   }
 
   D3D12_RANGE readRange = {};
-  HRESULT     hr        = Buffer->Resource.get()->Get()->Map(
+  HRESULT     hr        = m_buffer->Resource.get()->Get()->Map(
       0, &readRange, reinterpret_cast<void**>(&MappedPointer));
   assert(SUCCEEDED(hr));
 
