@@ -7,13 +7,13 @@
 
 namespace game_engine {
 
-void jShaderBindingInstance_DX12::Initialize(
-    const jShaderBindingArray& InShaderBindingArray) {
+void ShaderBindingInstanceDx12::Initialize(
+    const ShaderBindingArray& InShaderBindingArray) {
   UpdateShaderBindings(InShaderBindingArray);
 }
 
-void jShaderBindingInstance_DX12::UpdateShaderBindings(
-    const jShaderBindingArray& InShaderBindingArray) {
+void ShaderBindingInstanceDx12::UpdateShaderBindings(
+    const ShaderBindingArray& InShaderBindingArray) {
   // Let's copy the descriptors to the online descriptor set.
   // CopySimpleDescriptor
   // Let's find the descriptor layout and bind it.
@@ -29,40 +29,40 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
   RootParameterInlines.clear();
 
   for (int32_t i = 0; i < InShaderBindingArray.NumOfData; ++i) {
-    const jShaderBinding* ShaderBinding = InShaderBindingArray[i];
-    assert(ShaderBinding);
-    assert(ShaderBinding->Resource);
-    assert(ShaderBinding->IsBindless == ShaderBinding->Resource->IsBindless());
+    const ShaderBinding* shaderBinding = InShaderBindingArray[i];
+    assert(shaderBinding);
+    assert(shaderBinding->Resource);
+    assert(shaderBinding->IsBindless == shaderBinding->Resource->IsBindless());
 
-    const bool IsBindless = ShaderBinding->IsBindless;
-    assert((IsBindless && !ShaderBinding->IsInline)
+    const bool IsBindless = shaderBinding->IsBindless;
+    assert((IsBindless && !shaderBinding->IsInline)
            || !IsBindless);  // Bindless must note be inline
 
-    switch (ShaderBinding->BindingType) {
+    switch (shaderBinding->BindingType) {
       case EShaderBindingType::UNIFORMBUFFER:
       case EShaderBindingType::UNIFORMBUFFER_DYNAMIC: {
         if (IsBindless) {
           auto UniformResourceBindless
-              = (jUniformBufferResourceBindless*)ShaderBinding->Resource;
+              = (UniformBufferResourceBindless*)shaderBinding->Resource;
           for (auto Resource : UniformResourceBindless->UniformBuffers) {
             assert(Resource);
 
-            jUniformBufferBlock_DX12* UniformBuffer
-                = (jUniformBufferBlock_DX12*)Resource;
+            UniformBufferBlockDx12* UniformBuffer
+                = (UniformBufferBlockDx12*)Resource;
             Descriptors.push_back({.Descriptor   = UniformBuffer->GetCBV(),
                                    .ResourceName = UniformBuffer->ResourceName,
                                    .Resource     = UniformBuffer});
           }
         } else {
-          jUniformBufferBlock_DX12* UniformBuffer
-              = (jUniformBufferBlock_DX12*)
-                    ShaderBinding->Resource->GetResource();
+          UniformBufferBlockDx12* UniformBuffer
+              = (UniformBufferBlockDx12*)
+                    shaderBinding->Resource->GetResource();
           assert(UniformBuffer->GetLowLevelResource());
           // assert(!UniformBuffer->IsUseRingBuffer() ||
-          // (UniformBuffer->IsUseRingBuffer() && ShaderBinding->IsInline));
-          if (ShaderBinding->IsInline) {
+          // (UniformBuffer->IsUseRingBuffer() && shaderBinding->IsInline));
+          if (shaderBinding->IsInline) {
             RootParameterInlines.push_back(
-                {.Type              = jInlineRootParamType::CBV,
+                {.Type              = InlineRootParamType::CBV,
                  .GPUVirtualAddress = UniformBuffer->GetGPUAddress(),
                  .ResourceName      = UniformBuffer->ResourceName,
                  .Resource          = UniformBuffer});
@@ -77,19 +77,19 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_SAMPLER_SRV: {
         if (IsBindless) {
           auto TextureResourceResourceBindless
-              = (jTextureResourceBindless*)ShaderBinding->Resource;
+              = (TextureResourceBindless*)shaderBinding->Resource;
           for (auto Resource :
                TextureResourceResourceBindless->TextureBindDatas) {
-            assert(Resource.Texture);
+            assert(Resource.m_texture);
 
-            jTexture_DX12* TexDX12 = (jTexture_DX12*)Resource.Texture;
+            TextureDx12* TexDX12 = (TextureDx12*)Resource.m_texture;
             Descriptors.push_back({.Descriptor   = TexDX12->SRV,
                                    .ResourceName = TexDX12->ResourceName,
                                    .Resource     = TexDX12});
 
             if (Resource.SamplerState) {
-              jSamplerStateInfo_DX12* SamplerDX12
-                  = (jSamplerStateInfo_DX12*)Resource.SamplerState;
+              SamplerStateInfoDx12* SamplerDX12
+                  = (SamplerStateInfoDx12*)Resource.SamplerState;
               assert(SamplerDX12);
               SamplerDescriptors.push_back(
                   {.Descriptor   = SamplerDX12->SamplerSRV,
@@ -97,8 +97,8 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
                    .Resource     = SamplerDX12});
             } else {
               // assert(0);   // todo : need to set DefaultSamplerState
-              const jSamplerStateInfo_DX12* SamplerDX12
-                  = (jSamplerStateInfo_DX12*)
+              const SamplerStateInfoDx12* SamplerDX12
+                  = (SamplerStateInfoDx12*)
                       TSamplerStateInfo<ETextureFilter::LINEAR_MIPMAP_LINEAR,
                                         ETextureFilter::LINEAR_MIPMAP_LINEAR,
                                         ETextureAddressMode::REPEAT,
@@ -114,20 +114,20 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
             }
           }
         } else {
-          const jTextureResource* tbor
-              = reinterpret_cast<const jTextureResource*>(
-                  ShaderBinding->Resource);
-          assert(tbor && tbor->Texture);
+          const TextureResource* tbor
+              = reinterpret_cast<const TextureResource*>(
+                  shaderBinding->Resource);
+          assert(tbor && tbor->m_texture);
 
-          if (tbor && tbor->Texture) {
-            jTexture_DX12* TexDX12 = (jTexture_DX12*)tbor->Texture;
+          if (tbor && tbor->m_texture) {
+            TextureDx12* TexDX12 = (TextureDx12*)tbor->m_texture;
             Descriptors.push_back({.Descriptor   = TexDX12->SRV,
                                    .ResourceName = TexDX12->ResourceName,
                                    .Resource     = TexDX12});
 
             if (tbor->SamplerState) {
-              jSamplerStateInfo_DX12* SamplerDX12
-                  = (jSamplerStateInfo_DX12*)tbor->SamplerState;
+              SamplerStateInfoDx12* SamplerDX12
+                  = (SamplerStateInfoDx12*)tbor->SamplerState;
               assert(SamplerDX12);
               SamplerDescriptors.push_back(
                   {.Descriptor   = SamplerDX12->SamplerSRV,
@@ -136,8 +136,8 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
             } else {
               // assert(0);   // TODO: need to set DefaultSamplerState
 
-              const jSamplerStateInfo_DX12* SamplerDX12
-                  = (jSamplerStateInfo_DX12*)
+              const SamplerStateInfoDx12* SamplerDX12
+                  = (SamplerStateInfoDx12*)
                       TSamplerStateInfo<ETextureFilter::LINEAR_MIPMAP_LINEAR,
                                         ETextureFilter::LINEAR_MIPMAP_LINEAR,
                                         ETextureAddressMode::REPEAT,
@@ -158,17 +158,17 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_SRV: {
         if (IsBindless) {
           auto TextureResourceResourceBindless
-              = (jTextureResourceBindless*)ShaderBinding->Resource;
+              = (TextureResourceBindless*)shaderBinding->Resource;
           for (auto Resource :
                TextureResourceResourceBindless->TextureBindDatas) {
-            jTexture_DX12* Tex = (jTexture_DX12*)Resource.Texture;
+            TextureDx12* Tex = (TextureDx12*)Resource.m_texture;
             Descriptors.push_back({.Descriptor   = Tex->SRV,
                                    .ResourceName = Tex->ResourceName,
                                    .Resource     = Tex});
           }
         } else {
-          jTexture_DX12* Tex
-              = (jTexture_DX12*)ShaderBinding->Resource->GetResource();
+          TextureDx12* Tex
+              = (TextureDx12*)shaderBinding->Resource->GetResource();
           Descriptors.push_back({.Descriptor   = Tex->SRV,
                                  .ResourceName = Tex->ResourceName,
                                  .Resource     = Tex});
@@ -178,10 +178,10 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_ARRAY_SRV: {
         if (IsBindless) {
           auto TextureResourceResourceArrayBindless
-              = (jTextureArrayResourceBindless*)ShaderBinding->Resource;
+              = (TextureArrayResourceBindless*)shaderBinding->Resource;
           for (auto Resource :
                TextureResourceResourceArrayBindless->TextureArrayBindDatas) {
-            jTexture_DX12** TexArray = (jTexture_DX12**)Resource.TextureArray;
+            TextureDx12** TexArray = (TextureDx12**)Resource.TextureArray;
             for (int32_t i = 0; i < Resource.InNumOfTexure; ++i) {
               assert(TexArray[i]);
               Descriptors.push_back({.Descriptor   = TexArray[i]->SRV,
@@ -190,9 +190,9 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
             }
           }
         } else {
-          jTexture_DX12** Tex
-              = (jTexture_DX12**)ShaderBinding->Resource->GetResource();
-          for (int32_t i = 0; i < ShaderBinding->Resource->NumOfResource();
+          TextureDx12** Tex
+              = (TextureDx12**)shaderBinding->Resource->GetResource();
+          for (int32_t i = 0; i < shaderBinding->Resource->NumOfResource();
                ++i) {
             assert(Tex[i]);
             Descriptors.push_back({.Descriptor   = Tex[i]->SRV,
@@ -206,22 +206,22 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       case EShaderBindingType::BUFFER_TEXEL_SRV:
       case EShaderBindingType::ACCELERATION_STRUCTURE_SRV: {
         if (IsBindless) {
-          auto BufferResourceBindless
-              = (jBufferResourceBindless*)ShaderBinding->Resource;
-          for (auto Resource : BufferResourceBindless->Buffers) {
-            jBuffer_DX12* Buf = (jBuffer_DX12*)Resource;
+          auto bufferResourceBindless
+              = (BufferResourceBindless*)shaderBinding->Resource;
+          for (auto Resource : bufferResourceBindless->m_buffers) {
+            BufferDx12* Buf = (BufferDx12*)Resource;
             Descriptors.push_back({.Descriptor   = Buf->SRV,
                                    .ResourceName = Buf->ResourceName,
                                    .Resource     = Buf});
           }
         } else {
-          jBuffer_DX12* Buf
-              = (jBuffer_DX12*)ShaderBinding->Resource->GetResource();
-          assert(Buf->Buffer->Resource);
+          BufferDx12* Buf
+              = (BufferDx12*)shaderBinding->Resource->GetResource();
+          assert(Buf->m_buffer->Resource);
 
-          if (ShaderBinding->IsInline) {
+          if (shaderBinding->IsInline) {
             RootParameterInlines.push_back(
-                {.Type              = jInlineRootParamType::SRV,
+                {.Type              = InlineRootParamType::SRV,
                  .GPUVirtualAddress = Buf->GetGPUAddress(),
                  .ResourceName      = Buf->ResourceName,
                  .Resource          = Buf});
@@ -236,10 +236,10 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_UAV: {
         if (IsBindless) {
           auto TextureResourceResourceBindless
-              = (jTextureResourceBindless*)ShaderBinding->Resource;
+              = (TextureResourceBindless*)shaderBinding->Resource;
           for (auto Resource :
                TextureResourceResourceBindless->TextureBindDatas) {
-            jTexture_DX12* Tex = (jTexture_DX12*)Resource.Texture;
+            TextureDx12* Tex = (TextureDx12*)Resource.m_texture;
             if (Resource.MipLevel == 0) {
               Descriptors.push_back({.Descriptor   = Tex->UAV,
                                      .ResourceName = Tex->ResourceName,
@@ -259,11 +259,11 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
             }
           }
         } else {
-          jTexture_DX12* Tex
-              = (jTexture_DX12*)ShaderBinding->Resource->GetResource();
-          const jTextureResource* tbor
-              = reinterpret_cast<const jTextureResource*>(
-                  ShaderBinding->Resource);
+          TextureDx12* Tex
+              = (TextureDx12*)shaderBinding->Resource->GetResource();
+          const TextureResource* tbor
+              = reinterpret_cast<const TextureResource*>(
+                  shaderBinding->Resource);
           if (tbor->MipLevel == 0) {
             Descriptors.push_back({.Descriptor   = Tex->UAV,
                                    .ResourceName = Tex->ResourceName,
@@ -287,21 +287,21 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       case EShaderBindingType::BUFFER_UAV_DYNAMIC:
       case EShaderBindingType::BUFFER_TEXEL_UAV: {
         if (IsBindless) {
-          auto BufferResourceBindless
-              = (jBufferResourceBindless*)ShaderBinding->Resource;
-          for (auto Resource : BufferResourceBindless->Buffers) {
-            jBuffer_DX12* Buf = (jBuffer_DX12*)Resource;
+          auto bufferResourceBindless
+              = (BufferResourceBindless*)shaderBinding->Resource;
+          for (auto Resource : bufferResourceBindless->m_buffers) {
+            BufferDx12* Buf = (BufferDx12*)Resource;
             Descriptors.push_back({.Descriptor   = Buf->UAV,
                                    .ResourceName = Buf->ResourceName,
                                    .Resource     = Buf});
           }
         } else {
-          jBuffer_DX12* Buf
-              = (jBuffer_DX12*)ShaderBinding->Resource->GetResource();
-          assert(Buf->Buffer->Resource);
-          if (ShaderBinding->IsInline) {
+          BufferDx12* Buf
+              = (BufferDx12*)shaderBinding->Resource->GetResource();
+          assert(Buf->m_buffer->Resource);
+          if (shaderBinding->IsInline) {
             RootParameterInlines.push_back(
-                {.Type              = jInlineRootParamType::UAV,
+                {.Type              = InlineRootParamType::UAV,
                  .GPUVirtualAddress = Buf->GetGPUAddress(),
                  .ResourceName      = Buf->ResourceName,
                  .Resource          = Buf});
@@ -315,18 +315,18 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
       }
       case EShaderBindingType::SAMPLER: {
         if (IsBindless) {
-          auto SamplerResourceBindless
-              = (jSamplerResourceBindless*)ShaderBinding->Resource;
-          for (auto Resource : SamplerResourceBindless->SamplerStates) {
-            jSamplerStateInfo_DX12* Sampler = (jSamplerStateInfo_DX12*)Resource;
+          auto samplerResourceBindless
+              = (SamplerResourceBindless*)shaderBinding->Resource;
+          for (auto Resource : samplerResourceBindless->SamplerStates) {
+            SamplerStateInfoDx12* Sampler = (SamplerStateInfoDx12*)Resource;
             assert(Sampler);
             SamplerDescriptors.push_back({.Descriptor   = Sampler->SamplerSRV,
                                           .ResourceName = Sampler->ResourceName,
                                           .Resource     = Sampler});
           }
         } else {
-          jSamplerStateInfo_DX12* Sampler
-              = (jSamplerStateInfo_DX12*)ShaderBinding->Resource->GetResource();
+          SamplerStateInfoDx12* Sampler
+              = (SamplerStateInfoDx12*)shaderBinding->Resource->GetResource();
           assert(Sampler);
           SamplerDescriptors.push_back({.Descriptor   = Sampler->SamplerSRV,
                                         .ResourceName = Sampler->ResourceName,
@@ -350,20 +350,20 @@ void jShaderBindingInstance_DX12::UpdateShaderBindings(
 #endif
 }
 
-void* jShaderBindingInstance_DX12::GetHandle() const {
+void* ShaderBindingInstanceDx12::GetHandle() const {
   return ShaderBindingsLayouts->GetHandle();
 }
 
-void jShaderBindingInstance_DX12::Free() {
-  if (GetType() == jShaderBindingInstanceType::MultiFrame) {
+void ShaderBindingInstanceDx12::Free() {
+  if (GetType() == ShaderBindingInstanceType::MultiFrame) {
     ScopedLock s(&g_rhi_dx12->MultiFrameShaderBindingInstanceLock);
-    g_rhi_dx12->DeallocatorMultiFrameShaderBindingInstance.Free(
+    g_rhi_dx12->m_deallocatorMultiFrameShaderBindingInstance.Free(
         shared_from_this());
   }
 }
 
-void jShaderBindingInstance_DX12::BindGraphics(
-    jCommandBuffer_DX12* InCommandList, int32_t& InOutStartIndex) const {
+void ShaderBindingInstanceDx12::BindGraphics(
+    CommandBufferDx12* InCommandList, int32_t& InOutStartIndex) const {
   assert(InCommandList);
 
   auto CommandList = InCommandList->Get();
@@ -373,15 +373,15 @@ void jShaderBindingInstance_DX12::BindGraphics(
   for (index = 0; index < RootParameterInlines.size();
        ++index, ++InOutStartIndex) {
     switch (RootParameterInlines[index].Type) {
-      case jInlineRootParamType::CBV:
+      case InlineRootParamType::CBV:
         CommandList->SetGraphicsRootConstantBufferView(
             InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
         break;
-      case jInlineRootParamType::SRV:
+      case InlineRootParamType::SRV:
         CommandList->SetGraphicsRootShaderResourceView(
             InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
         break;
-      case jInlineRootParamType::UAV:
+      case InlineRootParamType::UAV:
         CommandList->SetGraphicsRootUnorderedAccessView(
             InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
       default:
@@ -390,8 +390,8 @@ void jShaderBindingInstance_DX12::BindGraphics(
   }
 }
 
-void jShaderBindingInstance_DX12::BindCompute(
-    jCommandBuffer_DX12* InCommandList, int32_t& InOutStartIndex) {
+void ShaderBindingInstanceDx12::BindCompute(
+    CommandBufferDx12* InCommandList, int32_t& InOutStartIndex) {
   assert(InCommandList);
 
   auto CommandList = InCommandList->Get();
@@ -401,15 +401,15 @@ void jShaderBindingInstance_DX12::BindCompute(
   for (index = 0; index < RootParameterInlines.size();
        ++index, ++InOutStartIndex) {
     switch (RootParameterInlines[index].Type) {
-      case jInlineRootParamType::CBV:
+      case InlineRootParamType::CBV:
         CommandList->SetComputeRootConstantBufferView(
             InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
         break;
-      case jInlineRootParamType::SRV:
+      case InlineRootParamType::SRV:
         CommandList->SetComputeRootShaderResourceView(
             InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
         break;
-      case jInlineRootParamType::UAV:
+      case InlineRootParamType::UAV:
         CommandList->SetComputeRootUnorderedAccessView(
             InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
       default:
@@ -418,8 +418,8 @@ void jShaderBindingInstance_DX12::BindCompute(
   }
 }
 
-void jShaderBindingInstance_DX12::CopyToOnlineDescriptorHeap(
-    jCommandBuffer_DX12* InCommandList) {
+void ShaderBindingInstanceDx12::CopyToOnlineDescriptorHeap(
+    CommandBufferDx12* InCommandList) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->Device);
 
@@ -431,7 +431,7 @@ void jShaderBindingInstance_DX12::CopyToOnlineDescriptorHeap(
     for (int32_t i = 0; i < Descriptors.size(); ++i) {
       SrcDescriptor.Add(Descriptors[i].Descriptor.CPUHandle);
 
-      jDescriptor_DX12 Descriptor
+      DescriptorDx12 Descriptor
           = InCommandList->OnlineDescriptorHeap->Alloc();
       assert(Descriptor.IsValid());
       DestDescriptor.Add(Descriptor.CPUHandle);
@@ -454,7 +454,7 @@ void jShaderBindingInstance_DX12::CopyToOnlineDescriptorHeap(
     for (int32_t i = 0; i < SamplerDescriptors.size(); ++i) {
       SrcSamplerDescriptor.Add(SamplerDescriptors[i].Descriptor.CPUHandle);
 
-      jDescriptor_DX12 Descriptor
+      DescriptorDx12 Descriptor
           = InCommandList->OnlineSamplerDescriptorHeap->Alloc();
       assert(Descriptor.IsValid());
       DestSamplerDescriptor.Add(Descriptor.CPUHandle);
