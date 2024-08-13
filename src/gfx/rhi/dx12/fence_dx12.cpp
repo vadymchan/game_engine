@@ -6,10 +6,10 @@
 
 namespace game_engine {
 
-jFence_DX12::~jFence_DX12() {
-  if (Fence) {
-    Fence->Release();
-    Fence = nullptr;
+FenceDx12::~FenceDx12() {
+  if (m_fence) {
+    m_fence->Release();
+    m_fence = nullptr;
   }
 
   if (FenceEvent) {
@@ -18,35 +18,35 @@ jFence_DX12::~jFence_DX12() {
   }
 }
 
-bool jFence_DX12::IsComplete() const {
-  return Fence->GetCompletedValue() >= FenceValue;
+bool FenceDx12::IsComplete() const {
+  return m_fence->GetCompletedValue() >= FenceValue;
 }
 
-bool jFence_DX12::IsComplete(uint64_t InFenceValue) const {
-  return Fence->GetCompletedValue() >= InFenceValue;
+bool FenceDx12::IsComplete(uint64_t InFenceValue) const {
+  return m_fence->GetCompletedValue() >= InFenceValue;
 }
 
 
-void jFence_DX12::WaitForFence(uint64_t InTimeoutNanoSec) {
+void FenceDx12::WaitForFence(uint64_t InTimeoutNanoSec) {
   WaitForFenceValue(FenceValue, InTimeoutNanoSec);
 }
 
-void jFence_DX12::WaitForFenceValue(uint64_t InFenceValue,
+void FenceDx12::WaitForFenceValue(uint64_t InFenceValue,
                                     uint64_t InTimeoutNanoSec) {
   if (InFenceValue == InitialFenceValue) {
     return;
   }
 
-  assert(Fence);
+  assert(m_fence);
   if (UINT64_MAX == InTimeoutNanoSec) {
-    while (Fence->GetCompletedValue() < InFenceValue) {
+    while (m_fence->GetCompletedValue() < InFenceValue) {
       Sleep(0);
     }
   } else {
     std::chrono::system_clock::time_point lastTime
         = std::chrono::system_clock::now();
 
-    while (Fence->GetCompletedValue() < InFenceValue) {
+    while (m_fence->GetCompletedValue() < InFenceValue) {
       std::chrono::nanoseconds elapsed_nanoseconds
           = std::chrono::duration_cast<std::chrono::nanoseconds>(
               std::chrono::system_clock::now() - lastTime);
@@ -59,13 +59,13 @@ void jFence_DX12::WaitForFenceValue(uint64_t InFenceValue,
   }
 }
 
-uint64_t jFence_DX12::SignalWithNextFenceValue(
+uint64_t FenceDx12::SignalWithNextFenceValue(
     ID3D12CommandQueue* InCommandQueue, bool bWaitUntilExecuteComplete) {
   {
     ScopedLock s(&FenceValueLock);
 
     const auto NewFenceValue = FenceValue + 1;
-    HRESULT    hr = InCommandQueue->Signal(Fence.Get(), NewFenceValue);
+    HRESULT    hr = InCommandQueue->Signal(m_fence.Get(), NewFenceValue);
     assert(SUCCEEDED(hr));
 
     if (FAILED(hr)) {
@@ -75,7 +75,7 @@ uint64_t jFence_DX12::SignalWithNextFenceValue(
     FenceValue = NewFenceValue;
   }
 
-  HRESULT hr = Fence->SetEventOnCompletion(FenceValue, FenceEvent);
+  HRESULT hr = m_fence->SetEventOnCompletion(FenceValue, FenceEvent);
   assert(SUCCEEDED(hr));
 
   if (FAILED(hr)) {
@@ -84,9 +84,9 @@ uint64_t jFence_DX12::SignalWithNextFenceValue(
   return FenceValue;
 }
 
-jFence* jFenceManager_DX12::GetOrCreateFence() {
+Fence* FenceManagerDx12::GetOrCreateFence() {
   if (PendingFences.size() > 0) {
-    jFence* fence = *PendingFences.begin();
+    Fence* fence = *PendingFences.begin();
     PendingFences.erase(PendingFences.begin());
     UsingFences.insert(fence);
     return fence;
@@ -95,10 +95,10 @@ jFence* jFenceManager_DX12::GetOrCreateFence() {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->Device);
 
-  jFence_DX12* newFence = new jFence_DX12();
-  HRESULT hr = g_rhi_dx12->Device->CreateFence(jFence_DX12::InitialFenceValue,
+  FenceDx12* newFence = new FenceDx12();
+  HRESULT hr = g_rhi_dx12->Device->CreateFence(FenceDx12::InitialFenceValue,
                                                D3D12_FENCE_FLAG_NONE,
-                                               IID_PPV_ARGS(&newFence->Fence));
+                                               IID_PPV_ARGS(&newFence->m_fence));
   assert(SUCCEEDED(hr));
 
   if (SUCCEEDED(hr)) {
@@ -115,7 +115,7 @@ jFence* jFenceManager_DX12::GetOrCreateFence() {
   return nullptr;
 }
 
-void jFenceManager_DX12::Release() {
+void FenceManagerDx12::Release() {
   for (auto& fence : UsingFences) {
     delete fence;
   }
