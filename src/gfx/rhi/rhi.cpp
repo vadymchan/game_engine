@@ -2,27 +2,27 @@
 
 namespace game_engine {
 
-jRHI* g_rhi = nullptr;
+RHI* g_rhi = nullptr;
 
-const jRTClearValue jRTClearValue::Invalid = jRTClearValue();
+const RTClearValue RTClearValue::Invalid = RTClearValue();
 
 int32_t GMaxCheckCountForRealTimeShaderUpdate = 10;
 int32_t GSleepMSForRealTimeShaderUpdate       = 100;
 bool    GUseRealTimeShaderUpdate              = true;
 
-std::shared_ptr<jTexture>  GWhiteTexture;
-std::shared_ptr<jTexture>  GBlackTexture;
-std::shared_ptr<jTexture>  GWhiteCubeTexture;
-std::shared_ptr<jTexture>  GNormalTexture;
-std::shared_ptr<jMaterial> GDefaultMaterial = nullptr;
+std::shared_ptr<Texture>  GWhiteTexture;
+std::shared_ptr<Texture>  GBlackTexture;
+std::shared_ptr<Texture>  GWhiteCubeTexture;
+std::shared_ptr<Texture>  GNormalTexture;
+std::shared_ptr<Material> GDefaultMaterial = nullptr;
 
-TResourcePool<Shader, MutexRWLock> jRHI::ShaderPool;
+TResourcePool<Shader, MutexRWLock> RHI::ShaderPool;
 
-bool jRHI::init(const std::shared_ptr<Window>& window) {
+bool RHI::init(const std::shared_ptr<Window>& window) {
   return false;
 }
 
-void jRHI::OnInitRHI() {
+void RHI::OnInitRHI() {
   ImageData image;
   image.imageBulkData.ImageData = {255, 255, 255, 255};
   image.Width                   = 1;
@@ -45,16 +45,16 @@ void jRHI::OnInitRHI() {
   image.imageBulkData.ImageData = {255, 255, 255, 200, 255, 255};
   GWhiteCubeTexture             = CreateTextureFromData(&image);
 
-  GDefaultMaterial = std::make_shared<jMaterial>();
-  GDefaultMaterial->TexData[(int32_t)jMaterial::EMaterialTextureType::Albedo]
-      .Texture
+  GDefaultMaterial = std::make_shared<Material>();
+  GDefaultMaterial->TexData[(int32_t)Material::EMaterialTextureType::Albedo]
+      .m_texture
       = GWhiteTexture.get();
-  GDefaultMaterial->TexData[(int32_t)jMaterial::EMaterialTextureType::Normal]
-      .Texture
+  GDefaultMaterial->TexData[(int32_t)Material::EMaterialTextureType::Normal]
+      .m_texture
       = GNormalTexture.get();
 }
 
-void jRHI::release() {
+void RHI::release() {
   GWhiteTexture.reset();
   GBlackTexture.reset();
   GWhiteCubeTexture.reset();
@@ -65,7 +65,7 @@ void jRHI::release() {
   ShaderPool.Release();
 }
 
-jRHI::jRHI() {
+RHI::RHI() {
 }
 
 }  // namespace game_engine
