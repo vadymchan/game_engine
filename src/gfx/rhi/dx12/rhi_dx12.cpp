@@ -15,30 +15,31 @@
 
 // Whether to use InlineDescriptor or DescriptorTable
 #define USE_INLINE_DESCRIPTOR               0
-// Whether to use temporary Descriptor and Buffer only for the current frame
+// Whether to use temporary Descriptor and m_buffer only for the current frame
 #define USE_ONE_FRAME_BUFFER_AND_DESCRIPTOR (USE_INLINE_DESCRIPTOR && 1)
 
 namespace game_engine {
 
-struct jSimpleConstantBuffer {
+// TODO: seems like not used
+struct SimpleConstantBuffer {
   math::Matrix4f M;
   int32_t        TexIndex = 0;
 };
 
-jRHI_DX12*                                         g_rhi_dx12 = nullptr;
-std::unordered_map<size_t, jShaderBindingLayout*>  jRHI_DX12::ShaderBindingPool;
-TResourcePool<jSamplerStateInfo_DX12, MutexRWLock> jRHI_DX12::SamplerStatePool;
-TResourcePool<jRasterizationStateInfo_DX12, MutexRWLock>
-    jRHI_DX12::RasterizationStatePool;
-TResourcePool<jStencilOpStateInfo_DX12, MutexRWLock>
-    jRHI_DX12::StencilOpStatePool;
-TResourcePool<jDepthStencilStateInfo_DX12, MutexRWLock>
-    jRHI_DX12::DepthStencilStatePool;
-TResourcePool<jBlendingStateInfo_DX12, MutexRWLock>
-    jRHI_DX12::BlendingStatePool;
-TResourcePool<jPipelineStateInfo_DX12, MutexRWLock>
-                                             jRHI_DX12::PipelineStatePool;
-TResourcePool<jRenderPass_DX12, MutexRWLock> jRHI_DX12::RenderPassPool;
+RhiDx12*                                         g_rhi_dx12 = nullptr;
+std::unordered_map<size_t, ShaderBindingLayout*>  RhiDx12::ShaderBindingPool;
+TResourcePool<SamplerStateInfoDx12, MutexRWLock> RhiDx12::SamplerStatePool;
+TResourcePool<RasterizationStateInfoDx12, MutexRWLock>
+    RhiDx12::RasterizationStatePool;
+TResourcePool<StencilOpStateInfoDx12, MutexRWLock>
+    RhiDx12::StencilOpStatePool;
+TResourcePool<DepthStencilStateInfoDx12, MutexRWLock>
+    RhiDx12::DepthStencilStatePool;
+TResourcePool<BlendingStateInfoDx12, MutexRWLock>
+    RhiDx12::BlendingStatePool;
+TResourcePool<PipelineStateInfoDx12, MutexRWLock>
+                                             RhiDx12::PipelineStatePool;
+TResourcePool<RenderPassDx12, MutexRWLock> RhiDx12::RenderPassPool;
 
 // LRESULT CALLBACK WindowProc(HWND   hWnd,
 //                             UINT   message,
@@ -97,18 +98,18 @@ TResourcePool<jRenderPass_DX12, MutexRWLock> jRHI_DX12::RenderPassPool;
 // }
 
 //////////////////////////////////////////////////////////////////////////
-// jRHI_DX12
+// RhiDx12
 //////////////////////////////////////////////////////////////////////////
-jRHI_DX12::jRHI_DX12() {
+RhiDx12::RhiDx12() {
   g_rhi_dx12 = this;
 }
 
-jRHI_DX12::~jRHI_DX12() {
+RhiDx12::~RhiDx12() {
 }
 
 // TODO: consider whether parameter window is needed (m_window_ is presented in
-// jRHI_DX12 class)
-// HWND jRHI_DX12::CreateMainWindow(const std::shared_ptr<Window>& window) const
+// RhiDx12 class)
+// HWND RhiDx12::CreateMainWindow(const std::shared_ptr<Window>& window) const
 // {
 //  auto hInstance = GetModuleHandle(NULL);
 //
@@ -199,14 +200,14 @@ int32_t GetHardwareAdapter(IDXGIFactory1*  InFactory,
   return adapterIndex;
 }
 
-void jRHI_DX12::WaitForGPU() const {
-  assert(Swapchain);
+void RhiDx12::WaitForGPU() const {
+  assert(m_swapchain_);
 
-  auto Queue = CommandBufferManager->GetCommandQueue();
+  auto Queue = m_commandBufferManager->GetCommandQueue();
   assert(Queue);
 
-  if (CommandBufferManager && CommandBufferManager->Fence) {
-    CommandBufferManager->Fence->SignalWithNextFenceValue(Queue.Get(), true);
+  if (m_commandBufferManager && m_commandBufferManager->m_fence) {
+    m_commandBufferManager->m_fence->SignalWithNextFenceValue(Queue.Get(), true);
   }
 }
 
@@ -238,7 +239,7 @@ void SetupDebugLayerSettings(ID3D12Device* device) {
   }
 }
 
-bool jRHI_DX12::init(const std::shared_ptr<Window>& window) {
+bool RhiDx12::init(const std::shared_ptr<Window>& window) {
   m_window_ = window;
 
   // TODO: consider remove
@@ -350,9 +351,9 @@ bool jRHI_DX12::init(const std::shared_ptr<Window>& window) {
     }
   }
 
-  PlacedResourcePool.Init();
+  m_placedResourcePool.Init();
   // TODO: consider remove nested smart pointers (probably need changes in
-  // jDeallocatorMultiFrameResource)
+  // DeallocatorMultiFrameResource)
   DeallocatorMultiFrameStandaloneResource.FreeDelegate
       = [](std::shared_ptr<ComPtr<ID3D12Resource>> InData) { InData->Reset(); };
 
@@ -400,9 +401,9 @@ bool jRHI_DX12::init(const std::shared_ptr<Window>& window) {
   //////////////////////////////////////////////////////////////////////////
 
   // 2. Command
-  CommandBufferManager = new jCommandBufferManager_DX12();
-  CommandBufferManager->Initialize(Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
-  CopyCommandBufferManager = new jCommandBufferManager_DX12();
+  m_commandBufferManager = new CommandBufferManagerDx12();
+  m_commandBufferManager->Initialize(Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+  CopyCommandBufferManager = new CommandBufferManagerDx12();
   CopyCommandBufferManager->Initialize(Device, D3D12_COMMAND_LIST_TYPE_COPY);
 
   // 4. Heap
@@ -412,13 +413,13 @@ bool jRHI_DX12::init(const std::shared_ptr<Window>& window) {
   SamplerDescriptorHeaps.Initialize(EDescriptorHeapTypeDX12::SAMPLER);
 
   // 3. Swapchain
-  // Swapchain = new jSwapchain_DX12();
-  Swapchain->Create(m_window_);
-  CurrentFrameIndex = Swapchain->GetCurrentBackBufferIndex();
+  // m_swapchain_ = new SwapchainDx12();
+  m_swapchain_->Create(m_window_);
+  CurrentFrameIndex = m_swapchain_->GetCurrentBackBufferIndex();
 
-  OneFrameUniformRingBuffers.resize(Swapchain->GetNumOfSwapchainImages());
-  for (jRingBuffer_DX12*& iter : OneFrameUniformRingBuffers) {
-    iter = new jRingBuffer_DX12();
+  OneFrameUniformRingBuffers.resize(m_swapchain_->GetNumOfSwapchainImages());
+  for (RingBufferDx12*& iter : OneFrameUniformRingBuffers) {
+    iter = new RingBufferDx12();
     // iter->Create(16 * 1024 * 1024);
     iter->Create(65'536);
   }
@@ -447,10 +448,10 @@ bool jRHI_DX12::init(const std::shared_ptr<Window>& window) {
   }
 #endif
 
-  // QueryPoolTime = new jQueryPoolTime_DX12();
+  // QueryPoolTime = new QueryPoolTimeDx12();
   // QueryPoolTime->Create();
 
-  // g_ImGUI = new jImGUI_DX12();
+  // g_ImGUI = new ImGUIDx12();
   // g_ImGUI->Initialize((float)m_window_->getSize().width(),
   //                     (float)m_window_->getSize().height());
 
@@ -465,13 +466,13 @@ bool jRHI_DX12::init(const std::shared_ptr<Window>& window) {
   return true;
 }
 
-void jRHI_DX12::release() {
+void RhiDx12::release() {
   WaitForGPU();
 
-  jRHI::release();
+  RHI::release();
 
-  if (CommandBufferManager) {
-    CommandBufferManager->Release();
+  if (m_commandBufferManager) {
+    m_commandBufferManager->Release();
   }
 
   if (CopyCommandBufferManager) {
@@ -504,21 +505,21 @@ void jRHI_DX12::release() {
   //////////////////////////////////////////////////////////////////////////
   // 3. Swapchain
   // TODO: consider using destructor
-  Swapchain->Release();
-  // delete Swapchain;
+  m_swapchain_->Release();
+  // delete m_swapchain_;
 
   //////////////////////////////////////////////////////////////////////////
   // 2. Command
-  delete CommandBufferManager;
+  delete m_commandBufferManager;
 
-  PlacedResourcePool.Release();
+  m_placedResourcePool.Release();
 
   //////////////////////////////////////////////////////////////////////////
   // 1. Device
   Device.Reset();
 }
 
-bool jRHI_DX12::OnHandleResized(uint32_t InWidth,
+bool RhiDx12::OnHandleResized(uint32_t InWidth,
                                 uint32_t InHeight,
                                 bool     InIsMinimized) {
   assert(InWidth > 0);
@@ -536,71 +537,71 @@ bool jRHI_DX12::OnHandleResized(uint32_t InWidth,
 
   WaitForGPU();
 
-  Swapchain->Resize(InWidth, InHeight);
-  CurrentFrameIndex = Swapchain->GetCurrentBackBufferIndex();
+  m_swapchain_->Resize(InWidth, InHeight);
+  CurrentFrameIndex = m_swapchain_->GetCurrentBackBufferIndex();
 
   return true;
 }
 
-jCommandBuffer_DX12* jRHI_DX12::BeginSingleTimeCommands() const {
-  assert(CommandBufferManager);
-  return CommandBufferManager->GetOrCreateCommandBuffer();
+CommandBufferDx12* RhiDx12::BeginSingleTimeCommands() const {
+  assert(m_commandBufferManager);
+  return m_commandBufferManager->GetOrCreateCommandBuffer();
 }
 
-void jRHI_DX12::EndSingleTimeCommands(jCommandBuffer* commandBuffer) const {
-  auto CommandBuffer_DX12 = (jCommandBuffer_DX12*)commandBuffer;
+void RhiDx12::EndSingleTimeCommands(CommandBuffer* commandBuffer) const {
+  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
 
-  assert(CommandBufferManager);
-  CommandBufferManager->ExecuteCommandList(CommandBuffer_DX12, true);
-  CommandBufferManager->ReturnCommandBuffer(CommandBuffer_DX12);
+  assert(m_commandBufferManager);
+  m_commandBufferManager->ExecuteCommandList(commandBufferDx12, true);
+  m_commandBufferManager->ReturnCommandBuffer(commandBufferDx12);
 }
 
-jCommandBuffer_DX12* jRHI_DX12::BeginSingleTimeCopyCommands() const {
+CommandBufferDx12* RhiDx12::BeginSingleTimeCopyCommands() const {
   assert(CopyCommandBufferManager);
   return CopyCommandBufferManager->GetOrCreateCommandBuffer();
 }
 
-void jRHI_DX12::EndSingleTimeCopyCommands(
-    jCommandBuffer_DX12* commandBuffer) const {
+void RhiDx12::EndSingleTimeCopyCommands(
+    CommandBufferDx12* commandBuffer) const {
   assert(CopyCommandBufferManager);
   CopyCommandBufferManager->ExecuteCommandList(commandBuffer, true);
   CopyCommandBufferManager->ReturnCommandBuffer(commandBuffer);
 }
 
-std::shared_ptr<jTexture> jRHI_DX12::CreateTextureFromData(
+std::shared_ptr<Texture> RhiDx12::CreateTextureFromData(
     const ImageData* InImageData) const {
   assert(InImageData);
 
   const int32_t         MipLevel = InImageData->MipLevel;
   const EResourceLayout Layout   = EResourceLayout::GENERAL;
 
-  std::shared_ptr<jTexture_DX12> TexturePtr;
+  std::shared_ptr<TextureDx12> TexturePtr;
   if (InImageData->TextureType == ETextureType::TEXTURE_CUBE) {
     TexturePtr
-        = g_rhi->CreateCubeTexture<jTexture_DX12>(InImageData->Width,
-                                                  InImageData->Height,
-                                                  MipLevel,
-                                                  InImageData->Format,
-                                                  ETextureCreateFlag::UAV,
-                                                  Layout,
-                                                  InImageData->imageBulkData);
-  } else {
-    TexturePtr
-        = g_rhi->Create2DTexture<jTexture_DX12>(InImageData->Width,
+        = g_rhi->CreateCubeTexture<TextureDx12>(InImageData->Width,
                                                 InImageData->Height,
-                                                InImageData->LayerCount,
                                                 MipLevel,
                                                 InImageData->Format,
                                                 ETextureCreateFlag::UAV,
                                                 Layout,
                                                 InImageData->imageBulkData);
+  } else {
+    TexturePtr
+        = g_rhi->Create2DTexture<TextureDx12>(InImageData->Width,
+                                              InImageData->Height,
+                                              InImageData->LayerCount,
+                                              MipLevel,
+                                              InImageData->Format,
+                                              ETextureCreateFlag::UAV,
+                                              Layout,
+                                              InImageData->imageBulkData);
   }
   TexturePtr->sRGB = InImageData->sRGB;
   return TexturePtr;
 }
 
-jShaderBindingLayout* jRHI_DX12::CreateShaderBindings(
-    const jShaderBindingArray& InShaderBindingArray) const {
+ShaderBindingLayout* RhiDx12::CreateShaderBindings(
+    const ShaderBindingArray& InShaderBindingArray) const {
   size_t hash = InShaderBindingArray.GetHash();
 
   {
@@ -621,7 +622,7 @@ jShaderBindingLayout* jRHI_DX12::CreateShaderBindings(
       return it_find->second;
     }
 
-    auto NewShaderBinding = new jShaderBindingLayout_DX12();
+    auto NewShaderBinding = new ShaderBindingLayoutDx12();
     NewShaderBinding->Initialize(InShaderBindingArray);
     NewShaderBinding->Hash  = hash;
     ShaderBindingPool[hash] = NewShaderBinding;
@@ -630,41 +631,41 @@ jShaderBindingLayout* jRHI_DX12::CreateShaderBindings(
   }
 }
 
-jSamplerStateInfo* jRHI_DX12::CreateSamplerState(
-    const jSamplerStateInfo& initializer) const {
+SamplerStateInfo* RhiDx12::CreateSamplerState(
+    const SamplerStateInfo& initializer) const {
   return SamplerStatePool.GetOrCreate(initializer);
 }
 
-jRasterizationStateInfo* jRHI_DX12::CreateRasterizationState(
-    const jRasterizationStateInfo& initializer) const {
+RasterizationStateInfo* RhiDx12::CreateRasterizationState(
+    const RasterizationStateInfo& initializer) const {
   return RasterizationStatePool.GetOrCreate(initializer);
 }
 
-jStencilOpStateInfo* jRHI_DX12::CreateStencilOpStateInfo(
-    const jStencilOpStateInfo& initializer) const {
+StencilOpStateInfo* RhiDx12::CreateStencilOpStateInfo(
+    const StencilOpStateInfo& initializer) const {
   return StencilOpStatePool.GetOrCreate(initializer);
 }
 
-jDepthStencilStateInfo* jRHI_DX12::CreateDepthStencilState(
-    const jDepthStencilStateInfo& initializer) const {
+DepthStencilStateInfo* RhiDx12::CreateDepthStencilState(
+    const DepthStencilStateInfo& initializer) const {
   return DepthStencilStatePool.GetOrCreate(initializer);
 }
 
-jBlendingStateInfo* jRHI_DX12::CreateBlendingState(
-    const jBlendingStateInfo& initializer) const {
+BlendingStateInfo* RhiDx12::CreateBlendingState(
+    const BlendingStateInfo& initializer) const {
   return BlendingStatePool.GetOrCreate(initializer);
 }
 
 // TODO: consider rewriting this method for DX12 shader creation
-bool jRHI_DX12::CreateShaderInternal(Shader*           OutShader,
-                                     const ShaderInfo& shaderInfo) const {
+bool RhiDx12::CreateShaderInternal(Shader*           OutShader,
+                                   const ShaderInfo& shaderInfo) const {
   std::vector<Name> IncludeFilePaths;
   Shader*           shader_dx12 = OutShader;
   assert(shader_dx12->GetPermutationCount());
   {
-    assert(!shader_dx12->CompiledShader);
-    jCompiledShader_DX12* CurCompiledShader = new jCompiledShader_DX12();
-    shader_dx12->CompiledShader             = CurCompiledShader;
+    assert(!shader_dx12->m_compiledShader);
+    CompiledShaderDx12* CurCompiledShader = new CompiledShaderDx12();
+    shader_dx12->m_compiledShader         = CurCompiledShader;
 
     // Prepare for compilation by setting the PermutationId.
     shader_dx12->SetPermutationId(shaderInfo.GetPermutationId());
@@ -793,93 +794,93 @@ bool jRHI_DX12::CreateShaderInternal(Shader*           OutShader,
   return true;
 }
 
-jRenderPass* jRHI_DX12::GetOrCreateRenderPass(
-    const std::vector<jAttachment>& colorAttachments,
-    const math::Vector2Di&          offset,
-    const math::Vector2Di&          extent) const {
+RenderPass* RhiDx12::GetOrCreateRenderPass(
+    const std::vector<Attachment>& colorAttachments,
+    const math::Vector2Di&         offset,
+    const math::Vector2Di&         extent) const {
   return RenderPassPool.GetOrCreate(
-      jRenderPass_DX12(colorAttachments, offset, extent));
+      RenderPassDx12(colorAttachments, offset, extent));
 }
 
-jRenderPass* jRHI_DX12::GetOrCreateRenderPass(
-    const std::vector<jAttachment>& colorAttachments,
-    const jAttachment&              depthAttachment,
-    const math::Vector2Di&          offset,
-    const math::Vector2Di&          extent) const {
+RenderPass* RhiDx12::GetOrCreateRenderPass(
+    const std::vector<Attachment>& colorAttachments,
+    const Attachment&              depthAttachment,
+    const math::Vector2Di&         offset,
+    const math::Vector2Di&         extent) const {
   return RenderPassPool.GetOrCreate(
-      jRenderPass_DX12(colorAttachments, depthAttachment, offset, extent));
+      RenderPassDx12(colorAttachments, depthAttachment, offset, extent));
 }
 
-jRenderPass* jRHI_DX12::GetOrCreateRenderPass(
-    const std::vector<jAttachment>& colorAttachments,
-    const jAttachment&              depthAttachment,
-    const jAttachment&              colorResolveAttachment,
-    const math::Vector2Di&          offset,
-    const math::Vector2Di&          extent) const {
-  return RenderPassPool.GetOrCreate(jRenderPass_DX12(colorAttachments,
-                                                     depthAttachment,
-                                                     colorResolveAttachment,
-                                                     offset,
-                                                     extent));
+RenderPass* RhiDx12::GetOrCreateRenderPass(
+    const std::vector<Attachment>& colorAttachments,
+    const Attachment&              depthAttachment,
+    const Attachment&              colorResolveAttachment,
+    const math::Vector2Di&         offset,
+    const math::Vector2Di&         extent) const {
+  return RenderPassPool.GetOrCreate(RenderPassDx12(colorAttachments,
+                                                   depthAttachment,
+                                                   colorResolveAttachment,
+                                                   offset,
+                                                   extent));
 }
 
-jRenderPass* jRHI_DX12::GetOrCreateRenderPass(
-    const jRenderPassInfo& renderPassInfo,
+RenderPass* RhiDx12::GetOrCreateRenderPass(
+    const RenderPassInfo&  renderPassInfo,
     const math::Vector2Di& offset,
     const math::Vector2Di& extent) const {
   return RenderPassPool.GetOrCreate(
-      jRenderPass_DX12(renderPassInfo, offset, extent));
+      RenderPassDx12(renderPassInfo, offset, extent));
 }
 
-jPipelineStateInfo* jRHI_DX12::CreatePipelineStateInfo(
-    const jPipelineStateFixedInfo*   InPipelineStateFixed,
+PipelineStateInfo* RhiDx12::CreatePipelineStateInfo(
+    const PipelineStateFixedInfo*    InPipelineStateFixed,
     const GraphicsPipelineShader     InShader,
-    const jVertexBufferArray&        InVertexBufferArray,
-    const jRenderPass*               InRenderPass,
-    const jShaderBindingLayoutArray& InShaderBindingArray,
-    const jPushConstant*             InPushConstant,
+    const VertexBufferArray&         InVertexBufferArray,
+    const RenderPass*                InRenderPass,
+    const ShaderBindingLayoutArray& InShaderBindingArray,
+    const PushConstant*              InPushConstant,
     int32_t                          InSubpassIndex) const {
   return PipelineStatePool.GetOrCreateMove(
-      std::move(jPipelineStateInfo(InPipelineStateFixed,
-                                   InShader,
-                                   InVertexBufferArray,
-                                   InRenderPass,
-                                   InShaderBindingArray,
-                                   InPushConstant,
-                                   InSubpassIndex)));
+      std::move(PipelineStateInfo(InPipelineStateFixed,
+                                  InShader,
+                                  InVertexBufferArray,
+                                  InRenderPass,
+                                  InShaderBindingArray,
+                                  InPushConstant,
+                                  InSubpassIndex)));
 }
 
-jPipelineStateInfo* jRHI_DX12::CreateComputePipelineStateInfo(
+PipelineStateInfo* RhiDx12::CreateComputePipelineStateInfo(
     const Shader*                    shader,
-    const jShaderBindingLayoutArray& InShaderBindingArray,
-    const jPushConstant*             pushConstant) const {
-  return PipelineStatePool.GetOrCreateMove(std::move(
-      jPipelineStateInfo(shader, InShaderBindingArray, pushConstant)));
+    const ShaderBindingLayoutArray& InShaderBindingArray,
+    const PushConstant*              pushConstant) const {
+  return PipelineStatePool.GetOrCreateMove(
+      std::move(PipelineStateInfo(shader, InShaderBindingArray, pushConstant)));
 }
 
-void jRHI_DX12::RemovePipelineStateInfo(size_t InHash) {
+void RhiDx12::RemovePipelineStateInfo(size_t InHash) {
   PipelineStatePool.Release(InHash);
 }
 
-std::shared_ptr<jRenderFrameContext> jRHI_DX12::BeginRenderFrame() {
+std::shared_ptr<RenderFrameContext> RhiDx12::BeginRenderFrame() {
   // SCOPE_CPU_PROFILE(BeginRenderFrame);
 
   //////////////////////////////////////////////////////////////////////////
   // Acquire new swapchain image
-  jSwapchainImage_DX12* CurrentSwapchainImage
-      = (jSwapchainImage_DX12*)Swapchain->GetCurrentSwapchainImage();
-  assert(CommandBufferManager);
-  CommandBufferManager->Fence->WaitForFenceValue(
+  SwapchainImageDx12* CurrentSwapchainImage
+      = (SwapchainImageDx12*)m_swapchain_->GetCurrentSwapchainImage();
+  assert(m_commandBufferManager);
+  m_commandBufferManager->m_fence->WaitForFenceValue(
       CurrentSwapchainImage->FenceValue);
   //////////////////////////////////////////////////////////////////////////
 
   GetOneFrameUniformRingBuffer()->Reset();
 
-  jCommandBuffer_DX12* commandBuffer
-      = (jCommandBuffer_DX12*)CommandBufferManager->GetOrCreateCommandBuffer();
+  CommandBufferDx12* commandBuffer
+      = (CommandBufferDx12*)m_commandBufferManager->GetOrCreateCommandBuffer();
 
   auto renderFrameContextPtr
-      = std::make_shared<jRenderFrameContext_DX12>(commandBuffer);
+      = std::make_shared<RenderFrameContextDx12>(commandBuffer);
   // TODO: remove constant for UseForwardRenderer
   renderFrameContextPtr->UseForwardRenderer = true;
   renderFrameContextPtr->FrameIndex         = CurrentFrameIndex;
@@ -891,64 +892,64 @@ std::shared_ptr<jRenderFrameContext> jRHI_DX12::BeginRenderFrame() {
   return renderFrameContextPtr;
 }
 
-void jRHI_DX12::EndRenderFrame(
-    const std::shared_ptr<jRenderFrameContext>& renderFrameContextPtr) {
+void RhiDx12::EndRenderFrame(
+    const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {
   // SCOPE_CPU_PROFILE(EndRenderFrame);
 
-  jCommandBuffer_DX12* CommandBuffer
-      = (jCommandBuffer_DX12*)renderFrameContextPtr->GetActiveCommandBuffer();
+  CommandBufferDx12* commandBuffer
+      = (CommandBufferDx12*)renderFrameContextPtr->GetActiveCommandBuffer();
 
-  jSwapchainImage_DX12* CurrentSwapchainImage
-      = (jSwapchainImage_DX12*)Swapchain->GetCurrentSwapchainImage();
-  g_rhi->TransitionLayout(CommandBuffer,
+  SwapchainImageDx12* CurrentSwapchainImage
+      = (SwapchainImageDx12*)m_swapchain_->GetCurrentSwapchainImage();
+  g_rhi->TransitionLayout(commandBuffer,
                           CurrentSwapchainImage->TexturePtr.get(),
                           EResourceLayout::PRESENT_SRC);
 
-  CommandBufferManager->ExecuteCommandList(CommandBuffer);
+  m_commandBufferManager->ExecuteCommandList(commandBuffer);
 
   CurrentSwapchainImage->FenceValue
-      = CommandBuffer->Owner->Fence->SignalWithNextFenceValue(
-          CommandBufferManager->GetCommandQueue().Get());
+      = commandBuffer->Owner->m_fence->SignalWithNextFenceValue(
+          m_commandBufferManager->GetCommandQueue().Get());
 
   HRESULT hr = S_OK;
   if (g_rhi->IsSupportVSync()) {
     // Wait for VSync, the application will sleep until the next VSync.
     // This is done to save cycles of frames that do not appear on the screen.
-    hr = Swapchain->SwapChain->Present(1, 0);
+    hr = m_swapchain_->SwapChain->Present(1, 0);
   } else {
-    hr = Swapchain->SwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
+    hr = m_swapchain_->SwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
   }
 
   assert(hr == S_OK);
 
-  // CurrentFrameIndex = (CurrentFrameIndex + 1) % Swapchain->Images.size();
-  CurrentFrameIndex = Swapchain->GetCurrentBackBufferIndex();
+  // CurrentFrameIndex = (CurrentFrameIndex + 1) % m_swapchain_->Images.size();
+  CurrentFrameIndex = m_swapchain_->GetCurrentBackBufferIndex();
   renderFrameContextPtr->Destroy();
 }
 
-std::shared_ptr<IUniformBufferBlock> jRHI_DX12::CreateUniformBufferBlock(
+std::shared_ptr<IUniformBufferBlock> RhiDx12::CreateUniformBufferBlock(
     Name InName, LifeTimeType InLifeTimeType, size_t InSize /*= 0*/) const {
   auto uniformBufferBlockPtr
-      = std::make_shared<jUniformBufferBlock_DX12>(InName, InLifeTimeType);
+      = std::make_shared<UniformBufferBlockDx12>(InName, InLifeTimeType);
   uniformBufferBlockPtr->Init(InSize);
   return uniformBufferBlockPtr;
 }
 
-void jRHI_DX12::BindGraphicsShaderBindingInstances(
-    const jCommandBuffer*                InCommandBuffer,
-    const jPipelineStateInfo*            InPiplineState,
+void RhiDx12::BindGraphicsShaderBindingInstances(
+    const CommandBuffer*                 InCommandBuffer,
+    const PipelineStateInfo*             InPiplineState,
     const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
     uint32_t                             InFirstSet) const {
   // This part will use the previously created one if it is structured.
-  if (InShaderBindingInstanceCombiner.shaderBindingInstanceArray) {
-    auto CommandBuffer_DX12 = (jCommandBuffer_DX12*)InCommandBuffer;
-    assert(CommandBuffer_DX12);
+  if (InShaderBindingInstanceCombiner.m_shaderBindingInstanceArray) {
+    auto commandBufferDx12 = (CommandBufferDx12*)InCommandBuffer;
+    assert(commandBufferDx12);
 
-    const jShaderBindingInstanceArray& ShaderBindingInstanceArray
-        = *(InShaderBindingInstanceCombiner.shaderBindingInstanceArray);
-    CommandBuffer_DX12->CommandList->SetGraphicsRootSignature(
-        jShaderBindingLayout_DX12::CreateRootSignature(
-            ShaderBindingInstanceArray));
+    const ShaderBindingInstanceArray& m_shaderBindingInstanceArray
+        = *(InShaderBindingInstanceCombiner.m_shaderBindingInstanceArray);
+    commandBufferDx12->CommandList->SetGraphicsRootSignature(
+        ShaderBindingLayoutDx12::CreateRootSignature(
+            m_shaderBindingInstanceArray));
 
     int32_t RootParameterIndex     = 0;
     int32_t NumOfDescriptor        = 0;
@@ -957,9 +958,9 @@ void jRHI_DX12::BindGraphicsShaderBindingInstances(
     // Check current online descriptor is enough to allocate descriptors, if
     // not, allocate descriptor blocks for current commandlist
     {
-      for (int32_t i = 0; i < ShaderBindingInstanceArray.NumOfData; ++i) {
-        jShaderBindingInstance_DX12* Instance
-            = (jShaderBindingInstance_DX12*)ShaderBindingInstanceArray[i];
+      for (int32_t i = 0; i < m_shaderBindingInstanceArray.NumOfData; ++i) {
+        ShaderBindingInstanceDx12* Instance
+            = (ShaderBindingInstanceDx12*)m_shaderBindingInstanceArray[i];
         NumOfDescriptor        += (int32_t)Instance->Descriptors.size();
         NumOfSamplerDescriptor += (int32_t)Instance->SamplerDescriptors.size();
       }
@@ -968,21 +969,21 @@ void jRHI_DX12::BindGraphicsShaderBindingInstances(
 
       // Check if the descriptor is sufficient, if not, allocate a new one.
       bool NeedSetDescriptorHeapsAgain = false;
-      if (!CommandBuffer_DX12->OnlineDescriptorHeap->CanAllocate(
+      if (!commandBufferDx12->OnlineDescriptorHeap->CanAllocate(
               NumOfDescriptor)) {
         const ID3D12DescriptorHeap* PrevDescriptorHeap
-            = CommandBuffer_DX12->OnlineDescriptorHeap->GetHeap();
+            = commandBufferDx12->OnlineDescriptorHeap->GetHeap();
 
-        CommandBuffer_DX12->OnlineDescriptorHeap->Release();
-        CommandBuffer_DX12->OnlineDescriptorHeap
-            = ((jRHI_DX12*)this)
+        commandBufferDx12->OnlineDescriptorHeap->Release();
+        commandBufferDx12->OnlineDescriptorHeap
+            = ((RhiDx12*)this)
                   ->OnlineDescriptorHeapManager.Alloc(
                       EDescriptorHeapTypeDX12::CBV_SRV_UAV);
-        assert(CommandBuffer_DX12->OnlineDescriptorHeap->CanAllocate(
+        assert(commandBufferDx12->OnlineDescriptorHeap->CanAllocate(
             NumOfDescriptor));
 
         if (PrevDescriptorHeap
-            != CommandBuffer_DX12->OnlineDescriptorHeap->GetHeap()) {
+            != commandBufferDx12->OnlineDescriptorHeap->GetHeap()) {
           NeedSetDescriptorHeapsAgain = true;
         }
       }
@@ -990,22 +991,22 @@ void jRHI_DX12::BindGraphicsShaderBindingInstances(
       // Check if the sampler descriptor is sufficient, if not, allocate a new
       // one.
       const ID3D12DescriptorHeap* PrevOnlineSamplerDescriptorHeap
-          = CommandBuffer_DX12->OnlineDescriptorHeap->GetHeap();
-      if (!CommandBuffer_DX12->OnlineSamplerDescriptorHeap->CanAllocate(
+          = commandBufferDx12->OnlineDescriptorHeap->GetHeap();
+      if (!commandBufferDx12->OnlineSamplerDescriptorHeap->CanAllocate(
               NumOfSamplerDescriptor)) {
         const ID3D12DescriptorHeap* PrevDescriptorHeap
-            = CommandBuffer_DX12->OnlineSamplerDescriptorHeap->GetHeap();
+            = commandBufferDx12->OnlineSamplerDescriptorHeap->GetHeap();
 
-        CommandBuffer_DX12->OnlineSamplerDescriptorHeap->Release();
-        CommandBuffer_DX12->OnlineSamplerDescriptorHeap
-            = ((jRHI_DX12*)this)
+        commandBufferDx12->OnlineSamplerDescriptorHeap->Release();
+        commandBufferDx12->OnlineSamplerDescriptorHeap
+            = ((RhiDx12*)this)
                   ->OnlineDescriptorHeapManager.Alloc(
                       EDescriptorHeapTypeDX12::SAMPLER);
-        assert(CommandBuffer_DX12->OnlineSamplerDescriptorHeap->CanAllocate(
+        assert(commandBufferDx12->OnlineSamplerDescriptorHeap->CanAllocate(
             NumOfSamplerDescriptor));
 
         if (PrevDescriptorHeap
-            != CommandBuffer_DX12->OnlineSamplerDescriptorHeap->GetHeap()) {
+            != commandBufferDx12->OnlineSamplerDescriptorHeap->GetHeap()) {
           NeedSetDescriptorHeapsAgain = true;
         }
       }
@@ -1013,42 +1014,42 @@ void jRHI_DX12::BindGraphicsShaderBindingInstances(
       // If Descriptor is newly allocated, replace OnlineDescriptorHeap with
       // SetDescriptorHeaps
       if (NeedSetDescriptorHeapsAgain) {
-        assert(CommandBuffer_DX12->OnlineDescriptorHeap
-                   && CommandBuffer_DX12->OnlineSamplerDescriptorHeap
-               || (!CommandBuffer_DX12->OnlineDescriptorHeap
-                   && !CommandBuffer_DX12->OnlineSamplerDescriptorHeap));
-        if (CommandBuffer_DX12->OnlineDescriptorHeap
-            && CommandBuffer_DX12->OnlineSamplerDescriptorHeap) {
+        assert(commandBufferDx12->OnlineDescriptorHeap
+                   && commandBufferDx12->OnlineSamplerDescriptorHeap
+               || (!commandBufferDx12->OnlineDescriptorHeap
+                   && !commandBufferDx12->OnlineSamplerDescriptorHeap));
+        if (commandBufferDx12->OnlineDescriptorHeap
+            && commandBufferDx12->OnlineSamplerDescriptorHeap) {
           ID3D12DescriptorHeap* ppHeaps[]
-              = {CommandBuffer_DX12->OnlineDescriptorHeap->GetHeap(),
-                 CommandBuffer_DX12->OnlineSamplerDescriptorHeap->GetHeap()};
-          CommandBuffer_DX12->CommandList->SetDescriptorHeaps(_countof(ppHeaps),
-                                                              ppHeaps);
+              = {commandBufferDx12->OnlineDescriptorHeap->GetHeap(),
+                 commandBufferDx12->OnlineSamplerDescriptorHeap->GetHeap()};
+          commandBufferDx12->CommandList->SetDescriptorHeaps(_countof(ppHeaps),
+                                                             ppHeaps);
         }
       }
     }
 
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUDescriptorHandle
-        = CommandBuffer_DX12->OnlineDescriptorHeap->GetGPUHandle(
-            CommandBuffer_DX12->OnlineDescriptorHeap->GetNumOfAllocated());
+        = commandBufferDx12->OnlineDescriptorHeap->GetGPUHandle(
+            commandBufferDx12->OnlineDescriptorHeap->GetNumOfAllocated());
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUSamplerDescriptorHandle
-        = CommandBuffer_DX12->OnlineSamplerDescriptorHeap->GetGPUHandle(
-            CommandBuffer_DX12->OnlineSamplerDescriptorHeap
+        = commandBufferDx12->OnlineSamplerDescriptorHeap->GetGPUHandle(
+            commandBufferDx12->OnlineSamplerDescriptorHeap
                 ->GetNumOfAllocated());
 
-    for (int32_t i = 0; i < ShaderBindingInstanceArray.NumOfData; ++i) {
-      jShaderBindingInstance_DX12* Instance
-          = (jShaderBindingInstance_DX12*)ShaderBindingInstanceArray[i];
-      jShaderBindingLayout_DX12* Layout
-          = (jShaderBindingLayout_DX12*)(Instance->ShaderBindingsLayouts);
+    for (int32_t i = 0; i < m_shaderBindingInstanceArray.NumOfData; ++i) {
+      ShaderBindingInstanceDx12* Instance
+          = (ShaderBindingInstanceDx12*)m_shaderBindingInstanceArray[i];
+      ShaderBindingLayoutDx12* Layout
+          = (ShaderBindingLayoutDx12*)(Instance->ShaderBindingsLayouts);
 
-      Instance->CopyToOnlineDescriptorHeap(CommandBuffer_DX12);
-      Instance->BindGraphics(CommandBuffer_DX12, RootParameterIndex);
+      Instance->CopyToOnlineDescriptorHeap(commandBufferDx12);
+      Instance->BindGraphics(commandBufferDx12, RootParameterIndex);
     }
 
     // DescriptorTable is always bound last.
     if (NumOfDescriptor > 0) {
-      CommandBuffer_DX12->CommandList->SetGraphicsRootDescriptorTable(
+      commandBufferDx12->CommandList->SetGraphicsRootDescriptorTable(
           RootParameterIndex++,
           FirstGPUDescriptorHandle);  // StructuredBuffer test, I will use
                                       // descriptor index based on GPU handle
@@ -1056,58 +1057,58 @@ void jRHI_DX12::BindGraphicsShaderBindingInstances(
     }
 
     if (NumOfSamplerDescriptor > 0) {
-      CommandBuffer_DX12->CommandList->SetGraphicsRootDescriptorTable(
+      commandBufferDx12->CommandList->SetGraphicsRootDescriptorTable(
           RootParameterIndex++,
           FirstGPUSamplerDescriptorHandle);  // SamplerState test
     }
   }
 }
 
-void jRHI_DX12::BindComputeShaderBindingInstances(
-    const jCommandBuffer*                InCommandBuffer,
-    const jPipelineStateInfo*            InPiplineState,
+void RhiDx12::BindComputeShaderBindingInstances(
+    const CommandBuffer*                 InCommandBuffer,
+    const PipelineStateInfo*             InPiplineState,
     const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
     uint32_t                             InFirstSet) const {
   // This part will use the previously created one if it is structured.
-  if (InShaderBindingInstanceCombiner.shaderBindingInstanceArray) {
-    auto CommandBuffer_DX12 = (jCommandBuffer_DX12*)InCommandBuffer;
-    assert(CommandBuffer_DX12);
+  if (InShaderBindingInstanceCombiner.m_shaderBindingInstanceArray) {
+    auto commandBufferDx12 = (CommandBufferDx12*)InCommandBuffer;
+    assert(commandBufferDx12);
 
-    const jShaderBindingInstanceArray& ShaderBindingInstanceArray
-        = *(InShaderBindingInstanceCombiner.shaderBindingInstanceArray);
-    CommandBuffer_DX12->CommandList->SetComputeRootSignature(
-        jShaderBindingLayout_DX12::CreateRootSignature(
-            ShaderBindingInstanceArray));
+    const ShaderBindingInstanceArray& m_shaderBindingInstanceArray
+        = *(InShaderBindingInstanceCombiner.m_shaderBindingInstanceArray);
+    commandBufferDx12->CommandList->SetComputeRootSignature(
+        ShaderBindingLayoutDx12::CreateRootSignature(
+            m_shaderBindingInstanceArray));
 
     int32_t RootParameterIndex   = 0;
     bool    HasDescriptor        = false;
     bool    HasSamplerDescriptor = false;
 
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUDescriptorHandle
-        = CommandBuffer_DX12->OnlineDescriptorHeap->GetGPUHandle(
-            CommandBuffer_DX12->OnlineDescriptorHeap->GetNumOfAllocated());
+        = commandBufferDx12->OnlineDescriptorHeap->GetGPUHandle(
+            commandBufferDx12->OnlineDescriptorHeap->GetNumOfAllocated());
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUSamplerDescriptorHandle
-        = CommandBuffer_DX12->OnlineSamplerDescriptorHeap->GetGPUHandle(
-            CommandBuffer_DX12->OnlineSamplerDescriptorHeap
+        = commandBufferDx12->OnlineSamplerDescriptorHeap->GetGPUHandle(
+            commandBufferDx12->OnlineSamplerDescriptorHeap
                 ->GetNumOfAllocated());
 
-    for (int32_t i = 0; i < ShaderBindingInstanceArray.NumOfData; ++i) {
-      jShaderBindingInstance_DX12* Instance
-          = (jShaderBindingInstance_DX12*)ShaderBindingInstanceArray[i];
-      jShaderBindingLayout_DX12* Layout
-          = (jShaderBindingLayout_DX12*)(Instance->ShaderBindingsLayouts);
+    for (int32_t i = 0; i < m_shaderBindingInstanceArray.NumOfData; ++i) {
+      ShaderBindingInstanceDx12* Instance
+          = (ShaderBindingInstanceDx12*)m_shaderBindingInstanceArray[i];
+      ShaderBindingLayoutDx12* Layout
+          = (ShaderBindingLayoutDx12*)(Instance->ShaderBindingsLayouts);
 
-      Instance->CopyToOnlineDescriptorHeap(CommandBuffer_DX12);
+      Instance->CopyToOnlineDescriptorHeap(commandBufferDx12);
 
       HasDescriptor        |= Instance->Descriptors.size() > 0;
       HasSamplerDescriptor |= Instance->SamplerDescriptors.size() > 0;
 
-      Instance->BindCompute(CommandBuffer_DX12, RootParameterIndex);
+      Instance->BindCompute(commandBufferDx12, RootParameterIndex);
     }
 
     // DescriptorTable is always bound last.
     if (HasDescriptor) {
-      CommandBuffer_DX12->CommandList->SetComputeRootDescriptorTable(
+      commandBufferDx12->CommandList->SetComputeRootDescriptorTable(
           RootParameterIndex++,
           FirstGPUDescriptorHandle);  // StructuredBuffer test, I will use
                                       // descriptor index based on GPU handle
@@ -1115,16 +1116,16 @@ void jRHI_DX12::BindComputeShaderBindingInstances(
     }
 
     if (HasSamplerDescriptor) {
-      CommandBuffer_DX12->CommandList->SetComputeRootDescriptorTable(
+      commandBufferDx12->CommandList->SetComputeRootDescriptorTable(
           RootParameterIndex++,
           FirstGPUSamplerDescriptorHandle);  // SamplerState test
     }
   }
 }
 
-void jRHI_DX12::BindRaytracingShaderBindingInstances(
-    const jCommandBuffer*                InCommandBuffer,
-    const jPipelineStateInfo*            InPiplineState,
+void RhiDx12::BindRaytracingShaderBindingInstances(
+    const CommandBuffer*                 InCommandBuffer,
+    const PipelineStateInfo*             InPiplineState,
     const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
     uint32_t                             InFirstSet) const {
   BindComputeShaderBindingInstances(InCommandBuffer,
@@ -1133,18 +1134,18 @@ void jRHI_DX12::BindRaytracingShaderBindingInstances(
                                     InFirstSet);
 }
 
-std::shared_ptr<jVertexBuffer> jRHI_DX12::CreateVertexBuffer(
+std::shared_ptr<VertexBuffer> RhiDx12::CreateVertexBuffer(
     const std::shared_ptr<VertexStreamData>& streamData) const {
   if (!streamData) {
     return nullptr;
   }
 
-  auto vertexBufferPtr = std::make_shared<jVertexBuffer_DX12>();
+  auto vertexBufferPtr = std::make_shared<VertexBufferDx12>();
   vertexBufferPtr->Initialize(streamData);
   return vertexBufferPtr;
 }
 
-std::shared_ptr<jIndexBuffer> jRHI_DX12::CreateIndexBuffer(
+std::shared_ptr<IndexBuffer> RhiDx12::CreateIndexBuffer(
     const std::shared_ptr<IndexStreamData>& streamData) const {
   if (!streamData) {
     return nullptr;
@@ -1153,12 +1154,12 @@ std::shared_ptr<jIndexBuffer> jRHI_DX12::CreateIndexBuffer(
   assert(streamData);
   assert(streamData->stream);
 
-  auto indexBufferPtr = std::make_shared<jIndexBuffer_DX12>();
+  auto indexBufferPtr = std::make_shared<IndexBufferDx12>();
   indexBufferPtr->Initialize(streamData);
   return indexBufferPtr;
 }
 
-std::shared_ptr<jTexture> jRHI_DX12::Create2DTexture(
+std::shared_ptr<Texture> RhiDx12::Create2DTexture(
     uint32_t             InWidth,
     uint32_t             InHeight,
     uint32_t             InArrayLayers,
@@ -1167,7 +1168,7 @@ std::shared_ptr<jTexture> jRHI_DX12::Create2DTexture(
     ETextureCreateFlag   InTextureCreateFlag,
     EResourceLayout      InImageLayout,
     const ImageBulkData& InImageBulkData,
-    const jRTClearValue& InClearValue,
+    const RTClearValue&  InClearValue,
     const wchar_t*       InResourceName) const {
   auto TexturePtr = CreateTexture(InWidth,
                                   InHeight,
@@ -1190,17 +1191,17 @@ std::shared_ptr<jTexture> jRHI_DX12::Create2DTexture(
                                   InImageBulkData.ImageData.size());
     assert(BufferPtr);
 
-    jCommandBuffer_DX12* commandList = BeginSingleTimeCopyCommands();
+    CommandBufferDx12* commandList = BeginSingleTimeCopyCommands();
     if (InImageBulkData.SubresourceFootprints.size() > 0) {
       CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->Buffer->Get(),
-                          TexturePtr->Texture->Get(),
+                          BufferPtr->m_buffer->Get(),
+                          TexturePtr->m_texture->Get(),
                           InImageBulkData.SubresourceFootprints);
     } else {
       CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->Buffer->Get(),
+                          BufferPtr->m_buffer->Get(),
                           0,
-                          TexturePtr->Texture->Get());
+                          TexturePtr->m_texture->Get());
     }
 
     EndSingleTimeCopyCommands(commandList);
@@ -1208,7 +1209,7 @@ std::shared_ptr<jTexture> jRHI_DX12::Create2DTexture(
   return TexturePtr;
 }
 
-std::shared_ptr<jTexture> jRHI_DX12::CreateCubeTexture(
+std::shared_ptr<Texture> RhiDx12::CreateCubeTexture(
     uint32_t             InWidth,
     uint32_t             InHeight,
     uint32_t             InMipLevels,
@@ -1216,7 +1217,7 @@ std::shared_ptr<jTexture> jRHI_DX12::CreateCubeTexture(
     ETextureCreateFlag   InTextureCreateFlag,
     EResourceLayout      InImageLayout,
     const ImageBulkData& InImageBulkData,
-    const jRTClearValue& InClearValue,
+    const RTClearValue&  InClearValue,
     const wchar_t*       InResourceName) const {
   auto TexturePtr = CreateTexture(InWidth,
                                   InHeight,
@@ -1239,17 +1240,17 @@ std::shared_ptr<jTexture> jRHI_DX12::CreateCubeTexture(
                                   InImageBulkData.ImageData.size());
     assert(BufferPtr);
 
-    jCommandBuffer_DX12* commandList = BeginSingleTimeCopyCommands();
+    CommandBufferDx12* commandList = BeginSingleTimeCopyCommands();
     if (InImageBulkData.SubresourceFootprints.size() > 0) {
       CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->Buffer->Get(),
-                          TexturePtr->Texture->Get(),
+                          BufferPtr->m_buffer->Get(),
+                          TexturePtr->m_texture->Get(),
                           InImageBulkData.SubresourceFootprints);
     } else {
       CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->Buffer->Get(),
+                          BufferPtr->m_buffer->Get(),
                           0,
-                          TexturePtr->Texture->Get());
+                          TexturePtr->m_texture->Get());
     }
 
     EndSingleTimeCopyCommands(commandList);
@@ -1257,144 +1258,144 @@ std::shared_ptr<jTexture> jRHI_DX12::CreateCubeTexture(
   return TexturePtr;
 }
 
-std::shared_ptr<jShaderBindingInstance> jRHI_DX12::CreateShaderBindingInstance(
-    const jShaderBindingArray&       InShaderBindingArray,
-    const jShaderBindingInstanceType InType) const {
+std::shared_ptr<ShaderBindingInstance> RhiDx12::CreateShaderBindingInstance(
+    const ShaderBindingArray&       InShaderBindingArray,
+    const ShaderBindingInstanceType InType) const {
   auto shaderBindingsLayout = CreateShaderBindings(InShaderBindingArray);
   assert(shaderBindingsLayout);
   return shaderBindingsLayout->CreateShaderBindingInstance(InShaderBindingArray,
                                                            InType);
 }
 
-void jRHI_DX12::DrawArrays(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawArrays(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    int32_t                                     vertStartIndex,
-    int32_t                                     vertCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    int32_t                                    vertStartIndex,
+    int32_t                                    vertCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  CommandBuffer_DX12->CommandList->DrawInstanced(
+  commandBufferDx12->CommandList->DrawInstanced(
       vertCount, 1, vertStartIndex, 0);
 }
 
-void jRHI_DX12::DrawArraysInstanced(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawArraysInstanced(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    int32_t                                     vertStartIndex,
-    int32_t                                     vertCount,
-    int32_t                                     instanceCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    int32_t                                    vertStartIndex,
+    int32_t                                    vertCount,
+    int32_t                                    instanceCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  CommandBuffer_DX12->CommandList->DrawInstanced(
+  commandBufferDx12->CommandList->DrawInstanced(
       vertCount, instanceCount, vertStartIndex, 0);
 }
 
-void jRHI_DX12::DrawElements(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawElements(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  CommandBuffer_DX12->CommandList->DrawIndexedInstanced(
+  commandBufferDx12->CommandList->DrawIndexedInstanced(
       indexCount, 1, startIndex, 0, 0);
 }
 
-void jRHI_DX12::DrawElementsInstanced(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawElementsInstanced(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount,
-    int32_t                                     instanceCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount,
+    int32_t                                    instanceCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  CommandBuffer_DX12->CommandList->DrawIndexedInstanced(
+  commandBufferDx12->CommandList->DrawIndexedInstanced(
       indexCount, instanceCount, startIndex, 0, 0);
 }
 
-void jRHI_DX12::DrawElementsBaseVertex(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawElementsBaseVertex(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount,
-    int32_t                                     baseVertexIndex) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount,
+    int32_t                                    baseVertexIndex) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  CommandBuffer_DX12->CommandList->DrawIndexedInstanced(
+  commandBufferDx12->CommandList->DrawIndexedInstanced(
       indexCount, 1, startIndex, baseVertexIndex, 0);
 }
 
-void jRHI_DX12::DrawElementsInstancedBaseVertex(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawElementsInstancedBaseVertex(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount,
-    int32_t                                     baseVertexIndex,
-    int32_t                                     instanceCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount,
+    int32_t                                    baseVertexIndex,
+    int32_t                                    instanceCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  CommandBuffer_DX12->CommandList->DrawIndexedInstanced(
+  commandBufferDx12->CommandList->DrawIndexedInstanced(
       indexCount, instanceCount, startIndex, baseVertexIndex, 0);
 }
 
-void jRHI_DX12::DrawIndirect(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawIndirect(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    jBuffer*                                    buffer,
-    int32_t                                     startIndex,
-    int32_t                                     drawCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    Buffer*                                    buffer,
+    int32_t                                    startIndex,
+    int32_t                                    drawCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
   assert(0);
 }
 
-void jRHI_DX12::DrawElementsIndirect(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+void RhiDx12::DrawElementsIndirect(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
     // EPrimitiveType                              type,
-    jBuffer*                                    buffer,
-    int32_t                                     startIndex,
-    int32_t                                     drawCount) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+    Buffer*                                    buffer,
+    int32_t                                    startIndex,
+    int32_t                                    drawCount) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
   assert(0);
 }
 
-void jRHI_DX12::DispatchCompute(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
-    uint32_t                                    numGroupsX,
-    uint32_t                                    numGroupsY,
-    uint32_t                                    numGroupsZ) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
-  assert(CommandBuffer_DX12->CommandList);
+void RhiDx12::DispatchCompute(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    uint32_t                                   numGroupsX,
+    uint32_t                                   numGroupsY,
+    uint32_t                                   numGroupsZ) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
+  assert(commandBufferDx12->CommandList);
   assert(numGroupsX * numGroupsY * numGroupsZ > 0);
 
-  CommandBuffer_DX12->CommandList->Dispatch(numGroupsX, numGroupsY, numGroupsZ);
+  commandBufferDx12->CommandList->Dispatch(numGroupsX, numGroupsY, numGroupsZ);
 }
 
-std::shared_ptr<jRenderTarget> jRHI_DX12::CreateRenderTarget(
-    const jRenderTargetInfo& info) const {
+std::shared_ptr<RenderTarget> RhiDx12::CreateRenderTarget(
+    const RenderTargetInfo& info) const {
   const uint16_t MipLevels
       = info.IsGenerateMipmap
           ? static_cast<uint32_t>(std::floor(std::log2(
@@ -1412,11 +1413,11 @@ std::shared_ptr<jRenderTarget> jRHI_DX12::CreateRenderTarget(
                       info.Format,
                       (ETextureCreateFlag::RTV | info.TextureCreateFlag),
                       EResourceLayout::UNDEFINED,
-                      info.RTClearValue,
+                      info.m_rtClearValue,
                       // TODO: use info.ResourceName instead of string literal
                       L"RenderTarget");
 
-  auto RenderTargetPtr = std::make_shared<jRenderTarget>();
+  auto RenderTargetPtr = std::make_shared<RenderTarget>();
   assert(RenderTargetPtr);
   RenderTargetPtr->Info       = info;
   RenderTargetPtr->TexturePtr = TexturePtr;
@@ -1424,11 +1425,10 @@ std::shared_ptr<jRenderTarget> jRHI_DX12::CreateRenderTarget(
   return RenderTargetPtr;
 }
 
-bool jRHI_DX12::TransitionLayout_Internal(
-    jCommandBuffer*       commandBuffer,
-    ID3D12Resource*       resource,
-    D3D12_RESOURCE_STATES srcLayout,
-    D3D12_RESOURCE_STATES dstLayout) const {
+bool RhiDx12::TransitionLayout_Internal(CommandBuffer*        commandBuffer,
+                                        ID3D12Resource*       resource,
+                                        D3D12_RESOURCE_STATES srcLayout,
+                                        D3D12_RESOURCE_STATES dstLayout) const {
   assert(commandBuffer);
   assert(resource);
 
@@ -1436,7 +1436,7 @@ bool jRHI_DX12::TransitionLayout_Internal(
     return true;
   }
 
-  auto CommandBuffer_DX12 = (jCommandBuffer_DX12*)commandBuffer;
+  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
 
   D3D12_RESOURCE_BARRIER barrier = {};
   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -1447,47 +1447,47 @@ bool jRHI_DX12::TransitionLayout_Internal(
   barrier.Transition.Subresource
       = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;  // TODO: each subresource
                                                   // control
-  CommandBuffer_DX12->CommandList->ResourceBarrier(1, &barrier);
+  commandBufferDx12->CommandList->ResourceBarrier(1, &barrier);
 
   return true;
 }
 
-bool jRHI_DX12::TransitionLayout(jCommandBuffer* commandBuffer,
-                                 jTexture*       texture,
-                                 EResourceLayout newLayout) const {
+bool RhiDx12::TransitionLayout(CommandBuffer*  commandBuffer,
+                               Texture*        texture,
+                               EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(texture);
 
-  auto       Texture_DX12 = (jTexture_DX12*)texture;
-  const auto SrcLayout    = GetDX12ResourceLayout(Texture_DX12->Layout);
-  const auto DstLayout    = GetDX12ResourceLayout(newLayout);
+  auto       textureDx12 = (TextureDx12*)texture;
+  const auto SrcLayout   = GetDX12ResourceLayout(textureDx12->Layout);
+  const auto DstLayout   = GetDX12ResourceLayout(newLayout);
   if (SrcLayout == DstLayout) {
     return true;
   }
 
-  Texture_DX12->Layout = newLayout;
+  textureDx12->Layout = newLayout;
   return TransitionLayout_Internal(
-      commandBuffer, Texture_DX12->Texture->Get(), SrcLayout, DstLayout);
+      commandBuffer, textureDx12->m_texture->Get(), SrcLayout, DstLayout);
 }
 
-bool jRHI_DX12::TransitionLayoutImmediate(jTexture*       texture,
-                                          EResourceLayout newLayout) const {
+bool RhiDx12::TransitionLayoutImmediate(Texture*        texture,
+                                        EResourceLayout newLayout) const {
   assert(texture);
   if (texture->GetLayout() != newLayout) {
-    auto       Texture_DX12 = (jTexture_DX12*)texture;
-    const auto SrcLayout    = GetDX12ResourceLayout(Texture_DX12->Layout);
-    const auto DstLayout    = GetDX12ResourceLayout(newLayout);
+    auto       textureDx12 = (TextureDx12*)texture;
+    const auto SrcLayout   = GetDX12ResourceLayout(textureDx12->Layout);
+    const auto DstLayout   = GetDX12ResourceLayout(newLayout);
     if (SrcLayout == DstLayout) {
       return true;
     }
 
-    jCommandBuffer_DX12* commandBuffer = BeginSingleTimeCommands();
+    CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
     assert(commandBuffer);
 
     if (commandBuffer) {
       const bool ret = TransitionLayout_Internal(
-          commandBuffer, Texture_DX12->Texture->Get(), SrcLayout, DstLayout);
-      Texture_DX12->Layout = newLayout;
+          commandBuffer, textureDx12->m_texture->Get(), SrcLayout, DstLayout);
+      textureDx12->Layout = newLayout;
 
       EndSingleTimeCommands(commandBuffer);
       return ret;
@@ -1497,36 +1497,34 @@ bool jRHI_DX12::TransitionLayoutImmediate(jTexture*       texture,
   return false;
 }
 
-void jRHI_DX12::UAVBarrier(jCommandBuffer* commandBuffer,
-                           jTexture*       texture) const {
+void RhiDx12::UAVBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
   assert(commandBuffer);
-  auto commandBuffer_DX12 = (jCommandBuffer_DX12*)commandBuffer;
-  auto texture_dx12       = (jTexture_DX12*)texture;
-  assert(texture_dx12->Texture);
+  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
+  auto texture_dx12      = (TextureDx12*)texture;
+  assert(texture_dx12->m_texture);
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
   uavBarrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-  uavBarrier.UAV.pResource          = texture_dx12->Texture->Get();
+  uavBarrier.UAV.pResource          = texture_dx12->m_texture->Get();
   assert(uavBarrier.UAV.pResource);
-  commandBuffer_DX12->CommandList->ResourceBarrier(1, &uavBarrier);
+  commandBufferDx12->CommandList->ResourceBarrier(1, &uavBarrier);
 }
 
-void jRHI_DX12::UAVBarrier(jCommandBuffer* commandBuffer,
-                           jBuffer*        buffer) const {
+void RhiDx12::UAVBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {
   assert(commandBuffer);
-  auto commandBuffer_DX12 = (jCommandBuffer_DX12*)commandBuffer;
-  auto buffer_dx12        = (jBuffer_DX12*)buffer;
-  assert(buffer_dx12->Buffer);
+  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
+  auto buffer_dx12       = (BufferDx12*)buffer;
+  assert(buffer_dx12->m_buffer);
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
   uavBarrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-  uavBarrier.UAV.pResource          = buffer_dx12->Buffer->Get();
+  uavBarrier.UAV.pResource          = buffer_dx12->m_buffer->Get();
   assert(uavBarrier.UAV.pResource);
-  commandBuffer_DX12->CommandList->ResourceBarrier(1, &uavBarrier);
+  commandBufferDx12->CommandList->ResourceBarrier(1, &uavBarrier);
 }
 
-void jRHI_DX12::UAVBarrierImmediate(jTexture* texture) const {
-  jCommandBuffer_DX12* commandBuffer = BeginSingleTimeCommands();
+void RhiDx12::UAVBarrierImmediate(Texture* texture) const {
+  CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
   assert(commandBuffer);
 
   if (commandBuffer) {
@@ -1535,8 +1533,8 @@ void jRHI_DX12::UAVBarrierImmediate(jTexture* texture) const {
   }
 }
 
-void jRHI_DX12::UAVBarrierImmediate(jBuffer* buffer) const {
-  jCommandBuffer_DX12* commandBuffer = BeginSingleTimeCommands();
+void RhiDx12::UAVBarrierImmediate(Buffer* buffer) const {
+  CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
   assert(commandBuffer);
 
   if (commandBuffer) {
@@ -1545,43 +1543,43 @@ void jRHI_DX12::UAVBarrierImmediate(jBuffer* buffer) const {
   }
 }
 
-bool jRHI_DX12::TransitionLayout(jCommandBuffer* commandBuffer,
-                                 jBuffer*        buffer,
+bool RhiDx12::TransitionLayout(CommandBuffer* commandBuffer,
+                                 Buffer*        buffer,
                                  EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(buffer);
   assert(buffer->GetLayout() != newLayout);
 
-  auto       Buffer_DX12 = (jBuffer_DX12*)buffer;
-  const auto SrcLayout   = GetDX12ResourceLayout(Buffer_DX12->Layout);
-  const auto DstLayout   = GetDX12ResourceLayout(newLayout);
+  auto       bufferDx12 = (BufferDx12*)buffer;
+  const auto SrcLayout  = GetDX12ResourceLayout(bufferDx12->Layout);
+  const auto DstLayout  = GetDX12ResourceLayout(newLayout);
   if (SrcLayout == DstLayout) {
     return true;
   }
 
-  Buffer_DX12->Layout = newLayout;
+  bufferDx12->Layout = newLayout;
   return TransitionLayout_Internal(
-      commandBuffer, Buffer_DX12->Buffer->Get(), SrcLayout, DstLayout);
+      commandBuffer, bufferDx12->m_buffer->Get(), SrcLayout, DstLayout);
 }
 
-bool jRHI_DX12::TransitionLayoutImmediate(jBuffer*        buffer,
+bool RhiDx12::TransitionLayoutImmediate(Buffer*        buffer,
                                           EResourceLayout newLayout) const {
   assert(buffer);
   if (buffer->GetLayout() != newLayout) {
-    auto       Buffer_DX12 = (jBuffer_DX12*)buffer;
-    const auto SrcLayout   = GetDX12ResourceLayout(Buffer_DX12->Layout);
+    auto       bufferDx12 = (BufferDx12*)buffer;
+    const auto SrcLayout   = GetDX12ResourceLayout(bufferDx12->Layout);
     const auto DstLayout   = GetDX12ResourceLayout(newLayout);
     if (SrcLayout == DstLayout) {
       return true;
     }
 
-    jCommandBuffer_DX12* commandBuffer = BeginSingleTimeCommands();
+    CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
     assert(commandBuffer);
 
     if (commandBuffer) {
       const bool ret = TransitionLayout_Internal(
-          commandBuffer, Buffer_DX12->Buffer->Get(), SrcLayout, DstLayout);
-      Buffer_DX12->Layout = newLayout;
+          commandBuffer, bufferDx12->m_buffer->Get(), SrcLayout, DstLayout);
+      bufferDx12->Layout = newLayout;
 
       EndSingleTimeCommands(commandBuffer);
       return ret;
@@ -1591,11 +1589,11 @@ bool jRHI_DX12::TransitionLayoutImmediate(jBuffer*        buffer,
   return false;
 }
 
-// void jRHI_DX12::BeginDebugEvent(
-//     jCommandBuffer* InCommandBuffer,
+// void RhiDx12::BeginDebugEvent(
+//     CommandBuffer* InCommandBuffer,
 //     const char*     InName,
 //     const Vector4&  InColor /*= Vector4::ColorGreen*/) const {
-//   jCommandBuffer_DX12* CommandList = (jCommandBuffer_DX12*)InCommandBuffer;
+//   CommandBufferDx12* CommandList = (CommandBufferDx12*)InCommandBuffer;
 //   assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
@@ -1606,23 +1604,23 @@ bool jRHI_DX12::TransitionLayoutImmediate(jBuffer*        buffer,
 //                 InName);
 // }
 //
-// void jRHI_DX12::EndDebugEvent(jCommandBuffer* InCommandBuffer) const {
-//   jCommandBuffer_DX12* CommandList = (jCommandBuffer_DX12*)InCommandBuffer;
+// void RhiDx12::EndDebugEvent(CommandBuffer* InCommandBuffer) const {
+//   CommandBufferDx12* CommandList = (CommandBufferDx12*)InCommandBuffer;
 //   assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
 //   PIXEndEvent(CommandList->Get());
 // }
 
-void jRHI_DX12::Flush() const {
+void RhiDx12::Flush() const {
   WaitForGPU();
 }
 
-void jRHI_DX12::Finish() const {
+void RhiDx12::Finish() const {
   WaitForGPU();
 }
 
-std::shared_ptr<jBuffer> jRHI_DX12::CreateStructuredBuffer(
+std::shared_ptr<Buffer> RhiDx12::CreateStructuredBuffer(
     uint64_t          InSize,
     uint64_t          InAlignment,
     uint64_t          InStride,
@@ -1649,10 +1647,10 @@ std::shared_ptr<jBuffer> jRHI_DX12::CreateStructuredBuffer(
         BufferPtr.get(), (uint32_t)InStride, (uint32_t)(InSize / InStride));
   }
 
-  return std::shared_ptr<jBuffer>(BufferPtr);
+  return std::shared_ptr<Buffer>(BufferPtr);
 }
 
-std::shared_ptr<jBuffer> jRHI_DX12::CreateRawBuffer(
+std::shared_ptr<Buffer> RhiDx12::CreateRawBuffer(
     uint64_t          InSize,
     uint64_t          InAlignment,
     EBufferCreateFlag InBufferCreateFlag,
@@ -1677,7 +1675,7 @@ std::shared_ptr<jBuffer> jRHI_DX12::CreateRawBuffer(
   return BufferPtr;
 }
 
-std::shared_ptr<jBuffer> jRHI_DX12::CreateFormattedBuffer(
+std::shared_ptr<Buffer> RhiDx12::CreateFormattedBuffer(
     uint64_t          InSize,
     uint64_t          InAlignment,
     ETextureFormat    InFormat,
@@ -1705,13 +1703,13 @@ std::shared_ptr<jBuffer> jRHI_DX12::CreateFormattedBuffer(
   return BufferPtr;
 }
 
-bool jRHI_DX12::IsSupportVSync() const {
+bool RhiDx12::IsSupportVSync() const {
   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
-// jPlacedResourcePool
-void jPlacedResourcePool::Init() {
+// PlacedResourcePool
+void PlacedResourcePool::Init() {
   // The allocator should be able to allocate memory larger than the
   // PlacedResourceSizeThreshold.
   assert(g_rhi_dx12->GPlacedResourceSizeThreshold
@@ -1719,19 +1717,19 @@ void jPlacedResourcePool::Init() {
 
   assert(g_rhi_dx12);
   // TODO: consider remove nested smart pointers (probably need changes in
-  // jDeallocatorMultiFrameResource)
+  // DeallocatorMultiFrameResource)
   g_rhi_dx12->DeallocatorMultiFramePlacedResource.FreeDelegate = std::bind(
-      &jPlacedResourcePool::FreedFromPendingDelegateForCreatedResource,
+      &PlacedResourcePool::FreedFromPendingDelegateForCreatedResource,
       this,
       std::placeholders::_1);
 }
 
-void jPlacedResourcePool::Release() {
+void PlacedResourcePool::Release() {
   assert(g_rhi_dx12);
   g_rhi_dx12->DeallocatorMultiFramePlacedResource.FreeDelegate = nullptr;
 }
 
-void jPlacedResourcePool::Free(const ComPtr<ID3D12Resource>& InData) {
+void PlacedResourcePool::Free(const ComPtr<ID3D12Resource>& InData) {
   if (!InData) {
     return;
   }
