@@ -17,7 +17,7 @@ std::map<const Shader*, std::vector<size_t>>
     Shader::gConnectedPipelineStateHash;
 
 Shader::~Shader() {
-  delete CompiledShader;
+  delete m_compiledShader;
 }
 
 void Shader::StartAndRunCheckUpdateShaderThread() {
@@ -72,12 +72,12 @@ void Shader::StartAndRunCheckUpdateShaderThread() {
       Shader* shader = *it;
 
       // Backup previous data
-      jCompiledShader* PreviousCompiledShader = shader->CompiledShader;
+      CompiledShader* PreviousCompiledShader = shader->m_compiledShader;
       auto PreviousPipelineStateHashes = gConnectedPipelineStateHash[shader];
       gConnectedPipelineStateHash[shader].clear();
 
       // Reset Shader
-      shader->CompiledShader = nullptr;
+      shader->m_compiledShader = nullptr;
       g_rhi->ReleaseShader(shader->shaderInfo);
 
       // Try recreate shader
@@ -95,7 +95,7 @@ void Shader::StartAndRunCheckUpdateShaderThread() {
         it = WaitForUpdateShaders.erase(it);
       } else {
         // Restore shader data
-        shader->CompiledShader              = PreviousCompiledShader;
+        shader->m_compiledShader              = PreviousCompiledShader;
         gConnectedPipelineStateHash[shader] = PreviousPipelineStateHashes;
         g_rhi->AddShader(shader->shaderInfo, shader);
 
