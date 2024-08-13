@@ -104,7 +104,7 @@ void BillboardQuadPrimitive::Update(float deltaTime) {
   }
 }
 
-void UIQuadPrimitive::SetTexture(const jTexture* texture) {
+void UIQuadPrimitive::SetTexture(const Texture* texture) {
   // Todo
   assert(0);
 }
@@ -114,7 +114,7 @@ void UIQuadPrimitive::SetUniformParams(const Shader* shader) const {
   assert(0);
 }
 
-const jTexture* UIQuadPrimitive::GetTexture() const {
+const Texture* UIQuadPrimitive::GetTexture() const {
   // Todo
   assert(0);
   return nullptr;
@@ -126,7 +126,7 @@ void FullscreenQuadPrimitive::SetUniformBuffer(const Shader* shader) const {
 }
 
 void FullscreenQuadPrimitive::SetTexture(
-    int index, const jTexture* texture, const jSamplerStateInfo* samplerState) {
+    int index, const Texture* texture, const SamplerStateInfo* samplerState) {
   // Todo
   assert(0);
 }
@@ -1904,7 +1904,7 @@ BillboardQuadPrimitive* CreateBillobardQuad(const math::Vector3Df& pos,
 
 UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
                               const math::Vector2Df& size,
-                              jTexture*              texture) {
+                              Texture*              texture) {
   float vertices[] = {
     0.0f,
     1.0f,
@@ -1954,7 +1954,7 @@ UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
   return object;
 }
 
-FullscreenQuadPrimitive* CreateFullscreenQuad(jTexture* texture) {
+FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture) {
   float vertices[] = {0.0f, 1.0f, 2.0f};
 
   uint32_t elementCount = static_cast<uint32_t>(std::size(vertices));
@@ -2103,15 +2103,15 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
 //   if (data.lock()->imageBulkData.ImageData.size() > 0) {
-//     jTexture* texture = ImageFileLoader::GetInstance()
+//     Texture* texture = ImageFileLoader::GetInstance()
 //                              .LoadTextureFromFile(Name(textureFilename))
 //                              .lock()
 //                              .get();
 //     object->BillboardObject->RenderObjects[0]->MaterialPtr
-//         = std::make_shared<jMaterial>();
+//         = std::make_shared<Material>();
 //     object->BillboardObject->RenderObjects[0]
 //         ->MaterialPtr
-//         ->TexData[static_cast<int32_t>(jMaterial::EMaterialTextureType::Albedo)]
+//         ->TexData[static_cast<int32_t>(Material::EMaterialTextureType::Albedo)]
 //         .Texture
 //         = texture;
 //     object->BillboardObject->RenderObjects[0]->IsHiddenBoundBox = true;
@@ -2167,10 +2167,10 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                        .lock()
 //                        .get();
 //     object->BillboardObject->RenderObjects[0]->MaterialPtr
-//         = std::make_shared<jMaterial>();
+//         = std::make_shared<Material>();
 //     object->BillboardObject->RenderObjects[0]
 //         ->MaterialPtr
-//         ->TexData[static_cast<int32_t>(jMaterial::EMaterialTextureType::Albedo)]
+//         ->TexData[static_cast<int32_t>(Material::EMaterialTextureType::Albedo)]
 //         .Texture
 //         = texture;
 //     object->BillboardObject->RenderObjects[0]->IsHiddenBoundBox = true;
@@ -2224,10 +2224,10 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                        .lock()
 //                        .get();
 //     object->BillboardObject->RenderObjects[0]->MaterialPtr
-//         = std::make_shared<jMaterial>();
+//         = std::make_shared<Material>();
 //     object->BillboardObject->RenderObjects[0]
 //         ->MaterialPtr
-//         ->TexData[static_cast<int32_t>(jMaterial::EMaterialTextureType::Albedo)]
+//         ->TexData[static_cast<int32_t>(Material::EMaterialTextureType::Albedo)]
 //         .Texture
 //         = texture;
 //   }
