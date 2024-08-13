@@ -6,13 +6,13 @@
 namespace game_engine {
 
 //////////////////////////////////////////////////////////////////////////
-// jSwapchainImage_DX12
+// SwapchainImageDx12
 //////////////////////////////////////////////////////////////////////////
-void jSwapchainImage_DX12::Release() {
+void SwapchainImageDx12::Release() {
   ReleaseInternal();
 }
 
-void jSwapchainImage_DX12::ReleaseInternal() {
+void SwapchainImageDx12::ReleaseInternal() {
   TexturePtr = nullptr;
   // if (Available)
   //{
@@ -37,11 +37,11 @@ void jSwapchainImage_DX12::ReleaseInternal() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-// jSwapchain_DX12
+// SwapchainDx12
 //////////////////////////////////////////////////////////////////////////
-bool jSwapchain_DX12::Create(const std::shared_ptr<Window>& window) {
+bool SwapchainDx12::Create(const std::shared_ptr<Window>& window) {
   DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-  swapChainDesc.BufferCount      = jRHI_DX12::MaxFrameCount;
+  swapChainDesc.BufferCount      = RhiDx12::MaxFrameCount;
   swapChainDesc.Width            = window->getSize().width();
   swapChainDesc.Height           = window->getSize().height();
   swapChainDesc.Format           = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -55,11 +55,11 @@ bool jSwapchain_DX12::Create(const std::shared_ptr<Window>& window) {
   assert(g_rhi_dx12);
   assert(!!g_rhi_dx12->m_hWnd);
   assert(g_rhi_dx12->Factory);
-  assert(g_rhi_dx12->CommandBufferManager);
+  assert(g_rhi_dx12->m_commandBufferManager);
 
   ComPtr<IDXGISwapChain1> swapChainTemp;
   HRESULT                 hr = g_rhi_dx12->Factory->CreateSwapChainForHwnd(
-      g_rhi_dx12->CommandBufferManager->GetCommandQueue().Get(),
+      g_rhi_dx12->m_commandBufferManager->GetCommandQueue().Get(),
       g_rhi_dx12->m_hWnd,
       &swapChainDesc,
       nullptr,
@@ -80,9 +80,9 @@ bool jSwapchain_DX12::Create(const std::shared_ptr<Window>& window) {
 
   Extent = window->getSize();
 
-  Images.resize(jRHI_DX12::MaxFrameCount);
+  Images.resize(RhiDx12::MaxFrameCount);
   for (int32_t i = 0; i < Images.size(); ++i) {
-    jSwapchainImage_DX12* SwapchainImage = new jSwapchainImage_DX12();
+    SwapchainImageDx12* swapchainImage = new SwapchainImageDx12();
 
     ComPtr<ID3D12Resource> NewResource;
     HRESULT hr = SwapChain->GetBuffer(i, IID_PPV_ARGS(&NewResource));
@@ -93,42 +93,42 @@ bool jSwapchain_DX12::Create(const std::shared_ptr<Window>& window) {
     }
 
 
-    std::shared_ptr<jCreatedResource> RenderTargetResource
-        = jCreatedResource::CreatedFromSwapchain(NewResource);
+    std::shared_ptr<CreatedResource> RenderTargetResource
+        = CreatedResource::CreatedFromSwapchain(NewResource);
 
-    Images[i] = SwapchainImage;
+    Images[i] = swapchainImage;
 
     auto TextureDX12Ptr
-        = std::make_shared<jTexture_DX12>(ETextureType::TEXTURE_2D,
+        = std::make_shared<TextureDx12>(ETextureType::TEXTURE_2D,
                                           Format,
                                           Extent,
                                           1,
                                           EMSAASamples::COUNT_1,
                                           false,
-                                          jRTClearValue::Invalid,
+                                          RTClearValue::Invalid,
                                           RenderTargetResource);
-    SwapchainImage->TexturePtr = TextureDX12Ptr;
+    swapchainImage->TexturePtr = TextureDX12Ptr;
 
-    CreateRenderTargetView((jTexture_DX12*)SwapchainImage->TexturePtr.get());
+    CreateRenderTargetView((TextureDx12*)swapchainImage->TexturePtr.get());
     TextureDX12Ptr->Layout = EResourceLayout::PRESENT_SRC;
   }
 
   return true;
 }
 
-void jSwapchain_DX12::Release() {
+void SwapchainDx12::Release() {
   ReleaseInternal();
 }
 
-bool jSwapchain_DX12::Resize(int32_t InWidth, int32_t InHeight) {
+bool SwapchainDx12::Resize(int32_t InWidth, int32_t InHeight) {
   bool isSwapChainValid = SwapChain;
   assert(isSwapChainValid);
 
   if (isSwapChainValid) {
     for (int32_t i = 0; i < g_rhi_dx12->MaxFrameCount; ++i) {
-      jSwapchainImage* SwapchainImage = Images[i];
-      auto TexDX12 = (jTexture_DX12*)SwapchainImage->TexturePtr.get();
-      TexDX12->Texture->Resource.get()->Reset();
+      SwapchainImage* swapchainImage = Images[i];
+      auto TexDX12 = (TextureDx12*)swapchainImage->TexturePtr.get();
+      TexDX12->m_texture->Resource.get()->Reset();
     }
 
     SwapChain->SetFullscreenState(false, nullptr);
@@ -162,7 +162,7 @@ bool jSwapchain_DX12::Resize(int32_t InWidth, int32_t InHeight) {
   }
 
   for (int32_t i = 0; i < g_rhi_dx12->MaxFrameCount; ++i) {
-    jSwapchainImage* SwapchainImage = Images[i];
+    SwapchainImage* swapchainImage = Images[i];
 
     ComPtr<ID3D12Resource> NewResource;
     HRESULT hr = SwapChain->GetBuffer(i, IID_PPV_ARGS(&NewResource));
@@ -173,10 +173,10 @@ bool jSwapchain_DX12::Resize(int32_t InWidth, int32_t InHeight) {
     }
 
 
-    std::shared_ptr<jCreatedResource> RenderTargetResource
-        = jCreatedResource::CreatedFromSwapchain(NewResource);
+    std::shared_ptr<CreatedResource> RenderTargetResource
+        = CreatedResource::CreatedFromSwapchain(NewResource);
 
-    auto TextureDX12Ptr = std::make_shared<jTexture_DX12>(
+    auto TextureDX12Ptr = std::make_shared<TextureDx12>(
         ETextureType::TEXTURE_2D,
         GetDX12TextureFormat(DXGI_FORMAT_R8G8B8A8_UNORM),
         // TODO: remove casting
@@ -185,11 +185,11 @@ bool jSwapchain_DX12::Resize(int32_t InWidth, int32_t InHeight) {
         1,
         EMSAASamples::COUNT_1,
         false,
-        jRTClearValue::Invalid,
+        RTClearValue::Invalid,
         RenderTargetResource);
-    SwapchainImage->TexturePtr = TextureDX12Ptr;
+    swapchainImage->TexturePtr = TextureDX12Ptr;
 
-    CreateRenderTargetView((jTexture_DX12*)SwapchainImage->TexturePtr.get());
+    CreateRenderTargetView((TextureDx12*)swapchainImage->TexturePtr.get());
   }
 
   g_rhi_dx12->RenderPassPool.Release();
@@ -197,7 +197,7 @@ bool jSwapchain_DX12::Resize(int32_t InWidth, int32_t InHeight) {
   return true;
 }
 
-void jSwapchain_DX12::ReleaseInternal() {
+void SwapchainDx12::ReleaseInternal() {
   for (auto& iter : Images) {
     delete iter;
   }
