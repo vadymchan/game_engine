@@ -82,7 +82,7 @@ class Engine {
     m_applicationEventManager_
         = std::make_unique<ApplicationEventManager>(m_applicationEventHandler_);
 
-    g_rhi = new jRHI_DX12();
+    g_rhi = new RhiDx12();
     g_rhi->init(m_window_);
     g_rhi->OnInitRHI();
 
