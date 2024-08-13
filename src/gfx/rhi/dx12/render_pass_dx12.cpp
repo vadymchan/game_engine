@@ -4,21 +4,21 @@
 
 namespace game_engine {
 
-void jRenderPass_DX12::Release() {
-  // if (FrameBuffer)
+void RenderPassDx12::Release() {
+  // if (m_frameBuffer)
   //{
-  //     vkDestroyFramebuffer(g_rhi_vk->Device, FrameBuffer, nullptr);
-  //     FrameBuffer = nullptr;
+  //     vkDestroyFramebuffer(g_rhi_vk->Device, m_frameBuffer, nullptr);
+  //     m_frameBuffer = nullptr;
   // }
 
-  // if (RenderPass)
+  // if (m_renderPass)
   //{
-  //     vkDestroyRenderPass(g_rhi_vk->Device, RenderPass, nullptr);
-  //     RenderPass = nullptr;
+  //     vkDestroyRenderPass(g_rhi_vk->Device, m_renderPass, nullptr);
+  //     m_renderPass = nullptr;
   // }
 }
 
-bool jRenderPass_DX12::BeginRenderPass(const jCommandBuffer* commandBuffer) {
+bool RenderPassDx12::BeginRenderPass(const CommandBuffer* commandBuffer) {
   bool isValidCommandBuffer = commandBuffer != nullptr;
   assert(isValidCommandBuffer);
 
@@ -27,16 +27,16 @@ bool jRenderPass_DX12::BeginRenderPass(const jCommandBuffer* commandBuffer) {
   }
 
 
-  CommandBuffer = (const jCommandBuffer_DX12*)commandBuffer;
+  m_commandBuffer_ = (const CommandBufferDx12*)commandBuffer;
 
   if (RTVCPUHandles.size() > 0) {
-    CommandBuffer->CommandList->OMSetRenderTargets(
+    m_commandBuffer_->CommandList->OMSetRenderTargets(
         (uint32_t)RTVCPUHandles.size(),
         &RTVCPUHandles[0],
         false,
         (DSVCPUDHandle.ptr ? &DSVCPUDHandle : nullptr));
   } else {
-    CommandBuffer->CommandList->OMSetRenderTargets(
+    m_commandBuffer_->CommandList->OMSetRenderTargets(
         0, nullptr, false, (DSVCPUDHandle.ptr ? &DSVCPUDHandle : nullptr));
   }
 
@@ -45,7 +45,7 @@ bool jRenderPass_DX12::BeginRenderPass(const jCommandBuffer* commandBuffer) {
       continue;
     }
 
-    CommandBuffer->CommandList->ClearRenderTargetView(
+    m_commandBuffer_->CommandList->ClearRenderTargetView(
         RTVCPUHandles[i], RTVClears[i].GetCleraColor(), 0, nullptr);
   }
 
@@ -60,7 +60,7 @@ bool jRenderPass_DX12::BeginRenderPass(const jCommandBuffer* commandBuffer) {
         DSVClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
       }
 
-      CommandBuffer->CommandList->ClearDepthStencilView(
+      m_commandBuffer_->CommandList->ClearDepthStencilView(
           DSVCPUDHandle,
           DSVClearFlags,
           DSVClear.GetCleraDepth(),
@@ -73,39 +73,39 @@ bool jRenderPass_DX12::BeginRenderPass(const jCommandBuffer* commandBuffer) {
   return true;
 }
 
-void jRenderPass_DX12::EndRenderPass() {
-  // assert(CommandBuffer);
+void RenderPassDx12::EndRenderPass() {
+  // assert(m_commandBuffer);
 
   //// Finishing up
-  // vkCmdEndRenderPass((VkCommandBuffer)CommandBuffer->GetHandle());
+  // vkCmdEndRenderPass((VkCommandBuffer)m_commandBuffer->GetHandle());
 
   //// Apply layout to attachments
-  // for(jAttachment& iter : RenderPassInfo.Attachments)
+  // for(Attachment& iter : m_renderPassInfo.Attachments)
   //{
   //     check(iter.IsValid());
   //     SetFinalLayoutToAttachment(iter);
   // }
 
-  // CommandBuffer = nullptr;
+  // m_commandBuffer = nullptr;
 }
 
-void jRenderPass_DX12::SetFinalLayoutToAttachment(
-    const jAttachment& attachment) const {
+void RenderPassDx12::SetFinalLayoutToAttachment(
+    const Attachment& attachment) const {
   // check(attachment.RenderTargetPtr);
-  // jTexture_DX12* texture_vk =
-  // (jTexture_DX12*)attachment.RenderTargetPtr->GetTexture();
+  // TextureDx12* texture_vk =
+  // (TextureDx12*)attachment.RenderTargetPtr->GetTexture();
   // texture_vk->Layout = attachment.FinalLayout;
 }
 
-void jRenderPass_DX12::Initialize() {
+void RenderPassDx12::Initialize() {
   CreateRenderPass();
 }
 
-bool jRenderPass_DX12::CreateRenderPass() {
-  // Create RenderPass
+bool RenderPassDx12::CreateRenderPass() {
+  // Create m_renderPass
   {
-    for (int32_t i = 0; i < (int32_t)RenderPassInfo.Attachments.size(); ++i) {
-      const jAttachment& attachment = RenderPassInfo.Attachments[i];
+    for (int32_t i = 0; i < (int32_t)m_renderPassInfo.Attachments.size(); ++i) {
+      const Attachment& attachment = m_renderPassInfo.Attachments[i];
       assert(attachment.IsValid());
 
       const auto& RTInfo = attachment.RenderTargetPtr->Info;
@@ -113,12 +113,12 @@ bool jRenderPass_DX12::CreateRenderPass() {
           = (attachment.LoadStoreOp == EAttachmentLoadStoreOp::CLEAR_STORE
              || attachment.LoadStoreOp
                     == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
-      jTexture_DX12* TextureDX12
-          = (jTexture_DX12*)attachment.RenderTargetPtr->GetTexture();
+      TextureDx12* TextureDX12
+          = (TextureDx12*)attachment.RenderTargetPtr->GetTexture();
 
       if (attachment.IsDepthAttachment()) {
         DSVFormat = GetDX12TextureFormat(RTInfo.Format);
-        DSVClear  = attachment.RTClearValue;
+        DSVClear  = attachment.m_rtClearValue;
 
         DSVDepthClear   = HasClear;
         DSVStencilClear = (attachment.StencilLoadStoreOp
@@ -129,9 +129,9 @@ bool jRenderPass_DX12::CreateRenderPass() {
         DSVCPUDHandle = TextureDX12->DSV.CPUHandle;
       } else {
         if (HasClear) {
-          RTVClears.push_back(attachment.RTClearValue);
+          RTVClears.push_back(attachment.m_rtClearValue);
         } else {
-          RTVClears.push_back(jRTClearValue::Invalid);
+          RTVClears.push_back(RTClearValue::Invalid);
         }
         RTVCPUHandles.push_back(TextureDX12->RTV.CPUHandle);
         RTVFormats.push_back(GetDX12TextureFormat(RTInfo.Format));
