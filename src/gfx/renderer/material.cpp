@@ -5,60 +5,60 @@
 
 namespace game_engine {
 
-jTexture* jMaterial::GetTexture(EMaterialTextureType InType) const {
+Texture* Material::GetTexture(EMaterialTextureType InType) const {
   assert(EMaterialTextureType::Albedo <= InType);
   assert(EMaterialTextureType::Max > InType);
 
-  if (!TexData[(int32_t)InType].Texture) {
+  if (!TexData[(int32_t)InType].m_texture) {
     if (InType == EMaterialTextureType::Normal) {
       return GNormalTexture.get();
     }
     return GBlackTexture.get();
   }
 
-  return TexData[(int32_t)InType].Texture;
+  return TexData[(int32_t)InType].m_texture;
 }
 
-const std::shared_ptr<jShaderBindingInstance>&
-    jMaterial::CreateShaderBindingInstance() {
+const std::shared_ptr<ShaderBindingInstance>&
+    Material::CreateShaderBindingInstance() {
   if (NeedToUpdateShaderBindingInstance) {
     NeedToUpdateShaderBindingInstance = false;
 
     int32_t                              BindingPoint = 0;
-    jShaderBindingArray                   ShaderBindingArray;
-    jShaderBindingResourceInlineAllocator ResourceInlineAllactor;
+    ShaderBindingArray                   shaderBindingArray;
+    ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
     for (int32_t i = 0; i < (int32_t)EMaterialTextureType::Max; ++i) {
       const TextureData& TextureData = TexData[i];
-      const jTexture*   Texture     = TextureData.GetTexture();
+      const Texture*     texture     = TextureData.GetTexture();
 
-      if (!Texture) {
+      if (!texture) {
         if ((int32_t)EMaterialTextureType::Normal == i) {
-          Texture = GNormalTexture.get();
+          texture = GNormalTexture.get();
         } else if ((int32_t)EMaterialTextureType::Env == i) {
-          Texture = GWhiteCubeTexture.get();
+          texture = GWhiteCubeTexture.get();
         } else {
-          Texture = GWhiteTexture.get();
+          texture = GWhiteTexture.get();
         }
       }
 
-      ShaderBindingArray.Add(jShaderBinding(
+      shaderBindingArray.Add(ShaderBinding(
           BindingPoint++,
           1,
           EShaderBindingType::TEXTURE_SAMPLER_SRV,
           false,
           EShaderAccessStageFlag::ALL_GRAPHICS,
-          ResourceInlineAllactor.Alloc<jTextureResource>(Texture, nullptr)));
+          ResourceInlineAllactor.Alloc<TextureResource>(texture, nullptr)));
     }
 
-    if (ShaderBindingInstance) {
-      ShaderBindingInstance->Free();
+    if (m_shaderBindingInstance) {
+      m_shaderBindingInstance->Free();
     }
 
-    ShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
-        ShaderBindingArray, jShaderBindingInstanceType::MultiFrame);
+    m_shaderBindingInstance = g_rhi->CreateShaderBindingInstance(
+        shaderBindingArray, ShaderBindingInstanceType::MultiFrame);
   }
-  return ShaderBindingInstance;
+  return m_shaderBindingInstance;
 }
 
 }  // namespace game_engine
