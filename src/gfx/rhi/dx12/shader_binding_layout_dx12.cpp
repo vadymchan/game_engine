@@ -6,43 +6,43 @@
 namespace game_engine {
 
 std::unordered_map<size_t, ComPtr<ID3D12RootSignature>>
-            jShaderBindingLayout_DX12::GRootSignaturePool;
-MutexRWLock jShaderBindingLayout_DX12::GRootSignatureLock;
+            ShaderBindingLayoutDx12::GRootSignaturePool;
+MutexRWLock ShaderBindingLayoutDx12::GRootSignatureLock;
 
 // Below option will be work like switch
 #define FORCE_USE_DESCRIPTOR_OFFSET_BY_USING_AUTO_CALCULATION_FOR_BINDLESS 1
 #define FORCE_USE_D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND \
   (1 && !FORCE_USE_DESCRIPTOR_OFFSET_BY_USING_AUTO_CALCULATION_FOR_BINDLESS)
 
-void jRootParameterExtractor::Extract(
+void RootParameterExtractor::Extract(
     int32_t&                   InOutDescriptorOffset,
     int32_t&                   InOutSamplerDescriptorOffset,
-    const jShaderBindingArray& InShaderBindingArray,
+    const ShaderBindingArray& InShaderBindingArray,
     int32_t                    InRegisterSpace) {
   // Always place inline descriptors at the very beginning of InRootParameters.
   int32_t BindingIndex = 0;  // To support both APIs (Vulkan, DX12): Vulkan
                              // requires a unique binding index.
 
   for (int32_t i = 0; i < InShaderBindingArray.NumOfData; ++i) {
-    const jShaderBinding* ShaderBinding = InShaderBindingArray[i];
-    const bool            IsBindless    = ShaderBinding->IsBindless;
+    const ShaderBinding* shaderBinding = InShaderBindingArray[i];
+    const bool            IsBindless    = shaderBinding->IsBindless;
 
     assert(
-        !ShaderBinding->IsInline
-        || (ShaderBinding->IsInline
-            && (ShaderBinding->BindingType == EShaderBindingType::UNIFORMBUFFER
-                || ShaderBinding->BindingType
+        !shaderBinding->IsInline
+        || (shaderBinding->IsInline
+            && (shaderBinding->BindingType == EShaderBindingType::UNIFORMBUFFER
+                || shaderBinding->BindingType
                        == EShaderBindingType::UNIFORMBUFFER_DYNAMIC
-                || ShaderBinding->BindingType == EShaderBindingType::BUFFER_SRV
-                || ShaderBinding->BindingType
+                || shaderBinding->BindingType == EShaderBindingType::BUFFER_SRV
+                || shaderBinding->BindingType
                        == EShaderBindingType::ACCELERATION_STRUCTURE_SRV
-                || ShaderBinding->BindingType
+                || shaderBinding->BindingType
                        == EShaderBindingType::BUFFER_UAV)));
 
-    switch (ShaderBinding->BindingType) {
+    switch (shaderBinding->BindingType) {
       case EShaderBindingType::UNIFORMBUFFER:
       case EShaderBindingType::UNIFORMBUFFER_DYNAMIC: {
-        if (ShaderBinding->IsInline) {
+        if (shaderBinding->IsInline) {
           D3D12_ROOT_PARAMETER1 rootParameter = {};
           rootParameter.ParameterType         = D3D12_ROOT_PARAMETER_TYPE_CBV;
           rootParameter.ShaderVisibility      = D3D12_SHADER_VISIBILITY_ALL;
@@ -54,7 +54,7 @@ void jRootParameterExtractor::Extract(
         } else {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-          range.NumDescriptors          = ShaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -68,18 +68,18 @@ void jRootParameterExtractor::Extract(
                 = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 #else
             range.OffsetInDescriptorsFromTableStart
-                = (ShaderBinding->BindingPoint == -1)
+                = (shaderBinding->BindingPoint == -1)
                     ? D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
-                    : ShaderBinding->BindingPoint;
+                    : shaderBinding->BindingPoint;
 #endif
             range.Flags
                 = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
           }
-          InOutDescriptorOffset += ShaderBinding->NumOfDescriptors;
+          InOutDescriptorOffset += shaderBinding->NumOfDescriptors;
           Descriptors.emplace_back(range);
         }
 
-        BindingIndex += ShaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->NumOfDescriptors;
         break;
       }
       case EShaderBindingType::TEXTURE_SAMPLER_SRV:
@@ -88,9 +88,9 @@ void jRootParameterExtractor::Extract(
       case EShaderBindingType::BUFFER_SRV:
       case EShaderBindingType::BUFFER_TEXEL_SRV:
       case EShaderBindingType::ACCELERATION_STRUCTURE_SRV: {
-        if (ShaderBinding->IsInline
-            && (ShaderBinding->BindingType == EShaderBindingType::BUFFER_SRV
-                || ShaderBinding->BindingType
+        if (shaderBinding->IsInline
+            && (shaderBinding->BindingType == EShaderBindingType::BUFFER_SRV
+                || shaderBinding->BindingType
                        == EShaderBindingType::ACCELERATION_STRUCTURE_SRV)) {
           D3D12_ROOT_PARAMETER1 rootParameter = {};
           rootParameter.ParameterType         = D3D12_ROOT_PARAMETER_TYPE_SRV;
@@ -103,7 +103,7 @@ void jRootParameterExtractor::Extract(
         } else {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-          range.NumDescriptors          = ShaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -117,25 +117,25 @@ void jRootParameterExtractor::Extract(
                 = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 #else
             range.OffsetInDescriptorsFromTableStart
-                = (ShaderBinding->BindingPoint == -1)
+                = (shaderBinding->BindingPoint == -1)
                     ? D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
-                    : ShaderBinding->BindingPoint;
+                    : shaderBinding->BindingPoint;
 #endif
             range.Flags
                 = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
           }
-          InOutDescriptorOffset += ShaderBinding->NumOfDescriptors;
+          InOutDescriptorOffset += shaderBinding->NumOfDescriptors;
           Descriptors.emplace_back(range);
         }
 
         // TODO: Since Texture Sampler SRV defines both Texture and Sampler
         // simultaneously, add Sampler here. Need to consider not using it since
         // it's a Vulkan syntax.
-        if (ShaderBinding->BindingType
+        if (shaderBinding->BindingType
             == EShaderBindingType::TEXTURE_SAMPLER_SRV) {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-          range.NumDescriptors          = ShaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -151,26 +151,26 @@ void jRootParameterExtractor::Extract(
                 = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 #else
             range.OffsetInDescriptorsFromTableStart
-                = (ShaderBinding->BindingPoint == -1)
+                = (shaderBinding->BindingPoint == -1)
                     ? D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
-                    : ShaderBinding->BindingPoint;
+                    : shaderBinding->BindingPoint;
 #endif
             range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
           }
-          InOutSamplerDescriptorOffset += ShaderBinding->NumOfDescriptors;
+          InOutSamplerDescriptorOffset += shaderBinding->NumOfDescriptors;
           SamplerDescriptors.emplace_back(range);
 
-          // SamplerIndex += ShaderBinding->NumOfDescriptors;
+          // SamplerIndex += shaderBinding->NumOfDescriptors;
         }
 
-        BindingIndex += ShaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->NumOfDescriptors;
         break;
       }
       case EShaderBindingType::TEXTURE_UAV:
       case EShaderBindingType::BUFFER_UAV:
       case EShaderBindingType::BUFFER_UAV_DYNAMIC:
       case EShaderBindingType::BUFFER_TEXEL_UAV: {
-        if (ShaderBinding->IsInline) {
+        if (shaderBinding->IsInline) {
           D3D12_ROOT_PARAMETER1 rootParameter = {};
           rootParameter.ParameterType         = D3D12_ROOT_PARAMETER_TYPE_UAV;
           rootParameter.ShaderVisibility      = D3D12_SHADER_VISIBILITY_ALL;
@@ -182,7 +182,7 @@ void jRootParameterExtractor::Extract(
         } else {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-          range.NumDescriptors          = ShaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -196,23 +196,23 @@ void jRootParameterExtractor::Extract(
                 = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 #else
             range.OffsetInDescriptorsFromTableStart
-                = (ShaderBinding->BindingPoint == -1)
+                = (shaderBinding->BindingPoint == -1)
                     ? D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
-                    : ShaderBinding->BindingPoint;
+                    : shaderBinding->BindingPoint;
 #endif
             range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
           }
-          InOutDescriptorOffset += ShaderBinding->NumOfDescriptors;
+          InOutDescriptorOffset += shaderBinding->NumOfDescriptors;
           Descriptors.emplace_back(range);
         }
 
-        BindingIndex += ShaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->NumOfDescriptors;
         break;
       }
       case EShaderBindingType::SAMPLER: {
         D3D12_DESCRIPTOR_RANGE1 range = {};
         range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-        range.NumDescriptors          = ShaderBinding->NumOfDescriptors;
+        range.NumDescriptors          = shaderBinding->NumOfDescriptors;
         range.BaseShaderRegister      = BindingIndex;
         range.RegisterSpace           = InRegisterSpace;
         if (IsBindless) {
@@ -228,16 +228,16 @@ void jRootParameterExtractor::Extract(
               = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 #else
           range.OffsetInDescriptorsFromTableStart
-              = (ShaderBinding->BindingPoint == -1)
+              = (shaderBinding->BindingPoint == -1)
                   ? D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
-                  : ShaderBinding->BindingPoint;
+                  : shaderBinding->BindingPoint;
 #endif
           range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
         }
-        InOutSamplerDescriptorOffset += ShaderBinding->NumOfDescriptors;
+        InOutSamplerDescriptorOffset += shaderBinding->NumOfDescriptors;
         SamplerDescriptors.emplace_back(range);
 
-        BindingIndex += ShaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->NumOfDescriptors;
         break;
       }
       case EShaderBindingType::SUBPASS_INPUT_ATTACHMENT:
@@ -249,14 +249,14 @@ void jRootParameterExtractor::Extract(
   }
 }
 
-void jRootParameterExtractor::Extract(
-    const jShaderBindingLayoutArray& InBindingLayoutArray,
+void RootParameterExtractor::Extract(
+    const ShaderBindingLayoutArray& InBindingLayoutArray,
     int32_t                          InRegisterSpace /*= 0*/) {
   int32_t InOutDescriptorOffset        = 0;
   int32_t InOutSamplerDescriptorOffset = 0;
   for (int32_t i = 0; i < InBindingLayoutArray.NumOfData; ++i) {
-    jShaderBindingLayout_DX12* Layout
-        = (jShaderBindingLayout_DX12*)InBindingLayoutArray[i];
+    ShaderBindingLayoutDx12* Layout
+        = (ShaderBindingLayoutDx12*)InBindingLayoutArray[i];
     assert(Layout);
 
     Extract(InOutDescriptorOffset,
@@ -288,19 +288,19 @@ void jRootParameterExtractor::Extract(
   }
 }
 
-void jRootParameterExtractor::Extract(
-    const jShaderBindingInstanceArray& InBindingInstanceArray,
+void RootParameterExtractor::Extract(
+    const ShaderBindingInstanceArray& InBindingInstanceArray,
     int32_t                            InRegisterSpace /*= 0*/) {
   int32_t InOutDescriptorOffset        = 0;
   int32_t InOutSamplerDescriptorOffset = 0;
   for (int32_t i = 0; i < InBindingInstanceArray.NumOfData; ++i) {
-    jShaderBindingInstance_DX12* Instance
-        = (jShaderBindingInstance_DX12*)InBindingInstanceArray[i];
+    ShaderBindingInstanceDx12* Instance
+        = (ShaderBindingInstanceDx12*)InBindingInstanceArray[i];
     assert(Instance);
     assert(Instance->ShaderBindingsLayouts);
 
-    jShaderBindingLayout_DX12* Layout
-        = (jShaderBindingLayout_DX12*)Instance->ShaderBindingsLayouts;
+    ShaderBindingLayoutDx12* Layout
+        = (ShaderBindingLayoutDx12*)Instance->ShaderBindingsLayouts;
     assert(Layout);
     Extract(InOutDescriptorOffset,
             InOutSamplerDescriptorOffset,
@@ -331,26 +331,26 @@ void jRootParameterExtractor::Extract(
   }
 }
 
-bool jShaderBindingLayout_DX12::Initialize(
-    const jShaderBindingArray& InShaderBindingArray) {
-  InShaderBindingArray.CloneWithoutResource(ShaderBindingArray);
+bool ShaderBindingLayoutDx12::Initialize(
+    const ShaderBindingArray& InShaderBindingArray) {
+  InShaderBindingArray.CloneWithoutResource(m_shaderBindingArray_);
 
   return true;
 }
 
-std::shared_ptr<jShaderBindingInstance>
-    jShaderBindingLayout_DX12::CreateShaderBindingInstance(
-        const jShaderBindingArray&       InShaderBindingArray,
-        const jShaderBindingInstanceType InType) const {
-  auto ShaderBindingInstance = new jShaderBindingInstance_DX12();
-  ShaderBindingInstance->ShaderBindingsLayouts = this;
-  ShaderBindingInstance->Initialize(InShaderBindingArray);
-  ShaderBindingInstance->SetType(InType);
+std::shared_ptr<ShaderBindingInstance>
+    ShaderBindingLayoutDx12::CreateShaderBindingInstance(
+        const ShaderBindingArray&       InShaderBindingArray,
+        const ShaderBindingInstanceType InType) const {
+  auto shaderBindingInstance = new ShaderBindingInstanceDx12();
+  shaderBindingInstance->ShaderBindingsLayouts = this;
+  shaderBindingInstance->Initialize(InShaderBindingArray);
+  shaderBindingInstance->SetType(InType);
 
-  return std::shared_ptr<jShaderBindingInstance>(ShaderBindingInstance);
+  return std::shared_ptr<ShaderBindingInstance>(shaderBindingInstance);
 }
 
-ID3D12RootSignature* jShaderBindingLayout_DX12::CreateRootSignatureInternal(
+ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
     size_t InHash, FuncGetRootParameterExtractor InFunc) {
   {
     ScopeReadLock sr(&GRootSignatureLock);
@@ -369,7 +369,7 @@ ID3D12RootSignature* jShaderBindingLayout_DX12::CreateRootSignatureInternal(
       return it_find->second.Get();
     }
 
-    jRootParameterExtractor DescriptorExtractor;
+    RootParameterExtractor DescriptorExtractor;
     InFunc(DescriptorExtractor);
 
     // Create RootSignature
@@ -420,28 +420,28 @@ ID3D12RootSignature* jShaderBindingLayout_DX12::CreateRootSignatureInternal(
   }
 }
 
-ID3D12RootSignature* jShaderBindingLayout_DX12::CreateRootSignature(
-    const jShaderBindingInstanceArray& InBindingInstanceArray) {
+ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
+    const ShaderBindingInstanceArray& InBindingInstanceArray) {
   if (InBindingInstanceArray.NumOfData <= 0) {
     return nullptr;
   }
 
   size_t hash = 0;
   for (int32_t i = 0; i < InBindingInstanceArray.NumOfData; ++i) {
-    jShaderBindingLayoutArray::GetHash(
+    ShaderBindingLayoutArray::GetHash(
         hash, i, InBindingInstanceArray[i]->ShaderBindingsLayouts);
   }
 
   return CreateRootSignatureInternal(
       hash,
       [&InBindingInstanceArray](
-          jRootParameterExtractor& OutRootParameterExtractor) {
+          RootParameterExtractor& OutRootParameterExtractor) {
         OutRootParameterExtractor.Extract(InBindingInstanceArray);
       });
 }
 
-ID3D12RootSignature* jShaderBindingLayout_DX12::CreateRootSignature(
-    const jShaderBindingLayoutArray& InBindingLayoutArray) {
+ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
+    const ShaderBindingLayoutArray& InBindingLayoutArray) {
   if (InBindingLayoutArray.NumOfData <= 0) {
     return nullptr;
   }
@@ -451,7 +451,7 @@ ID3D12RootSignature* jShaderBindingLayout_DX12::CreateRootSignature(
   return CreateRootSignatureInternal(
       hash,
       [&InBindingLayoutArray](
-          jRootParameterExtractor& OutRootParameterExtractor) {
+          RootParameterExtractor& OutRootParameterExtractor) {
         OutRootParameterExtractor.Extract(InBindingLayoutArray);
       });
 }
