@@ -6,11 +6,11 @@
 
 namespace game_engine {
 
-jUniformBufferBlock_DX12::~jUniformBufferBlock_DX12() {
+UniformBufferBlockDx12::~UniformBufferBlockDx12() {
   Release();
 }
 
-void jUniformBufferBlock_DX12::Init(size_t size) {
+void UniformBufferBlockDx12::Init(size_t size) {
   assert(size);
 
   size = Align<uint64_t>(size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
@@ -27,10 +27,10 @@ void jUniformBufferBlock_DX12::Init(size_t size) {
   }
 }
 
-void jUniformBufferBlock_DX12::Release() {
+void UniformBufferBlockDx12::Release() {
 }
 
-void jUniformBufferBlock_DX12::UpdateBufferData(const void* InData,
+void UniformBufferBlockDx12::UpdateBufferData(const void* InData,
                                                 size_t      InSize) {
   if (LifeTimeType::MultiFrame == LifeType) {
     assert(BufferPtr);
@@ -63,27 +63,27 @@ void jUniformBufferBlock_DX12::UpdateBufferData(const void* InData,
   }
 }
 
-void jUniformBufferBlock_DX12::ClearBuffer(int32_t clearValue) {
+void UniformBufferBlockDx12::ClearBuffer(int32_t clearValue) {
   assert(BufferPtr);
   UpdateBufferData(nullptr, BufferPtr->GetAllocatedSize());
 }
 
-void* jUniformBufferBlock_DX12::GetLowLevelResource() const {
+void* UniformBufferBlockDx12::GetLowLevelResource() const {
   return (LifeTimeType::MultiFrame == LifeType) ? BufferPtr->GetHandle()
                                                 : RingBuffer->GetHandle();
 }
 
-void* jUniformBufferBlock_DX12::GetLowLevelMemory() const {
+void* UniformBufferBlockDx12::GetLowLevelMemory() const {
   return (LifeTimeType::MultiFrame == LifeType) ? BufferPtr->CPUAddress
                                                 : RingBufferDestAddress;
 }
 
-size_t jUniformBufferBlock_DX12::GetBufferSize() const {
+size_t UniformBufferBlockDx12::GetBufferSize() const {
   return (LifeTimeType::MultiFrame == LifeType) ? BufferPtr->Size
                                                 : RingBufferAllocatedSize;
 }
 
-const jDescriptor_DX12& jUniformBufferBlock_DX12::GetCBV() const {
+const DescriptorDx12& UniformBufferBlockDx12::GetCBV() const {
   if (LifeTimeType::MultiFrame == LifeType) {
     return BufferPtr->CBV;
   }
@@ -91,7 +91,7 @@ const jDescriptor_DX12& jUniformBufferBlock_DX12::GetCBV() const {
   return RingBuffer->CBV;
 }
 
-uint64_t jUniformBufferBlock_DX12::GetGPUAddress() const {
+uint64_t UniformBufferBlockDx12::GetGPUAddress() const {
   return (LifeTimeType::MultiFrame == LifeType)
            ? BufferPtr->GetGPUAddress()
            : (RingBuffer->GetGPUAddress() + RingBufferOffset);
