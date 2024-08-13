@@ -5,21 +5,21 @@
 
 namespace game_engine {
 
-void jBuffer_DX12::Release() {
+void BufferDx12::Release() {
   CBV.Free();
   SRV.Free();
   UAV.Free();
 }
 
-bool jVertexBuffer_DX12::Initialize(
+bool VertexBufferDx12::Initialize(
     const std::shared_ptr<VertexStreamData>& InStreamData) {
   if (!InStreamData) {
     return false;
   }
 
   vertexStreamData = InStreamData;
-  BindInfos.Reset();
-  BindInfos.StartBindingIndex = InStreamData->bindingIndex;
+  m_bindInfos.Reset();
+  m_bindInfos.StartBindingIndex = InStreamData->bindingIndex;
 
   Streams.clear();
   Streams.reserve(InStreamData->streams.size());
@@ -35,7 +35,7 @@ bool jVertexBuffer_DX12::Initialize(
       continue;
     }
 
-    jVertexStream_DX12 stream;
+    VertexStreamDx12 stream;
     stream.BufferType      = EBufferType::Static;
     stream.name            = iter->name;
     stream.Stride          = iter->Stride;
@@ -43,7 +43,7 @@ bool jVertexBuffer_DX12::Initialize(
 
     // Create vertex buffer
     stream.BufferPtr
-        = g_rhi->CreateRawBuffer<jBuffer_DX12>(iter->GetBufferSize(),
+        = g_rhi->CreateRawBuffer<BufferDx12>(iter->GetBufferSize(),
                                                0,
                                                EBufferCreateFlag::NONE,
                                                EResourceLayout::GENERAL,
@@ -51,7 +51,7 @@ bool jVertexBuffer_DX12::Initialize(
                                                iter->GetBufferSize()
                                                /*, TEXT("VertexBuffer")*/);
 
-    jBuffer_DX12* Buffer_DX12 = stream.GetBuffer<jBuffer_DX12>();
+    BufferDx12* bufferDx12 = stream.GetBuffer<BufferDx12>();
 
     for (IBufferAttribute::Attribute& element : iter->Attributes) {
       DXGI_FORMAT AttrFormat = DXGI_FORMAT_UNKNOWN;
@@ -173,8 +173,8 @@ bool jVertexBuffer_DX12::Initialize(
       assert(AttrFormat != VK_FORMAT_UNDEFINED);
 
       if (iter->GetBufferSize() > 0) {
-        BindInfos.Buffers.push_back(Buffer_DX12->Buffer->Get());
-        BindInfos.Offsets.push_back(stream.Offset + Buffer_DX12->Offset);
+        m_bindInfos.m_buffers.push_back(bufferDx12->m_buffer->Get());
+        m_bindInfos.Offsets.push_back(stream.Offset + bufferDx12->Offset);
       }
 
       D3D12_INPUT_ELEMENT_DESC elem;
@@ -193,7 +193,7 @@ bool jVertexBuffer_DX12::Initialize(
              == D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA)
               ? 1
               : 0;
-      BindInfos.InputElementDescs.emplace_back(elem);
+      m_bindInfos.InputElementDescs.emplace_back(elem);
 
       ++locationIndex;
     }
@@ -201,8 +201,8 @@ bool jVertexBuffer_DX12::Initialize(
     Streams.emplace_back(stream);
 
     D3D12_VERTEX_BUFFER_VIEW view;
-    view.BufferLocation = Buffer_DX12->GetGPUAddress();
-    view.SizeInBytes    = (uint32_t)Buffer_DX12->Size;
+    view.BufferLocation = bufferDx12->GetGPUAddress();
+    view.SizeInBytes    = (uint32_t)bufferDx12->Size;
     view.StrideInBytes  = stream.Stride;
     VBView.emplace_back(view);
 
@@ -214,42 +214,42 @@ bool jVertexBuffer_DX12::Initialize(
   return true;
 }
 
-void jVertexBuffer_DX12::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+void VertexBufferDx12::Bind(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  Bind(CommandBuffer_DX12);
+  Bind(commandBufferDx12);
 }
 
-void jVertexBuffer_DX12::Bind(jCommandBuffer_DX12* InCommandList) const {
+void VertexBufferDx12::Bind(CommandBufferDx12* InCommandList) const {
   assert(InCommandList->CommandList);
   InCommandList->CommandList->IASetPrimitiveTopology(GetTopology());
   InCommandList->CommandList->IASetVertexBuffers(
-      BindInfos.StartBindingIndex, (uint32_t)VBView.size(), &VBView[0]);
+      m_bindInfos.StartBindingIndex, (uint32_t)VBView.size(), &VBView[0]);
 }
 
-jBuffer* jVertexBuffer_DX12::GetBuffer(int32_t InStreamIndex) const {
+Buffer* VertexBufferDx12::GetBuffer(int32_t InStreamIndex) const {
   assert(Streams.size() > InStreamIndex);
   return Streams[InStreamIndex].BufferPtr.get();
 }
 
-void jIndexBuffer_DX12::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
-  auto CommandBuffer_DX12
-      = (jCommandBuffer_DX12*)InRenderFrameContext->GetActiveCommandBuffer();
-  assert(CommandBuffer_DX12);
+void IndexBufferDx12::Bind(
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
+  auto commandBufferDx12
+      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+  assert(commandBufferDx12);
 
-  Bind(CommandBuffer_DX12);
+  Bind(commandBufferDx12);
 }
 
-void jIndexBuffer_DX12::Bind(jCommandBuffer_DX12* InCommandList) const {
+void IndexBufferDx12::Bind(CommandBufferDx12* InCommandList) const {
   assert(InCommandList->CommandList);
   InCommandList->CommandList->IASetIndexBuffer(&IBView);
 }
 
-bool jIndexBuffer_DX12::Initialize(
+bool IndexBufferDx12::Initialize(
     const std::shared_ptr<IndexStreamData>& InStreamData) {
   if (!InStreamData) {
     return false;
@@ -280,7 +280,7 @@ bool jIndexBuffer_DX12::Initialize(
   }
 
   // Create index buffer
-  BufferPtr = g_rhi->CreateFormattedBuffer<jBuffer_DX12>(
+  BufferPtr = g_rhi->CreateFormattedBuffer<BufferDx12>(
       bufferSize,
       0,
       GetDX12TextureFormat(IndexType),
