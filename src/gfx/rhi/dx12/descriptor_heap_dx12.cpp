@@ -6,11 +6,11 @@
 namespace game_engine {
 
 //////////////////////////////////////////////////////////////////////////
-// jDescriptor_DX12
+// DescriptorDx12
 //////////////////////////////////////////////////////////////////////////
-const jDescriptor_DX12 jDescriptor_DX12::Invalid;
+const DescriptorDx12 DescriptorDx12::Invalid;
 
-void jDescriptor_DX12::Free() {
+void DescriptorDx12::Free() {
   if (IsValid()) {
     if (!DescriptorHeap.expired()) {
       DescriptorHeap.lock()->Free(Index);
@@ -23,9 +23,9 @@ void jDescriptor_DX12::Free() {
 }
 
 //////////////////////////////////////////////////////////////////////////
-// jDescriptorHeap_DX12
+// DescriptorHeapDx12
 //////////////////////////////////////////////////////////////////////////
-void jDescriptorHeap_DX12::Initialize(EDescriptorHeapTypeDX12 InHeapType,
+void DescriptorHeapDx12::Initialize(EDescriptorHeapTypeDX12 InHeapType,
                                       bool                    InShaderVisible,
                                       uint32_t InNumOfDescriptors) {
   ScopedLock s(&DescriptorLock);
@@ -71,7 +71,7 @@ void jDescriptorHeap_DX12::Initialize(EDescriptorHeapTypeDX12 InHeapType,
   }
 }
 
-void jDescriptorHeap_DX12::Release() {
+void DescriptorHeapDx12::Release() {
   ScopedLock s(&DescriptorLock);
 
   Heap->Release();
@@ -82,13 +82,13 @@ void jDescriptorHeap_DX12::Release() {
   Pools.clear();
 }
 
-void jDescriptorHeap_DX12::Free(uint32_t InIndex, uint32_t InDelayFrames) {
+void DescriptorHeapDx12::Free(uint32_t InIndex, uint32_t InDelayFrames) {
   PendingFree.push_back({.DescriptorIndex = InIndex,
                          .FrameIndex = g_rhi_dx12->GetCurrentFrameNumber()});
   ProcessPendingDescriptorPoolFree();
 }
 
-void jDescriptorHeap_DX12::ProcessPendingDescriptorPoolFree() {
+void DescriptorHeapDx12::ProcessPendingDescriptorPoolFree() {
   const int32_t CurrentFrameNumber = g_rhi->GetCurrentFrameNumber();
   const int32_t OldestFrameToKeep
       = CurrentFrameNumber - NumOfFramesToWaitBeforeReleasing;
@@ -122,17 +122,17 @@ void jDescriptorHeap_DX12::ProcessPendingDescriptorPoolFree() {
   }
 }
 
-// jDescriptor_DX12
-// jDescriptorHeap_DX12::OneFrameCreateConstantBufferView(jRingBuffer_DX12*
+// DescriptorDx12
+// DescriptorHeapDx12::OneFrameCreateConstantBufferView(RingBufferDx12*
 // InBuffer, uint64 InOffset, uint32_t InSize, ETextureFormat InFormat)
 //{
 //     assert(g_rhi_dx12);
 //     assert(g_rhi_dx12->Device);
 //
-//     jDescriptor_DX12 Descriptor = OneFrameAlloc();
+//     DescriptorDx12 Descriptor = OneFrameAlloc();
 //
 //     assert(InBuffer);
-//     assert(InBuffer->Buffer);
+//     assert(InBuffer->m_buffer);
 //
 //     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = { };
 //     cbvDesc.BufferLocation = InBuffer->GetGPUAddress() + InOffset;
@@ -142,8 +142,8 @@ void jDescriptorHeap_DX12::ProcessPendingDescriptorPoolFree() {
 //     Descriptor.CPUHandle); return Descriptor;
 // }
 
-// jDescriptor_DX12
-// jDescriptorHeap_DX12::OneFrameCreateShaderResourceView(jRingBuffer_DX12*
+// DescriptorDx12
+// DescriptorHeapDx12::OneFrameCreateShaderResourceView(RingBufferDx12*
 // InBuffer, uint64 InOffset, uint32_t InStride, uint32_t InNumOfElement,
 // ETextureFormat InFormat)
 //{
@@ -154,23 +154,23 @@ void jDescriptorHeap_DX12::ProcessPendingDescriptorPoolFree() {
 //     desc.Format = (InFormat == ETextureFormat::MAX) ? DXGI_FORMAT_UNKNOWN :
 //     GetDX12TextureFormat(InFormat); desc.ViewDimension =
 //     D3D12_SRV_DIMENSION_BUFFER; desc.Shader4ComponentMapping =
-//     D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; desc.Buffer.FirstElement =
-//     uint32_t(InOffset / InStride); desc.Buffer.Flags =
-//     D3D12_BUFFER_SRV_FLAG_NONE; desc.Buffer.NumElements = InNumOfElement;
-//     desc.Buffer.StructureByteStride = InStride;
+//     D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; desc.m_buffer.FirstElement =
+//     uint32_t(InOffset / InStride); desc.m_buffer.Flags =
+//     D3D12_BUFFER_SRV_FLAG_NONE; desc.m_buffer.NumElements = InNumOfElement;
+//     desc.m_buffer.StructureByteStride = InStride;
 //
-//     jDescriptor_DX12 Descriptor = OneFrameAlloc();
+//     DescriptorDx12 Descriptor = OneFrameAlloc();
 //
 //     assert(InBuffer);
-//     assert(InBuffer->Buffer);
-//     g_rhi_dx12->Device->CreateShaderResourceView(InBuffer->Buffer.Get(),
+//     assert(InBuffer->m_buffer);
+//     g_rhi_dx12->Device->CreateShaderResourceView(InBuffer->m_buffer.Get(),
 //     &desc, Descriptor.CPUHandle); return Descriptor;
 // }
 
 //////////////////////////////////////////////////////////////////////////
-// jOnlineDescriptorHeap_DX12
+// OnlineDescriptorHeapDx12
 //////////////////////////////////////////////////////////////////////////
-void jOnlineDescriptorHeapBlocks_DX12::Initialize(
+void OnlineDescriptorHeapBlocksDx12::Initialize(
     EDescriptorHeapTypeDX12 InHeapType,
     uint32_t                  InTotalHeapSize,
     uint32_t                  InDescriptorsInBlock) {
@@ -222,7 +222,7 @@ void jOnlineDescriptorHeapBlocks_DX12::Initialize(
       DescriptorBlocks[Index].Descriptors.resize(InDescriptorsInBlock);
     }
 
-    jDescriptor_DX12& Descriptor
+    DescriptorDx12& Descriptor
         = DescriptorBlocks[Index].Descriptors[AllocatedSize];
     Descriptor.Index          = i;
     Descriptor.CPUHandle      = CPUHandleStart;
@@ -239,14 +239,14 @@ void jOnlineDescriptorHeapBlocks_DX12::Initialize(
     DescriptorBlocks[i].Index                = i;
     DescriptorBlocks[i].HeapType             = HeapType;
 
-    OnlineDescriptorHeap[i] = new jOnlineDescriptorHeap_DX12();
+    OnlineDescriptorHeap[i] = new OnlineDescriptorHeapDx12();
     OnlineDescriptorHeap[i]->Initialize(&DescriptorBlocks[i]);
 
     FreeLists.insert({.ReleasedFrame = 0, .Index = i});
   }
 }
 
-void jOnlineDescriptorHeapBlocks_DX12::Release() {
+void OnlineDescriptorHeapBlocksDx12::Release() {
   ScopedLock s(&DescriptorBlockLock);
 
   if (Heap) {
@@ -264,7 +264,7 @@ void jOnlineDescriptorHeapBlocks_DX12::Release() {
   OnlineDescriptorHeap.clear();
 }
 
-jOnlineDescriptorHeap_DX12* jOnlineDescriptorHeapBlocks_DX12::Alloc() {
+OnlineDescriptorHeapDx12* OnlineDescriptorHeapBlocksDx12::Alloc() {
   ScopedLock s(&DescriptorBlockLock);
 
   if (FreeLists.empty()) {
@@ -272,29 +272,29 @@ jOnlineDescriptorHeap_DX12* jOnlineDescriptorHeapBlocks_DX12::Alloc() {
   }
 
   for (auto it = FreeLists.begin(); FreeLists.end() != it; ++it) {
-    jFreeData FreeData = *it;
+    FreeData freeData = *it;
 
     const bool CanAlloc
-        = (g_rhi_dx12->CurrentFrameNumber - FreeData.ReleasedFrame
+        = (g_rhi_dx12->CurrentFrameNumber - freeData.ReleasedFrame
            > NumOfFramesToWaitBeforeReleasing)
-       || (0 == FreeData.ReleasedFrame);
+       || (0 == freeData.ReleasedFrame);
     if (CanAlloc) {
       FreeLists.erase(it);
-      OnlineDescriptorHeap[FreeData.Index]->Reset();
-      return OnlineDescriptorHeap[FreeData.Index];
+      OnlineDescriptorHeap[freeData.Index]->Reset();
+      return OnlineDescriptorHeap[freeData.Index];
     }
   }
 
   return nullptr;
 }
 
-void jOnlineDescriptorHeapBlocks_DX12::Free(int32_t InIndex) {
+void OnlineDescriptorHeapBlocksDx12::Free(int32_t InIndex) {
   ScopedLock s(&DescriptorBlockLock);
 
-  jFreeData FreeData
+  FreeData freeData
       = {.ReleasedFrame = g_rhi_dx12->CurrentFrameNumber, .Index = InIndex};
-  assert(!FreeLists.contains(FreeData));
-  FreeLists.insert(FreeData);
+  assert(!FreeLists.contains(freeData));
+  FreeLists.insert(freeData);
 }
 
 }  // namespace game_engine
