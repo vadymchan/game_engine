@@ -8,7 +8,7 @@
 
 namespace game_engine {
 
-bool jCommandBuffer_DX12::Begin() const {
+bool CommandBufferDx12::Begin() const {
   Reset();
 
   assert(OnlineDescriptorHeap && OnlineSamplerDescriptorHeap
@@ -22,7 +22,7 @@ bool jCommandBuffer_DX12::Begin() const {
   return true;
 }
 
-void jCommandBuffer_DX12::Reset() const {
+void CommandBufferDx12::Reset() const {
   if (IsClosed) {
     HRESULT hr;
 
@@ -53,24 +53,24 @@ void jCommandBuffer_DX12::Reset() const {
   }
 }
 
-void* jCommandBuffer_DX12::GetFenceHandle() const {
-  return Owner->Fence ? Owner->Fence->GetHandle() : nullptr;
+void* CommandBufferDx12::GetFenceHandle() const {
+  return Owner->m_fence ? Owner->m_fence->GetHandle() : nullptr;
 }
 
-void jCommandBuffer_DX12::SetFence(void* InFence) {
-  // Fence = (jFence_DX12*)InFence;
+void CommandBufferDx12::SetFence(void* InFence) {
+  // m_fence = (FenceDx12*)InFence;
   assert(0);
 }
 
-jFence* jCommandBuffer_DX12::GetFence() const {
-  return Owner->Fence;
+Fence* CommandBufferDx12::GetFence() const {
+  return Owner->m_fence;
 }
 
-bool jCommandBuffer_DX12::IsCompleteForWaitFence() {
-  return Owner->Fence->IsComplete(FenceValue);
+bool CommandBufferDx12::IsCompleteForWaitFence() {
+  return Owner->m_fence->IsComplete(FenceValue);
 }
 
-bool jCommandBuffer_DX12::End() const {
+bool CommandBufferDx12::End() const {
   if (IsClosed) {
     return true;
   }
