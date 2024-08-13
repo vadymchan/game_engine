@@ -3,7 +3,7 @@
 
 namespace game_engine {
 
-jCompiledShader_DX12::~jCompiledShader_DX12() {
+CompiledShaderDx12::~CompiledShaderDx12() {
   ShaderBlob.Reset();
   ShaderBlob = nullptr;
 }
