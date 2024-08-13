@@ -10,64 +10,64 @@ void DrawCommand::PrepareToDraw(bool InIsPositionOnly) {
   if (!Test) {
     // GetShaderBindings
     if (view) {
-      view->GetShaderBindingInstance(shaderBindingInstanceArray,
+      view->GetShaderBindingInstance(m_shaderBindingInstanceArray,
                                      RenderFrameContextPtr->UseForwardRenderer);
     }
 
     // GetShaderBindings
     OneRenderObjectUniformBuffer = RenderObject->CreateShaderBindingInstance();
-    shaderBindingInstanceArray.Add(OneRenderObjectUniformBuffer.get());
+    m_shaderBindingInstanceArray.Add(OneRenderObjectUniformBuffer.get());
 
-    if (Material) {
-      shaderBindingInstanceArray.Add(
-          Material->CreateShaderBindingInstance().get());
+    if (m_material) {
+      m_shaderBindingInstanceArray.Add(
+          m_material->CreateShaderBindingInstance().get());
     }
   }
 
   // Gather ShaderBindings
-  jShaderBindingLayoutArray ShaderBindingLayoutArray;
-  for (int32_t i = 0; i < shaderBindingInstanceArray.NumOfData; ++i) {
+  ShaderBindingLayoutArray shaderBindingLayoutArray;
+  for (int32_t i = 0; i < m_shaderBindingInstanceArray.NumOfData; ++i) {
     // Add DescriptorSetLayout data
-    ShaderBindingLayoutArray.Add(
-        shaderBindingInstanceArray[i]->ShaderBindingsLayouts);
+    shaderBindingLayoutArray.Add(
+        m_shaderBindingInstanceArray[i]->ShaderBindingsLayouts);
 
     // Add shaderBindingInstanceCombiner data : DescriptorSets, DynamicOffsets
     shaderBindingInstanceCombiner.DescriptorSetHandles.Add(
-        shaderBindingInstanceArray[i]->GetHandle());
+        m_shaderBindingInstanceArray[i]->GetHandle());
     const std::vector<uint32_t>* pDynamicOffsetTest
-        = shaderBindingInstanceArray[i]->GetDynamicOffsets();
+        = m_shaderBindingInstanceArray[i]->GetDynamicOffsets();
     if (pDynamicOffsetTest && pDynamicOffsetTest->size()) {
       shaderBindingInstanceCombiner.DynamicOffsets.Add(
           (void*)pDynamicOffsetTest->data(),
           (int32_t)pDynamicOffsetTest->size());
     }
   }
-  shaderBindingInstanceCombiner.shaderBindingInstanceArray
-      = &shaderBindingInstanceArray;
+  shaderBindingInstanceCombiner.m_shaderBindingInstanceArray
+      = &m_shaderBindingInstanceArray;
 
   const auto& RenderObjectGeoDataPtr = RenderObject->GeometryDataPtr;
 
-  jVertexBufferArray VertexBufferArray;
-  VertexBufferArray.Add(
+  VertexBufferArray vertexBufferArray;
+  vertexBufferArray.Add(
       InIsPositionOnly
           ? RenderObjectGeoDataPtr->VertexBuffer_PositionOnlyPtr.get()
           : RenderObjectGeoDataPtr->VertexBufferPtr.get());
   if (OverrideInstanceData) {
-    VertexBufferArray.Add(OverrideInstanceData);
+    vertexBufferArray.Add(OverrideInstanceData);
   } else if (RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr) {
-    VertexBufferArray.Add(
+    vertexBufferArray.Add(
         RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr.get());
   }
 
   // Create Pipeline
   CurrentPipelineStateInfo
-      = (jPipelineStateInfo*)g_rhi->CreatePipelineStateInfo(
+      = (PipelineStateInfo*)g_rhi->CreatePipelineStateInfo(
           PipelineStateFixed,
           Shader,
-          VertexBufferArray,
-          RenderPass,
-          ShaderBindingLayoutArray,
-          PushConstant,
+          vertexBufferArray,
+          m_renderPass,
+          shaderBindingLayoutArray,
+          m_pushConstant,
           SubpassIndex);
 
   IsPositionOnly = InIsPositionOnly;
@@ -99,13 +99,13 @@ void DrawCommand::Draw() const {
   // TODO: add check to Vulkan
   bool isUseVulkan = false;
   if (isUseVulkan) {
-    if (PushConstant && PushConstant->IsValid()) {
-      const ResourceContainer<jPushConstantRange>* pushConstantRanges
-          = PushConstant->GetPushConstantRanges();
+    if (m_pushConstant && m_pushConstant->IsValid()) {
+      const ResourceContainer<PushConstantRange>* pushConstantRanges
+          = m_pushConstant->GetPushConstantRanges();
       assert(pushConstantRanges);
       if (pushConstantRanges) {
         for (int32_t i = 0; i < pushConstantRanges->NumOfData; ++i) {
-          const jPushConstantRange& range = (*pushConstantRanges)[i];
+          const PushConstantRange& range = (*pushConstantRanges)[i];
           vkCmdPushConstants(
               (VkCommandBuffer)RenderFrameContextPtr->GetActiveCommandBuffer()
                   ->GetNativeHandle(),
@@ -114,7 +114,7 @@ void DrawCommand::Draw() const {
               GetVulkanShaderAccessFlags(range.AccessStageFlag),
               range.Offset,
               range.Size,
-              PushConstant->GetConstantData());
+              m_pushConstant->GetConstantData());
         }
       }
     }
@@ -124,7 +124,7 @@ void DrawCommand::Draw() const {
 
   // Draw
   const auto&          RenderObjectGeoDataPtr = RenderObject->GeometryDataPtr;
-  const jVertexBuffer* InstanceData
+  const VertexBuffer* InstanceData
       = OverrideInstanceData
           ? OverrideInstanceData
           : RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr.get();
