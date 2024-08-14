@@ -11,28 +11,28 @@ namespace game_engine {
 
 void SamplerStateInfoVk::Initialize() {
   GetHash();
-  SamplerStateInfo.sType     = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  SamplerStateInfo.magFilter = GetVulkanTextureFilterType(Magnification);
-  SamplerStateInfo.minFilter = GetVulkanTextureFilterType(Minification);
+  m_samplerStateInfo.sType     = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  m_samplerStateInfo.magFilter = GetVulkanTextureFilterType(Magnification);
+  m_samplerStateInfo.minFilter = GetVulkanTextureFilterType(Minification);
 
-  SamplerStateInfo.addressModeU = GetVulkanTextureAddressMode(AddressU);
-  SamplerStateInfo.addressModeV = GetVulkanTextureAddressMode(AddressV);
-  SamplerStateInfo.addressModeW = GetVulkanTextureAddressMode(AddressW);
+  m_samplerStateInfo.addressModeU = GetVulkanTextureAddressMode(AddressU);
+  m_samplerStateInfo.addressModeV = GetVulkanTextureAddressMode(AddressV);
+  m_samplerStateInfo.addressModeW = GetVulkanTextureAddressMode(AddressW);
 
-  SamplerStateInfo.anisotropyEnable = (MaxAnisotropy > 1);
-  SamplerStateInfo.maxAnisotropy    = MaxAnisotropy;
+  m_samplerStateInfo.anisotropyEnable = (MaxAnisotropy > 1);
+  m_samplerStateInfo.maxAnisotropy    = MaxAnisotropy;
 
-  SamplerStateInfo.unnormalizedCoordinates = VK_FALSE;
+  m_samplerStateInfo.unnormalizedCoordinates = VK_FALSE;
 
-  SamplerStateInfo.compareEnable = IsEnableComparisonMode;
-  SamplerStateInfo.compareOp     = GetVulkanCompareOp(ComparisonFunc);
+  m_samplerStateInfo.compareEnable = IsEnableComparisonMode;
+  m_samplerStateInfo.compareOp     = GetVulkanCompareOp(ComparisonFunc);
 
-  SamplerStateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-  SamplerStateInfo.mipLodBias = 0.0f;    // Optional
-  SamplerStateInfo.minLod     = MinLOD;  // Optional
-  SamplerStateInfo.maxLod     = MaxLOD;
+  m_samplerStateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+  m_samplerStateInfo.mipLodBias = 0.0f;    // Optional
+  m_samplerStateInfo.minLod     = MinLOD;  // Optional
+  m_samplerStateInfo.maxLod     = MaxLOD;
 
-  SamplerStateInfo.borderColor = VK_BORDER_COLOR_FLOAT_CUSTOM_EXT;
+  m_samplerStateInfo.borderColor = VK_BORDER_COLOR_FLOAT_CUSTOM_EXT;
 
   VkSamplerCustomBorderColorCreateInfoEXT CustomBorderColor{};
   CustomBorderColor.sType
@@ -40,10 +40,10 @@ void SamplerStateInfoVk::Initialize() {
   memcpy(CustomBorderColor.customBorderColor.float32,
          &BorderColor,
          sizeof(BorderColor));
-  SamplerStateInfo.pNext = &CustomBorderColor;
+  m_samplerStateInfo.pNext = &CustomBorderColor;
 
   if (vkCreateSampler(
-          g_rhi_vk->m_device_, &SamplerStateInfo, nullptr, &SamplerState)
+          g_rhi_vk->m_device_, &m_samplerStateInfo, nullptr, &SamplerState)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create sampler");
   }
@@ -63,21 +63,21 @@ void SamplerStateInfoVk::Release() {
 
 void RasterizationStateInfoVk::Initialize() {
   GetHash();
-  RasterizationStateInfo = {};
-  RasterizationStateInfo.sType
+  m_rasterizationStateInfo = {};
+  m_rasterizationStateInfo.sType
       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-  RasterizationStateInfo.depthClampEnable        = DepthClampEnable;
-  RasterizationStateInfo.rasterizerDiscardEnable = RasterizerDiscardEnable;
-  RasterizationStateInfo.polygonMode
+  m_rasterizationStateInfo.depthClampEnable        = DepthClampEnable;
+  m_rasterizationStateInfo.rasterizerDiscardEnable = RasterizerDiscardEnable;
+  m_rasterizationStateInfo.polygonMode
       = GetVulkanPolygonMode(PolygonMode);  // FILL, LINE, POINT
-  RasterizationStateInfo.lineWidth       = LineWidth;
-  RasterizationStateInfo.cullMode        = GetVulkanCullMode(CullMode);
-  RasterizationStateInfo.frontFace       = GetVulkanFrontFace(FrontFace);
-  RasterizationStateInfo.depthBiasEnable = DepthBiasEnable;
-  RasterizationStateInfo.depthBiasConstantFactor
+  m_rasterizationStateInfo.lineWidth       = LineWidth;
+  m_rasterizationStateInfo.cullMode        = GetVulkanCullMode(CullMode);
+  m_rasterizationStateInfo.frontFace       = GetVulkanFrontFace(FrontFace);
+  m_rasterizationStateInfo.depthBiasEnable = DepthBiasEnable;
+  m_rasterizationStateInfo.depthBiasConstantFactor
       = DepthBiasConstantFactor;                           // Optional
-  RasterizationStateInfo.depthBiasClamp = DepthBiasClamp;  // Optional
-  RasterizationStateInfo.depthBiasSlopeFactor
+  m_rasterizationStateInfo.depthBiasClamp = DepthBiasClamp;  // Optional
+  m_rasterizationStateInfo.depthBiasSlopeFactor
       = DepthBiasSlopeFactor;                              // Optional
 
   // VkPipelineRasterizationStateCreateFlags flags;
@@ -103,14 +103,14 @@ void RasterizationStateInfoVk::Initialize() {
 
 void StencilOpStateInfoVk::Initialize() {
   GetHash();
-  StencilOpStateInfo             = {};
-  StencilOpStateInfo.failOp      = GetVulkanStencilOp(FailOp);
-  StencilOpStateInfo.passOp      = GetVulkanStencilOp(PassOp);
-  StencilOpStateInfo.depthFailOp = GetVulkanStencilOp(DepthFailOp);
-  StencilOpStateInfo.compareOp   = GetVulkanCompareOp(CompareOp);
-  StencilOpStateInfo.compareMask = CompareMask;
-  StencilOpStateInfo.writeMask   = WriteMask;
-  StencilOpStateInfo.reference   = Reference;
+  m_stencilOpStateInfo             = {};
+  m_stencilOpStateInfo.failOp      = GetVulkanStencilOp(FailOp);
+  m_stencilOpStateInfo.passOp      = GetVulkanStencilOp(PassOp);
+  m_stencilOpStateInfo.depthFailOp = GetVulkanStencilOp(DepthFailOp);
+  m_stencilOpStateInfo.compareOp   = GetVulkanCompareOp(CompareOp);
+  m_stencilOpStateInfo.compareMask = CompareMask;
+  m_stencilOpStateInfo.writeMask   = WriteMask;
+  m_stencilOpStateInfo.reference   = Reference;
 }
 
 // DepthStencilStateInfoVk
@@ -118,23 +118,23 @@ void StencilOpStateInfoVk::Initialize() {
 
 void DepthStencilStateInfoVk::Initialize() {
   GetHash();
-  DepthStencilStateInfo = {};
-  DepthStencilStateInfo.sType
+  m_depthStencilStateInfo = {};
+  m_depthStencilStateInfo.sType
       = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-  DepthStencilStateInfo.depthTestEnable  = DepthTestEnable;
-  DepthStencilStateInfo.depthWriteEnable = DepthWriteEnable;
-  DepthStencilStateInfo.depthCompareOp   = GetVulkanCompareOp(DepthCompareOp);
-  DepthStencilStateInfo.depthBoundsTestEnable = DepthBoundsTestEnable;
-  DepthStencilStateInfo.minDepthBounds        = MinDepthBounds;  // Optional
-  DepthStencilStateInfo.maxDepthBounds        = MaxDepthBounds;  // Optional
-  DepthStencilStateInfo.stencilTestEnable     = StencilTestEnable;
+  m_depthStencilStateInfo.depthTestEnable  = DepthTestEnable;
+  m_depthStencilStateInfo.depthWriteEnable = DepthWriteEnable;
+  m_depthStencilStateInfo.depthCompareOp   = GetVulkanCompareOp(DepthCompareOp);
+  m_depthStencilStateInfo.depthBoundsTestEnable = DepthBoundsTestEnable;
+  m_depthStencilStateInfo.minDepthBounds        = MinDepthBounds;  // Optional
+  m_depthStencilStateInfo.maxDepthBounds        = MaxDepthBounds;  // Optional
+  m_depthStencilStateInfo.stencilTestEnable     = StencilTestEnable;
   if (Front) {
-    DepthStencilStateInfo.front
-        = ((StencilOpStateInfoVk*)Front)->StencilOpStateInfo;
+    m_depthStencilStateInfo.front
+        = ((StencilOpStateInfoVk*)Front)->m_stencilOpStateInfo;
   }
   if (Back) {
-    DepthStencilStateInfo.back
-        = ((StencilOpStateInfoVk*)Back)->StencilOpStateInfo;
+    m_depthStencilStateInfo.back
+        = ((StencilOpStateInfoVk*)Back)->m_stencilOpStateInfo;
   }
 }
 
@@ -265,10 +265,10 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   }
 
   assert(PipelineStateFixed);
-  assert(VertexBufferArray.NumOfData);
+  assert(m_vertexBufferArray.NumOfData);
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo2
-      = ((VertexBufferVk*)VertexBufferArray[0])->CreateVertexInputState();
+      = ((VertexBufferVk*)m_vertexBufferArray[0])->CreateVertexInputState();
 
   std::vector<VkVertexInputBindingDescription>   bindingDescriptions;
   std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
@@ -277,10 +277,10 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   VertexBufferVk::CreateVertexInputState(vertexInputInfo,
                                          bindingDescriptions,
                                          attributeDescriptions,
-                                         VertexBufferArray);
+                                         m_vertexBufferArray);
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly
-      = ((VertexBufferVk*)VertexBufferArray[0])->CreateInputAssemblyState();
+      = ((VertexBufferVk*)m_vertexBufferArray[0])->CreateInputAssemblyState();
 
   const auto&             Viewports = PipelineStateFixed->viewports;
   std::vector<VkViewport> vkViewports;
@@ -331,17 +331,17 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   colorBlending.logicOp       = VK_LOGIC_OP_COPY;  // Optional
 
   int32_t ColorAttachmentCountInSubpass = 0;
-  assert(RenderPass->RenderPassInfo.Subpasses.size() > SubpassIndex);
-  const jSubpass& SelectedSubpass
-      = RenderPass->RenderPassInfo.Subpasses[SubpassIndex];
+  assert(m_renderPass->m_renderPassInfo.Subpasses.size() > SubpassIndex);
+  const Subpass& SelectedSubpass
+      = m_renderPass->m_renderPassInfo.Subpasses[SubpassIndex];
   for (int32_t i = 0;
        i < (int32_t)SelectedSubpass.OutputColorAttachments.size();
        ++i) {
     const int32_t AttachmentIndex = SelectedSubpass.OutputColorAttachments[i];
     const bool    IsColorAttachment
-        = !RenderPass->RenderPassInfo.Attachments[AttachmentIndex]
+        = !m_renderPass->m_renderPassInfo.Attachments[AttachmentIndex]
                .IsDepthAttachment()
-       && !RenderPass->RenderPassInfo.Attachments[AttachmentIndex]
+       && !m_renderPass->m_renderPassInfo.Attachments[AttachmentIndex]
                .IsResolveAttachment();
     if (IsColorAttachment) {
       ++ColorAttachmentCountInSubpass;
@@ -388,7 +388,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
 
   // 10. Pipeline layout
   vkPipelineLayout = ShaderBindingLayoutVk::CreatePipelineLayout(
-      ShaderBindingLayoutArray, PushConstant);
+      m_shaderBindingLayoutArray, m_pushConstant);
 
   VkGraphicsPipelineCreateInfo pipelineInfo = {};
   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -422,17 +422,17 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   pipelineInfo.pViewportState      = &viewportState;
   pipelineInfo.pRasterizationState
       = &((RasterizationStateInfoVk*)PipelineStateFixed->RasterizationState)
-             ->RasterizationStateInfo;
+             ->m_rasterizationStateInfo;
   pipelineInfo.pMultisampleState
       = &((RasterizationStateInfoVk*)PipelineStateFixed->RasterizationState)
              ->MultisampleStateInfo;
   pipelineInfo.pDepthStencilState
       = &((DepthStencilStateInfoVk*)PipelineStateFixed->DepthStencilState)
-             ->DepthStencilStateInfo;
+             ->m_depthStencilStateInfo;
   pipelineInfo.pColorBlendState = &colorBlending;
   pipelineInfo.pDynamicState    = &dynamicState;
   pipelineInfo.layout           = vkPipelineLayout;
-  pipelineInfo.renderPass       = (VkRenderPass)RenderPass->GetRenderPass();
+  pipelineInfo.renderPass       = (VkRenderPass)m_renderPass->GetRenderPass();
   pipelineInfo.subpass          = SubpassIndex;      // index of subpass
 
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;  // Optional
@@ -512,7 +512,7 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
   }
 
   vkPipelineLayout = ShaderBindingLayoutVk::CreatePipelineLayout(
-      ShaderBindingLayoutArray, PushConstant);
+      m_shaderBindingLayoutArray, m_pushConstant);
 
   VkComputePipelineCreateInfo computePipelineCreateInfo{};
   computePipelineCreateInfo.sType
@@ -545,7 +545,7 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
 }
 
 void PipelineStateInfoVk::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
   assert(vkPipeline);
   if (PipelineType == EPipelineType::Graphics) {
     vkCmdBindPipeline(
