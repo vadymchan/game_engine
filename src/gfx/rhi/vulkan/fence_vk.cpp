@@ -9,27 +9,27 @@ namespace game_engine {
 // ====================================================
 
 FenceVk::~FenceVk() {
-  if (Fence != VK_NULL_HANDLE) {
-    vkDestroyFence(g_rhi_vk->m_device_, Fence, nullptr);
+  if (m_fence != VK_NULL_HANDLE) {
+    vkDestroyFence(g_rhi_vk->m_device_, m_fence, nullptr);
   }
 }
 
 void FenceVk::WaitForFence(uint64_t timeout) {
-  assert(Fence != VK_NULL_HANDLE);
-  vkWaitForFences(g_rhi_vk->m_device_, 1, &Fence, VK_TRUE, timeout);
+  assert(m_fence != VK_NULL_HANDLE);
+  vkWaitForFences(g_rhi_vk->m_device_, 1, &m_fence, VK_TRUE, timeout);
 }
 
 void FenceVk::ResetFence() const {
-  assert(Fence != VK_NULL_HANDLE);
-  vkResetFences(g_rhi_vk->m_device_, 1, &Fence);
+  assert(m_fence != VK_NULL_HANDLE);
+  vkResetFences(g_rhi_vk->m_device_, 1, &m_fence);
 }
 
 // FenceManagerVk
 // ====================================================
 
-jFence* FenceManagerVk::GetOrCreateFence() {
+Fence* FenceManagerVk::GetOrCreateFence() {
   if (!PendingFences.empty()) {
-    jFence* fence = *PendingFences.begin();
+    Fence* fence = *PendingFences.begin();
     PendingFences.erase(PendingFences.begin());
     UsingFences.insert(fence);
     return fence;
@@ -39,7 +39,7 @@ jFence* FenceManagerVk::GetOrCreateFence() {
   VkFenceCreateInfo fenceInfo = {};
   fenceInfo.sType             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceInfo.flags             = VK_FENCE_CREATE_SIGNALED_BIT;
-  if (vkCreateFence(g_rhi_vk->m_device_, &fenceInfo, nullptr, &newFence->Fence)
+  if (vkCreateFence(g_rhi_vk->m_device_, &fenceInfo, nullptr, &newFence->m_fence)
       == VK_SUCCESS) {
     UsingFences.insert(newFence);
   } else {
@@ -51,7 +51,7 @@ jFence* FenceManagerVk::GetOrCreateFence() {
   return newFence;
 }
 
-void FenceManagerVk::ReturnFence(jFence* fence) {
+void FenceManagerVk::ReturnFence(Fence* fence) {
   UsingFences.erase(fence);
   PendingFences.insert(fence);
 }
