@@ -19,7 +19,7 @@ void RingBufferVk::Create(EVulkanBufferBits bufferBits,
       bufferBits,
       EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
       VkDeviceSize(totalSize),
-      Buffer,
+      m_buffer,
       BufferMemory,
       RingBufferSize);
 
@@ -70,9 +70,9 @@ uint64_t RingBufferVk::Alloc(uint64_t allocSize) {
 void RingBufferVk::Release() {
   assert(g_rhi_vk->m_device_);
 
-  if (Buffer) {
-    vkDestroyBuffer(g_rhi_vk->m_device_, Buffer, nullptr);
-    Buffer = nullptr;
+  if (m_buffer) {
+    vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer, nullptr);
+    m_buffer = nullptr;
   }
 
   if (BufferMemory) {
