@@ -667,23 +667,23 @@ enum class ETextureCreateFlag : uint32_t {
 };
 DECLARE_ENUM_BIT_OPERATORS(ETextureCreateFlag)
 
-struct jDepthStencilClearType {
+struct DepthStencilClearType {
   float    Depth;
   uint32_t Stencil;
 };
 
-class jRTClearValue {
+class RTClearValue {
   public:
-  static const jRTClearValue Invalid;
+  static const RTClearValue Invalid;
 
   union jClearValueType {
-    float                  Color[4];
-    jDepthStencilClearType DepthStencil;
+    float                 Color[4];
+    DepthStencilClearType DepthStencil;
   };
 
-  constexpr jRTClearValue() = default;
+  constexpr RTClearValue() = default;
 
-  jRTClearValue(const math::Vector4Df& InColor)
+  RTClearValue(const math::Vector4Df& InColor)
       : Type(ERTClearType::Color) {
     ClearValue.Color[0] = InColor.x();
     ClearValue.Color[1] = InColor.y();
@@ -691,7 +691,7 @@ class jRTClearValue {
     ClearValue.Color[3] = InColor.w();
   }
 
-  constexpr jRTClearValue(float InR, float InG, float InB, float InA)
+  constexpr RTClearValue(float InR, float InG, float InB, float InA)
       : Type(ERTClearType::Color) {
     ClearValue.Color[0] = InR;
     ClearValue.Color[1] = InG;
@@ -699,7 +699,7 @@ class jRTClearValue {
     ClearValue.Color[3] = InA;
   }
 
-  constexpr jRTClearValue(float InDepth, uint32_t InStencil)
+  constexpr RTClearValue(float InDepth, uint32_t InStencil)
       : Type(ERTClearType::DepthStencil) {
     ClearValue.DepthStencil.Depth   = InDepth;
     ClearValue.DepthStencil.Stencil = InStencil;
@@ -721,7 +721,7 @@ class jRTClearValue {
 
   const float* GetCleraColor() const { return &ClearValue.Color[0]; }
 
-  jDepthStencilClearType GetCleraDepthStencil() const {
+  DepthStencilClearType GetCleraDepthStencil() const {
     return ClearValue.DepthStencil;
   }
 
@@ -764,7 +764,6 @@ struct BaseVertex {
 struct PositionOnlyVertex {
   math::Vector3Df Pos = math::g_zeroVector<float, 3>();
 };
-
 
 }  // namespace game_engine
 
