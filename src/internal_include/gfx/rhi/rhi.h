@@ -28,22 +28,23 @@ extern std::int32_t GMaxCheckCountForRealTimeShaderUpdate;
 extern std::int32_t GSleepMSForRealTimeShaderUpdate;
 extern bool         GUseRealTimeShaderUpdate;
 
-extern std::shared_ptr<jTexture>  GWhiteTexture;
-extern std::shared_ptr<jTexture>  GBlackTexture;
-extern std::shared_ptr<jTexture>  GWhiteCubeTexture;
-extern std::shared_ptr<jTexture>  GNormalTexture;
-extern std::shared_ptr<jMaterial> GDefaultMaterial;
+extern std::shared_ptr<Texture>  GWhiteTexture;
+extern std::shared_ptr<Texture>  GBlackTexture;
+extern std::shared_ptr<Texture>  GWhiteCubeTexture;
+extern std::shared_ptr<Texture>  GNormalTexture;
+extern std::shared_ptr<Material> GDefaultMaterial;
 
 struct Shader;
 struct ShaderInfo;
 
 // struct ImageData; // #include "file_loader/image_file_loader.h"
 
-class jRHI {
+// TODO: consider whether to name RHI or Rhi
+class RHI {
   public:
-  jRHI();
+  RHI();
 
-  virtual ~jRHI() {}
+  virtual ~RHI() {}
 
   // BEGIN: shader related functions and variables
   // =================================================================
@@ -80,15 +81,15 @@ class jRHI {
 
   virtual void* GetWindow() const { return nullptr; }
 
-  virtual jSamplerStateInfo* CreateSamplerState(
-      const jSamplerStateInfo& info) const {
+  virtual SamplerStateInfo* CreateSamplerState(
+      const SamplerStateInfo& info) const {
     return nullptr;
   }
 
-  virtual void ReleaseSamplerState(jSamplerStateInfo* samplerState) const {}
+  virtual void ReleaseSamplerState(SamplerStateInfo* samplerState) const {}
 
   virtual void BindSamplerState(std::int32_t             index,
-                                const jSamplerStateInfo* samplerState) const {}
+                                const SamplerStateInfo* samplerState) const {}
 
   virtual void SetClear(ERenderBufferType typeBit) const {}
 
@@ -104,7 +105,7 @@ class jRHI {
                               const std::int32_t* value,
                               std::int32_t        bufferIndex) const {}
 
-  virtual void SetFrameBuffer(const jFrameBuffer* rt,
+  virtual void SetFrameBuffer(const FrameBuffer* rt,
                               std::int32_t        index = 0,
                               bool                mrt   = false) const {}
 
@@ -118,30 +119,30 @@ class jRHI {
 
   virtual void SetTextureWrap(int flag) const {}
 
-  virtual void SetTexture(std::int32_t index, const jTexture* texture) const {}
+  virtual void SetTexture(std::int32_t index, const Texture* texture) const {}
 
   virtual void DrawArrays(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
       std::int32_t                                vertStartIndex,
       std::int32_t                                vertCount) const {}
 
   virtual void DrawArraysInstanced(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
       std::int32_t                                vertStartIndex,
       std::int32_t                                vertCount,
       std::int32_t                                instanceCount) const {}
 
   virtual void DrawElements(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
       std::int32_t                                elementSize,
       std::int32_t                                startIndex,
       std::int32_t                                indexCount) const {}
 
   virtual void DrawElementsInstanced(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
       std::int32_t                                elementSize,
       std::int32_t                                startIndex,
@@ -149,7 +150,7 @@ class jRHI {
       std::int32_t                                instanceCount) const {}
 
   virtual void DrawElementsBaseVertex(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
       std::int32_t                                elementSize,
       std::int32_t                                startIndex,
@@ -157,7 +158,7 @@ class jRHI {
       std::int32_t                                baseVertexIndex) const {}
 
   virtual void DrawElementsInstancedBaseVertex(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
       std::int32_t                                elementSize,
       std::int32_t                                startIndex,
@@ -166,21 +167,21 @@ class jRHI {
       std::int32_t                                instanceCount) const {}
 
   virtual void DrawIndirect(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
-      jBuffer*                                    buffer,
+      Buffer*                                    buffer,
       std::int32_t                                startIndex,
       std::int32_t                                drawCount) const {}
 
   virtual void DrawElementsIndirect(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       // EPrimitiveType                              type,
-      jBuffer*                                    buffer,
+      Buffer*                                    buffer,
       std::int32_t                                startIndex,
       std::int32_t                                drawCount) const {}
 
   virtual void DispatchCompute(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       std::uint32_t                               numGroupsX,
       std::uint32_t                               numGroupsY,
       std::uint32_t                               numGroupsZ) const {}
@@ -346,14 +347,14 @@ class jRHI {
     return false;
   }
 
-  virtual jTexture* CreateNullTexture() const { return nullptr; }
+  virtual Texture* CreateNullTexture() const { return nullptr; }
 
-  virtual std::shared_ptr<jTexture> CreateTextureFromData(
+  virtual std::shared_ptr<Texture> CreateTextureFromData(
       const ImageData* InImageData) const {
     return nullptr;
   }
 
-  virtual jTexture* CreateCubeTextureFromData(std::vector<void*> faces,
+  virtual Texture* CreateCubeTextureFromData(std::vector<void*> faces,
                                               std::int32_t       width,
                                               std::int32_t       height,
                                               bool               sRGB,
@@ -363,12 +364,12 @@ class jRHI {
     return nullptr;
   }
 
-  virtual jFrameBuffer* CreateFrameBuffer(const jFrameBufferInfo& info) const {
+  virtual FrameBuffer* CreateFrameBuffer(const FrameBufferInfo& info) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<jRenderTarget> CreateRenderTarget(
-      const jRenderTargetInfo& info) const {
+  virtual std::shared_ptr<RenderTarget> CreateRenderTarget(
+      const RenderTargetInfo& info) const {
     return nullptr;
   }
 
@@ -414,19 +415,19 @@ class jRHI {
   virtual void EndDebugEvent() const {}
 
   // TODO: implement
-  //virtual void BeginDebugEvent(jCommandBuffer*        InCommandBuffer,
+  //virtual void BeginDebugEvent(CommandBuffer*        InCommandBuffer,
   //                             const char*            InName,
   //                             const math::Vector4Df& InColor
   //                             = math::ColorGreen) const {}
 
-  virtual void EndDebugEvent(jCommandBuffer* InCommandBuffer) const {}
+  virtual void EndDebugEvent(CommandBuffer* InCommandBuffer) const {}
 
-  virtual void GenerateMips(const jTexture* texture) const {}
+  virtual void GenerateMips(const Texture* texture) const {}
 
   virtual void EnableWireframe(bool enable) const {}
 
   virtual void SetImageTexture(std::int32_t            index,
-                               const jTexture*         texture,
+                               const Texture*         texture,
                                EImageTextureAccessType type) const {}
 
   virtual void SetPolygonMode(EFace        face,
@@ -449,52 +450,52 @@ class jRHI {
 
   virtual void Finish() const {}
 
-  virtual std::shared_ptr<jRenderFrameContext> BeginRenderFrame() {
+  virtual std::shared_ptr<RenderFrameContext> BeginRenderFrame() {
     return nullptr;
   }
 
   virtual void EndRenderFrame(
-      const std::shared_ptr<jRenderFrameContext>& renderFrameContextPtr) {}
+      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {}
 
   virtual void QueueSubmit(
-      const std::shared_ptr<jRenderFrameContext>& renderFrameContextPtr,
-      class jSemaphore*                           InSignalSemaphore) {}
+      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
+      class Semaphore*                           InSignalSemaphore) {}
 
-  virtual jRasterizationStateInfo* CreateRasterizationState(
-      const jRasterizationStateInfo& initializer) const {
+  virtual RasterizationStateInfo* CreateRasterizationState(
+      const RasterizationStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual jStencilOpStateInfo* CreateStencilOpStateInfo(
-      const jStencilOpStateInfo& initializer) const {
+  virtual StencilOpStateInfo* CreateStencilOpStateInfo(
+      const StencilOpStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual jDepthStencilStateInfo* CreateDepthStencilState(
-      const jDepthStencilStateInfo& initializer) const {
+  virtual DepthStencilStateInfo* CreateDepthStencilState(
+      const DepthStencilStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual jBlendingStateInfo* CreateBlendingState(
-      const jBlendingStateInfo& initializer) const {
+  virtual BlendingStateInfo* CreateBlendingState(
+      const BlendingStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual jPipelineStateInfo* CreatePipelineStateInfo(
-      const jPipelineStateFixedInfo*   pipelineStateFixed,
+  virtual PipelineStateInfo* CreatePipelineStateInfo(
+      const PipelineStateFixedInfo*   pipelineStateFixed,
       const GraphicsPipelineShader     shader,
-      const jVertexBufferArray&        InVertexBufferArray,
-      const jRenderPass*               renderPass,
-      const jShaderBindingLayoutArray& InShaderBindingArray,
-      const jPushConstant*             InPushConstant,
+      const VertexBufferArray&        InVertexBufferArray,
+      const RenderPass*               renderPass,
+      const ShaderBindingLayoutArray& InShaderBindingArray,
+      const PushConstant*             InPushConstant,
       std::int32_t                     InSubpassIndex) const {
     return nullptr;
   }
 
-  virtual jPipelineStateInfo* CreateComputePipelineStateInfo(
+  virtual PipelineStateInfo* CreateComputePipelineStateInfo(
       const Shader*                    shader,
-      const jShaderBindingLayoutArray& InShaderBindingArray,
-      const jPushConstant*             pushConstant) const {
+      const ShaderBindingLayoutArray& InShaderBindingArray,
+      const PushConstant*             pushConstant) const {
     return nullptr;
   }
 
@@ -509,55 +510,55 @@ class jRHI {
 
   virtual void RemovePipelineStateInfo(size_t InHash) {}
 
-  virtual jShaderBindingLayout* CreateShaderBindings(
-      const jShaderBindingArray& InShaderBindingArray) const {
+  virtual ShaderBindingLayout* CreateShaderBindings(
+      const ShaderBindingArray& InShaderBindingArray) const {
     assert(0);
     return nullptr;
   }
 
-  virtual std::shared_ptr<jShaderBindingInstance> CreateShaderBindingInstance(
-      const jShaderBindingArray&       InShaderBindingArray,
-      const jShaderBindingInstanceType InType) const {
+  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+      const ShaderBindingArray&       InShaderBindingArray,
+      const ShaderBindingInstanceType InType) const {
     assert(0);
     return nullptr;
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const std::vector<jAttachment>& colorAttachments,
+  virtual RenderPass* GetOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
       const math::Vector2Di&          offset,
       const math::Vector2Di&          extent) const {
     return nullptr;
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const std::vector<jAttachment>& colorAttachments,
-      const jAttachment&              depthAttachment,
+  virtual RenderPass* GetOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
       const math::Vector2Di&          offset,
       const math::Vector2Di&          extent) const {
     return nullptr;
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const std::vector<jAttachment>& colorAttachments,
-      const jAttachment&              depthAttachment,
-      const jAttachment&              colorResolveAttachment,
+  virtual RenderPass* GetOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const Attachment&              colorResolveAttachment,
       const math::Vector2Di&          offset,
       const math::Vector2Di&          extent) const {
     return nullptr;
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual jRenderPass* GetOrCreateRenderPass(
-      const jRenderPassInfo& renderPassInfo,
+  virtual RenderPass* GetOrCreateRenderPass(
+      const RenderPassInfo& renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const {
     return nullptr;
   }
 
-  virtual jCommandBufferManager* GetCommandBufferManager() const {
+  virtual CommandBufferManager* GetCommandBufferManager() const {
     return nullptr;
   }
 
@@ -566,43 +567,43 @@ class jRHI {
   }
 
   // ResourceBarrier
-  virtual bool TransitionLayout(jCommandBuffer* commandBuffer,
-                                jTexture*       texture,
+  virtual bool TransitionLayout(CommandBuffer* commandBuffer,
+                                Texture*       texture,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayoutImmediate(jTexture*       texture,
+  virtual bool TransitionLayoutImmediate(Texture*       texture,
                                          EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayout(jCommandBuffer* commandBuffer,
-                                jBuffer*        buffer,
+  virtual bool TransitionLayout(CommandBuffer* commandBuffer,
+                                Buffer*        buffer,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayoutImmediate(jBuffer*        buffer,
+  virtual bool TransitionLayoutImmediate(Buffer*        buffer,
                                          EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual void UAVBarrier(jCommandBuffer* commandBuffer,
-                          jTexture*       texture) const {}
+  virtual void UAVBarrier(CommandBuffer* commandBuffer,
+                          Texture*       texture) const {}
 
-  virtual void UAVBarrierImmediate(jTexture* texture) const {}
+  virtual void UAVBarrierImmediate(Texture* texture) const {}
 
-  virtual void UAVBarrier(jCommandBuffer* commandBuffer,
-                          jBuffer*        buffer) const {}
+  virtual void UAVBarrier(CommandBuffer* commandBuffer,
+                          Buffer*        buffer) const {}
 
-  virtual void UAVBarrierImmediate(jBuffer* buffer) const {}
+  virtual void UAVBarrierImmediate(Buffer* buffer) const {}
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual std::shared_ptr<jSwapchain> GetSwapchain() const { return nullptr; }
+  virtual std::shared_ptr<Swapchain> GetSwapchain() const { return nullptr; }
 
-  virtual class jSwapchainImage* GetSwapchainImage(std::int32_t InIndex) const {
+  virtual class SwapchainImage* GetSwapchainImage(std::int32_t InIndex) const {
     return nullptr;
   }
 
@@ -610,34 +611,34 @@ class jRHI {
 
   virtual std::uint32_t GetMaxSwapchainCount() const { return 0; }
 
-  virtual void BindShadingRateImage(jCommandBuffer* commandBuffer,
-                                    jTexture*       vrstexture) const {}
+  virtual void BindShadingRateImage(CommandBuffer* commandBuffer,
+                                    Texture*       vrstexture) const {}
 
-  virtual jMemoryPool* GetMemoryPool() const { return nullptr; }
+  virtual MemoryPool* GetMemoryPool() const { return nullptr; }
 
-  virtual void NextSubpass(const jCommandBuffer* commandBuffer) const {}
+  virtual void NextSubpass(const CommandBuffer* commandBuffer) const {}
 
   virtual void BindGraphicsShaderBindingInstances(
-      const jCommandBuffer*                InCommandBuffer,
-      const jPipelineStateInfo*            InPiplineState,
+      const CommandBuffer*                InCommandBuffer,
+      const PipelineStateInfo*            InPiplineState,
       const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
       std::uint32_t                        InFirstSet) const {}
 
   virtual void BindComputeShaderBindingInstances(
-      const jCommandBuffer*                InCommandBuffer,
-      const jPipelineStateInfo*            InPiplineState,
+      const CommandBuffer*                InCommandBuffer,
+      const PipelineStateInfo*            InPiplineState,
       const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
       std::uint32_t                        InFirstSet) const {}
 
   virtual void BindRaytracingShaderBindingInstances(
-      const jCommandBuffer*                InCommandBuffer,
-      const jPipelineStateInfo*            InPiplineState,
+      const CommandBuffer*                InCommandBuffer,
+      const PipelineStateInfo*            InPiplineState,
       const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
       std::uint32_t                        InFirstSet) const {}
 
-  virtual jFenceManager* GetFenceManager() { return nullptr; }
+  virtual FenceManager* GetFenceManager() { return nullptr; }
 
-  virtual jSemaphoreManager* GetSemaphoreManager() { return nullptr; }
+  virtual SemaphoreManager* GetSemaphoreManager() { return nullptr; }
 
   virtual std::uint32_t GetCurrentFrameIndex() const { return 0; }
 
@@ -655,14 +656,14 @@ class jRHI {
 
   // virtual RaytracingScene* CreateRaytracingScene() const { return nullptr; }
 
-  virtual jCommandBuffer* BeginSingleTimeCommands() const { return nullptr; }
+  virtual CommandBuffer* BeginSingleTimeCommands() const { return nullptr; }
 
-  virtual void EndSingleTimeCommands(jCommandBuffer* commandBuffer) const {}
+  virtual void EndSingleTimeCommands(CommandBuffer* commandBuffer) const {}
 
   // RaytracingScene* raytracingScene = nullptr;
 
   // CreateBuffers
-  virtual std::shared_ptr<jBuffer> CreateStructuredBuffer(
+  virtual std::shared_ptr<Buffer> CreateStructuredBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       std::uint64_t     InStride,
@@ -673,7 +674,7 @@ class jRHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<jBuffer> CreateRawBuffer(
+  virtual std::shared_ptr<Buffer> CreateRawBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       EBufferCreateFlag InBufferCreateFlag,
@@ -683,7 +684,7 @@ class jRHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<jBuffer> CreateFormattedBuffer(
+  virtual std::shared_ptr<Buffer> CreateFormattedBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
       ETextureFormat    InFormat,
@@ -699,17 +700,17 @@ class jRHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<jVertexBuffer> CreateVertexBuffer(
+  virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(
       const std::shared_ptr<VertexStreamData>& streamData) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<jIndexBuffer> CreateIndexBuffer(
+  virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(
       const std::shared_ptr<IndexStreamData>& streamData) const {
     return nullptr;
   }
 
-  template <typename T = jBuffer>
+  template <typename T = Buffer>
   inline std::shared_ptr<T> CreateStructuredBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
@@ -728,7 +729,7 @@ class jRHI {
                                InDataSize));
   }
 
-  template <typename T = jBuffer>
+  template <typename T = Buffer>
   inline std::shared_ptr<T> CreateRawBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
@@ -744,7 +745,7 @@ class jRHI {
                                                        InDataSize));
   }
 
-  template <typename T = jBuffer>
+  template <typename T = Buffer>
   inline std::shared_ptr<T> CreateFormattedBuffer(
       std::uint64_t     InSize,
       std::uint64_t     InAlignment,
@@ -772,7 +773,7 @@ class jRHI {
   //////////////////////////////////////////////////////////////////////////
 
   // Create Images
-  virtual std::shared_ptr<jTexture> Create2DTexture(
+  virtual std::shared_ptr<Texture> Create2DTexture(
       std::uint32_t        InWidth,
       std::uint32_t        InHeight,
       std::uint32_t        InArrayLayers,
@@ -781,12 +782,12 @@ class jRHI {
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const jRTClearValue& InClearValue    = jRTClearValue::Invalid,
+      const RTClearValue& InClearValue    = RTClearValue::Invalid,
       const wchar_t*       InResourceName  = nullptr) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<jTexture> CreateCubeTexture(
+  virtual std::shared_ptr<Texture> CreateCubeTexture(
       std::uint32_t        InWidth,
       std::uint32_t        InHeight,
       std::uint32_t        InMipLevels,
@@ -794,7 +795,7 @@ class jRHI {
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const jRTClearValue& InClearValue    = jRTClearValue::Invalid,
+      const RTClearValue& InClearValue    = RTClearValue::Invalid,
       const wchar_t*       InResourceName  = nullptr) const {
     return nullptr;
   }
@@ -809,7 +810,7 @@ class jRHI {
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageCopyData = {},
-      const jRTClearValue& InClearValue    = jRTClearValue::Invalid,
+      const RTClearValue& InClearValue    = RTClearValue::Invalid,
       const wchar_t*       InResourceName  = nullptr) const {
     return std::static_pointer_cast<T>(Create2DTexture(InWidth,
                                                        InHeight,
@@ -832,7 +833,7 @@ class jRHI {
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageCopyData = {},
-      const jRTClearValue& InClearValue    = jRTClearValue::Invalid,
+      const RTClearValue& InClearValue    = RTClearValue::Invalid,
       const wchar_t*       InResourceName  = nullptr) const {
     return std::static_pointer_cast<T>(CreateCubeTexture(InWidth,
                                                          InHeight,
@@ -848,14 +849,14 @@ class jRHI {
   //////////////////////////////////////////////////////////////////////////
 };
 
-extern jRHI* g_rhi;
+extern RHI* g_rhi;
 
 // TODO: consider move pipeline state info templated files to another file
 // (current problem - g_rhi dependecty so not possible to move in
 // pipeline_state_info file)
 
 /**
- * \brief Constructs a SamplerStateInfo object with configurable parameters
+ * \brief Constructs a m_samplerStateInfo object with configurable parameters
  * and a default border color.
  *
  * The \a BorderColor parameter is provided at runtime instead of as a
@@ -879,14 +880,14 @@ template <ETextureFilter         TMinification  = ETextureFilter::NEAREST,
           ETextureComparisonMode TTextureComparisonMode
           = ETextureComparisonMode::NONE>
 struct TSamplerStateInfo {
-  static jSamplerStateInfo* Create(math::Vector4Df BorderColor
+  static SamplerStateInfo* Create(math::Vector4Df BorderColor
                                    = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f)) {
-    static jSamplerStateInfo* CachedInfo = nullptr;
+    static SamplerStateInfo* CachedInfo = nullptr;
     if (CachedInfo) {
       return CachedInfo;
     }
 
-    jSamplerStateInfo initializer;
+    SamplerStateInfo initializer;
     initializer.Minification           = TMinification;
     initializer.Magnification          = TMagnification;
     initializer.AddressU               = TAddressU;
@@ -935,14 +936,14 @@ struct TRasterizationStateInfo {
    * not necessary, pass EMSAASamples::COUNT_1 or any other appropriate
    * default value as the template argument.
    */
-  static jRasterizationStateInfo* Create(
+  static RasterizationStateInfo* Create(
       std::optional<EMSAASamples> sampleCountOpt = std::nullopt) {
-    static jRasterizationStateInfo* CachedInfo = nullptr;
+    static RasterizationStateInfo* CachedInfo = nullptr;
     if (CachedInfo) {
       return CachedInfo;
     }
 
-    jRasterizationStateInfo initializer;
+    RasterizationStateInfo initializer;
     initializer.PolygonMode             = TPolygonMode;
     initializer.CullMode                = TCullMode;
     initializer.FrontFace               = TFrontFace;
@@ -975,14 +976,14 @@ template <bool       TDepthTestEnable       = false,
           float      TMinDepthBounds        = 0.0f,
           float      TMaxDepthBounds        = 1.0f>
 struct TDepthStencilStateInfo {
-  static jDepthStencilStateInfo* Create(jStencilOpStateInfo* Front = nullptr,
-                                        jStencilOpStateInfo* Back  = nullptr) {
-    static jDepthStencilStateInfo* CachedInfo = nullptr;
+  static DepthStencilStateInfo* Create(StencilOpStateInfo* Front = nullptr,
+                                        StencilOpStateInfo* Back  = nullptr) {
+    static DepthStencilStateInfo* CachedInfo = nullptr;
     if (CachedInfo) {
       return CachedInfo;
     }
 
-    jDepthStencilStateInfo initializer;
+    DepthStencilStateInfo initializer;
     initializer.DepthTestEnable       = TDepthTestEnable;
     initializer.DepthWriteEnable      = TDepthWriteEnable;
     initializer.DepthCompareOp        = TDepthCompareOp;
@@ -1007,13 +1008,13 @@ template <bool         TBlendEnable    = false,
           EBlendOp     TAlphaBlendOp   = EBlendOp::ADD,
           EColorMask   TColorWriteMask = EColorMask::ALL>
 struct TBlendingStateInfo {
-  static jBlendingStateInfo* Create() {
-    static jBlendingStateInfo* CachedInfo = nullptr;
+  static BlendingStateInfo* Create() {
+    static BlendingStateInfo* CachedInfo = nullptr;
     if (CachedInfo) {
       return CachedInfo;
     }
 
-    jBlendingStateInfo initializer;
+    BlendingStateInfo initializer;
     initializer.BlendEnable    = TBlendEnable;
     initializer.Src            = TSrc;
     initializer.Dest           = TDest;
