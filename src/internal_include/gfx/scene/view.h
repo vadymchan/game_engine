@@ -30,19 +30,19 @@ class View {
   void PrepareViewUniformBufferShaderBindingInstance();
 
   void GetShaderBindingInstance(
-      jShaderBindingInstanceArray& OutShaderBindingInstanceArray,
+      ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
       bool                        InIsForwardRenderer = false) const;
 
   // TODO: currently not used
   void GetShaderBindingLayout(
-      jShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
+      ShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
       bool                        InIsForwardRenderer = false) const;
 
   const Camera*                         Camera = nullptr;
   //std::vector<ViewLight>                lights;
   //std::vector<ViewLight>                ShadowCasterLights;
   std::shared_ptr<IUniformBufferBlock>   ViewUniformBufferPtr;
-  std::shared_ptr<jShaderBindingInstance> ViewUniformBufferShaderBindingInstance;
+  std::shared_ptr<ShaderBindingInstance> ViewUniformBufferShaderBindingInstance;
 };
 
 }  // namespace game_engine
