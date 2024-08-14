@@ -48,25 +48,25 @@ class UIQuadPrimitive : public Object {
   math::Vector2Df Pos;
   math::Vector2Df Size;
 
-  // virtual void Draw(const std::shared_ptr<jRenderFrameContext>&
+  // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
   // InRenderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
-  void             SetTexture(const jTexture* texture);
+  void             SetTexture(const Texture* texture);
   void             SetUniformParams(const Shader* shader) const;
-  const jTexture* GetTexture() const;
+  const Texture* GetTexture() const;
 };
 
 class FullscreenQuadPrimitive : public Object {
   public:
-  // virtual void Draw(const std::shared_ptr<jRenderFrameContext>&
+  // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
   // InRenderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
   void SetUniformBuffer(const Shader* shader) const;
   void SetTexture(int                       index,
-                  const jTexture*          texture,
-                  const jSamplerStateInfo* samplerState);
+                  const Texture*          texture,
+                  const SamplerStateInfo* samplerState);
 };
 
 class BoundBoxObject : public Object {
@@ -197,7 +197,7 @@ class FrustumPrimitive : public Object {
   }
 
   virtual void Update(float deltaTime) override;
-  // virtual void Draw(const std::shared_ptr<jRenderFrameContext>&
+  // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
   // InRenderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
@@ -299,8 +299,8 @@ BillboardQuadPrimitive*  CreateBillobardQuad(const math::Vector3Df& pos,
                                              Camera*                camera);
 UIQuadPrimitive*         CreateUIQuad(const math::Vector2Df& pos,
                                       const math::Vector2Df& size,
-                                      jTexture*             texture);
-FullscreenQuadPrimitive* CreateFullscreenQuad(jTexture* texture);
+                                      Texture*             texture);
+FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture);
 SegmentPrimitive*        CreateSegment(const math::Vector3Df& start,
                                        const math::Vector3Df& end,
                                        float                  time,
