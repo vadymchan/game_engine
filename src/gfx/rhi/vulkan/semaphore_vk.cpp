@@ -8,17 +8,17 @@ namespace game_engine {
 // ====================================================
 
 SemaphoreVk ::~SemaphoreVk() {
-  if (Semaphore != VK_NULL_HANDLE) {
-    vkDestroySemaphore(g_rhi_vk->m_device_, Semaphore, nullptr);
+  if (m_semaphore_ != VK_NULL_HANDLE) {
+    vkDestroySemaphore(g_rhi_vk->m_device_, m_semaphore_, nullptr);
   }
 }
 
 // SemaphoreManagerVk
 // ====================================================
 
-jSemaphore* SemaphoreManagerVk::GetOrCreateSemaphore() {
+Semaphore* SemaphoreManagerVk::GetOrCreateSemaphore() {
   if (!PendingSemaphores.empty()) {
-    jSemaphore* semaphore = *PendingSemaphores.begin();
+    Semaphore* semaphore = *PendingSemaphores.begin();
     PendingSemaphores.erase(PendingSemaphores.begin());
     UsingSemaphores.insert(semaphore);
     return semaphore;
@@ -30,7 +30,7 @@ jSemaphore* SemaphoreManagerVk::GetOrCreateSemaphore() {
   if (vkCreateSemaphore(g_rhi_vk->m_device_,
                         &semaphoreInfo,
                         nullptr,
-                        &newSemaphore->Semaphore)
+                        &newSemaphore->m_semaphore_)
       == VK_SUCCESS) {
     UsingSemaphores.insert(newSemaphore);
   } else {
@@ -42,7 +42,7 @@ jSemaphore* SemaphoreManagerVk::GetOrCreateSemaphore() {
   return newSemaphore;
 }
 
-void SemaphoreManagerVk::ReturnSemaphore(jSemaphore* semaphore) {
+void SemaphoreManagerVk::ReturnSemaphore(Semaphore* semaphore) {
   UsingSemaphores.erase(semaphore);
   PendingSemaphores.insert(semaphore);
 }
