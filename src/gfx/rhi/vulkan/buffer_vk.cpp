@@ -21,15 +21,15 @@ BufferVk::BufferVk(VkDeviceSize      size,
   CreateBuffer(usage, properties, size, imageLayout);
 }
 
-void BufferVk::InitializeWithMemory(const jMemory& InMemory) {
+void BufferVk::InitializeWithMemory(const Memory& InMemory) {
   assert(InMemory.IsValid());
   HasBufferOwnership = false;
   m_buffer           = (VkBuffer)InMemory.GetBuffer();
   MappedPointer      = InMemory.GetMappedPointer();
-  m_memory           = (VkDeviceMemory)InMemory.GetMemory();
-  Offset             = InMemory.Range.Offset;
-  AllocatedSize      = InMemory.Range.DataSize;
-  Memory             = InMemory;
+  m_deviceMemory           = (VkDeviceMemory)InMemory.GetMemory();
+  Offset             = InMemory.m_range.Offset;
+  AllocatedSize      = InMemory.m_range.DataSize;
+  m_memory             = InMemory;
 }
 
 void BufferVk::Release() {
@@ -37,8 +37,8 @@ void BufferVk::Release() {
 
   if (!HasBufferOwnership) {
     // Return an allocated memory to vulkan memory pool
-    if (Memory.IsValid()) {
-      Memory.Free();
+    if (m_memory.IsValid()) {
+      m_memory.Free();
     }
 
     return;
@@ -47,11 +47,11 @@ void BufferVk::Release() {
   if (m_buffer != VK_NULL_HANDLE) {
     vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer, nullptr);
   }
-  if (m_memory != VK_NULL_HANDLE) {
-    vkFreeMemory(g_rhi_vk->m_device_, m_memory, nullptr);
+  if (m_deviceMemory != VK_NULL_HANDLE) {
+    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory, nullptr);
   }
 
-  m_memory = nullptr;
+  m_deviceMemory = nullptr;
 
   AllocatedSize = 0;
   MappedPointer = nullptr;
@@ -67,7 +67,7 @@ void* BufferVk::Map(uint64_t offset, uint64_t size) {
         "Failed to map buffer: Invalid buffer ownership or already mapped");
     return nullptr;
   }
-  vkMapMemory(g_rhi_vk->m_device_, m_memory, offset, size, 0, &MappedPointer);
+  vkMapMemory(g_rhi_vk->m_device_, m_deviceMemory, offset, size, 0, &MappedPointer);
   return MappedPointer;
 }
 
@@ -79,7 +79,7 @@ void BufferVk::Unmap() {
   if (!HasBufferOwnership || !MappedPointer) {
     return;
   }
-  vkUnmapMemory(g_rhi_vk->m_device_, m_memory);
+  vkUnmapMemory(g_rhi_vk->m_device_, m_deviceMemory);
   MappedPointer = nullptr;
 }
 
@@ -121,7 +121,7 @@ void BufferVk::UpdateBuffer(const void* data, uint64_t size) {
 void VertexBufferVk::BindInfo::Reset() {
   InputBindingDescriptions.clear();
   AttributeDescriptions.clear();
-  Buffers.clear();
+  m_buffers.clear();
   Offsets.clear();
   StartBindingIndex = 0;
 }
@@ -149,16 +149,16 @@ VkPipelineVertexInputStateCreateInfo
 }
 
 void VertexBufferVk::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
   assert(InRenderFrameContext);
   assert(InRenderFrameContext->GetActiveCommandBuffer());
   vkCmdBindVertexBuffers(
       (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
           ->GetNativeHandle(),
-      BindInfos.StartBindingIndex,
-      (uint32_t)BindInfos.Buffers.size(),
-      &BindInfos.Buffers[0],
-      &BindInfos.Offsets[0]);
+      m_bindInfos.StartBindingIndex,
+      (uint32_t)m_bindInfos.m_buffers.size(),
+      &m_bindInfos.m_buffers[0],
+      &m_bindInfos.Offsets[0]);
 }
 
 bool VertexBufferVk::Initialize(
@@ -168,8 +168,8 @@ bool VertexBufferVk::Initialize(
   }
 
   vertexStreamData = InStreamData;
-  BindInfos.Reset();
-  BindInfos.StartBindingIndex = InStreamData->bindingIndex;
+  m_bindInfos.Reset();
+  m_bindInfos.StartBindingIndex = InStreamData->bindingIndex;
 
   std::list<uint32_t> buffers;
   int32_t             locationIndex = InStreamData->startLocation;
@@ -231,8 +231,8 @@ bool VertexBufferVk::Initialize(
 
       // stagingBuffer.Release();
 
-      // BindInfos.Buffers.push_back(stream.BufferPtr->m_buffer);
-      // BindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
+      // m_bindInfos.m_buffers.push_back(stream.BufferPtr->m_buffer);
+      // m_bindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
 
       VkDeviceSize bufferSize = iter->GetBufferSize();
       stream.BufferPtr        = g_rhi->CreateStructuredBuffer<BufferVk>(
@@ -246,8 +246,8 @@ bool VertexBufferVk::Initialize(
           iter->GetBufferData(),
           bufferSize);
 
-      BindInfos.Buffers.push_back(stream.BufferPtr->m_buffer);
-      BindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
+      m_bindInfos.m_buffers.push_back(stream.BufferPtr->m_buffer);
+      m_bindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
     }
 
     /////////////////////////////////////////////////////////////
@@ -260,7 +260,7 @@ bool VertexBufferVk::Initialize(
     // VK_VERTEX_INPUT_RATE_INSTANCE : go to next data for each instance
     bindingDescription.inputRate
         = GetVulkanVertexInputRate(InStreamData->VertexInputRate);
-    BindInfos.InputBindingDescriptions.push_back(bindingDescription);
+    m_bindInfos.InputBindingDescriptions.push_back(bindingDescription);
     /////////////////////////////////////////////////////////////
 
     // for (const IBufferAttribute::Attribute& element : iter->Attributes) {
@@ -269,7 +269,7 @@ bool VertexBufferVk::Initialize(
     //   attributeDescription.location                          = locationIndex;
     //   attributeDescription.format                            =
     //   element.format; attributeDescription.offset = element.offset;
-    //   BindInfos.AttributeDescriptions.push_back(attributeDescription);
+    //   m_bindInfos.AttributeDescriptions.push_back(attributeDescription);
 
     //  ++locationIndex;
     //}
@@ -401,7 +401,7 @@ bool VertexBufferVk::Initialize(
       // double-precision (64-bit) float
       attributeDescription.format = AttrFormat;
       attributeDescription.offset = element.offset;
-      BindInfos.AttributeDescriptions.push_back(attributeDescription);
+      m_bindInfos.AttributeDescriptions.push_back(attributeDescription);
 
       ++locationIndex;
     }
@@ -436,12 +436,12 @@ void VertexBufferVk::CreateVertexInputState(
     VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
     std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
     std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-    const jVertexBufferArray&                       InVertexBufferArray) {
+    const VertexBufferArray&                       InVertexBufferArray) {
   for (int32_t i = 0; i < InVertexBufferArray.NumOfData; ++i) {
     // TODO: consider replace assertion
     assert(InVertexBufferArray[i] != nullptr);
     const auto& bindInfo
-        = ((const VertexBufferVk*)InVertexBufferArray[i])->BindInfos;
+        = ((const VertexBufferVk*)InVertexBufferArray[i])->m_bindInfos;
     OutBindingDescriptions.insert(OutBindingDescriptions.end(),
                                   bindInfo.InputBindingDescriptions.begin(),
                                   bindInfo.InputBindingDescriptions.end());
@@ -464,7 +464,7 @@ void VertexBufferVk::CreateVertexInputState(
 // IndexBufferVk
 // ================================================================================
 void IndexBufferVk::Bind(
-    const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
   // TODO: old code (remove)
   // assert(indexStreamData->stream->Attributes.size() != 0);
   // VkIndexType IndexType
