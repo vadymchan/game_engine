@@ -97,10 +97,10 @@ struct Scissor {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jSamplerStateInfo
+// SamplerStateInfo
 //////////////////////////////////////////////////////////////////////////
-struct jSamplerStateInfo : public ShaderBindableResource {
-  virtual ~jSamplerStateInfo() {}
+struct SamplerStateInfo : public ShaderBindableResource {
+  virtual ~SamplerStateInfo() {}
 
   virtual void Initialize() { GetHash(); }
 
@@ -189,10 +189,10 @@ struct jSamplerStateInfo : public ShaderBindableResource {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jRasterizationStateInfo
+// RasterizationStateInfo
 //////////////////////////////////////////////////////////////////////////
-struct jRasterizationStateInfo {
-  virtual ~jRasterizationStateInfo() {}
+struct RasterizationStateInfo {
+  virtual ~RasterizationStateInfo() {}
 
   virtual void Initialize() { GetHash(); }
 
@@ -241,10 +241,10 @@ struct jRasterizationStateInfo {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jStencilOpStateInfo
+// StencilOpStateInfo
 //////////////////////////////////////////////////////////////////////////
-struct jStencilOpStateInfo {
-  virtual ~jStencilOpStateInfo() {}
+struct StencilOpStateInfo {
+  virtual ~StencilOpStateInfo() {}
 
   virtual void Initialize() { GetHash(); }
 
@@ -275,10 +275,10 @@ struct jStencilOpStateInfo {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jDepthStencilStateInfo
+// DepthStencilStateInfo
 //////////////////////////////////////////////////////////////////////////
-struct jDepthStencilStateInfo {
-  virtual ~jDepthStencilStateInfo() {}
+struct DepthStencilStateInfo {
+  virtual ~DepthStencilStateInfo() {}
 
   virtual void Initialize() { GetHash(); }
 
@@ -301,24 +301,24 @@ struct jDepthStencilStateInfo {
 
   mutable size_t Hash = 0;
 
-  bool                 DepthTestEnable       = false;
-  bool                 DepthWriteEnable      = false;
-  ECompareOp           DepthCompareOp        = ECompareOp::LEQUAL;
-  bool                 DepthBoundsTestEnable = false;
-  bool                 StencilTestEnable     = false;
-  jStencilOpStateInfo* Front                 = nullptr;
-  jStencilOpStateInfo* Back                  = nullptr;
-  float                MinDepthBounds        = 0.0f;
-  float                MaxDepthBounds        = 1.0f;
+  bool                DepthTestEnable       = false;
+  bool                DepthWriteEnable      = false;
+  ECompareOp          DepthCompareOp        = ECompareOp::LEQUAL;
+  bool                DepthBoundsTestEnable = false;
+  bool                StencilTestEnable     = false;
+  StencilOpStateInfo* Front                 = nullptr;
+  StencilOpStateInfo* Back                  = nullptr;
+  float               MinDepthBounds        = 0.0f;
+  float               MaxDepthBounds        = 1.0f;
 
   // VkPipelineDepthStencilStateCreateFlags    flags;
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jBlendingStateInfo
+// BlendingStateInfo
 //////////////////////////////////////////////////////////////////////////
-struct jBlendingStateInfo {
-  virtual ~jBlendingStateInfo() {}
+struct BlendingStateInfo {
+  virtual ~BlendingStateInfo() {}
 
   virtual void Initialize() { GetHash(); }
 
@@ -358,17 +358,17 @@ struct jBlendingStateInfo {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jPipelineStateFixedInfo
+// PipelineStateFixedInfo
 //////////////////////////////////////////////////////////////////////////
-struct jPipelineStateFixedInfo {
-  jPipelineStateFixedInfo() = default;
+struct PipelineStateFixedInfo {
+  PipelineStateFixedInfo() = default;
 
-  jPipelineStateFixedInfo(jRasterizationStateInfo*     rasterizationState,
-                          jDepthStencilStateInfo*      depthStencilState,
-                          jBlendingStateInfo*          blendingState,
-                          const std::vector<Viewport>& viewports,
-                          const std::vector<Scissor>&  scissors,
-                          bool                         isUseVRS)
+  PipelineStateFixedInfo(RasterizationStateInfo*      rasterizationState,
+                         DepthStencilStateInfo*       depthStencilState,
+                         BlendingStateInfo*           blendingState,
+                         const std::vector<Viewport>& viewports,
+                         const std::vector<Scissor>&  scissors,
+                         bool                         isUseVRS)
       : RasterizationState(rasterizationState)
       , DepthStencilState(depthStencilState)
       , BlendingState(blendingState)
@@ -378,12 +378,12 @@ struct jPipelineStateFixedInfo {
     CreateHash();
   }
 
-  jPipelineStateFixedInfo(jRasterizationStateInfo* rasterizationState,
-                          jDepthStencilStateInfo*  depthStencilState,
-                          jBlendingStateInfo*      blendingState,
-                          const Viewport&          viewport,
-                          const Scissor&           scissor,
-                          bool                     isUseVRS)
+  PipelineStateFixedInfo(RasterizationStateInfo* rasterizationState,
+                         DepthStencilStateInfo*  depthStencilState,
+                         BlendingStateInfo*      blendingState,
+                         const Viewport&         viewport,
+                         const Scissor&          scissor,
+                         bool                    isUseVRS)
       : RasterizationState(rasterizationState)
       , DepthStencilState(depthStencilState)
       , BlendingState(blendingState)
@@ -393,10 +393,10 @@ struct jPipelineStateFixedInfo {
     CreateHash();
   }
 
-  jPipelineStateFixedInfo(
-      jRasterizationStateInfo*                  rasterizationState,
-      jDepthStencilStateInfo*                   depthStencilState,
-      jBlendingStateInfo*                       blendingState,
+  PipelineStateFixedInfo(
+      RasterizationStateInfo*                   rasterizationState,
+      DepthStencilStateInfo*                    depthStencilState,
+      BlendingStateInfo*                        blendingState,
       const std::vector<EPipelineDynamicState>& InDynamicStates,
       bool                                      isUseVRS)
       : RasterizationState(rasterizationState)
@@ -440,20 +440,20 @@ struct jPipelineStateFixedInfo {
   std::vector<Scissor>               scissors;
   std::vector<EPipelineDynamicState> DynamicStates;
 
-  jRasterizationStateInfo* RasterizationState = nullptr;
-  jDepthStencilStateInfo*  DepthStencilState  = nullptr;
-  jBlendingStateInfo*      BlendingState      = nullptr;
-  bool                     IsUseVRS           = false;
+  RasterizationStateInfo* RasterizationState = nullptr;
+  DepthStencilStateInfo*  DepthStencilState  = nullptr;
+  BlendingStateInfo*      BlendingState      = nullptr;
+  bool                    IsUseVRS           = false;
 
   mutable size_t Hash = 0;
 };
 
-struct jPushConstantRange {
-  jPushConstantRange() = default;
+struct PushConstantRange {
+  PushConstantRange() = default;
 
-  jPushConstantRange(EShaderAccessStageFlag accessStageFlag,
-                     int32_t                offset,
-                     int32_t                size)
+  PushConstantRange(EShaderAccessStageFlag accessStageFlag,
+                    int32_t                offset,
+                    int32_t                size)
       : AccessStageFlag(accessStageFlag)
       , Offset(offset)
       , Size(size) {}
@@ -463,10 +463,10 @@ struct jPushConstantRange {
   int32_t                Size            = 0;
 };
 
-struct jPushConstant {
-  jPushConstant() = default;
+struct PushConstant {
+  PushConstant() = default;
 
-  jPushConstant(const jPushConstant& InPushConstant) {
+  PushConstant(const PushConstant& InPushConstant) {
     assert(InPushConstant.UsedSize < 256);
 
     UsedSize = InPushConstant.UsedSize;
@@ -475,21 +475,21 @@ struct jPushConstant {
     Hash               = InPushConstant.Hash;
   }
 
-  jPushConstant(const char*            InData,
-                int32_t                InSize,
-                EShaderAccessStageFlag InShaderAccessStageFlag) {
+  PushConstant(const char*            InData,
+               int32_t                InSize,
+               EShaderAccessStageFlag InShaderAccessStageFlag) {
     assert(InSize < 256);
 
     UsedSize = InSize;
     memcpy(Data, InData, InSize);
     PushConstantRanges.Add(
-        jPushConstantRange(InShaderAccessStageFlag, 0, InSize));
+        PushConstantRange(InShaderAccessStageFlag, 0, InSize));
     GetHash();
   }
 
-  jPushConstant(const char*               InData,
-                int32_t                   InSize,
-                const jPushConstantRange& InPushConstantRange) {
+  PushConstant(const char*              InData,
+               int32_t                  InSize,
+               const PushConstantRange& InPushConstantRange) {
     assert(InSize < 256);
 
     UsedSize = InSize;
@@ -498,10 +498,9 @@ struct jPushConstant {
     GetHash();
   }
 
-  jPushConstant(
-      const char*                                  InData,
-      int32_t                                      InSize,
-      const ResourceContainer<jPushConstantRange>& InPushConstantRanges)
+  PushConstant(const char*                                 InData,
+               int32_t                                     InSize,
+               const ResourceContainer<PushConstantRange>& InPushConstantRanges)
       : PushConstantRanges(InPushConstantRanges) {
     assert(InSize < 256);
 
@@ -511,26 +510,25 @@ struct jPushConstant {
   }
 
   template <typename T>
-  jPushConstant(const T&               InData,
-                EShaderAccessStageFlag InShaderAccessStageFlag) {
-    Set(InData, jPushConstantRange(InShaderAccessStageFlag, 0, sizeof(T)));
+  PushConstant(const T&               InData,
+               EShaderAccessStageFlag InShaderAccessStageFlag) {
+    Set(InData, PushConstantRange(InShaderAccessStageFlag, 0, sizeof(T)));
   }
 
   template <typename T>
-  jPushConstant(const T&                  InData,
-                const jPushConstantRange& InPushConstantRange) {
+  PushConstant(const T& InData, const PushConstantRange& InPushConstantRange) {
     Set(InData, InPushConstantRange);
   }
 
   template <typename T>
-  jPushConstant(
-      const T&                                     InData,
-      const ResourceContainer<jPushConstantRange>& InPushConstantRanges) {
+  PushConstant(
+      const T&                                    InData,
+      const ResourceContainer<PushConstantRange>& InPushConstantRanges) {
     Set(InData, InPushConstantRanges);
   }
 
   template <typename T>
-  void Set(const T& InData, const jPushConstantRange& InPushConstantRange) {
+  void Set(const T& InData, const PushConstantRange& InPushConstantRange) {
     assert(sizeof(T) < 256);
 
     UsedSize = sizeof(T);
@@ -540,8 +538,8 @@ struct jPushConstant {
   }
 
   template <typename T>
-  void Set(const T&                                     InData,
-           const ResourceContainer<jPushConstantRange>& InPushConstantRanges) {
+  void Set(const T&                                    InData,
+           const ResourceContainer<PushConstantRange>& InPushConstantRanges) {
     assert(sizeof(T) < 256);
 
     UsedSize = sizeof(T);
@@ -557,7 +555,7 @@ struct jPushConstant {
 
   bool IsValid() const { return UsedSize > 0; }
 
-  jPushConstant& operator=(const jPushConstant& InPushConstant) {
+  PushConstant& operator=(const PushConstant& InPushConstant) {
     assert(InPushConstant.UsedSize < 256);
 
     UsedSize = InPushConstant.UsedSize;
@@ -577,7 +575,7 @@ struct jPushConstant {
       // TODO: be careful with sizeof(PushConstantRange) when added
       // incapsulation
       Hash = ::XXH64(&PushConstantRanges[0],
-                     sizeof(jPushConstantRange) * PushConstantRanges.NumOfData,
+                     sizeof(PushConstantRange) * PushConstantRanges.NumOfData,
                      Hash);
     }
 
@@ -588,61 +586,59 @@ struct jPushConstant {
 
   int32_t GetSize() const { return UsedSize; }
 
-  const ResourceContainer<jPushConstantRange>* GetPushConstantRanges() const {
+  const ResourceContainer<PushConstantRange>* GetPushConstantRanges() const {
     return &PushConstantRanges;
   }
 
-  mutable size_t                        Hash = 0;
-  ResourceContainer<jPushConstantRange> PushConstantRanges;
-  uint8_t                               Data[256];
-  int32_t                               UsedSize = 0;
+  mutable size_t                       Hash = 0;
+  ResourceContainer<PushConstantRange> PushConstantRanges;
+  uint8_t                              Data[256];
+  int32_t                              UsedSize = 0;
 };
 
 // struct Shader;
-// struct jGraphicsPipelineShader;
-// struct jVertexBuffer;
-// struct jShaderBindingLayout;
-// class jRenderPass;
-// struct jRenderFrameContext;
+// struct GraphicsPipelineShader;
+// struct VertexBuffer;
+// struct ShaderBindingLayout;
+// class  RenderPass;
+// struct RenderFrameContext;
 
 //////////////////////////////////////////////////////////////////////////
-// jPipelineStateInfo
+// PipelineStateInfo
 //////////////////////////////////////////////////////////////////////////
-struct jPipelineStateInfo {
+struct PipelineStateInfo {
   enum class EPipelineType : uint8_t {
     Graphics = 0,
     Compute,
     RayTracing
   };
 
-  jPipelineStateInfo() = default;
+  PipelineStateInfo() = default;
 
-  jPipelineStateInfo(
-      const jPipelineStateFixedInfo*   InPipelineStateFixed,
-      const GraphicsPipelineShader     InShader,
-      const jVertexBufferArray&        InVertexBufferArray,
-      const jRenderPass*               InRenderPass,
-      const jShaderBindingLayoutArray& InShaderBindingLayoutArray,
-      const jPushConstant*             InPushConstant = nullptr,
-      int32_t                          InSubpassIndex = 0)
+  PipelineStateInfo(const PipelineStateFixedInfo*    InPipelineStateFixed,
+                    const GraphicsPipelineShader     InShader,
+                    const VertexBufferArray&         InVertexBufferArray,
+                    const RenderPass*                InRenderPass,
+                    const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+                    const PushConstant*              InPushConstant = nullptr,
+                    int32_t                          InSubpassIndex = 0)
       : PipelineStateFixed(InPipelineStateFixed)
       , GraphicsShader(InShader)
-      , VertexBufferArray(InVertexBufferArray)
-      , RenderPass(InRenderPass)
-      , ShaderBindingLayoutArray(InShaderBindingLayoutArray)
-      , PushConstant(InPushConstant)
+      , m_vertexBufferArray(InVertexBufferArray)
+      , m_renderPass(InRenderPass)
+      , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
+      , m_pushConstant(InPushConstant)
       , SubpassIndex(InSubpassIndex) {
     PipelineType = EPipelineType::Graphics;
   }
 
-  jPipelineStateInfo(
-      const Shader*                    InComputeShader,
-      const jShaderBindingLayoutArray& InShaderBindingLayoutArray,
-      const jPushConstant*             InPushConstant = nullptr,
-      int32_t                          InSubpassIndex = 0)
+  PipelineStateInfo(const Shader*                    InComputeShader,
+                    const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+                    const PushConstant*              InPushConstant = nullptr,
+                    int32_t                          InSubpassIndex = 0)
       : ComputeShader(InComputeShader)
-      , ShaderBindingLayoutArray(InShaderBindingLayoutArray)
-      , PushConstant(InPushConstant)
+      , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
+      , m_pushConstant(InPushConstant)
       , SubpassIndex(InSubpassIndex) {
     PipelineType = EPipelineType::Compute;
   }
@@ -655,59 +651,59 @@ struct jPipelineStateInfo {
   //     int32_t                                       InSubpassIndex = 0)
   //     : RaytracingShaders(InShader)
   //     , RaytracingPipelineData(InRaytracingPipelineData)
-  //     , ShaderBindingLayoutArray(InShaderBindingLayoutArray)
-  //     , PushConstant(InPushConstant)
+  //     , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
+  //     , m_pushConstant(InPushConstant)
   //     , SubpassIndex(InSubpassIndex) {
   //   PipelineType = EPipelineType::RayTracing;
   // }
 
-  jPipelineStateInfo(const jPipelineStateInfo& InPipelineState)
+  PipelineStateInfo(const PipelineStateInfo& InPipelineState)
       : PipelineStateFixed(InPipelineState.PipelineStateFixed)
       , GraphicsShader(InPipelineState.GraphicsShader)
       , ComputeShader(InPipelineState.ComputeShader)
       //, RaytracingShaders(InPipelineState.RaytracingShaders)
       , PipelineType(InPipelineState.PipelineType)
-      , VertexBufferArray(InPipelineState.VertexBufferArray)
-      , RenderPass(InPipelineState.RenderPass)
-      , ShaderBindingLayoutArray(InPipelineState.ShaderBindingLayoutArray)
-      , PushConstant(InPipelineState.PushConstant)
+      , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
+      , m_renderPass(InPipelineState.m_renderPass)
+      , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
+      , m_pushConstant(InPipelineState.m_pushConstant)
       , Hash(InPipelineState.Hash)
       , SubpassIndex(InPipelineState.SubpassIndex)
   //, RaytracingPipelineData(InPipelineState.RaytracingPipelineData)
   {}
 
-  jPipelineStateInfo(jPipelineStateInfo&& InPipelineState) noexcept
+  PipelineStateInfo(PipelineStateInfo&& InPipelineState) noexcept
       : PipelineStateFixed(InPipelineState.PipelineStateFixed)
       , GraphicsShader(InPipelineState.GraphicsShader)
       , ComputeShader(InPipelineState.ComputeShader)
       //, RaytracingShaders(InPipelineState.RaytracingShaders)
       , PipelineType(InPipelineState.PipelineType)
-      , VertexBufferArray(InPipelineState.VertexBufferArray)
-      , RenderPass(InPipelineState.RenderPass)
-      , ShaderBindingLayoutArray(InPipelineState.ShaderBindingLayoutArray)
-      , PushConstant(InPipelineState.PushConstant)
+      , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
+      , m_renderPass(InPipelineState.m_renderPass)
+      , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
+      , m_pushConstant(InPipelineState.m_pushConstant)
       , Hash(InPipelineState.Hash)
       , SubpassIndex(InPipelineState.SubpassIndex)
   //, RaytracingPipelineData(InPipelineState.RaytracingPipelineData)
   {}
 
-  virtual ~jPipelineStateInfo() {}
+  virtual ~PipelineStateInfo() {}
 
   size_t GetHash() const;
 
   mutable size_t Hash = 0;
 
-  EPipelineType                  PipelineType = EPipelineType::Graphics;
-  const GraphicsPipelineShader   GraphicsShader;
-  const Shader*                  ComputeShader = nullptr;
+  EPipelineType                 PipelineType = EPipelineType::Graphics;
+  const GraphicsPipelineShader  GraphicsShader;
+  const Shader*                 ComputeShader = nullptr;
   // std::vector<jRaytracingPipelineShader> RaytracingShaders;
   // jRaytracingPipelineData                RaytracingPipelineData;
-  const jRenderPass*             RenderPass = nullptr;
-  jVertexBufferArray             VertexBufferArray;
-  jShaderBindingLayoutArray      ShaderBindingLayoutArray;
-  const jPushConstant*           PushConstant;
-  const jPipelineStateFixedInfo* PipelineStateFixed = nullptr;
-  int32_t                        SubpassIndex       = 0;
+  const RenderPass*             m_renderPass = nullptr;
+  VertexBufferArray             m_vertexBufferArray;
+  ShaderBindingLayoutArray     m_shaderBindingLayoutArray;
+  const PushConstant*           m_pushConstant;
+  const PipelineStateFixedInfo* PipelineStateFixed = nullptr;
+  int32_t                       SubpassIndex       = 0;
 
   virtual void Initialize() { GetHash(); }
 
@@ -722,7 +718,7 @@ struct jPipelineStateInfo {
   virtual void* CreateRaytracingPipelineState() { return nullptr; }
 
   virtual void Bind(
-      const std::shared_ptr<jRenderFrameContext>& InRenderFrameContext) const {}
+      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {}
 };
 
 }  // namespace game_engine
