@@ -17,14 +17,14 @@ void SubMemoryAllocatorVk::Initialize(EVulkanBufferBits InUsage,
   CreateBuffer_LowLevel(InUsage,
                         InProperties,
                         InSize,
-                        Buffer,
+                        m_buffer,
                         DeviceMemory,
                         SubMemoryRange.DataSize);
   Usages     = InUsage;
   Properties = InProperties;
 
   VkMemoryRequirements memRequirements;
-  vkGetBufferMemoryRequirements(g_rhi_vk->m_device_, Buffer, &memRequirements);
+  vkGetBufferMemoryRequirements(g_rhi_vk->m_device_, m_buffer, &memRequirements);
   Alignment = memRequirements.alignment;
 
   if (!!(InProperties & EVulkanMemoryBits::HOST_VISIBLE)) {
@@ -40,7 +40,7 @@ void SubMemoryAllocatorVk::Initialize(EVulkanBufferBits InUsage,
 
 
 
-jSubMemoryAllocator* MemoryPoolVk::CreateSubMemoryAllocator() const {
+SubMemoryAllocator* MemoryPoolVk::CreateSubMemoryAllocator() const {
   return new SubMemoryAllocatorVk();
 }
 
