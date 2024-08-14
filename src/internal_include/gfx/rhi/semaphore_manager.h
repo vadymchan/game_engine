@@ -3,19 +3,19 @@
 
 namespace game_engine {
 
-class jSemaphore {
+class Semaphore {
   public:
-  virtual ~jSemaphore() {}
+  virtual ~Semaphore() {}
 
   virtual void* GetHandle() const = 0;
 };
 
-class jSemaphoreManager {
+class SemaphoreManager {
   public:
-  virtual ~jSemaphoreManager() {}
+  virtual ~SemaphoreManager() {}
 
-  virtual jSemaphore* GetOrCreateSemaphore()             = 0;
-  virtual void        ReturnSemaphore(jSemaphore* fence) = 0;
+  virtual Semaphore* GetOrCreateSemaphore()             = 0;
+  virtual void        ReturnSemaphore(Semaphore* fence) = 0;
 };
 
 }  // namespace game_engine
