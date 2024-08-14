@@ -93,15 +93,15 @@ void DescriptorPoolVk::Reset() {
   }
 }
 
-std::shared_ptr<jShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
+std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
     VkDescriptorSetLayout InLayout) {
   ScopedLock s(&DescriptorPoolLock);
 #if !USE_RESET_DESCRIPTOR_POOL
   const auto it_find = PendingDescriptorSets.find(InLayout);
   if (it_find != PendingDescriptorSets.end()) {
-    jShaderBindingInstancePtrArray& pendingPools = it_find->second;
+    ShaderBindingInstancePtrArray& pendingPools = it_find->second;
     if (pendingPools.size()) {
-      std::shared_ptr<jShaderBindingInstance> descriptorSet
+      std::shared_ptr<ShaderBindingInstance> descriptorSet
           = *pendingPools.rbegin();
       // pendingPools.PopBack();
       pendingPools.resize(pendingPools.size() - 1);
@@ -139,7 +139,7 @@ std::shared_ptr<jShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
 }
 
 void DescriptorPoolVk::Free(
-    std::shared_ptr<jShaderBindingInstance> InShaderBindingInstance) {
+    std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance) {
   assert(InShaderBindingInstance);
   ScopedLock s(&DescriptorPoolLock);
 
@@ -165,10 +165,10 @@ void DescriptorPoolVk::Free(
   //            OldestFrameToKeep)
   //            {
   //                // Return to pending descriptor set
-  //                assert(PendingFreeShaderBindingInstance.ShaderBindingInstance);
+  //                assert(PendingFreeShaderBindingInstance.m_shaderBindingInstance);
   //                const VkDescriptorSetLayout DescriptorSetLayout =
-  //                (VkDescriptorSetLayout)PendingFreeShaderBindingInstance.ShaderBindingInstance->ShaderBindingsLayouts->GetHandle();
-  //                PendingDescriptorSets[DescriptorSetLayout].push_back(PendingFreeShaderBindingInstance.ShaderBindingInstance);
+  //                (VkDescriptorSetLayout)PendingFreeShaderBindingInstance.m_shaderBindingInstance->ShaderBindingsLayouts->GetHandle();
+  //                PendingDescriptorSets[DescriptorSetLayout].push_back(PendingFreeShaderBindingInstance.m_shaderBindingInstance);
   //            }
   //            else
   //            {
@@ -218,9 +218,9 @@ void DescriptorPoolVk::Release() {
   }
 }
 
-// This will be called from 'DeallocatorMultiFrameShaderBindingInstance'
+// This will be called from 'm_deallocatorMultiFrameShaderBindingInstance'
 void DescriptorPoolVk::FreedFromPendingDelegate(
-    std::shared_ptr<jShaderBindingInstance> InShaderBindingInstance) {
+    std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance) {
   ShaderBindingInstanceVk* shaderBindingInstanceVk
       = (ShaderBindingInstanceVk*)InShaderBindingInstance.get();
   assert(shaderBindingInstanceVk);
