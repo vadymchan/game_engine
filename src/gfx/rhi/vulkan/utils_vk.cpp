@@ -156,7 +156,7 @@ VkFence CreateFence(bool signaled) {
   return fence;
 }
 
-// =============== Buffer Utils ===============
+// =============== m_buffer Utils ===============
 
 // --------------- image (texture) ------------
 
@@ -716,9 +716,9 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
   BufferPtr->RealBufferSize = InSize;
 #if USE_VK_MEMORY_POOL
   assert(g_rhi->GetMemoryPool());
-  const jMemory& Memory
+  const Memory& m_memory
       = g_rhi->GetMemoryPool()->Alloc(InUsage, InProperties, InSize);
-  BufferPtr->InitializeWithMemory(Memory);
+  BufferPtr->InitializeWithMemory(m_memory);
 #else
   if (!CreateBuffer_LowLevel(g_rhi_vk->m_device_,
                              g_rhi_vk->m_physicalDevice_,
@@ -726,7 +726,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
                              InProperties,
                              InSize,
                              BufferPtr->m_buffer,
-                             BufferPtr->m_memory,
+                             BufferPtr->m_deviceMemory,
                              BufferPtr->AllocatedSize)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create buffer");
     return nullptr;
@@ -755,7 +755,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
 //                       InProperties,
 //                       InSize,
 //                       OutBuffer.m_buffer,
-//                       OutBuffer.m_memory,
+//                       OutBuffer.m_deviceMemory,
 //                       OutBuffer.AllocatedSize);
 // #endif
 // }
