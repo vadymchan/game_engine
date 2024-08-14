@@ -12,9 +12,9 @@
 
 namespace game_engine {
 
-class jSwapchainImage {
+class SwapchainImage {
   public:
-  virtual ~jSwapchainImage() {}
+  virtual ~SwapchainImage() {}
 
   virtual void Release() = 0;
 
@@ -22,19 +22,19 @@ class jSwapchainImage {
     return TexturePtr ? TexturePtr->GetHandle() : nullptr;
   }
 
-  std::shared_ptr<jTexture> TexturePtr;
+  std::shared_ptr<Texture> TexturePtr;
 };
 
-class jSwapchain {
+class Swapchain {
   public:
-  virtual ~jSwapchain() {}
+  virtual ~Swapchain() {}
 
   virtual bool           Create(const std::shared_ptr<Window>& window)     = 0;
   virtual void           Release()                                         = 0;
   virtual void*          GetHandle() const                                 = 0;
   virtual ETextureFormat GetFormat() const                                 = 0;
   virtual const math::Dimension2Di& GetExtent() const                      = 0;
-  virtual jSwapchainImage*          GetSwapchainImage(int32_t index) const = 0;
+  virtual SwapchainImage*          GetSwapchainImage(int32_t index) const = 0;
   virtual int32_t                   GetNumOfSwapchainImages() const        = 0;
 };
 
