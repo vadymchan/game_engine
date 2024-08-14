@@ -13,7 +13,7 @@
 
 namespace game_engine {
 
-struct jRenderTargetInfo {
+struct RenderTargetInfo {
   size_t GetHash() const {
     return GETHASH_FROM_INSTANT_STRUCT(Type,
                                        Format,
@@ -22,7 +22,7 @@ struct jRenderTargetInfo {
                                        LayerCount,
                                        IsGenerateMipmap,
                                        SampleCount,
-                                       RTClearValue.GetHash(),
+                                       m_rtClearValue.GetHash(),
                                        TextureCreateFlag,
                                        IsUseAsSubpassInput,
                                        IsMemoryless);
@@ -36,28 +36,28 @@ struct jRenderTargetInfo {
   EMSAASamples       SampleCount         = EMSAASamples::COUNT_1;
   bool               IsUseAsSubpassInput = false;
   bool               IsMemoryless        = false;
-  jRTClearValue      RTClearValue        = jRTClearValue::Invalid;
+  RTClearValue      m_rtClearValue        = RTClearValue::Invalid;
   ETextureCreateFlag TextureCreateFlag   = ETextureCreateFlag::RTV;
 };
 
-struct jRenderTarget final
-    : public std::enable_shared_from_this<jRenderTarget> {
+struct RenderTarget final
+    : public std::enable_shared_from_this<RenderTarget> {
   // Create render target from texture, It is useful to create render target
   // from swapchain texture
   template <typename T1, class... T2>
-  static std::shared_ptr<jRenderTarget> CreateFromTexture(const T2&... args) {
+  static std::shared_ptr<RenderTarget> CreateFromTexture(const T2&... args) {
     const auto& T1Ptr = std::make_shared<T1>(args...);
-    return std::make_shared<jRenderTarget>(T1Ptr);
+    return std::make_shared<RenderTarget>(T1Ptr);
   }
 
-  static std::shared_ptr<jRenderTarget> CreateFromTexture(
-      const std::shared_ptr<jTexture>& texturePtr) {
-    return std::make_shared<jRenderTarget>(texturePtr);
+  static std::shared_ptr<RenderTarget> CreateFromTexture(
+      const std::shared_ptr<Texture>& texturePtr) {
+    return std::make_shared<RenderTarget>(texturePtr);
   }
 
-  jRenderTarget() = default;
+  RenderTarget() = default;
 
-  jRenderTarget(const std::shared_ptr<jTexture>& InTexturePtr)
+  RenderTarget(const std::shared_ptr<Texture>& InTexturePtr)
       : TexturePtr(InTexturePtr) {
     if (InTexturePtr) {
       Info.Type        = InTexturePtr->type;
@@ -68,7 +68,7 @@ struct jRenderTarget final
     }
   }
 
-  ~jRenderTarget() {}
+  ~RenderTarget() {}
 
   size_t GetHash() const {
     if (Hash) {
@@ -88,10 +88,10 @@ struct jRenderTarget final
     return TexturePtr ? TexturePtr->GetLayout() : EResourceLayout::UNDEFINED;
   }
 
-  jTexture* GetTexture() const { return TexturePtr.get(); }
+  Texture* GetTexture() const { return TexturePtr.get(); }
 
-  jRenderTargetInfo         Info;
-  std::shared_ptr<jTexture> TexturePtr;
+  RenderTargetInfo         Info;
+  std::shared_ptr<Texture> TexturePtr;
 
   mutable size_t Hash                         = 0;
   bool           bCreatedFromRenderTargetPool = false;
@@ -100,15 +100,15 @@ struct jRenderTarget final
 // ==================== SceneRenderTarget ( for Renderer) =====================
 
 struct SceneRenderTarget {
-  std::shared_ptr<jRenderTarget> ColorPtr;
-  std::shared_ptr<jRenderTarget> DepthPtr;
-  std::shared_ptr<jRenderTarget> ResolvePtr;
+  std::shared_ptr<RenderTarget> ColorPtr;
+  std::shared_ptr<RenderTarget> DepthPtr;
+  std::shared_ptr<RenderTarget> ResolvePtr;
 
   // Final rendered image, post-processed
-  std::shared_ptr<jRenderTarget> FinalColorPtr;
+  std::shared_ptr<RenderTarget> FinalColorPtr;
 
   void Create(std::shared_ptr<Window> window,
-              const jSwapchainImage*  InSwapchain);
+              const SwapchainImage*  InSwapchain);
 
   void Return();
 };
