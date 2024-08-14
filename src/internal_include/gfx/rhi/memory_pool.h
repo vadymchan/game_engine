@@ -9,33 +9,33 @@
 
 namespace game_engine {
 
-class jSubMemoryAllocator;
+class SubMemoryAllocator;
 
 // Memory range in sub memory
-struct jRange {
+struct Range {
   uint64_t Offset   = 0;
   uint64_t DataSize = 0;
 };
 
-struct jMemory {
-  bool IsValid() const { return Buffer; }
+struct Memory {
+  bool IsValid() const { return m_buffer; }
 
-  void* GetBuffer() const { return Buffer; }
+  void* GetBuffer() const { return m_buffer; }
 
-  void*                GetMappedPointer() const;
-  void*                GetMemory() const;
-  void                 Free();
-  void                 Reset();
-  void*                Buffer = nullptr;
-  jRange               Range;
-  jSubMemoryAllocator* SubMemoryAllocator = nullptr;
+  void*               GetMappedPointer() const;
+  void*               GetMemory() const;
+  void                Free();
+  void                Reset();
+  void*               m_buffer = nullptr;
+  Range              m_range;
+  SubMemoryAllocator* m_subMemoryAllocator = nullptr;
 };
 
-class jSubMemoryAllocator {
+class SubMemoryAllocator {
   public:
-  friend class jMemoryPool;
+  friend class MemoryPool;
 
-  virtual ~jSubMemoryAllocator() {}
+  virtual ~SubMemoryAllocator() {}
 
   virtual void Initialize(EVulkanBufferBits InUsage,
                           EVulkanMemoryBits InProperties,
@@ -48,7 +48,7 @@ class jSubMemoryAllocator {
 
   virtual void* GetMappedPointer() const { return MappedPointer; }
 
-  virtual jMemory Alloc(uint64_t InRequstedSize);
+  virtual Memory Alloc(uint64_t InRequstedSize);
 
   virtual bool IsMatchType(EVulkanBufferBits InUsages,
                            EVulkanMemoryBits InProperties) const {
@@ -56,7 +56,7 @@ class jSubMemoryAllocator {
   }
 
   protected:
-  virtual void Free(const jMemory& InFreeMemory) {
+  virtual void Free(const Memory& InFreeMemory) {
     ScopedLock s(&Lock);
 
     // If All of the allocated memory returned then clear allocated list to use
@@ -65,23 +65,23 @@ class jSubMemoryAllocator {
       AllAllocatedLists.clear();
       FreeLists.clear();
     } else {
-      FreeLists.push_back(InFreeMemory.Range);
+      FreeLists.push_back(InFreeMemory.m_range);
     }
   }
 
   MutexLock           Lock;
   void*               MappedPointer = nullptr;
-  std::vector<jRange> FreeLists;
-  std::vector<jRange> AllAllocatedLists;
-  jRange              SubMemoryRange;
+  std::vector<Range> FreeLists;
+  std::vector<Range> AllAllocatedLists;
+  Range              SubMemoryRange;
   EVulkanBufferBits   Usages     = EVulkanBufferBits::TRANSFER_SRC;
   EVulkanMemoryBits   Properties = EVulkanMemoryBits::DEVICE_LOCAL;
   uint64_t            Alignment  = 16;
 };
 
-class jMemoryPool {
+class MemoryPool {
   public:
-  virtual ~jMemoryPool() {}
+  virtual ~MemoryPool() {}
   enum class EPoolSizeType : uint8_t {
     E128,
     E256,
@@ -117,20 +117,20 @@ class jMemoryPool {
     1024 * 1024,
   };
 
-  struct jPendingFreeMemory {
-    jPendingFreeMemory() = default;
+  struct PendingFreeMemory {
+    PendingFreeMemory() = default;
 
-    jPendingFreeMemory(int32_t InFrameIndex, const jMemory& InMemory)
+    PendingFreeMemory(int32_t InFrameIndex, const Memory& InMemory)
         : FrameIndex(InFrameIndex)
-        , Memory(InMemory) {}
+        , m_memory(InMemory) {}
 
     int32_t FrameIndex = 0;
-    jMemory Memory;
+    Memory m_memory;
   };
 
   static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
 
-  virtual jSubMemoryAllocator* CreateSubMemoryAllocator() const = 0;
+  virtual SubMemoryAllocator* CreateSubMemoryAllocator() const = 0;
 
   // select the appropriate PoolSize
   virtual EPoolSizeType GetPoolSizeType(uint64_t InSize) const {
@@ -142,17 +142,16 @@ class jMemoryPool {
     return EPoolSizeType::MAX;
   }
 
-  virtual jMemory Alloc(EVulkanBufferBits InUsages,
+  virtual Memory Alloc(EVulkanBufferBits InUsages,
                         EVulkanMemoryBits InProperties,
                         uint64_t          InSize);
 
-  virtual void Free(const jMemory& InFreeMemory);
+  virtual void Free(const Memory& InFreeMemory);
 
-  MutexLock Lock;
-  std::vector<jSubMemoryAllocator*>
-                                  MemoryPools[(int32_t)EPoolSizeType::MAX + 1];
-  std::vector<jPendingFreeMemory> PendingFree;
-  int32_t                         CanReleasePendingFreeMemoryFrameNumber = 0;
+  MutexLock                        Lock;
+  std::vector<SubMemoryAllocator*> MemoryPools[(int32_t)EPoolSizeType::MAX + 1];
+  std::vector<PendingFreeMemory>  PendingFree;
+  int32_t                          CanReleasePendingFreeMemoryFrameNumber = 0;
 };
 
 }  // namespace game_engine
