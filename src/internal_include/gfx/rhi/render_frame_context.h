@@ -8,25 +8,25 @@
 
 namespace game_engine {
 
-struct jRenderFrameContext
-    : public std::enable_shared_from_this<jRenderFrameContext> {
+struct RenderFrameContext
+    : public std::enable_shared_from_this<RenderFrameContext> {
   enum ECurrentRenderPass {
     None,
     ShadowPass,
     BasePass,
   };
 
-  jRenderFrameContext() = default;
+  RenderFrameContext() = default;
 
-  jRenderFrameContext(jCommandBuffer* InCommandBuffer)
-      : CommandBuffer(InCommandBuffer) {}
+  RenderFrameContext(CommandBuffer* InCommandBuffer)
+      : m_commandBuffer(InCommandBuffer) {}
 
-  virtual ~jRenderFrameContext();
+  virtual ~RenderFrameContext();
 
   virtual void Destroy();
 
-  virtual jCommandBuffer* GetActiveCommandBuffer() const {
-    return CommandBuffer;
+  virtual CommandBuffer* GetActiveCommandBuffer() const {
+    return m_commandBuffer;
   }
 
   virtual bool BeginActiveCommandBuffer();
@@ -43,7 +43,7 @@ struct jRenderFrameContext
   bool                               IsBeginActiveCommandbuffer = false;
 
   protected:
-  jCommandBuffer* CommandBuffer = nullptr;
+  CommandBuffer* m_commandBuffer = nullptr;
 };
 
 }  // namespace game_engine
