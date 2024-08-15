@@ -9,21 +9,21 @@
 namespace game_engine {
 
 // TODO: consider moving this to a separate file
-struct jDescriptor_DX12 {
-  static const jDescriptor_DX12 Invalid;
+struct DescriptorDx12 {
+  static const DescriptorDx12 Invalid;
 
   D3D12_CPU_DESCRIPTOR_HANDLE               CPUHandle = {};
   D3D12_GPU_DESCRIPTOR_HANDLE               GPUHandle = {};
-  uint32_t                                    Index     = uint32_t(-1);
-  std::weak_ptr<class jDescriptorHeap_DX12> DescriptorHeap;
+  uint32_t                                  Index     = uint32_t(-1);
+  std::weak_ptr<class DescriptorHeapDx12> DescriptorHeap;
 
   void Free();
 
   bool IsValid() const { return Index != -1; }
 };
 
-class jDescriptorHeap_DX12
-    : public std::enable_shared_from_this<jDescriptorHeap_DX12> {
+class DescriptorHeapDx12
+    : public std::enable_shared_from_this<DescriptorHeapDx12> {
   public:
   static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
 
@@ -34,17 +34,17 @@ class jDescriptorHeap_DX12
 
   void Initialize(EDescriptorHeapTypeDX12 InHeapType,
                   bool                    InShaderVisible,
-                  uint32_t                  InNumOfDescriptors = 1024);
+                  uint32_t                InNumOfDescriptors = 1024);
   void Release();
 
-  jDescriptor_DX12 Alloc() {
+  DescriptorDx12 Alloc() {
     ScopedLock s(&DescriptorLock);
 
     if (Pools.empty()) {
-      return jDescriptor_DX12();
+      return DescriptorDx12();
     }
 
-    jDescriptor_DX12 Descriptor;
+    DescriptorDx12 Descriptor;
     Descriptor.Index = *Pools.begin();
     Pools.erase(Pools.begin());
 
@@ -58,8 +58,8 @@ class jDescriptorHeap_DX12
     return Descriptor;
   }
 
-  jDescriptor_DX12 OneFrameAlloc() {
-    jDescriptor_DX12 NewAlloc = Alloc();
+  DescriptorDx12 OneFrameAlloc() {
+    DescriptorDx12 NewAlloc = Alloc();
     Free(NewAlloc.Index, NumOfFramesToWaitBeforeReleasing);
     return NewAlloc;
   }
@@ -74,40 +74,40 @@ class jDescriptorHeap_DX12
   void Free(uint32_t InIndex, uint32_t InDelayFrames);
   void ProcessPendingDescriptorPoolFree();
 
-  // 이번 프레임에만 사용할 Descriptor 생성
-  // jDescriptor_DX12 OneFrameCreateConstantBufferView(jRingBuffer_DX12*
+  // Create a Descriptor that will be used only for this frame
+  // DescriptorDx12 OneFrameCreateConstantBufferView(RingBufferDx12*
   // InBuffer, uint64_t InOffset, uint32_t InSize, ETextureFormat InFormat =
-  // ETextureFormat::MAX); jDescriptor_DX12
-  // OneFrameCreateShaderResourceView(jRingBuffer_DX12* InBuffer, uint64_t
-  // InOffset, uint32_t InStride, uint32_t InNumOfElement, ETextureFormat InFormat =
-  // ETextureFormat::MAX);
+  // ETextureFormat::MAX); DescriptorDx12
+  // OneFrameCreateShaderResourceView(RingBufferDx12* InBuffer, uint64_t
+  // InOffset, uint32_t InStride, uint32_t InNumOfElement, ETextureFormat
+  // InFormat = ETextureFormat::MAX);
 
   ComPtr<ID3D12DescriptorHeap> Heap;
   EDescriptorHeapTypeDX12      HeapType = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
   D3D12_CPU_DESCRIPTOR_HANDLE  CPUHandleStart   = {};
   D3D12_GPU_DESCRIPTOR_HANDLE  GPUHandleStart   = {};
-  uint32_t                       DescriptorSize   = 0;
-  uint32_t                       NumOfDescriptors = 0;
-  std::set<uint32_t>             Pools;
-  mutable MutexLock           DescriptorLock;
+  uint32_t                     DescriptorSize   = 0;
+  uint32_t                     NumOfDescriptors = 0;
+  std::set<uint32_t>           Pools;
+  mutable MutexLock            DescriptorLock;
 
   std::vector<PendingForFree> PendingFree;
   int32_t CanReleasePendingFreeShaderBindingInstanceFrameNumber = 0;
 };
 
-struct jDescriptorBlock_DX12 {
-  class jOnlineDescriptorHeapBlocks_DX12* DescriptorHeapBlocks = nullptr;
+struct DescriptorBlockDx12 {
+  class OnlineDescriptorHeapBlocksDx12* DescriptorHeapBlocks = nullptr;
   EDescriptorHeapTypeDX12       HeapType = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
-  int32_t                         Index    = 0;
-  int32_t                         AllocatedSize = 0;
-  std::vector<jDescriptor_DX12> Descriptors;
+  int32_t                       Index    = 0;
+  int32_t                       AllocatedSize = 0;
+  std::vector<DescriptorDx12> Descriptors;
 };
 
-class jOnlineDescriptorHeap_DX12;
+class OnlineDescriptorHeapDx12;
 
-// 한개의 Heap 을 여러개의 Block 으로 쪼개서 관리하는 클래스
-// - Block 이름은 jOnlineDescriptorHeap_DX12 임.
-class jOnlineDescriptorHeapBlocks_DX12 {
+// Class that manages a single Heap by dividing it into multiple Blocks
+// - The Block name is OnlineDescriptorHeapDx12
+class OnlineDescriptorHeapBlocksDx12 {
   public:
   static constexpr int32_t DescriptorsInBlock        = 5000;
   static constexpr int32_t TotalHeapSize             = 500'000;
@@ -116,49 +116,49 @@ class jOnlineDescriptorHeapBlocks_DX12 {
 
   static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
 
-  struct jFreeData {
+  struct FreeData {
     bool IsValid() const { return Index != -1; }
 
     uint32_t ReleasedFrame = 0;
     int32_t  Index         = -1;
   };
 
-  struct jFreeDataLessReleasedFrameFirstComp {
-    bool operator()(const jFreeData& InA, const jFreeData& InB) const {
+  struct FreeDataLessReleasedFrameFirstComp {
+    bool operator()(const FreeData& InA, const FreeData& InB) const {
       return ((uint64_t)InA.ReleasedFrame << 32 | (uint64_t)InA.Index)
            < ((uint64_t)InB.ReleasedFrame << 32 | (uint64_t)InB.Index);
     }
   };
 
   void Initialize(EDescriptorHeapTypeDX12 InHeapType,
-                  uint32_t                  InTotalHeapSize,
-                  uint32_t                  InDescriptorsInBlock);
+                  uint32_t                InTotalHeapSize,
+                  uint32_t                InDescriptorsInBlock);
   void Release();
 
-  jOnlineDescriptorHeap_DX12* Alloc();
+  OnlineDescriptorHeapDx12* Alloc();
   void                        Free(int32_t InIndex);
 
   ComPtr<ID3D12DescriptorHeap> Heap;
   EDescriptorHeapTypeDX12      HeapType = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
   D3D12_CPU_DESCRIPTOR_HANDLE  CPUHandleStart   = {};
   D3D12_GPU_DESCRIPTOR_HANDLE  GPUHandleStart   = {};
-  uint32_t                       DescriptorSize   = 0;
-  uint32_t                       NumOfDescriptors = 0;
-  std::set<jFreeData, jFreeDataLessReleasedFrameFirstComp> FreeLists;
+  uint32_t                     DescriptorSize   = 0;
+  uint32_t                     NumOfDescriptors = 0;
+  std::set<FreeData, FreeDataLessReleasedFrameFirstComp> FreeLists;
 
-  std::vector<jOnlineDescriptorHeap_DX12*> OnlineDescriptorHeap;
-  std::vector<jDescriptorBlock_DX12>       DescriptorBlocks;
+  std::vector<OnlineDescriptorHeapDx12*> OnlineDescriptorHeap;
+  std::vector<DescriptorBlockDx12>       DescriptorBlocks;
 
   mutable MutexLock DescriptorBlockLock;
 };
 
-// CommandList 당 한개씩 가지게 되는 OnlineDescriptorHeap,
-// jOnlineDescriptorHeapBlocks_DX12 으로 부터 할당 받음.
-// - CommandList 당 Block 을 할당하는 방식으로 여러개의 CommandList 가
-// OnlineDescriptor 에서 Allocation 경쟁 하는 부분을 피함.
-class jOnlineDescriptorHeap_DX12 {
+// Each CommandList has its own OnlineDescriptorHeap, allocated from
+// OnlineDescriptorHeapBlocksDx12.
+// - By allocating a block per CommandList, we avoid multiple CommandLists
+// competing for allocations from the OnlineDescriptor.
+class OnlineDescriptorHeapDx12 {
   public:
-  void Initialize(jDescriptorBlock_DX12* InDescriptorBlocks) {
+  void Initialize(DescriptorBlockDx12* InDescriptorBlocks) {
     DescriptorBlocks = InDescriptorBlocks;
     if (DescriptorBlocks) {
       CPUHandle = DescriptorBlocks->Descriptors[0].CPUHandle;
@@ -174,12 +174,12 @@ class jOnlineDescriptorHeap_DX12 {
     }
   }
 
-  jDescriptor_DX12 Alloc() {
+  DescriptorDx12 Alloc() {
     if (NumOfAllocated < DescriptorBlocks->Descriptors.size()) {
       return DescriptorBlocks->Descriptors[NumOfAllocated++];
     }
 
-    return jDescriptor_DX12();
+    return DescriptorDx12();
   }
 
   void Reset() { NumOfAllocated = 0; }
@@ -210,46 +210,47 @@ class jOnlineDescriptorHeap_DX12 {
 
   private:
   ID3D12DescriptorHeap*       Heap             = nullptr;
-  jDescriptorBlock_DX12*      DescriptorBlocks = nullptr;
+  DescriptorBlockDx12*      DescriptorBlocks = nullptr;
   D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle        = {};
   D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle        = {};
-  int32_t                       NumOfAllocated   = 0;
+  int32_t                     NumOfAllocated   = 0;
 };
 
-// OnlineDescriptorHeapBlock 을 관리하는 객체, 필요한 경우 추가
-// DescriptorHeapBlock 을 할당함.
-class jOnlineDescriptorManager {
+// Manages the OnlineDescriptorHeapBlock and allocates additional
+// DescriptorHeapBlocks when needed.
+class OnlineDescriptorManager {
   public:
-  jOnlineDescriptorHeap_DX12* Alloc(EDescriptorHeapTypeDX12 InType) {
-    std::vector<jOnlineDescriptorHeapBlocks_DX12*>& DescriptorHeapBlocks
+  OnlineDescriptorHeapDx12* Alloc(EDescriptorHeapTypeDX12 InType) {
+    std::vector<OnlineDescriptorHeapBlocksDx12*>& DescriptorHeapBlocks
         = OnlineDescriptorHeapBlocks[(int32_t)InType];
 
-    // 기존 HeapBlock 에서 할당 가능한지 확인
-    for (int32_t i = 0; i < (int32_t)DescriptorHeapBlocks.size(); ++i) {
+    // Check if allocation is possible from an existing HeapBlock
+    for (int32_t i = 0; i < static_cast<int32_t>(DescriptorHeapBlocks.size());
+         ++i) {
       assert(DescriptorHeapBlocks[i]);
-      jOnlineDescriptorHeap_DX12* AllocatedBlocks
+      OnlineDescriptorHeapDx12* AllocatedBlocks
           = DescriptorHeapBlocks[i]->Alloc();
       if (AllocatedBlocks) {
         return AllocatedBlocks;
       }
     }
 
-    // 기존 HeapBlock 이 가득 찬 상태라 HeapBlock 추가
-    auto SelectedHeapBlocks = new jOnlineDescriptorHeapBlocks_DX12();
+    // If all existing HeapBlocks are full, add a new HeapBlock
+    auto SelectedHeapBlocks = new OnlineDescriptorHeapBlocksDx12();
 
     switch (InType) {
       case EDescriptorHeapTypeDX12::CBV_SRV_UAV: {
         SelectedHeapBlocks->Initialize(
             EDescriptorHeapTypeDX12::CBV_SRV_UAV,
-            jOnlineDescriptorHeapBlocks_DX12::TotalHeapSize,
-            jOnlineDescriptorHeapBlocks_DX12::DescriptorsInBlock);
+            OnlineDescriptorHeapBlocksDx12::TotalHeapSize,
+            OnlineDescriptorHeapBlocksDx12::DescriptorsInBlock);
         break;
       }
       case EDescriptorHeapTypeDX12::SAMPLER: {
         SelectedHeapBlocks->Initialize(
             EDescriptorHeapTypeDX12::SAMPLER,
-            jOnlineDescriptorHeapBlocks_DX12::SamplerTotalHeapSize,
-            jOnlineDescriptorHeapBlocks_DX12::SamplerDescriptorsInBlock);
+            OnlineDescriptorHeapBlocksDx12::SamplerTotalHeapSize,
+            OnlineDescriptorHeapBlocksDx12::SamplerDescriptorsInBlock);
         break;
       }
       default:
@@ -257,29 +258,31 @@ class jOnlineDescriptorManager {
         break;
     }
 
+    // Add the new HeapBlock to the list
     DescriptorHeapBlocks.push_back(SelectedHeapBlocks);
 
-    // 할당 할 수 있는 HeapBlock 이 더 많은 것을 앞쪽에 배치함
+    // Sort HeapBlocks so that the ones with the most available allocations are
+    // first
     std::sort(DescriptorHeapBlocks.begin(),
               DescriptorHeapBlocks.end(),
-              [](jOnlineDescriptorHeapBlocks_DX12* InA,
-                 jOnlineDescriptorHeapBlocks_DX12* InB) {
+              [](OnlineDescriptorHeapBlocksDx12* InA,
+                 OnlineDescriptorHeapBlocksDx12* InB) {
                 return InA->FreeLists.size() > InB->FreeLists.size();
               });
 
-    jOnlineDescriptorHeap_DX12* AllocatedBlocks = SelectedHeapBlocks->Alloc();
+    OnlineDescriptorHeapDx12* AllocatedBlocks = SelectedHeapBlocks->Alloc();
     assert(AllocatedBlocks);
     return AllocatedBlocks;
   }
 
-  void Free(jOnlineDescriptorHeap_DX12* InDescriptorHeap) {
+  void Free(OnlineDescriptorHeapDx12* InDescriptorHeap) {
     assert(InDescriptorHeap);
     InDescriptorHeap->Release();
   }
 
   void Release() {
     for (int32_t i = 0; i < (int32_t)EDescriptorHeapTypeDX12::MAX; ++i) {
-      for (jOnlineDescriptorHeapBlocks_DX12* iter :
+      for (OnlineDescriptorHeapBlocksDx12* iter :
            OnlineDescriptorHeapBlocks[i]) {
         delete iter;
       }
@@ -287,11 +290,11 @@ class jOnlineDescriptorManager {
     }
   }
 
-  std::vector<jOnlineDescriptorHeapBlocks_DX12*>
+  std::vector<OnlineDescriptorHeapBlocksDx12*>
       OnlineDescriptorHeapBlocks[(int32_t)EDescriptorHeapTypeDX12::MAX];
 };
 
-class jOfflineDescriptorHeap_DX12 {
+class OfflineDescriptorHeapDx12 {
   public:
   void Initialize(EDescriptorHeapTypeDX12 InHeapType) {
     assert(!IsInitialized);
@@ -301,9 +304,9 @@ class jOfflineDescriptorHeap_DX12 {
     IsInitialized = true;
   }
 
-  jDescriptor_DX12 Alloc() {
+  DescriptorDx12 Alloc() {
     if (!IsInitialized) {
-      return jDescriptor_DX12();
+      return DescriptorDx12();
     }
 
     if (!CurrentHeap) {
@@ -311,14 +314,15 @@ class jOfflineDescriptorHeap_DX12 {
       assert(CurrentHeap);
     }
 
-    jDescriptor_DX12 NewDescriptor = CurrentHeap->Alloc();
+    DescriptorDx12 NewDescriptor = CurrentHeap->Alloc();
     if (!NewDescriptor.IsValid()) {
       if (Heap.size() > 0) {
-        // 할당 할 수 있는 Heap 이 더 많은 것을 앞쪽에 배치함
+        // Reorder the Heap to place those with more available allocations at
+        // the front
         std::sort(Heap.begin(),
                   Heap.end(),
-                  [](const std::shared_ptr<jDescriptorHeap_DX12>& InA,
-                     const std::shared_ptr<jDescriptorHeap_DX12>& InB) {
+                  [](const std::shared_ptr<DescriptorHeapDx12>& InA,
+                     const std::shared_ptr<DescriptorHeapDx12>& InB) {
                     return InA->Pools.size() > InB->Pools.size();
                   });
 
@@ -341,7 +345,7 @@ class jOfflineDescriptorHeap_DX12 {
     return NewDescriptor;
   }
 
-  void Free(const jDescriptor_DX12& InDescriptor) {
+  void Free(const DescriptorDx12& InDescriptor) {
     if (!InDescriptor.DescriptorHeap.expired()) {
       InDescriptor.DescriptorHeap.lock()->Free(InDescriptor.Index);
     }
@@ -356,8 +360,8 @@ class jOfflineDescriptorHeap_DX12 {
   }
 
   private:
-  std::shared_ptr<jDescriptorHeap_DX12> CreateDescriptorHeap() {
-    auto DescriptorHeap = std::make_shared<jDescriptorHeap_DX12>();
+  std::shared_ptr<DescriptorHeapDx12> CreateDescriptorHeap() {
+    auto DescriptorHeap = std::make_shared<DescriptorHeapDx12>();
     assert(DescriptorHeap);
 
     DescriptorHeap->Initialize(HeapType, false);
@@ -369,8 +373,8 @@ class jOfflineDescriptorHeap_DX12 {
   bool                    IsInitialized = false;
   EDescriptorHeapTypeDX12 HeapType      = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
 
-  std::shared_ptr<jDescriptorHeap_DX12>              CurrentHeap;
-  std::vector<std::shared_ptr<jDescriptorHeap_DX12>> Heap;
+  std::shared_ptr<DescriptorHeapDx12>              CurrentHeap;
+  std::vector<std::shared_ptr<DescriptorHeapDx12>> Heap;
 };
 
 }  // namespace game_engine
