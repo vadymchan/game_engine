@@ -47,7 +47,7 @@ struct WriteDescriptorSet {
   void Reset();
 
   void SetWriteDescriptorInfo(int32_t               InIndex,
-                              const jShaderBinding* InShaderBinding);
+                              const ShaderBinding* InShaderBinding);
 
   bool                              IsInitialized = false;
   std::vector<WriteDescriptorInfo>  WriteDescriptorInfos;
@@ -59,7 +59,7 @@ struct WriteDescriptorSet {
 // ----------------------
 
 // TODO: move to Vulkan folder
-struct ShaderBindingInstanceVk : public jShaderBindingInstance {
+struct ShaderBindingInstanceVk : public ShaderBindingInstance {
   virtual ~ShaderBindingInstanceVk() {}
 
   const struct ShaderBindingLayoutVk* ShaderBindingsLayouts = nullptr;
@@ -67,17 +67,17 @@ struct ShaderBindingInstanceVk : public jShaderBindingInstance {
   static void CreateWriteDescriptorSet(
       WriteDescriptorSet&        OutDescriptorWrites,
       const VkDescriptorSet      InDescriptorSet,
-      const jShaderBindingArray& InShaderBindingArray);
+      const ShaderBindingArray& InShaderBindingArray);
 
   static void UpdateWriteDescriptorSet(
       WriteDescriptorSet&        OutDescriptorWrites,
-      const jShaderBindingArray& InShaderBindingArray);
+      const ShaderBindingArray& InShaderBindingArray);
 
   virtual void Initialize(
-      const jShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& InShaderBindingArray) override;
 
   virtual void UpdateShaderBindings(
-      const jShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& InShaderBindingArray) override;
 
   virtual void* GetHandle() const override { return DescriptorSet; }
 
@@ -87,14 +87,14 @@ struct ShaderBindingInstanceVk : public jShaderBindingInstance {
 
   virtual void Free() override;
 
-  virtual jShaderBindingInstanceType GetType() const { return Type; }
+  virtual ShaderBindingInstanceType GetType() const { return Type; }
 
-  virtual void SetType(const jShaderBindingInstanceType InType) {
+  virtual void SetType(const ShaderBindingInstanceType InType) {
     Type = InType;
   }
 
   private:
-  jShaderBindingInstanceType Type = jShaderBindingInstanceType::SingleFrame;
+  ShaderBindingInstanceType Type = ShaderBindingInstanceType::SingleFrame;
 
   public:
   // When the DescriptorPool is released, everything can be handled, so it is
@@ -105,19 +105,19 @@ struct ShaderBindingInstanceVk : public jShaderBindingInstance {
 
 struct ShaderBindingLayoutVk;
 
-struct ShaderBindingLayoutVk : public jShaderBindingLayout {
+struct ShaderBindingLayoutVk : public ShaderBindingLayout {
   virtual ~ShaderBindingLayoutVk() { Release(); }
 
   virtual bool Initialize(
-      const jShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& InShaderBindingArray) override;
 
-  virtual std::shared_ptr<jShaderBindingInstance> CreateShaderBindingInstance(
-      const jShaderBindingArray&       InShaderBindingArray,
-      const jShaderBindingInstanceType InType) const override;
+  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+      const ShaderBindingArray&       InShaderBindingArray,
+      const ShaderBindingInstanceType InType) const override;
 
   virtual size_t GetHash() const override;
 
-  virtual const jShaderBindingArray& GetShaderBindingsLayout() const {
+  virtual const ShaderBindingArray& GetShaderBindingsLayout() const {
     return shaderBindingArray;
   }
 
@@ -131,17 +131,17 @@ struct ShaderBindingLayoutVk : public jShaderBindingLayout {
   mutable size_t Hash = 0;
 
   protected:
-  jShaderBindingArray shaderBindingArray;
+  ShaderBindingArray shaderBindingArray;
 
   public:
   VkDescriptorSetLayout DescriptorSetLayout = nullptr;
 
   static VkDescriptorSetLayout CreateDescriptorSetLayout(
-      const jShaderBindingArray& InShaderBindingArray);
+      const ShaderBindingArray& InShaderBindingArray);
 
   static VkPipelineLayout CreatePipelineLayout(
-      const jShaderBindingLayoutArray& InShaderBindingLayoutArray,
-      const jPushConstant*             pushConstant);
+      const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+      const PushConstant*             pushConstant);
 
   static void ClearPipelineLayout();
 
