@@ -19,21 +19,21 @@ struct UniformBufferBlockVk : public IUniformBufferBlock {
 
   void AllocBufferFromGlobalMemory(size_t size);
 
-  virtual void Release() override { Buffer.Release(); }
+  virtual void Release() override { m_buffer.Release(); }
 
   virtual void UpdateBufferData(const void* InData, size_t InSize) override;
 
   virtual void ClearBuffer(int32_t clearValue) override;
 
-  virtual void* GetLowLevelResource() const override { return Buffer.m_buffer; }
+  virtual void* GetLowLevelResource() const override { return m_buffer.m_buffer; }
 
-  virtual void* GetLowLevelMemory() const override { return Buffer.m_memory; }
+  virtual void* GetLowLevelMemory() const override { return m_buffer.m_deviceMemory; }
 
-  virtual size_t GetBufferSize() const override { return Buffer.AllocatedSize; }
+  virtual size_t GetBufferSize() const override { return m_buffer.AllocatedSize; }
 
-  virtual size_t GetBufferOffset() const override { return Buffer.Offset; }
+  virtual size_t GetBufferOffset() const override { return m_buffer.Offset; }
 
-  BufferVk Buffer;
+  BufferVk m_buffer;
 
   private:
   UniformBufferBlockVk(const UniformBufferBlockVk&)            = delete;
