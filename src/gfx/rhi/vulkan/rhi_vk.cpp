@@ -2160,10 +2160,11 @@ bool RhiVk::TransitionLayout(VkCommandBuffer commandBuffer,
       }
       break;
   }
+  // TODO: consider removing
   // if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
   //{
   //     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-  //     if (jVulkanBufferUtil::HasStencilComponent(format))
+  //     if (VulkanBufferUtil::HasStencilComponent(format))
   //         barrier.subresourceRange.aspectMask |=
   //         VK_IMAGE_ASPECT_STENCIL_BIT;
   // }
