@@ -676,7 +676,7 @@ class RTClearValue {
   public:
   static const RTClearValue Invalid;
 
-  union jClearValueType {
+  union ClearValueType {
     float                 Color[4];
     DepthStencilClearType DepthStencil;
   };
@@ -729,7 +729,7 @@ class RTClearValue {
 
   uint32_t GetCleraStencil() const { return ClearValue.DepthStencil.Stencil; }
 
-  jClearValueType GetClearValue() const { return ClearValue; }
+  ClearValueType GetClearValue() const { return ClearValue; }
 
   void ResetToNoneType() { Type = ERTClearType::None; }
 
@@ -750,7 +750,7 @@ class RTClearValue {
 
   private:
   ERTClearType    Type = ERTClearType::None;
-  jClearValueType ClearValue;
+  ClearValueType ClearValue;
 };
 
 struct BaseVertex {
