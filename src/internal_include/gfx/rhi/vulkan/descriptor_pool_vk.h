@@ -48,9 +48,9 @@ const std::unordered_map<VkDescriptorType, float> DefaultPoolSizes = {
 };
 
 struct DescriptorPoolVk {
-  std::map<VkDescriptorSetLayout, jShaderBindingInstancePtrArray>
+  std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
       PendingDescriptorSets;
-  std::map<VkDescriptorSetLayout, jShaderBindingInstancePtrArray>
+  std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
       AllocatedDescriptorSets;
 
   DescriptorPoolVk() = default;
@@ -61,17 +61,17 @@ struct DescriptorPoolVk {
 
   virtual void Reset();
 
-  virtual std::shared_ptr<jShaderBindingInstance> AllocateDescriptorSet(
+  virtual std::shared_ptr<ShaderBindingInstance> AllocateDescriptorSet(
       VkDescriptorSetLayout InLayout);
 
   virtual void Free(
-      std::shared_ptr<jShaderBindingInstance> InShaderBindingInstance);
+      std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance);
 
   void Release();
 
-  // This will be called from 'jDeallocatorMultiFrameShaderBindingInstance'
+  // This will be called from 'DeallocatorMultiFrameShaderBindingInstance'
   void FreedFromPendingDelegate(
-      std::shared_ptr<jShaderBindingInstance> InShaderBindingInstance);
+      std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance);
 
   uint32_t         MaxDescriptorSets = 128;
   // TODO: check that std::size works as _countof
@@ -80,7 +80,7 @@ struct DescriptorPoolVk {
   ;
   mutable MutexLock DescriptorPoolLock;
 
-  jDeallocatorMultiFrameShaderBindingInstance
+  DeallocatorMultiFrameShaderBindingInstance
       DeallocateMultiframeShaderBindingInstance;
 };
 
