@@ -411,7 +411,7 @@ cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compile
 
 # BEGIN: DirectX 12 Agility SDK
 #--------------------------------------------------------------------------------
-if(USE_DIRECTX_AGILITY AND USE_VCPKG)
+if(USE_DIRECTX_AGILITY)
 
     # BEGIN: cmake_modules (FindWindowsSDK) -> D3D12_LIB
     # ---------------------------------------------------------------------------
@@ -481,7 +481,7 @@ endif()
 
 # BEGIN: DirectXShaderCompiler
 # -------------------------------------------------------------------------------------
-if(USE_DIRECTX_SHADER_COMPILER AND USE_VCPKG)
+if(USE_DIRECTX_SHADER_COMPILER)
     message(STATUS "Fetching directx-dxc...")
 
     # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
