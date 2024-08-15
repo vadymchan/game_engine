@@ -118,6 +118,7 @@ class BufferVk : public Buffer {
 
   virtual EResourceLayout GetLayout() const override { return Layout; }
 
+  // TODO: consider descriptive names for Memory and VkDeviceMemory
   Memory          m_memory;
   VkBuffer        m_buffer       = VK_NULL_HANDLE;
   VkDeviceMemory  m_deviceMemory = VK_NULL_HANDLE;

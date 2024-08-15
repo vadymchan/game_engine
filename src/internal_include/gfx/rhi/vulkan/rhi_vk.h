@@ -331,52 +331,52 @@ class RhiVk : public RHI {
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     vertStartIndex,
-      int32_t                                     vertCount) const override;
+      int32_t                                    vertStartIndex,
+      int32_t                                    vertCount) const override;
 
   void DrawArraysInstanced(
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     vertStartIndex,
-      int32_t                                     vertCount,
-      int32_t                                     instanceCount) const override;
+      int32_t                                    vertStartIndex,
+      int32_t                                    vertCount,
+      int32_t                                    instanceCount) const override;
 
   void DrawElements(
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount) const override;
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount) const override;
 
   void DrawElementsInstanced(
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount,
-      int32_t                                     instanceCount) const override;
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
+      int32_t                                    instanceCount) const override;
 
   void DrawElementsBaseVertex(
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount,
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
       int32_t baseVertexIndex) const override;
 
   void DrawElementsInstancedBaseVertex(
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      int32_t                                     elementSize,
-      int32_t                                     startIndex,
-      int32_t                                     indexCount,
-      int32_t                                     baseVertexIndex,
-      int32_t                                     instanceCount) const override;
+      int32_t                                    elementSize,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
+      int32_t                                    baseVertexIndex,
+      int32_t                                    instanceCount) const override;
 
   void DrawIndirect(
       const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
