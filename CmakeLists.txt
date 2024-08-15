@@ -5,8 +5,25 @@ cmake_minimum_required(VERSION 3.26)
 set(WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-message("WORKING_DIRECTORY: ${WORKING_DIRECTORY}")
-message("CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+
+# Choose which third-party libraries to include in the build
+option(BUILD_SDL "Build the SDL library" ON)
+option(BUILD_GLFW "Build the GLFW library" OFF)
+option(BUILD_SPDLOG "Build the SPDLOG library" ON)
+option(BUILD_BULLET "Build the Bullet library" OFF)
+option(BUILD_IMGUI "Build the ImGui library" OFF)
+option(BUILD_ASSIMP "Build the Assimp library" OFF)
+option(BUILD_STB "Build the STB library" OFF)
+option(BUILD_BOOST "Build the Boost library" OFF)
+option(BUILD_EIGEN "Include the Eigen library" OFF)
+option(BUILD_MATH_LIBRARY "Build the Math Library" ON)
+option(BUILD_EASTL "Build the EASTL library" ON)
+option(BUILD_XXHASH "Build the xxHash library" ON)
+
+# Choose which rendering API to use
+option(USE_VULKAN "Use Vulkan as the rendering API" ON)
+option(USE_OPENGL "Use OpenGL as the rendering API" OFF)
+option(USE_DIRECTX "Use DirectX as the rendering API" OFF)
 
 # WIP - change build directory
 # set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
@@ -22,9 +39,10 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
 # vcpkg
 # -------------------------------------------------------------------------------------
 
-option(USE_VCPKG "Build the vcpkg" ON)
-
-if(USE_VCPKG)
+# Currently vcpkg is used only for DirectX related third parties
+# option(USE_VCPKG "Build the vcpkg" ON)
+# if(USE_VCPKG)
+if(USE_DIRECTX)
     message(STATUS "Fetching vcpkg-cmake-integration...")
     FetchContent_Declare(
         vcpkg_cmake_integration
@@ -58,18 +76,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif()
 
-option(BUILD_SDL "Build the SDL library" ON)
-option(BUILD_GLFW "Build the GLFW library" OFF)
-option(BUILD_SPDLOG "Build the SPDLOG library" ON)
-option(BUILD_BULLET "Build the Bullet library" OFF)
-option(BUILD_IMGUI "Build the ImGui library" OFF)
-option(BUILD_ASSIMP "Build the Assimp library" OFF)
-option(BUILD_STB "Build the STB library" OFF)
-option(BUILD_BOOST "Build the Boost library" OFF)
-option(BUILD_EIGEN "Include the Eigen library" OFF)
-option(BUILD_MATH_LIBRARY "Build the Math Library" ON)
-option(BUILD_EASTL "Build the EASTL library" ON)
-option(BUILD_XXHASH "Build the xxHash library" ON)
+
 
 if(BUILD_SDL)
     message(STATUS "Fetching SDL...")
@@ -341,9 +348,7 @@ if(BUILD_XXHASH)
     target_link_libraries(${PROJECT_NAME} PRIVATE xxhash)
 endif()
 
-option(USE_VULKAN "Use Vulkan for graphics" ON)
-option(USE_OPENGL "Use OpenGL for graphics" OFF)
-option(USE_DIRECTX "Use DirectX for graphics" OFF)
+
 
 if(USE_VULKAN)
     # Find Vulkan package
