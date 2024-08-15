@@ -7,12 +7,12 @@
 
 namespace game_engine {
 
-struct jUniformBufferBlock_DX12 : public IUniformBufferBlock {
-  friend struct jPlacedResourcePool;
+struct UniformBufferBlockDx12 : public IUniformBufferBlock {
+  friend struct PlacedResourcePool;
 
   using IUniformBufferBlock::IUniformBufferBlock;
   using IUniformBufferBlock::UpdateBufferData;
-  virtual ~jUniformBufferBlock_DX12();
+  virtual ~UniformBufferBlockDx12();
 
   virtual void Init(size_t size) override;
 
@@ -28,16 +28,16 @@ struct jUniformBufferBlock_DX12 : public IUniformBufferBlock {
 
   virtual size_t GetBufferOffset() const override { return 0; }
 
-  const jDescriptor_DX12& GetCBV() const;
+  const DescriptorDx12& GetCBV() const;
   uint64_t                  GetGPUAddress() const;
 
   private:
-  jUniformBufferBlock_DX12(const jUniformBufferBlock_DX12&)            = delete;
-  jUniformBufferBlock_DX12& operator=(const jUniformBufferBlock_DX12&) = delete;
+  UniformBufferBlockDx12(const UniformBufferBlockDx12&)            = delete;
+  UniformBufferBlockDx12& operator=(const UniformBufferBlockDx12&) = delete;
 
-  std::shared_ptr<jBuffer_DX12> BufferPtr;
+  std::shared_ptr<BufferDx12> BufferPtr;
 
-  jRingBuffer_DX12* RingBuffer              = nullptr;
+  RingBufferDx12* RingBuffer              = nullptr;
   int64_t             RingBufferOffset        = 0;
   uint8_t*            RingBufferDestAddress   = nullptr;
   size_t            RingBufferAllocatedSize = 0;
