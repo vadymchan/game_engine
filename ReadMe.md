@@ -17,6 +17,51 @@
 - vcpkg - for managing and building C++ libraries. (Currently is used for fetching and integrating DX12 related dependencies).
 - cmake-modules (FindWindowsSDK) - for locating and integrating the Windows SDK in the project.
 
+## How to Build
+
+I strongly recommend creating a separate build directory and building the project there. This approach makes it easy to clean up build-related files and folders, ensuring that they do not clutter the root directory.
+
+1. **Clone the repository**  
+   Open your terminal and clone the repository to your local machine:
+
+   ```bash
+   git clone git@github.com:vadymchan/game_engine.git
+   ```
+
+2. **Create a build directory** (optional but recommended)  
+   It’s a good practice to keep build files separate from source code. Create and navigate to the build directory:
+
+   ```bash
+   mkdir build
+   cd build
+   ```
+
+3. **Configure the project using CMake**  
+   Configure the project with CMake to generate the necessary build files.  
+   If you’re using a command-line interface, simply run:
+   ```bash
+   cmake ..
+   ```
+
+Alternatively, you can use the CMake GUI for a more user-friendly experience:
+
+- Open the CMake GUI.
+- Set the source directory to the root of the cloned repository.
+- Set the build directory to your preferred location (e.g., `game_engine/build`).
+- Click "Configure" and choose your preferred generator (e.g., Visual Studio, Ninja, Unix Makefiles).
+- Optionally, you can modify available CMake options. Here's some of them:
+  - `USE_VCPKG`: Build the vcpkg (default: ON).
+  - `BUILD_SDL`: Build the SDL library (default: ON).
+  - `BUILD_SPDLOG`: Build the SPDLOG library (default: ON).
+  - `BUILD_MATH_LIBRARY`: Build the Math Library (default: ON).
+  - `BUILD_EASTL`: Build the EASTL library (default: ON).
+  - `BUILD_XXHASH`: Build the xxHash library (default: ON).
+  - `USE_VULKAN`: Use Vulkan for graphics (default: ON).
+  - `USE_DIRECTX`: Use DirectX for graphics (default: OFF). **PAY ATTENTION!** This option is **not enabled by default** as DirectX is **not portable**.
+  - `USE_DIRECTX_AGILITY`: Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library) (default: ON if `USE_DIRECTX` is ON).
+  - `USE_DIRECTX_SHADER_COMPILER`: Fetch DirectX Shader Compiler (default: ON if `USE_DIRECTX` is ON).
+- Click "Generate" to create the build files.
+
 ## naming conventions for this project:
 
 For refactoring naming conventions this project uses **clang-format**.
