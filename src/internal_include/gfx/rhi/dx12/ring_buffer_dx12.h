@@ -12,10 +12,10 @@
 
 namespace game_engine {
 
-struct jRingBuffer_DX12 : public jBuffer {
-  jRingBuffer_DX12() = default;
+struct RingBufferDx12 : public Buffer {
+  RingBufferDx12() = default;
 
-  virtual ~jRingBuffer_DX12() { Release(); }
+  virtual ~RingBufferDx12() { Release(); }
 
   virtual void Create(uint64_t totalSize, uint32_t alignment = 16);
 
@@ -50,7 +50,7 @@ struct jRingBuffer_DX12 : public jBuffer {
 
     const D3D12_RANGE readRange = {.Begin = offset, .End = offset + size};
 
-    HRESULT hr = Buffer->Resource.get()->Get()->Map(
+    HRESULT hr = m_buffer->Resource.get()->Get()->Map(
         0, &readRange, reinterpret_cast<void**>(&MappedPointer));
     assert(SUCCEEDED(hr));
 
@@ -66,7 +66,7 @@ struct jRingBuffer_DX12 : public jBuffer {
     assert(!MappedPointer);
     D3D12_RANGE readRange = {};
 
-    HRESULT hr = Buffer->Resource.get()->Get()->Map(
+    HRESULT hr = m_buffer->Resource.get()->Get()->Map(
         0, &readRange, reinterpret_cast<void**>(&MappedPointer));
     assert(SUCCEEDED(hr));
 
@@ -79,7 +79,7 @@ struct jRingBuffer_DX12 : public jBuffer {
 
   virtual void Unmap() override {
     assert(MappedPointer);
-    Buffer->Resource.get()->Get()->Unmap(0, nullptr);
+    m_buffer->Resource.get()->Get()->Unmap(0, nullptr);
     MappedPointer = nullptr;
   }
 
@@ -95,7 +95,7 @@ struct jRingBuffer_DX12 : public jBuffer {
     }
   }
 
-  virtual void* GetHandle() const override { return Buffer->Get(); }
+  virtual void* GetHandle() const override { return m_buffer->Get(); }
 
   virtual uint64_t GetAllocatedSize() const override { return RingBufferSize; }
 
@@ -104,16 +104,16 @@ struct jRingBuffer_DX12 : public jBuffer {
   virtual uint64_t GetOffset() const override { return RingBufferOffset; }
 
   inline uint64_t GetGPUAddress() const {
-    return Buffer->GetGPUVirtualAddress();
+    return m_buffer->GetGPUVirtualAddress();
   }
 
   uint64_t                          RingBufferOffset = 0;
   uint32_t                          Alignment        = 16;
-  std::shared_ptr<jCreatedResource> Buffer;
+  std::shared_ptr<CreatedResource> m_buffer;
   uint64_t                          RingBufferSize = 0;
   void*                             MappedPointer  = nullptr;
 
-  jDescriptor_DX12 CBV;
+  DescriptorDx12 CBV;
 
   MutexLock Lock;
 };
