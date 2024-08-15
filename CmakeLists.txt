@@ -225,15 +225,14 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include" PREFIX "include" FILES ${HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${INTERNAL_HEADERS} ${SOURCES} ${INLINES})
-source_group("" FILES main.cpp)
 
 option(GAME_ENGINE_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
 
 if(WIN32 AND GAME_ENGINE_USE_WINDOWS_SUBSYSTEM)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} main.cpp)
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES})
     target_compile_definitions(${PROJECT_NAME} PUBLIC GAME_ENGINE_WINDOWS_SUBSYSTEM)
 else()
-    add_executable(${PROJECT_NAME} ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} main.cpp)
+    add_executable(${PROJECT_NAME} ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES})
 endif()
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
