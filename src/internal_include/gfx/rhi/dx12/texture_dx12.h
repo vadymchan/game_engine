@@ -10,47 +10,47 @@
 namespace game_engine {
 
 // TODO: constructors
-struct jTexture_DX12 : public jTexture {
-  jTexture_DX12() = default;
+struct TextureDx12 : public Texture {
+  TextureDx12() = default;
 
-  jTexture_DX12(ETextureType                             InType,
+  TextureDx12(ETextureType                             InType,
                 ETextureFormat                           InFormat,
                 const math::Dimension2Di&                extent,
                 int32_t                                  InLayerCount,
                 EMSAASamples                             InSampleCount,
                 bool                                     InSRGB,
-                const jRTClearValue&                     InClearValue,
-                const std::shared_ptr<jCreatedResource>& InImage,
-                jDescriptor_DX12                         InRTV = {},
-                jDescriptor_DX12                         InDSV = {},
-                jDescriptor_DX12                         InSRV = {},
-                jDescriptor_DX12                         InUAV = {},
+                const RTClearValue&                     InClearValue,
+                const std::shared_ptr<CreatedResource>& InImage,
+                DescriptorDx12                         InRTV = {},
+                DescriptorDx12                         InDSV = {},
+                DescriptorDx12                         InSRV = {},
+                DescriptorDx12                         InUAV = {},
                 EResourceLayout InImageLayout = EResourceLayout::UNDEFINED)
-      : jTexture(InType,
+      : Texture(InType,
                  InFormat,
                  extent,
                  InLayerCount,
                  InSampleCount,
                  InSRGB)
-      , Texture(InImage)
+      , m_texture(InImage)
       , RTV(InRTV)
       , DSV(InDSV)
       , SRV(InSRV)
       , UAV(InUAV)
       , Layout(InImageLayout) {}
 
-  virtual ~jTexture_DX12();
+  virtual ~TextureDx12();
 
-  std::shared_ptr<jCreatedResource> Texture;
+  std::shared_ptr<CreatedResource> m_texture;
   EResourceLayout                   Layout = EResourceLayout::UNDEFINED;
-  jDescriptor_DX12                  SRV;
-  jDescriptor_DX12                  UAV;
-  jDescriptor_DX12                  RTV;
-  jDescriptor_DX12                  DSV;
+  DescriptorDx12                  SRV;
+  DescriptorDx12                  UAV;
+  DescriptorDx12                  RTV;
+  DescriptorDx12                  DSV;
 
-  std::map<int32_t, jDescriptor_DX12> UAVMipMap;
+  std::map<int32_t, DescriptorDx12> UAVMipMap;
 
-  virtual void* GetHandle() const override { return Texture->Get(); }
+  virtual void* GetHandle() const override { return m_texture->Get(); }
 
   virtual void* GetSamplerStateHandle() const override { return nullptr; }
 
