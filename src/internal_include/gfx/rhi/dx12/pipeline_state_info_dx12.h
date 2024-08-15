@@ -7,15 +7,15 @@
 
 namespace game_engine {
 
-struct jCommandBuffer_DX12;
+struct CommandBufferDx12;
 
-struct jSamplerStateInfo_DX12 : public jSamplerStateInfo {
-  jSamplerStateInfo_DX12() = default;
+struct SamplerStateInfoDx12 : public SamplerStateInfo {
+  SamplerStateInfoDx12() = default;
 
-  jSamplerStateInfo_DX12(const jSamplerStateInfo& state)
-      : jSamplerStateInfo(state) {}
+  SamplerStateInfoDx12(const SamplerStateInfo& state)
+      : SamplerStateInfo(state) {}
 
-  virtual ~jSamplerStateInfo_DX12() { Release(); }
+  virtual ~SamplerStateInfoDx12() { Release(); }
 
   virtual void Initialize() override;
   void         Release();
@@ -23,16 +23,16 @@ struct jSamplerStateInfo_DX12 : public jSamplerStateInfo {
   virtual void* GetHandle() const { return (void*)&SamplerDesc; }
 
   D3D12_SAMPLER_DESC SamplerDesc;
-  jDescriptor_DX12   SamplerSRV;
+  DescriptorDx12   SamplerSRV;
 };
 
-struct jRasterizationStateInfo_DX12 : public jRasterizationStateInfo {
-  jRasterizationStateInfo_DX12() = default;
+struct RasterizationStateInfoDx12 : public RasterizationStateInfo {
+  RasterizationStateInfoDx12() = default;
 
-  jRasterizationStateInfo_DX12(const jRasterizationStateInfo& state)
-      : jRasterizationStateInfo(state) {}
+  RasterizationStateInfoDx12(const RasterizationStateInfo& state)
+      : RasterizationStateInfo(state) {}
 
-  virtual ~jRasterizationStateInfo_DX12() {}
+  virtual ~RasterizationStateInfoDx12() {}
 
   virtual void Initialize() override;
 
@@ -40,39 +40,39 @@ struct jRasterizationStateInfo_DX12 : public jRasterizationStateInfo {
   DXGI_SAMPLE_DESC      MultiSampleDesc = {};
 };
 
-struct jStencilOpStateInfo_DX12 : public jStencilOpStateInfo {
-  jStencilOpStateInfo_DX12() = default;
+struct StencilOpStateInfoDx12 : public StencilOpStateInfo {
+  StencilOpStateInfoDx12() = default;
 
-  jStencilOpStateInfo_DX12(const jStencilOpStateInfo& state)
-      : jStencilOpStateInfo(state) {}
+  StencilOpStateInfoDx12(const StencilOpStateInfo& state)
+      : StencilOpStateInfo(state) {}
 
-  virtual ~jStencilOpStateInfo_DX12() {}
+  virtual ~StencilOpStateInfoDx12() {}
 
   virtual void Initialize() override;
 
   D3D12_DEPTH_STENCILOP_DESC StencilOpStateDesc = {};
 };
 
-struct jDepthStencilStateInfo_DX12 : public jDepthStencilStateInfo {
-  jDepthStencilStateInfo_DX12() = default;
+struct DepthStencilStateInfoDx12 : public DepthStencilStateInfo {
+  DepthStencilStateInfoDx12() = default;
 
-  jDepthStencilStateInfo_DX12(const jDepthStencilStateInfo& state)
-      : jDepthStencilStateInfo(state) {}
+  DepthStencilStateInfoDx12(const DepthStencilStateInfo& state)
+      : DepthStencilStateInfo(state) {}
 
-  virtual ~jDepthStencilStateInfo_DX12() {}
+  virtual ~DepthStencilStateInfoDx12() {}
 
   virtual void Initialize() override;
 
   D3D12_DEPTH_STENCIL_DESC DepthStencilStateDesc = {};
 };
 
-struct jBlendingStateInfo_DX12 : public jBlendingStateInfo {
-  jBlendingStateInfo_DX12() = default;
+struct BlendingStateInfoDx12 : public BlendingStateInfo {
+  BlendingStateInfoDx12() = default;
 
-  jBlendingStateInfo_DX12(const jBlendingStateInfo& state)
-      : jBlendingStateInfo(state) {}
+  BlendingStateInfoDx12(const BlendingStateInfo& state)
+      : BlendingStateInfo(state) {}
 
-  virtual ~jBlendingStateInfo_DX12() {}
+  virtual ~BlendingStateInfoDx12() {}
 
   virtual void Initialize() override;
 
@@ -80,32 +80,32 @@ struct jBlendingStateInfo_DX12 : public jBlendingStateInfo {
 };
 
 //////////////////////////////////////////////////////////////////////////
-// jPipelineStateInfo_DX12
+// PipelineStateInfoDx12
 //////////////////////////////////////////////////////////////////////////
-struct jPipelineStateInfo_DX12 : public jPipelineStateInfo {
-  jPipelineStateInfo_DX12() = default;
+struct PipelineStateInfoDx12 : public PipelineStateInfo {
+  PipelineStateInfoDx12() = default;
 
-  jPipelineStateInfo_DX12(
-      const jPipelineStateFixedInfo*   pipelineStateFixed,
+  PipelineStateInfoDx12(
+      const PipelineStateFixedInfo*   pipelineStateFixed,
       const GraphicsPipelineShader     shader,
-      const jVertexBufferArray&        InVertexBufferArray,
-      const jRenderPass*               renderPass,
-      const jShaderBindingLayoutArray& InShaderBindingLayoutArray,
-      const jPushConstant*             pushConstant)
-      : jPipelineStateInfo(pipelineStateFixed,
+      const VertexBufferArray&        InVertexBufferArray,
+      const RenderPass*               renderPass,
+      const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+      const PushConstant*             pushConstant)
+      : PipelineStateInfo(pipelineStateFixed,
                            shader,
                            InVertexBufferArray,
                            renderPass,
                            InShaderBindingLayoutArray,
                            pushConstant) {}
 
-  jPipelineStateInfo_DX12(const jPipelineStateInfo& pipelineState)
-      : jPipelineStateInfo(pipelineState) {}
+  PipelineStateInfoDx12(const PipelineStateInfo& pipelineState)
+      : PipelineStateInfo(pipelineState) {}
 
-  jPipelineStateInfo_DX12(jPipelineStateInfo&& pipelineState)
-      : jPipelineStateInfo(std::move(pipelineState)) {}
+  PipelineStateInfoDx12(PipelineStateInfo&& pipelineState)
+      : PipelineStateInfo(std::move(pipelineState)) {}
 
-  virtual ~jPipelineStateInfo_DX12() { Release(); }
+  virtual ~PipelineStateInfoDx12() { Release(); }
 
   void Release();
 
@@ -118,9 +118,9 @@ struct jPipelineStateInfo_DX12 : public jPipelineStateInfo {
   virtual void* CreateGraphicsPipelineState() override;
   virtual void* CreateComputePipelineState() override;
   // virtual void* CreateRaytracingPipelineState() override;
-  virtual void  Bind(const std::shared_ptr<jRenderFrameContext>&
+  virtual void  Bind(const std::shared_ptr<RenderFrameContext>&
                          InRenderFrameContext) const override;
-  void          Bind(jCommandBuffer_DX12* InCommandList) const;
+  void          Bind(CommandBufferDx12* InCommandList) const;
 
   ComPtr<ID3D12PipelineState> PipelineState;
   std::vector<D3D12_VIEWPORT> Viewports;
