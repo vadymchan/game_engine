@@ -16,7 +16,7 @@
 namespace game_engine {
 
 
-class SubMemoryAllocatorVk : public jSubMemoryAllocator {
+class SubMemoryAllocatorVk : public SubMemoryAllocator {
   public:
 
   virtual ~SubMemoryAllocatorVk() {}
@@ -25,19 +25,19 @@ class SubMemoryAllocatorVk : public jSubMemoryAllocator {
                           EVulkanMemoryBits InProperties,
                           uint64_t          InSize) override;
 
-  virtual void* GetBuffer() const { return Buffer; }
+  virtual void* GetBuffer() const { return m_buffer; }
 
   virtual void* GetMemory() const { return DeviceMemory; }
 
-  VkBuffer       Buffer       = nullptr;
+  VkBuffer       m_buffer       = nullptr;
   VkDeviceMemory DeviceMemory = nullptr;
 };
 
-class MemoryPoolVk : public jMemoryPool {
+class MemoryPoolVk : public MemoryPool {
   public:
   virtual ~MemoryPoolVk() {}
 
-  virtual jSubMemoryAllocator* CreateSubMemoryAllocator() const override;
+  virtual SubMemoryAllocator* CreateSubMemoryAllocator() const override;
 
 };
 
