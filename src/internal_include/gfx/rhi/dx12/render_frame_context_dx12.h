@@ -5,13 +5,13 @@
 
 namespace game_engine {
 
-struct jRenderFrameContext_DX12 : public jRenderFrameContext {
-  jRenderFrameContext_DX12() = default;
+struct RenderFrameContextDx12 : public RenderFrameContext {
+  RenderFrameContextDx12() = default;
 
-  jRenderFrameContext_DX12(jCommandBuffer* InCommandBuffer)
-      : jRenderFrameContext(InCommandBuffer) {}
+  RenderFrameContextDx12(CommandBuffer* InCommandBuffer)
+      : RenderFrameContext(InCommandBuffer) {}
 
-  virtual ~jRenderFrameContext_DX12() {}
+  virtual ~RenderFrameContextDx12() {}
 
   // TODO: seems this method is not used
   virtual void QueueSubmitCurrentActiveCommandBuffer();
