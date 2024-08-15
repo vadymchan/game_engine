@@ -8,9 +8,9 @@
 
 namespace game_engine {
 
-	class jSwapchainImage_DX12 : public jSwapchainImage {
+	class SwapchainImageDx12 : public SwapchainImage {
   public:
-  virtual ~jSwapchainImage_DX12() { ReleaseInternal(); }
+  virtual ~SwapchainImageDx12() { ReleaseInternal(); }
 
   void         ReleaseInternal();
   virtual void Release() override;
@@ -19,9 +19,9 @@ namespace game_engine {
 };
 
 // Swapchain
-class jSwapchain_DX12 : public jSwapchain {
+class SwapchainDx12 : public Swapchain {
   public:
-  virtual ~jSwapchain_DX12() { ReleaseInternal(); }
+  virtual ~SwapchainDx12() { ReleaseInternal(); }
 
   void ReleaseInternal();
 
@@ -36,7 +36,7 @@ class jSwapchain_DX12 : public jSwapchain {
     return Extent;
   }
 
-  virtual jSwapchainImage* GetSwapchainImage(int32_t index) const override {
+  virtual SwapchainImage* GetSwapchainImage(int32_t index) const override {
     assert(Images.size() > index);
     return Images[index];
   }
@@ -51,14 +51,14 @@ class jSwapchain_DX12 : public jSwapchain {
     return SwapChain->GetCurrentBackBufferIndex();
   }
 
-  jSwapchainImage* GetCurrentSwapchainImage() const {
+  SwapchainImage* GetCurrentSwapchainImage() const {
     return Images[GetCurrentBackBufferIndex()];
   }
 
   ComPtr<IDXGISwapChain3>            SwapChain;
   ETextureFormat                     Format = ETextureFormat::RGB8;
   math::Dimension2Di                 Extent;
-  std::vector<jSwapchainImage_DX12*> Images;
+  std::vector<SwapchainImageDx12*> Images;
 };
 
 } // namespace game_engine
