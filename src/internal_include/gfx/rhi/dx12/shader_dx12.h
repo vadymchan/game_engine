@@ -9,8 +9,8 @@
 
 namespace game_engine {
 
-struct jCompiledShader_DX12 : public jCompiledShader {
-  virtual ~jCompiledShader_DX12();
+struct CompiledShaderDx12 : public CompiledShader {
+  virtual ~CompiledShaderDx12();
 
   ComPtr<IDxcBlob> ShaderBlob;
 };
