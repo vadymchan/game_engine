@@ -10,15 +10,15 @@
 
 namespace game_engine {
 
-struct jCommandBuffer_DX12;
+struct CommandBufferDx12;
 
-struct jShaderBindingInstance_DX12 : public jShaderBindingInstance {
-  virtual ~jShaderBindingInstance_DX12() {}
+struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
+  virtual ~ShaderBindingInstanceDx12() {}
 
   virtual void Initialize(
-      const jShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& InShaderBindingArray) override;
   virtual void UpdateShaderBindings(
-      const jShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& InShaderBindingArray) override;
   virtual void* GetHandle() const override;
 
   virtual const std::vector<uint32_t>* GetDynamicOffsets() const override {
@@ -27,13 +27,15 @@ struct jShaderBindingInstance_DX12 : public jShaderBindingInstance {
 
   virtual void Free() override;
 
-  void BindGraphics(jCommandBuffer_DX12* InCommandList,
+  void BindGraphics(CommandBufferDx12* InCommandList,
                     std::int32_t&        InOutStartIndex) const;
-  void BindCompute(jCommandBuffer_DX12* InCommandList,
+  void BindCompute(CommandBufferDx12* InCommandList,
                    std::int32_t&        InOutStartIndex);
-  void CopyToOnlineDescriptorHeap(jCommandBuffer_DX12* InCommandList);
+  void CopyToOnlineDescriptorHeap(CommandBufferDx12* InCommandList);
 
-  struct jInlineRootParamType {
+
+  // TODO: consider using only enum class
+  struct InlineRootParamType {
     enum Enum {
       CBV = 0,
       SRV,
@@ -42,8 +44,8 @@ struct jShaderBindingInstance_DX12 : public jShaderBindingInstance {
     };
   };
 
-  struct jInlineRootParamData {
-    jInlineRootParamType::Enum Type = jInlineRootParamType::NumOfType;
+  struct InlineRootParamData {
+    InlineRootParamType::Enum Type = InlineRootParamType::NumOfType;
     D3D12_GPU_VIRTUAL_ADDRESS  GPUVirtualAddress = {};
 
     // TODO: This is debug information, so it would be good to exclude it at
@@ -52,10 +54,10 @@ struct jShaderBindingInstance_DX12 : public jShaderBindingInstance {
     const ShaderBindableResource* Resource = nullptr;
   };
 
-  struct jDescriptorData {
+  struct DescriptorData {
     inline bool IsValid() const { return Descriptor.IsValid(); }
 
-    jDescriptor_DX12 Descriptor;
+    DescriptorDx12 Descriptor;
 
     // TODO: This is debug information, so it would be good to exclude it at
     // runtime.
@@ -63,9 +65,9 @@ struct jShaderBindingInstance_DX12 : public jShaderBindingInstance {
     const ShaderBindableResource* Resource = nullptr;
   };
 
-  std::vector<jInlineRootParamData> RootParameterInlines;
-  std::vector<jDescriptorData>      Descriptors;
-  std::vector<jDescriptorData>      SamplerDescriptors;
+  std::vector<InlineRootParamData> RootParameterInlines;
+  std::vector<DescriptorData>      Descriptors;
+  std::vector<DescriptorData>      SamplerDescriptors;
 };
 
 }  // namespace game_engine
