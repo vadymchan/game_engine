@@ -11,19 +11,19 @@
 
 namespace game_engine {
 // TODO: consider renaming this class to CommandAllocatorDx12
-class jCommandBufferManager_DX12 : public jCommandBufferManager {
+class CommandBufferManagerDx12 : public CommandBufferManager {
   public:
-  jCommandBufferManager_DX12()
+  CommandBufferManagerDx12()
       : CommandListType(D3D12_COMMAND_LIST_TYPE_DIRECT)
   //, FenceValue(0)
   {}
 
-  virtual ~jCommandBufferManager_DX12() {}
+  virtual ~CommandBufferManagerDx12() {}
 
   virtual void Release() override;
 
-  virtual jCommandBuffer_DX12* GetOrCreateCommandBuffer() override;
-  virtual void ReturnCommandBuffer(jCommandBuffer* commandBuffer) override;
+  virtual CommandBufferDx12* GetOrCreateCommandBuffer() override;
+  virtual void ReturnCommandBuffer(CommandBuffer* commandBuffer) override;
 
   bool Initialize(ComPtr<ID3D12Device>    InDevice,
                   D3D12_COMMAND_LIST_TYPE InType
@@ -32,11 +32,11 @@ class jCommandBufferManager_DX12 : public jCommandBufferManager {
   ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return CommandQueue; }
 
   // CommandList
-  void ExecuteCommandList(jCommandBuffer_DX12* InCommandList,
+  void ExecuteCommandList(CommandBufferDx12* InCommandList,
                           bool bWaitUntilExecuteComplete = false);
 
   // Not destroying because it is referenced by the Fence manager
-  jFence_DX12* Fence = nullptr;
+  FenceDx12* m_fence = nullptr;
 
   private:
   ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() const {
@@ -49,11 +49,11 @@ class jCommandBufferManager_DX12 : public jCommandBufferManager {
     return commandAllocator;
   }
 
-  jCommandBuffer_DX12* CreateCommandList() const;
+  CommandBufferDx12* CreateCommandList() const;
 
   MutexLock                                 CommandListLock;
-  std::vector<jCommandBuffer_DX12*>         AvailableCommandLists;
-  mutable std::vector<jCommandBuffer_DX12*> UsingCommandBuffers;
+  std::vector<CommandBufferDx12*>         AvailableCommandLists;
+  mutable std::vector<CommandBufferDx12*> UsingCommandBuffers;
 
   D3D12_COMMAND_LIST_TYPE    CommandListType = D3D12_COMMAND_LIST_TYPE_DIRECT;
   ComPtr<ID3D12Device>       Device;
