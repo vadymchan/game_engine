@@ -124,7 +124,7 @@
 //                                       LayerCount,
 //                                       IsGenerateMipmap,
 //                                       SampleCount,
-//                                       RTClearValue.GetHash(),
+//                                       m_rtClearValue.GetHash(),
 //                                       TextureCreateFlag,
 //                                       IsUseAsSubpassInput,
 //                                       IsMemoryless);
@@ -138,7 +138,7 @@
 //  EMSAASamples       SampleCount         = EMSAASamples::COUNT_1;
 //  bool               IsUseAsSubpassInput = false;
 //  bool               IsMemoryless        = false;
-//  RTClearValueVk     RTClearValue        = RTClearValueVk::Invalid;
+//  RTClearValueVk     m_rtClearValue        = RTClearValueVk::Invalid;
 //  ETextureCreateFlag TextureCreateFlag   = ETextureCreateFlag::RTV;
 //};
 //
