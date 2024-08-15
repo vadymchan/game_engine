@@ -9,7 +9,7 @@
 
 namespace game_engine {
 
-struct RingBufferVk : public jBuffer {
+struct RingBufferVk : public Buffer {
   RingBufferVk() = default;
 
   virtual ~RingBufferVk() { Release(); }
@@ -35,7 +35,7 @@ struct RingBufferVk : public jBuffer {
 
   virtual void UpdateBuffer(const void* data, uint64_t size) override;
 
-  virtual void* GetHandle() const override { return Buffer; }
+  virtual void* GetHandle() const override { return m_buffer; }
 
   virtual uint64_t GetAllocatedSize() const override { return RingBufferSize; }
 
@@ -45,7 +45,7 @@ struct RingBufferVk : public jBuffer {
 
   uint64_t       RingBufferOffset = 0;
   uint32_t       Alignment        = 16;
-  VkBuffer       Buffer           = nullptr;
+  VkBuffer       m_buffer           = nullptr;
   VkDeviceMemory BufferMemory     = nullptr;
   uint64_t       RingBufferSize   = 0;
   void*          MappedPointer    = nullptr;
