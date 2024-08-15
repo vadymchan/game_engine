@@ -10,35 +10,35 @@
 
 namespace game_engine {
 
-struct jRootParameterExtractor {
+struct RootParameterExtractor {
   public:
   std::vector<D3D12_ROOT_PARAMETER1>   RootParameters;
   std::vector<D3D12_DESCRIPTOR_RANGE1> Descriptors;
   std::vector<D3D12_DESCRIPTOR_RANGE1> SamplerDescriptors;
 
-  void Extract(const jShaderBindingLayoutArray& InBindingLayoutArray,
+  void Extract(const ShaderBindingLayoutArray& InBindingLayoutArray,
                int32_t                          InRegisterSpace = 0);
-  void Extract(const jShaderBindingInstanceArray& InBindingLayoutArray,
+  void Extract(const ShaderBindingInstanceArray& InBindingLayoutArray,
                int32_t                            InRegisterSpace = 0);
 
   protected:
   void Extract(int32_t&                   InOutDescriptorOffset,
                int32_t&                   InOutSamplerDescriptorOffset,
-               const jShaderBindingArray& InShaderBindingArray,
+               const ShaderBindingArray& InShaderBindingArray,
                int32_t                    InRegisterSpace = 0);
 
   private:
   int32_t NumOfInlineRootParameter = 0;
 };
 
-struct jShaderBindingLayout_DX12 : public jShaderBindingLayout {
-  virtual ~jShaderBindingLayout_DX12() {}
+struct ShaderBindingLayoutDx12 : public ShaderBindingLayout {
+  virtual ~ShaderBindingLayoutDx12() {}
 
   virtual bool Initialize(
-      const jShaderBindingArray& InShaderBindingArray) override;
-  virtual std::shared_ptr<jShaderBindingInstance> CreateShaderBindingInstance(
-      const jShaderBindingArray&       InShaderBindingArray,
-      const jShaderBindingInstanceType InType) const override;
+      const ShaderBindingArray& InShaderBindingArray) override;
+  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+      const ShaderBindingArray&       InShaderBindingArray,
+      const ShaderBindingInstanceType InType) const override;
 
   virtual void* GetHandle() const { return nullptr; }
 
@@ -53,14 +53,14 @@ struct jShaderBindingLayout_DX12 : public jShaderBindingLayout {
   //////////////////////////////////////////////////////////////////////////
   // RootSignature extractor utility
   using FuncGetRootParameterExtractor
-      = std::function<void(jRootParameterExtractor&)>;
+      = std::function<void(RootParameterExtractor&)>;
 
   static ID3D12RootSignature* CreateRootSignatureInternal(
       size_t InHash, FuncGetRootParameterExtractor InFunc);
   static ID3D12RootSignature* CreateRootSignature(
-      const jShaderBindingInstanceArray& InBindingInstanceArray);
+      const ShaderBindingInstanceArray& InBindingInstanceArray);
   static ID3D12RootSignature* CreateRootSignature(
-      const jShaderBindingLayoutArray& InBindingLayoutArray);
+      const ShaderBindingLayoutArray& InBindingLayoutArray);
 };
 
 }  // namespace game_engine
