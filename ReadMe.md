@@ -32,6 +32,7 @@ I strongly recommend creating a separate build directory and building the projec
    It’s a good practice to keep build files separate from source code. Create and navigate to the build directory:
 
    ```bash
+   cd game_engine
    mkdir build
    cd build
    ```
