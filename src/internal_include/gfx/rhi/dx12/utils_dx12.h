@@ -11,8 +11,8 @@
 
 namespace game_engine {
 
-struct jBuffer_DX12;
-struct jTexture_DX12;
+struct BufferDx12;
+struct TextureDx12;
 struct ImageSubResourceData;
 
 // TODO: why need anonymous namespace in header?
@@ -54,14 +54,14 @@ void* CopyInitialData(ComPtr<ID3D12Resource>& InDest,
 
 //}  // namespace
 
-std::shared_ptr<jCreatedResource> CreateBufferInternal(
+std::shared_ptr<CreatedResource> CreateBufferInternal(
     uint64_t              InSize,
     uint64_t              InAlignment,
     EBufferCreateFlag     InBufferCreateFlag,
     D3D12_RESOURCE_STATES InInitialResourceState,
     const wchar_t*        InResourceName = nullptr);
 
-std::shared_ptr<jBuffer_DX12> CreateBuffer(uint64_t          InSize,
+std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          InSize,
                                            uint64_t          InAlignment,
                                            EBufferCreateFlag InBufferCreateFlag,
                                            EResourceLayout   InLayout,
@@ -70,7 +70,7 @@ std::shared_ptr<jBuffer_DX12> CreateBuffer(uint64_t          InSize,
                                            const wchar_t*    InResourceName
                                            = nullptr);
 
-std::shared_ptr<jCreatedResource> CreateTexturenternal(
+std::shared_ptr<CreatedResource> CreateTexturenternal(
     uint32_t                 InWidth,
     uint32_t                 InHeight,
     uint32_t                 InArrayLayers,
@@ -83,7 +83,7 @@ std::shared_ptr<jCreatedResource> CreateTexturenternal(
     D3D12_CLEAR_VALUE*       InClearValue   = nullptr,
     const wchar_t*           InResourceName = nullptr);
 
-std::shared_ptr<jTexture_DX12> CreateTexture(
+std::shared_ptr<TextureDx12> CreateTexture(
     uint32_t             InWidth,
     uint32_t             InHeight,
     uint32_t             InArrayLayers,
@@ -93,14 +93,14 @@ std::shared_ptr<jTexture_DX12> CreateTexture(
     ETextureFormat       InFormat,
     ETextureCreateFlag   InTextureCreateFlag,
     EResourceLayout      InImageLayout  = EResourceLayout::UNDEFINED,
-    const jRTClearValue& InClearValue   = jRTClearValue::Invalid,
+    const RTClearValue& InClearValue   = RTClearValue::Invalid,
     const wchar_t*       InResourceName = nullptr);
 
-std::shared_ptr<jTexture_DX12> CreateTexture(
-    const std::shared_ptr<jCreatedResource>& InTexture,
+std::shared_ptr<TextureDx12> CreateTexture(
+    const std::shared_ptr<CreatedResource>& InTexture,
     ETextureCreateFlag                       InTextureCreateFlag,
     EResourceLayout                          InImageLayout,
-    const jRTClearValue&                     InClearValue,
+    const RTClearValue&                     InClearValue,
     const wchar_t*                           InResourceName);
 
 uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* InCommandBuffer,
@@ -132,36 +132,36 @@ void CopyBuffer(ID3D12Resource* InSrcBuffer,
                 uint64_t        InDstOffset);
 
 // Create CBV
-void CreateConstantBufferView(jBuffer_DX12* InBuffer);
+void CreateConstantBufferView(BufferDx12* InBuffer);
 
-// Create SRV for Buffer
-void CreateShaderResourceView_StructuredBuffer(jBuffer_DX12* InBuffer,
+// Create SRV for m_buffer
+void CreateShaderResourceView_StructuredBuffer(BufferDx12* InBuffer,
                                                uint32_t      InStride,
                                                uint32_t      InCount);
-void CreateShaderResourceView_Raw(jBuffer_DX12* InBuffer,
+void CreateShaderResourceView_Raw(BufferDx12* InBuffer,
                                   uint32_t      InBufferSize);
-void CreateShaderResourceView_Formatted(jBuffer_DX12*  InBuffer,
+void CreateShaderResourceView_Formatted(BufferDx12*  InBuffer,
                                         ETextureFormat InFormat,
                                         uint32_t       InBufferSize);
 
-// Create UAV for Buffer
-void CreateUnorderedAccessView_StructuredBuffer(jBuffer_DX12* InBuffer,
+// Create UAV for m_buffer
+void CreateUnorderedAccessView_StructuredBuffer(BufferDx12* InBuffer,
                                                 uint32_t      InStride,
                                                 uint32_t      InCount);
-void CreateUnorderedAccessView_Raw(jBuffer_DX12* InBuffer,
+void CreateUnorderedAccessView_Raw(BufferDx12* InBuffer,
                                    uint32_t      InBufferSize);
-void CreateUnorderedAccessView_Formatted(jBuffer_DX12*  InBuffer,
+void CreateUnorderedAccessView_Formatted(BufferDx12*  InBuffer,
                                          ETextureFormat InFormat,
                                          uint32_t       InBufferSize);
 
 // Create SRV for Texture
-void CreateShaderResourceView(jTexture_DX12* InTexture);
+void CreateShaderResourceView(TextureDx12* InTexture);
 
 // Create UAV for Texture
-void CreateUnorderedAccessView(jTexture_DX12* InTexture);
+void CreateUnorderedAccessView(TextureDx12* InTexture);
 
-void CreateDepthStencilView(jTexture_DX12* InTexture);
-void CreateRenderTargetView(jTexture_DX12* InTexture);
+void CreateDepthStencilView(TextureDx12* InTexture);
+void CreateRenderTargetView(TextureDx12* InTexture);
 
 }  // namespace game_engine
 
