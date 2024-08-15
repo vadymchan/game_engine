@@ -9,15 +9,15 @@
 
 namespace game_engine {
 
-class jFence_DX12 : public jFence {
+class FenceDx12 : public Fence {
   public:
   static constexpr uint64_t InitialFenceValue = uint64_t(0);
 
-  virtual ~jFence_DX12() override;
+  virtual ~FenceDx12() override;
 
-  virtual void* GetHandle() const override { return Fence.Get(); }
+  virtual void* GetHandle() const override { return m_fence.Get(); }
 
-  virtual bool IsValid() const override { return Fence && FenceEvent; }
+  virtual bool IsValid() const override { return m_fence && FenceEvent; }
 
   virtual bool IsComplete() const override;
   bool         IsComplete(uint64_t InFenceValue) const override;
@@ -30,26 +30,26 @@ class jFence_DX12 : public jFence {
   uint64_t SignalWithNextFenceValue(ID3D12CommandQueue* InCommandQueue,
                                     bool bWaitUntilExecuteComplete = false);
 
-  ComPtr<ID3D12Fence> Fence;
+  ComPtr<ID3D12Fence> m_fence;
   HANDLE              FenceEvent = nullptr;
 
   MutexLock FenceValueLock;
   uint64_t   FenceValue = InitialFenceValue;
 };
 
-class jFenceManager_DX12 : public jFenceManager {
+class FenceManagerDx12 : public FenceManager {
   public:
-  virtual jFence* GetOrCreateFence() override;
+  virtual Fence* GetOrCreateFence() override;
 
-  virtual void ReturnFence(jFence* fence) override {
+  virtual void ReturnFence(Fence* fence) override {
     UsingFences.erase(fence);
     PendingFences.insert(fence);
   }
 
   virtual void Release() override;
 
-  std::unordered_set<jFence*> UsingFences;
-  std::unordered_set<jFence*> PendingFences;
+  std::unordered_set<Fence*> UsingFences;
+  std::unordered_set<Fence*> PendingFences;
 };
 
 }  // namespace game_engine
