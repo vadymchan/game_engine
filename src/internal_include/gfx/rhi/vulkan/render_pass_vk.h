@@ -14,16 +14,16 @@
 
 namespace game_engine {
 
-class RenderPassVk : public jRenderPass {
+class RenderPassVk : public RenderPass {
   public:
-  using jRenderPass::jRenderPass;
+  using RenderPass::RenderPass;
 
   virtual ~RenderPassVk() { Release(); }
 
   void Release();
 
   // bool Initialize(const RenderPassInfoVk& renderPassInfo) {
-  //   RenderPassInfo = renderPassInfo;
+  //   m_renderPassInfo = renderPassInfo;
   //   if (!CreateRenderPass()) {
   //     return false;
   //   }
@@ -33,29 +33,29 @@ class RenderPassVk : public jRenderPass {
   void Initialize() { CreateRenderPass(); }
 
   // TODO: add subpassContents param
-  bool BeginRenderPass(const jCommandBuffer* commandBuffer
+  bool BeginRenderPass(const CommandBuffer* commandBuffer
                        /*, VkSubpassContents      subpassContents
                        = VK_SUBPASS_CONTENTS_INLINE*/) override;
 
   void EndRenderPass() override;
 
-  virtual void* GetRenderPass() const override { return RenderPass; }
+  virtual void* GetRenderPass() const override { return m_renderPass; }
 
-  virtual void* GetFrameBuffer() const override { return FrameBuffer; }
+  virtual void* GetFrameBuffer() const override { return m_frameBuffer; }
 
   bool CreateRenderPass();
 
   // TODO: make private
 
-  void SetFinalLayoutToAttachment(const jAttachment& attachment) const;
+  void SetFinalLayoutToAttachment(const Attachment& attachment) const;
 
-  const jCommandBuffer* CommandBuffer = nullptr;
+  const CommandBuffer* m_commandBuffer = nullptr;
 
   VkRenderPassBeginInfo     RenderPassBeginInfo{};
   // TODO: consider remove it (already have in attachment)
   std::vector<VkClearValue> ClearValues;
-  VkRenderPass              RenderPass  = VK_NULL_HANDLE;
-  VkFramebuffer             FrameBuffer = VK_NULL_HANDLE;
+  VkRenderPass              m_renderPass  = VK_NULL_HANDLE;
+  VkFramebuffer             m_frameBuffer = VK_NULL_HANDLE;
 };
 
 }  // namespace game_engine
