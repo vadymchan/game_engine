@@ -43,6 +43,10 @@ I strongly recommend creating a separate build directory and building the projec
    ```bash
    cmake ..
    ```
+   You can also customize the build by enabling or disabling specific options. For example, to enable DirectX as the rendering API, run:
+   ```bash
+   cmake -DUSE_DIRECTX=ON ..
+   ```
 
 Alternatively, you can use the CMake GUI for a more user-friendly experience:
 
