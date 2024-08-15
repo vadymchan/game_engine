@@ -59,7 +59,7 @@ constexpr bool useVulkanNdcYFlip = true;
 //   0.0f, 1.0f); float MinLOD = -FLT_MAX;  // TODO: consider change default
 //   value to 0.0f float MaxLOD = FLT_MAX;
 //
-//   VkSamplerCreateInfo SamplerStateInfo = {};
+//   VkSamplerCreateInfo m_samplerStateInfo = {};
 //   VkSampler           SamplerState     = nullptr;
 // };
 //
@@ -94,7 +94,7 @@ constexpr bool useVulkanNdcYFlip = true;
 //   bool         AlphaToCoverageEnable = false;
 //   bool         AlphaToOneEnable      = false;
 //
-//   VkPipelineRasterizationStateCreateInfo RasterizationStateInfo = {};
+//   VkPipelineRasterizationStateCreateInfo m_rasterizationStateInfo = {};
 //   VkPipelineMultisampleStateCreateInfo   MultisampleStateInfo   = {};
 // };
 //
@@ -118,7 +118,7 @@ constexpr bool useVulkanNdcYFlip = true;
 //   uint32_t   WriteMask   = 0;
 //   uint32_t   Reference   = 0;
 //
-//   VkStencilOpState StencilOpStateInfo = {};
+//   VkStencilOpState m_stencilOpStateInfo = {};
 // };
 //
 ////////////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ constexpr bool useVulkanNdcYFlip = true;
 //   float                 MaxDepthBounds        = 1.0f;
 //
 //   // VkPipelineDepthStencilStateCreateFlags    flags;
-//   VkPipelineDepthStencilStateCreateInfo DepthStencilStateInfo = {};
+//   VkPipelineDepthStencilStateCreateInfo m_depthStencilStateInfo = {};
 // };
 //
 ////////////////////////////////////////////////////////////////////////////
@@ -366,10 +366,10 @@ constexpr bool useVulkanNdcYFlip = true;
 //      int32_t                           InSubpassIndex = 0)
 //      : PipelineStateFixed(InPipelineStateFixed)
 //      , GraphicsShader(InShader)
-//      , VertexBufferArray(InVertexBufferArray)
-//      , RenderPass(InRenderPass)
-//      , ShaderBindingLayoutArray(InShaderBindingLayoutArray)
-//      , PushConstant(InPushConstant)
+//      , m_vertexBufferArray(InVertexBufferArray)
+//      , m_renderPass(InRenderPass)
+//      , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
+//      , m_pushConstant(InPushConstant)
 //      , SubpassIndex(InSubpassIndex) {
 //    PipelineType = EPipelineType::Graphics;
 //  }
@@ -380,8 +380,8 @@ constexpr bool useVulkanNdcYFlip = true;
 //      const PushConstantVk*             InPushConstant = nullptr,
 //      int32_t                           InSubpassIndex = 0)
 //      : ComputeShader(InComputeShader)
-//      , ShaderBindingLayoutArray(InShaderBindingLayoutArray)
-//      , PushConstant(InPushConstant)
+//      , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
+//      , m_pushConstant(InPushConstant)
 //      , SubpassIndex(InSubpassIndex) {
 //    PipelineType = EPipelineType::Compute;
 //  }
@@ -391,10 +391,10 @@ constexpr bool useVulkanNdcYFlip = true;
 //      , GraphicsShader(InPipelineState.GraphicsShader)
 //      , ComputeShader(InPipelineState.ComputeShader)
 //      , PipelineType(InPipelineState.PipelineType)
-//      , VertexBufferArray(InPipelineState.VertexBufferArray)
-//      , RenderPass(InPipelineState.RenderPass)
-//      , ShaderBindingLayoutArray(InPipelineState.ShaderBindingLayoutArray)
-//      , PushConstant(InPipelineState.PushConstant)
+//      , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
+//      , m_renderPass(InPipelineState.m_renderPass)
+//      , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
+//      , m_pushConstant(InPipelineState.m_pushConstant)
 //      , Hash(InPipelineState.Hash)
 //      , SubpassIndex(InPipelineState.SubpassIndex) {}
 //
@@ -403,10 +403,10 @@ constexpr bool useVulkanNdcYFlip = true;
 //      , GraphicsShader(InPipelineState.GraphicsShader)
 //      , ComputeShader(InPipelineState.ComputeShader)
 //      , PipelineType(InPipelineState.PipelineType)
-//      , VertexBufferArray(InPipelineState.VertexBufferArray)
-//      , RenderPass(InPipelineState.RenderPass)
-//      , ShaderBindingLayoutArray(InPipelineState.ShaderBindingLayoutArray)
-//      , PushConstant(InPipelineState.PushConstant)
+//      , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
+//      , m_renderPass(InPipelineState.m_renderPass)
+//      , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
+//      , m_pushConstant(InPipelineState.m_pushConstant)
 //      , Hash(InPipelineState.Hash)
 //      , SubpassIndex(InPipelineState.SubpassIndex) {}
 //
@@ -435,21 +435,21 @@ constexpr bool useVulkanNdcYFlip = true;
 //  EPipelineType                   PipelineType = EPipelineType::Graphics;
 //  const GraphicsPipelineShader    GraphicsShader;
 //  const Shader*                   ComputeShader = nullptr;
-//  const RenderPassVk*             RenderPass    = nullptr;
-//  VertexBufferArrayVk             VertexBufferArray;
-//  ShaderBindingLayoutArrayVk      ShaderBindingLayoutArray;
-//  const PushConstantVk*           PushConstant;
+//  const RenderPassVk*             m_renderPass    = nullptr;
+//  VertexBufferArrayVk             m_vertexBufferArray;
+//  ShaderBindingLayoutArrayVk      m_shaderBindingLayoutArray;
+//  const PushConstantVk*           m_pushConstant;
 //  const PipelineStateFixedInfoVk* PipelineStateFixed = nullptr;
 //  int32_t                         SubpassIndex       = 0;
 //  VkPipeline                      vkPipeline         = nullptr;
 //  VkPipelineLayout                vkPipelineLayout   = nullptr;
 //};
 
-struct SamplerStateInfoVk : public jSamplerStateInfo {
+struct SamplerStateInfoVk : public SamplerStateInfo {
   SamplerStateInfoVk() = default;
 
-  SamplerStateInfoVk(const jSamplerStateInfo& state)
-      : jSamplerStateInfo(state) {}
+  SamplerStateInfoVk(const SamplerStateInfo& state)
+      : SamplerStateInfo(state) {}
 
   virtual ~SamplerStateInfoVk() { Release(); }
 
@@ -458,21 +458,21 @@ struct SamplerStateInfoVk : public jSamplerStateInfo {
 
   virtual void* GetHandle() const { return SamplerState; }
 
-  VkSamplerCreateInfo SamplerStateInfo = {};
+  VkSamplerCreateInfo m_samplerStateInfo = {};
   VkSampler           SamplerState     = nullptr;
 };
 
-struct RasterizationStateInfoVk : public jRasterizationStateInfo {
+struct RasterizationStateInfoVk : public RasterizationStateInfo {
   RasterizationStateInfoVk() = default;
 
-  RasterizationStateInfoVk(const jRasterizationStateInfo& state)
-      : jRasterizationStateInfo(state) {}
+  RasterizationStateInfoVk(const RasterizationStateInfo& state)
+      : RasterizationStateInfo(state) {}
 
   virtual ~RasterizationStateInfoVk() {}
 
   virtual void Initialize() override;
 
-  VkPipelineRasterizationStateCreateInfo RasterizationStateInfo = {};
+  VkPipelineRasterizationStateCreateInfo m_rasterizationStateInfo = {};
   VkPipelineMultisampleStateCreateInfo   MultisampleStateInfo   = {};
 };
 
@@ -486,37 +486,37 @@ struct RasterizationStateInfoVk : public jRasterizationStateInfo {
 //     VkPipelineMultisampleStateCreateInfo MultisampleStateInfo = {};
 // };
 
-struct StencilOpStateInfoVk : public jStencilOpStateInfo {
+struct StencilOpStateInfoVk : public StencilOpStateInfo {
   StencilOpStateInfoVk() = default;
 
-  StencilOpStateInfoVk(const jStencilOpStateInfo& state)
-      : jStencilOpStateInfo(state) {}
+  StencilOpStateInfoVk(const StencilOpStateInfo& state)
+      : StencilOpStateInfo(state) {}
 
   virtual ~StencilOpStateInfoVk() {}
 
   virtual void Initialize() override;
 
-  VkStencilOpState StencilOpStateInfo = {};
+  VkStencilOpState m_stencilOpStateInfo = {};
 };
 
-struct DepthStencilStateInfoVk : public jDepthStencilStateInfo {
+struct DepthStencilStateInfoVk : public DepthStencilStateInfo {
   DepthStencilStateInfoVk() = default;
 
-  DepthStencilStateInfoVk(const jDepthStencilStateInfo& state)
-      : jDepthStencilStateInfo(state) {}
+  DepthStencilStateInfoVk(const DepthStencilStateInfo& state)
+      : DepthStencilStateInfo(state) {}
 
   virtual ~DepthStencilStateInfoVk() {}
 
   virtual void Initialize() override;
 
-  VkPipelineDepthStencilStateCreateInfo DepthStencilStateInfo = {};
+  VkPipelineDepthStencilStateCreateInfo m_depthStencilStateInfo = {};
 };
 
-struct BlendingStateInfoVk : public jBlendingStateInfo {
+struct BlendingStateInfoVk : public BlendingStateInfo {
   BlendingStateInfoVk() = default;
 
-  BlendingStateInfoVk(const jBlendingStateInfo& state)
-      : jBlendingStateInfo(state) {}
+  BlendingStateInfoVk(const BlendingStateInfo& state)
+      : BlendingStateInfo(state) {}
 
   virtual ~BlendingStateInfoVk() {}
 
@@ -528,28 +528,28 @@ struct BlendingStateInfoVk : public jBlendingStateInfo {
 //////////////////////////////////////////////////////////////////////////
 // PipelineStateInfoVk
 //////////////////////////////////////////////////////////////////////////
-struct PipelineStateInfoVk : public jPipelineStateInfo {
+struct PipelineStateInfoVk : public PipelineStateInfo {
   PipelineStateInfoVk() = default;
 
   PipelineStateInfoVk(
-      const jPipelineStateFixedInfo*   pipelineStateFixed,
+      const PipelineStateFixedInfo*   pipelineStateFixed,
       const GraphicsPipelineShader    shader,
-      const jVertexBufferArray&        InVertexBufferArray,
-      const jRenderPass*               renderPass,
-      const jShaderBindingLayoutArray& InShaderBindingLayoutArray,
-      const jPushConstant*             pushConstant)
-      : jPipelineStateInfo(pipelineStateFixed,
+      const VertexBufferArray&        InVertexBufferArray,
+      const RenderPass*               renderPass,
+      const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+      const PushConstant*             pushConstant)
+      : PipelineStateInfo(pipelineStateFixed,
                            shader,
                            InVertexBufferArray,
                            renderPass,
                            InShaderBindingLayoutArray,
                            pushConstant) {}
 
-  PipelineStateInfoVk(const jPipelineStateInfo& pipelineState)
-      : jPipelineStateInfo(pipelineState) {}
+  PipelineStateInfoVk(const PipelineStateInfo& pipelineState)
+      : PipelineStateInfo(pipelineState) {}
 
-  PipelineStateInfoVk(jPipelineStateInfo&& pipelineState)
-      : jPipelineStateInfo(std::move(pipelineState)) {}
+  PipelineStateInfoVk(PipelineStateInfo&& pipelineState)
+      : PipelineStateInfo(std::move(pipelineState)) {}
 
   virtual ~PipelineStateInfoVk() { Release(); }
 
@@ -567,7 +567,7 @@ struct PipelineStateInfoVk : public jPipelineStateInfo {
   virtual void* CreateComputePipelineState() override;
   // TODO: implement
   //virtual void* CreateRaytracingPipelineState() override;
-  virtual void  Bind(const std::shared_ptr<jRenderFrameContext>&
+  virtual void  Bind(const std::shared_ptr<RenderFrameContext>&
                          InRenderFrameContext) const override;
 
   VkPipeline       vkPipeline = nullptr;
