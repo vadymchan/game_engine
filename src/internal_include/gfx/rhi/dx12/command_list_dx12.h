@@ -7,13 +7,13 @@
 namespace game_engine {
 
 // TODO: consider renaming to command list
-struct jCommandBuffer_DX12 : public jCommandBuffer {
+struct CommandBufferDx12 : public CommandBuffer {
   ComPtr<ID3D12CommandAllocator>     CommandAllocator;
   ComPtr<ID3D12GraphicsCommandList4> CommandList;
   mutable bool                       IsClosed = false;
 
-  class jOnlineDescriptorHeap_DX12* OnlineDescriptorHeap        = nullptr;
-  class jOnlineDescriptorHeap_DX12* OnlineSamplerDescriptorHeap = nullptr;
+  class OnlineDescriptorHeapDx12* OnlineDescriptorHeap        = nullptr;
+  class OnlineDescriptorHeapDx12* OnlineSamplerDescriptorHeap = nullptr;
 
   ID3D12GraphicsCommandList4* Get() { return CommandList.Get(); }
 
@@ -29,9 +29,9 @@ struct jCommandBuffer_DX12 : public jCommandBuffer {
 
   virtual void*   GetFenceHandle() const override;
   virtual void    SetFence(void* InFence) override;
-  virtual jFence* GetFence() const override;
+  virtual Fence* GetFence() const override;
 
-  const class jCommandBufferManager_DX12* Owner      = nullptr;
+  const class CommandBufferManagerDx12* Owner      = nullptr;
   uint64_t                                FenceValue = 0;
   bool                                    IsCompleteForWaitFence();
 };
