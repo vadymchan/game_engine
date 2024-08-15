@@ -11,15 +11,15 @@
 namespace game_engine {
 
 // TODO: override IsComplete methods
-class FenceVk : public jFence {
+class FenceVk : public Fence {
   public:
   FenceVk()
-      : Fence(VK_NULL_HANDLE) {}
+      : m_fence(VK_NULL_HANDLE) {}
 
   virtual ~FenceVk() override;
 
   virtual void* GetHandle() const override {
-    return reinterpret_cast<void*>(Fence);
+    return reinterpret_cast<void*>(m_fence);
   }
 
   void WaitForFence(uint64_t timeout = UINT64_MAX) override;
@@ -30,22 +30,22 @@ class FenceVk : public jFence {
   // TODO
   // private:
 
-  VkFence Fence;
+  VkFence m_fence;
 };
 
-class FenceManagerVk : public jFenceManager {
+class FenceManagerVk : public FenceManager {
   public:
   ~FenceManagerVk() { Release(); }
 
-  jFence* GetOrCreateFence() override;
+  Fence* GetOrCreateFence() override;
 
-  void ReturnFence(jFence* fence) override;
+  void ReturnFence(Fence* fence) override;
 
   void Release() override;
 
   private:
-  std::unordered_set<jFence*> UsingFences;
-  std::unordered_set<jFence*> PendingFences;
+  std::unordered_set<Fence*> UsingFences;
+  std::unordered_set<Fence*> PendingFences;
 };
 
 }  // namespace game_engine
