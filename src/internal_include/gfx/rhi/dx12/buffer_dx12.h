@@ -13,28 +13,28 @@
 
 namespace game_engine {
 
-struct jCommandBuffer_DX12;
+struct CommandBufferDx12;
 
-struct jBuffer_DX12 : public jBuffer {
-  jBuffer_DX12() = default;
+struct BufferDx12 : public Buffer {
+  BufferDx12() = default;
 
-  jBuffer_DX12(std::shared_ptr<jCreatedResource> InBuffer,
+  BufferDx12(std::shared_ptr<CreatedResource> InBuffer,
                uint64_t                          InSize,
                uint64_t                          InAlignment,
                EBufferCreateFlag InBufferCreateFlag = EBufferCreateFlag::NONE)
-      : Buffer(InBuffer)
+      : m_buffer(InBuffer)
       , Size(InSize)
       , Alignment(InAlignment)
       , BufferCreateFlag(InBufferCreateFlag) {}
 
-  virtual ~jBuffer_DX12() { Release(); }
+  virtual ~BufferDx12() { Release(); }
 
   virtual void Release() override;
 
   virtual void* GetMappedPointer() const override { return CPUAddress; }
 
   virtual void* Map(uint64_t offset, uint64_t size) override {
-    assert(Buffer && Buffer->IsValid());
+    assert(m_buffer && m_buffer->IsValid());
 
     if (!(BufferCreateFlag & EBufferCreateFlag::CPUAccess
           | EBufferCreateFlag::Readback)) {
@@ -48,13 +48,13 @@ struct jBuffer_DX12 : public jBuffer {
     D3D12_RANGE range = {};
     range.Begin       = offset;
     range.End         = offset + size;
-    Buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&CPUAddress));
+    m_buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&CPUAddress));
 
     return CPUAddress;
   }
 
   virtual void* Map() override {
-    assert(Buffer && Buffer->IsValid());
+    assert(m_buffer && m_buffer->IsValid());
 
     if (!(BufferCreateFlag
           & (EBufferCreateFlag::CPUAccess | EBufferCreateFlag::Readback))) {
@@ -66,20 +66,20 @@ struct jBuffer_DX12 : public jBuffer {
     }
 
     D3D12_RANGE range = {};
-    Buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&CPUAddress));
+    m_buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&CPUAddress));
 
     return CPUAddress;
   }
 
   virtual void Unmap() override {
-    assert(Buffer && Buffer->IsValid());
+    assert(m_buffer && m_buffer->IsValid());
 
     if (!(BufferCreateFlag & EBufferCreateFlag::CPUAccess
           | EBufferCreateFlag::Readback)) {
       return;
     }
 
-    Buffer->Get()->Unmap(0, nullptr);
+    m_buffer->Get()->Unmap(0, nullptr);
     CPUAddress = nullptr;
   }
 
@@ -91,7 +91,7 @@ struct jBuffer_DX12 : public jBuffer {
     }
   }
 
-  virtual void* GetHandle() const override { return Buffer->Get(); }
+  virtual void* GetHandle() const override { return m_buffer->Get(); }
 
   virtual uint64_t GetAllocatedSize() const override { return (uint32_t)Size; }
 
@@ -100,7 +100,7 @@ struct jBuffer_DX12 : public jBuffer {
   virtual uint64_t GetOffset() const { return Offset; }
 
   inline uint64_t GetGPUAddress() const {
-    return Buffer->GetGPUVirtualAddress() + Offset;
+    return m_buffer->GetGPUVirtualAddress() + Offset;
   }
 
   virtual EResourceLayout GetLayout() const { return Layout; }
@@ -110,14 +110,15 @@ struct jBuffer_DX12 : public jBuffer {
   uint64_t                          Alignment        = 0;
   uint64_t                          Offset           = 0;
   uint8_t*                          CPUAddress       = nullptr;
-  std::shared_ptr<jCreatedResource> Buffer;
-  jDescriptor_DX12                  CBV;
-  jDescriptor_DX12                  SRV;
-  jDescriptor_DX12                  UAV;
+  // TODO: consider renaming to CreatedRedource
+  std::shared_ptr<CreatedResource> m_buffer;
+  DescriptorDx12                  CBV;
+  DescriptorDx12                  SRV;
+  DescriptorDx12                  UAV;
   EResourceLayout                   Layout = EResourceLayout::UNDEFINED;
 };
 
-struct jVertexStream_DX12 {
+struct VertexStreamDx12 {
   Name       name;
   // uint32_t Count;
   EBufferType BufferType = EBufferType::Static;
@@ -132,23 +133,23 @@ struct jVertexStream_DX12 {
     return (T*)BufferPtr.get();
   }
 
-  std::shared_ptr<jBuffer_DX12> BufferPtr;
+  std::shared_ptr<BufferDx12> BufferPtr;
 };
 
-struct jVertexBuffer_DX12 : public jVertexBuffer {
-  struct jBindInfo {
+struct VertexBufferDx12 : public VertexBuffer {
+  struct BindInfo {
     void Reset() {
       InputElementDescs.clear();
-      // Buffers.clear();
+      // m_buffers.clear();
       // Offsets.clear();
       StartBindingIndex = 0;
     }
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> InputElementDescs;
 
-    // Buffer references jVertexStream_DX12, so there's no need for separate
+    // m_buffer references VertexStreamDx12, so there's no need for separate
     // destruction
-    std::vector<ID3D12Resource*> Buffers;
+    std::vector<ID3D12Resource*> m_buffers;
     std::vector<size_t>          Offsets;
 
     int32_t StartBindingIndex = 0;
@@ -188,10 +189,10 @@ struct jVertexBuffer_DX12 : public jVertexBuffer {
     return Hash;
   }
 
-  inline size_t GetVertexInputStateHash() const { return BindInfos.GetHash(); }
+  inline size_t GetVertexInputStateHash() const { return m_bindInfos.GetHash(); }
 
   inline D3D12_INPUT_LAYOUT_DESC CreateVertexInputLayoutDesc() const {
-    return BindInfos.CreateVertexInputLayoutDesc();
+    return m_bindInfos.CreateVertexInputLayoutDesc();
   }
 
   inline D3D12_PRIMITIVE_TOPOLOGY_TYPE GetTopologyTypeOnly() const {
@@ -204,35 +205,35 @@ struct jVertexBuffer_DX12 : public jVertexBuffer {
 
   static void CreateVertexInputState(
       std::vector<D3D12_INPUT_ELEMENT_DESC>& OutInputElementDescs,
-      const jVertexBufferArray&              InVertexBufferArray) {
+      const VertexBufferArray&              InVertexBufferArray) {
     for (int32_t i = 0; i < InVertexBufferArray.NumOfData; ++i) {
       assert(InVertexBufferArray[i]);
-      const jBindInfo& bindInfo
-          = ((const jVertexBuffer_DX12*)InVertexBufferArray[i])->BindInfos;
+      const BindInfo& bindInfo
+          = ((const VertexBufferDx12*)InVertexBufferArray[i])->m_bindInfos;
       OutInputElementDescs.insert(OutInputElementDescs.end(),
                                   bindInfo.InputElementDescs.begin(),
                                   bindInfo.InputElementDescs.end());
     }
   }
 
-  jBindInfo                             BindInfos;
-  std::vector<jVertexStream_DX12>       Streams;
+  BindInfo                             m_bindInfos;
+  std::vector<VertexStreamDx12>       Streams;
   std::vector<D3D12_VERTEX_BUFFER_VIEW> VBView;
   mutable size_t                        Hash = 0;
 
   virtual bool Initialize(
       const std::shared_ptr<VertexStreamData>& InStreamData) override;
-  virtual void     Bind(const std::shared_ptr<jRenderFrameContext>&
+  virtual void     Bind(const std::shared_ptr<RenderFrameContext>&
                             InRenderFrameContext) const override;
-  virtual void     Bind(jCommandBuffer_DX12* InCommandList) const;
-  virtual jBuffer* GetBuffer(int32_t InStreamIndex) const override;
+  virtual void     Bind(CommandBufferDx12* InCommandList) const;
+  virtual Buffer* GetBuffer(int32_t InStreamIndex) const override;
 };
 
-struct jIndexBuffer_DX12 : public jIndexBuffer {
-  std::shared_ptr<jBuffer_DX12> BufferPtr;
-  virtual void Bind(const std::shared_ptr<jRenderFrameContext>&
+struct IndexBufferDx12 : public IndexBuffer {
+  std::shared_ptr<BufferDx12> BufferPtr;
+  virtual void Bind(const std::shared_ptr<RenderFrameContext>&
                         InRenderFrameContext) const override;
-  virtual void Bind(jCommandBuffer_DX12* InCommandList) const;
+  virtual void Bind(CommandBufferDx12* InCommandList) const;
   virtual bool Initialize(
       const std::shared_ptr<IndexStreamData>& InStreamData) override;
 
@@ -242,7 +243,7 @@ struct jIndexBuffer_DX12 : public jIndexBuffer {
     return indexStreamData->elementCount;
   }
 
-  virtual jBuffer_DX12* GetBuffer() const override { return BufferPtr.get(); }
+  virtual BufferDx12* GetBuffer() const override { return BufferPtr.get(); }
 };
 }  // namespace game_engine
 #endif  // GAME_ENGINE_BUFFER_DX12_H
