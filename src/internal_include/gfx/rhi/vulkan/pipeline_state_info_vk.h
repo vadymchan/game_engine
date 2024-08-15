@@ -476,11 +476,11 @@ struct RasterizationStateInfoVk : public RasterizationStateInfo {
   VkPipelineMultisampleStateCreateInfo   MultisampleStateInfo   = {};
 };
 
-// struct MultisampleStateInfoVk : public jMultisampleStateInfo
+// struct MultisampleStateInfoVk : public MultisampleStateInfo
 //{
 //     MultisampleStateInfoVk() = default;
-//     MultisampleStateInfoVk(const jMultisampleStateInfo& state) :
-//     jMultisampleStateInfo(state) {} virtual ~MultisampleStateInfoVk()
+//     MultisampleStateInfoVk(const MultisampleStateInfo& state) :
+//     MultisampleStateInfo(state) {} virtual ~MultisampleStateInfoVk()
 //     {} virtual void Initialize() override;
 //
 //     VkPipelineMultisampleStateCreateInfo MultisampleStateInfo = {};
