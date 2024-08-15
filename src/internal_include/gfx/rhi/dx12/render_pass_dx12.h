@@ -7,26 +7,26 @@
 
 namespace game_engine {
 
-class jRenderPass_DX12 : public jRenderPass {
+class RenderPassDx12 : public RenderPass {
   public:
-  using jRenderPass::jRenderPass;
+  using RenderPass::RenderPass;
 
-  virtual ~jRenderPass_DX12() { Release(); }
+  virtual ~RenderPassDx12() { Release(); }
 
   void Initialize();
   bool CreateRenderPass();
   void Release();
 
-  // virtual void* GetRenderPass() const override { return RenderPass; }
+  // virtual void* GetRenderPass() const override { return m_renderPass; }
   // inline const VkRenderPass& GetRenderPassRaw() const { return
-  // RenderPass; } virtual void* GetFrameBuffer() const override { return
-  // FrameBuffer; }
+  // m_renderPass; } virtual void* GetFrameBuffer() const override { return
+  // m_frameBuffer; }
 
-  virtual bool BeginRenderPass(const jCommandBuffer* commandBuffer) override;
+  virtual bool BeginRenderPass(const CommandBuffer* commandBuffer) override;
 
-  // Remove this. After organizing the relationship between jCommandBuffer_DX12
-  // and jCommandBuffer.
-  bool BeginRenderPass(const jCommandBuffer_DX12*  commandBuffer,
+  // Remove this. After organizing the relationship between CommandBufferDx12
+  // and CommandBuffer.
+  bool BeginRenderPass(const CommandBufferDx12*  commandBuffer,
                        D3D12_CPU_DESCRIPTOR_HANDLE InTempRTV) {
     assert(commandBuffer);
     if (!commandBuffer) {
@@ -88,16 +88,16 @@ class jRenderPass_DX12 : public jRenderPass {
   DXGI_FORMAT GetDSVFormat() const { return DSVFormat; }
 
   private:
-  void SetFinalLayoutToAttachment(const jAttachment& attachment) const;
+  void SetFinalLayoutToAttachment(const Attachment& attachment) const;
 
   private:
-  const jCommandBuffer_DX12* CommandBuffer = nullptr;
+  const CommandBufferDx12* m_commandBuffer_ = nullptr;
 
   std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> RTVCPUHandles;
   D3D12_CPU_DESCRIPTOR_HANDLE              DSVCPUDHandle = {};
 
-  std::vector<jRTClearValue> RTVClears;
-  jRTClearValue              DSVClear        = jRTClearValue(1.0f, 0);
+  std::vector<RTClearValue> RTVClears;
+  RTClearValue              DSVClear        = RTClearValue(1.0f, 0);
   bool                       DSVDepthClear   = false;
   bool                       DSVStencilClear = false;
 
