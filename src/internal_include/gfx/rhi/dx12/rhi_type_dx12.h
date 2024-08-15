@@ -522,9 +522,9 @@ GENERATE_CONVERSION_FUNCTION(GetDX12ResourceLayout,
 // clang-format on
 
 // Generated from CreateResource, CreateUploadResource
-struct jCreatedResource
-    : public std::enable_shared_from_this<jCreatedResource> {
-  ~jCreatedResource() { Free(); }
+struct CreatedResource
+    : public std::enable_shared_from_this<CreatedResource> {
+  ~CreatedResource() { Free(); }
 
   enum class EType : uint8_t {
     Standalone,    // CommittedResource
@@ -532,22 +532,22 @@ struct jCreatedResource
     Swapchain,     // no need release by me
   };
 
-  static std::shared_ptr<jCreatedResource> CreatedFromStandalone(
+  static std::shared_ptr<CreatedResource> CreatedFromStandalone(
       const ComPtr<ID3D12Resource>& InResource) {
-    return std::shared_ptr<jCreatedResource>(
-        new jCreatedResource(EType::Standalone, InResource));
+    return std::shared_ptr<CreatedResource>(
+        new CreatedResource(EType::Standalone, InResource));
   }
 
-  static std::shared_ptr<jCreatedResource> CreatedFromResourcePool(
+  static std::shared_ptr<CreatedResource> CreatedFromResourcePool(
       const ComPtr<ID3D12Resource>& InResource) {
-    return std::shared_ptr<jCreatedResource>(
-        new jCreatedResource(EType::ResourcePool, InResource));
+    return std::shared_ptr<CreatedResource>(
+        new CreatedResource(EType::ResourcePool, InResource));
   }
 
-  static std::shared_ptr<jCreatedResource> CreatedFromSwapchain(
+  static std::shared_ptr<CreatedResource> CreatedFromSwapchain(
       const ComPtr<ID3D12Resource>& InResource) {
-    return std::shared_ptr<jCreatedResource>(
-        new jCreatedResource(EType::Swapchain, InResource));
+    return std::shared_ptr<CreatedResource>(
+        new CreatedResource(EType::Swapchain, InResource));
   }
 
   EType                                   ResourceType = EType::Standalone;
@@ -567,15 +567,15 @@ struct jCreatedResource
   void Free();
 
   private:
-  jCreatedResource() {}
+  CreatedResource() {}
 
-  jCreatedResource(EType InType, const ComPtr<ID3D12Resource>& InResource)
+  CreatedResource(EType InType, const ComPtr<ID3D12Resource>& InResource)
       : ResourceType(InType)
       , Resource(std::make_shared<ComPtr<ID3D12Resource>>(InResource)) {}
 
   // prevent copying
-  jCreatedResource(const jCreatedResource&)            = delete;
-  jCreatedResource& operator=(const jCreatedResource&) = delete;
+  CreatedResource(const CreatedResource&)            = delete;
+  CreatedResource& operator=(const CreatedResource&) = delete;
 };
 
 }  // namespace game_engine
