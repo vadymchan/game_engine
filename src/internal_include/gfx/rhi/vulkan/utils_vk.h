@@ -68,7 +68,7 @@ bool isTexture2DArray(VkImageViewType    imageViewType,
                       uint32_t           layerCount,
                       VkImageCreateFlags flags);
 
-// =============== Buffer Utils ===============
+// =============== m_buffer Utils ===============
 
 VkImageView CreateTextureView(VkImage            image,
                               VkFormat           format,
