@@ -19,7 +19,7 @@
 
 namespace game_engine {
 
-struct CompiledShaderVk: public jCompiledShader {
+struct CompiledShaderVk: public CompiledShader {
   virtual ~CompiledShaderVk();
 
   VkPipelineShaderStageCreateInfo ShaderStage{};
