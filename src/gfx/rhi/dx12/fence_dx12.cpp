@@ -7,50 +7,50 @@
 namespace game_engine {
 
 FenceDx12::~FenceDx12() {
-  if (m_fence) {
-    m_fence->Release();
-    m_fence = nullptr;
+  if (m_fence_) {
+    m_fence_->Release();
+    m_fence_ = nullptr;
   }
 
-  if (FenceEvent) {
-    CloseHandle(FenceEvent);
-    FenceEvent = nullptr;
+  if (m_fenceEvent_) {
+    CloseHandle(m_fenceEvent_);
+    m_fenceEvent_ = nullptr;
   }
 }
 
 bool FenceDx12::IsComplete() const {
-  return m_fence->GetCompletedValue() >= FenceValue;
+  return m_fence_->GetCompletedValue() >= m_fenceValue_;
 }
 
-bool FenceDx12::IsComplete(uint64_t InFenceValue) const {
-  return m_fence->GetCompletedValue() >= InFenceValue;
+bool FenceDx12::IsComplete(uint64_t fenceValue) const {
+  return m_fence_->GetCompletedValue() >= fenceValue;
 }
 
 
-void FenceDx12::WaitForFence(uint64_t InTimeoutNanoSec) {
-  WaitForFenceValue(FenceValue, InTimeoutNanoSec);
+void FenceDx12::WaitForFence(uint64_t timeoutNanoSec) {
+  WaitForFenceValue(m_fenceValue_, timeoutNanoSec);
 }
 
-void FenceDx12::WaitForFenceValue(uint64_t InFenceValue,
-                                    uint64_t InTimeoutNanoSec) {
-  if (InFenceValue == InitialFenceValue) {
+void FenceDx12::WaitForFenceValue(uint64_t fenceValue,
+                                    uint64_t timeoutNanoSec) {
+  if (fenceValue == s_kInitialFenceValue) {
     return;
   }
 
-  assert(m_fence);
-  if (UINT64_MAX == InTimeoutNanoSec) {
-    while (m_fence->GetCompletedValue() < InFenceValue) {
+  assert(m_fence_);
+  if (UINT64_MAX == timeoutNanoSec) {
+    while (m_fence_->GetCompletedValue() < fenceValue) {
       Sleep(0);
     }
   } else {
     std::chrono::system_clock::time_point lastTime
         = std::chrono::system_clock::now();
 
-    while (m_fence->GetCompletedValue() < InFenceValue) {
+    while (m_fence_->GetCompletedValue() < fenceValue) {
       std::chrono::nanoseconds elapsed_nanoseconds
           = std::chrono::duration_cast<std::chrono::nanoseconds>(
               std::chrono::system_clock::now() - lastTime);
-      if (elapsed_nanoseconds.count() >= (int64_t)InTimeoutNanoSec) {
+      if (elapsed_nanoseconds.count() >= (int64_t)timeoutNanoSec) {
         return;
       }
 
@@ -60,28 +60,28 @@ void FenceDx12::WaitForFenceValue(uint64_t InFenceValue,
 }
 
 uint64_t FenceDx12::SignalWithNextFenceValue(
-    ID3D12CommandQueue* InCommandQueue, bool bWaitUntilExecuteComplete) {
+    ID3D12CommandQueue* commandQueue, bool bWaitUntilExecuteComplete) {
   {
-    ScopedLock s(&FenceValueLock);
+    ScopedLock s(&m_fenceValueLock_);
 
-    const auto NewFenceValue = FenceValue + 1;
-    HRESULT    hr = InCommandQueue->Signal(m_fence.Get(), NewFenceValue);
+    const auto NewFenceValue = m_fenceValue_ + 1;
+    HRESULT    hr = commandQueue->Signal(m_fence_.Get(), NewFenceValue);
     assert(SUCCEEDED(hr));
 
     if (FAILED(hr)) {
-      return FenceValue;
+      return m_fenceValue_;
     }
 
-    FenceValue = NewFenceValue;
+    m_fenceValue_ = NewFenceValue;
   }
 
-  HRESULT hr = m_fence->SetEventOnCompletion(FenceValue, FenceEvent);
+  HRESULT hr = m_fence_->SetEventOnCompletion(m_fenceValue_, m_fenceEvent_);
   assert(SUCCEEDED(hr));
 
   if (FAILED(hr)) {
-    WaitForSingleObjectEx(FenceEvent, INFINITE, false);
+    WaitForSingleObjectEx(m_fenceEvent_, INFINITE, false);
   }
-  return FenceValue;
+  return m_fenceValue_;
 }
 
 Fence* FenceManagerDx12::GetOrCreateFence() {
@@ -93,17 +93,17 @@ Fence* FenceManagerDx12::GetOrCreateFence() {
   }
 
   assert(g_rhi_dx12);
-  assert(g_rhi_dx12->Device);
+  assert(g_rhi_dx12->m_device_);
 
   FenceDx12* newFence = new FenceDx12();
-  HRESULT hr = g_rhi_dx12->Device->CreateFence(FenceDx12::InitialFenceValue,
+  HRESULT hr = g_rhi_dx12->m_device_->CreateFence(FenceDx12::s_kInitialFenceValue,
                                                D3D12_FENCE_FLAG_NONE,
-                                               IID_PPV_ARGS(&newFence->m_fence));
+                                               IID_PPV_ARGS(&newFence->m_fence_));
   assert(SUCCEEDED(hr));
 
   if (SUCCEEDED(hr)) {
-    newFence->FenceEvent = ::CreateEvent(nullptr, false, false, nullptr);
-    if (newFence->FenceEvent) {
+    newFence->m_fenceEvent_ = ::CreateEvent(nullptr, false, false, nullptr);
+    if (newFence->m_fenceEvent_) {
       UsingFences.insert(newFence);
       return newFence;
     }

@@ -14,32 +14,33 @@ namespace game_engine {
 class IBufferAttribute {
   public:
   struct Attribute {
-    Name               name;
-    // TODO: remove VkFormat (instead EBufferElementType and stride is used)
-    // VkFormat format;  // TODO: consider that index buffer use VkIndexType
-    // (currently in IndexBufferVk converts VkFormat to
-    // VkIndexType). Either use custom enums or union
-    EBufferElementType UnderlyingType;
-    int32_t            offset;
-    // The stride specifies the byte offset between consecutive elements of this
-    // attribute in the buffer.
-    int32_t            stride;
 
     Attribute(EBufferElementType UnderlyingType = EBufferElementType::BYTE,
               int32_t            offset         = 0,
               int32_t            stride         = 0)
-        : UnderlyingType(UnderlyingType)
-        , offset(offset)
-        , stride(stride) {}
+        : m_underlyingType_(UnderlyingType)
+        , m_offset_(offset)
+        , m_stride_(stride) {}
 
     Attribute(const Name&        name,
               EBufferElementType UnderlyingType = EBufferElementType::BYTE,
               int32_t            offset         = 0,
               int32_t            stride         = 0)
-        : name(name)
-        , UnderlyingType(UnderlyingType)
-        , offset(offset)
-        , stride(stride) {}
+        : m_name_(name)
+        , m_underlyingType_(UnderlyingType)
+        , m_offset_(offset)
+        , m_stride_(stride) {}
+
+    Name               m_name_;
+    // TODO: remove VkFormat (instead EBufferElementType and stride is used)
+    // VkFormat format;  // TODO: consider that index buffer use VkIndexType
+    // (currently in IndexBufferVk converts VkFormat to
+    // VkIndexType). Either use custom enums or union
+    EBufferElementType m_underlyingType_;
+    int32_t            m_offset_;
+    // The stride specifies the byte offset between consecutive elements of this
+    // attribute in the buffer.
+    int32_t            m_stride_;
   };
 
   IBufferAttribute(const Name&                   name,
@@ -49,11 +50,11 @@ class IBufferAttribute {
                    const std::vector<Attribute>& attributes
                    //, VkVertexInputRate             inputRate
                    )
-      : name(name)
-      , BufferType(bufferType)
+      : m_name_(name)
+      , m_bufferType_(bufferType)
       //, BufferUsage(bufferUsage)
-      , Stride(stride)
-      , Attributes(attributes)
+      , m_stride_(stride)
+      , m_attributes_(attributes)
   //, InputRate(inputRate)
   {}
 
@@ -64,12 +65,12 @@ class IBufferAttribute {
   virtual size_t      GetElementSize() const = 0;
 
   // private:
-  Name                   name;
-  EBufferType            BufferType = EBufferType::Static;
+  Name                   m_name_;
+  EBufferType            m_bufferType_ = EBufferType::Static;
   // TODO: Not needed
   // VkBufferUsageFlags     BufferUsage;
-  int32_t                Stride = 0;
-  std::vector<Attribute> Attributes;
+  int32_t                m_stride_ = 0;
+  std::vector<Attribute> m_attributes_;
   // TODO: Not needed
   // VkVertexInputRate      InputRate;
 };
@@ -91,18 +92,18 @@ class BufferAttributeStream : public IBufferAttribute {
                         )
       : IBufferAttribute(
           name, bufferType, /*bufferUsage,*/ stride, attributes /*, inputRate*/)
-      , Data(data) {}
+      , m_data_(data) {}
 
   virtual ~BufferAttributeStream() {}
 
-  virtual const void* GetBufferData() const { return Data.data(); }
+  virtual const void* GetBufferData() const { return m_data_.data(); }
 
-  virtual size_t GetBufferSize() const { return Data.size() * sizeof(T); }
+  virtual size_t GetBufferSize() const { return m_data_.size() * sizeof(T); }
 
   virtual size_t GetElementSize() const { return sizeof(T); }
 
   // private:
-  std::vector<T> Data;
+  std::vector<T> m_data_;
 };
 
 struct Buffer
@@ -131,40 +132,39 @@ struct Buffer
 
 class VertexStreamData {
   public:
-  virtual ~VertexStreamData() { streams.clear(); }
+  virtual ~VertexStreamData() { m_streams_.clear(); }
 
   int32_t GetEndLocation() const {
-    int32_t endLocation = startLocation;
-    for (const auto& stream : streams) {
-      endLocation += static_cast<int32_t>(stream->Attributes.size());
+    int32_t endLocation = m_startLocation_;
+    for (const auto& stream : m_streams_) {
+      endLocation += static_cast<int32_t>(stream->m_attributes_.size());
     }
     return endLocation;
   }
 
   // private:
   // TODO: consider renaming stream(s)
-  std::vector<std::shared_ptr<IBufferAttribute>> streams;
-  EPrimitiveType   PrimitiveType   = EPrimitiveType::TRIANGLES;
-  EVertexInputRate VertexInputRate = EVertexInputRate::VERTEX;
-  int32_t          elementCount    = 0;
-  int32_t          bindingIndex    = 0;
-  int32_t          startLocation   = 0;
+  std::vector<std::shared_ptr<IBufferAttribute>> m_streams_;
+  EPrimitiveType   m_primitiveType_   = EPrimitiveType::TRIANGLES;
+  EVertexInputRate m_vertexInputRate_ = EVertexInputRate::VERTEX;
+  int32_t          m_elementCount_    = 0;
+  int32_t          m_bindingIndex_    = 0;
+  int32_t          m_startLocation_   = 0;
 };
 
 struct VertexBuffer {
-  std::shared_ptr<VertexStreamData> vertexStreamData;
 
   virtual ~VertexBuffer() {}
 
-  virtual Name GetName() const { return Name::Invalid; }
+  virtual Name GetName() const { return Name::s_kInvalid; }
 
   virtual size_t GetHash() const { return 0; }
 
   virtual void Bind(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {}
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
 
   virtual int32_t GetElementCount() const {
-    return vertexStreamData ? vertexStreamData->elementCount : 0;
+    return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
   }
 
   virtual bool Initialize(
@@ -175,29 +175,31 @@ struct VertexBuffer {
   //virtual bool IsSupportRaytracing() const { return false; }
 
   virtual Buffer* GetBuffer(int32_t InStreamIndex) const { return nullptr; }
+
+  std::shared_ptr<VertexStreamData> m_vertexStreamData_;
 };
 
 class IndexStreamData {
   public:
-  ~IndexStreamData() { delete stream; }
+  ~IndexStreamData() { delete m_stream_; }
 
   // private:
-  IBufferAttribute* stream       = nullptr;
-  uint32_t          elementCount = 0;
+  IBufferAttribute* m_stream_       = nullptr;
+  uint32_t          m_elementCount_ = 0;
 };
 
 struct IndexBuffer {
-  std::shared_ptr<IndexStreamData> indexStreamData;
+  std::shared_ptr<IndexStreamData> m_indexStreamData_;
 
   virtual ~IndexBuffer() {}
 
-  virtual Name GetName() const { return Name::Invalid; }
+  virtual Name GetName() const { return Name::s_kInvalid; }
 
   virtual void Bind(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {}
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
 
   virtual int32_t GetElementCount() const {
-    return indexStreamData ? indexStreamData->elementCount : 0;
+    return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
   }
 
   virtual bool Initialize(
@@ -210,19 +212,19 @@ struct IndexBuffer {
 
 struct VertexBufferArray : public ResourceContainer<const VertexBuffer*> {
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = 0;
-    for (int32_t i = 0; i < NumOfData; ++i) {
-      Hash ^= (Data[i]->GetHash() << i);
+    m_hash_ = 0;
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
+      m_hash_ ^= (m_data_[i]->GetHash() << i);
     }
-    return Hash;
+    return m_hash_;
   }
 
   private:
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 };
 
 }  // namespace game_engine

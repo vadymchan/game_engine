@@ -8,32 +8,33 @@ namespace game_engine {
 
 // TODO: consider renaming to command list
 struct CommandBufferDx12 : public CommandBuffer {
-  ComPtr<ID3D12CommandAllocator>     CommandAllocator;
-  ComPtr<ID3D12GraphicsCommandList4> CommandList;
-  mutable bool                       IsClosed = false;
+  ID3D12GraphicsCommandList4* Get() { return m_commandList_.Get(); }
 
-  class OnlineDescriptorHeapDx12* OnlineDescriptorHeap        = nullptr;
-  class OnlineDescriptorHeapDx12* OnlineSamplerDescriptorHeap = nullptr;
+  bool IsValid() const { return m_commandList_.Get(); }
 
-  ID3D12GraphicsCommandList4* Get() { return CommandList.Get(); }
-
-  bool IsValid() const { return CommandList.Get(); }
-
-  inline ComPtr<ID3D12GraphicsCommandList4>& GetRef() { return CommandList; }
+  inline ComPtr<ID3D12GraphicsCommandList4>& GetRef() { return m_commandList_; }
 
   virtual bool Begin() const override;
   virtual bool End() const override;
   virtual void Reset() const override;
 
-  virtual void* GetNativeHandle() const override { return CommandList.Get(); }
+  virtual void* GetNativeHandle() const override { return m_commandList_.Get(); }
 
-  virtual void*   GetFenceHandle() const override;
-  virtual void    SetFence(void* InFence) override;
+  virtual void*  GetFenceHandle() const override;
+  virtual void   SetFence(void* fence) override;
   virtual Fence* GetFence() const override;
 
-  const class CommandBufferManagerDx12* Owner      = nullptr;
-  uint64_t                                FenceValue = 0;
-  bool                                    IsCompleteForWaitFence();
+  bool IsCompleteForWaitFence();
+
+  ComPtr<ID3D12CommandAllocator>     m_commandAllocator_;
+  ComPtr<ID3D12GraphicsCommandList4> m_commandList_;
+  mutable bool                       m_isClosed_ = false;
+
+  class OnlineDescriptorHeapDx12* m_onlineDescriptorHeap_        = nullptr;
+  class OnlineDescriptorHeapDx12* m_onlineSamplerDescriptorHeap_ = nullptr;
+
+  const class CommandBufferManagerDx12* m_owner_      = nullptr;
+  uint64_t                              m_fenceValue_ = 0;
 };
 
 }  // namespace game_engine

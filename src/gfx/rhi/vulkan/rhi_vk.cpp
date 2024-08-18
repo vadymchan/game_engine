@@ -8,24 +8,24 @@ namespace game_engine {
 
 RhiVk* g_rhi_vk = nullptr;
 
-TResourcePool<RenderPassVk, MutexRWLock>        RhiVk::RenderPassPool;
-TResourcePool<PipelineStateInfoVk, MutexRWLock> RhiVk::PipelineStatePool;
-TResourcePool<SamplerStateInfoVk, MutexRWLock>  RhiVk::SamplerStatePool;
+TResourcePool<RenderPassVk, MutexRWLock>        RhiVk::s_renderPassPool;
+TResourcePool<PipelineStateInfoVk, MutexRWLock> RhiVk::s_pipelineStatePool;
+TResourcePool<SamplerStateInfoVk, MutexRWLock>  RhiVk::s_samplerStatePool;
 TResourcePool<RasterizationStateInfoVk, MutexRWLock>
-                                                 RhiVk::RasterizationStatePool;
-TResourcePool<StencilOpStateInfoVk, MutexRWLock> RhiVk::StencilOpStatePool;
+    RhiVk::s_rasterizationStatePool;
+TResourcePool<StencilOpStateInfoVk, MutexRWLock> RhiVk::s_stencilOpStatePool;
 TResourcePool<DepthStencilStateInfoVk, MutexRWLock>
-                                                RhiVk::DepthStencilStatePool;
-TResourcePool<BlendingStateInfoVk, MutexRWLock> RhiVk::BlendingStatePool;
-std::unordered_map<uint64_t, ShaderBindingLayoutVk*> RhiVk::ShaderBindingPool;
+                                                RhiVk::s_depthStencilStatePool;
+TResourcePool<BlendingStateInfoVk, MutexRWLock> RhiVk::s_blendingStatePool;
+std::unordered_map<uint64_t, ShaderBindingLayoutVk*> RhiVk::s_shaderBindingPool;
 
 // TODO: consider whether need it
 struct FrameBufferVk : public FrameBuffer {
-  bool                                    IsInitialized = false;
-  std::vector<std::shared_ptr<Texture> > AllTextures;
+  bool                                   m_isInitialized = false;
+  std::vector<std::shared_ptr<Texture> > m_allTextures;
 
   virtual Texture* GetTexture(std::int32_t index = 0) const {
-    return AllTextures[index].get();
+    return m_allTextures[index].get();
   }
 };
 
@@ -224,9 +224,9 @@ bool RhiVk::init(const std::shared_ptr<Window>& window) {
         = FindQueueFamilies(m_physicalDevice_, m_surface_);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.GraphicsFamily.value(),
-                                              indices.PresentFamily.value(),
-                                              indices.ComputeFamily.value()};
+    std::set<uint32_t> uniqueQueueFamilies = {indices.m_graphicsFamily_.value(),
+                                              indices.m_presentFamily_.value(),
+                                              indices.m_computeFamily_.value()};
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -402,15 +402,17 @@ bool RhiVk::init(const std::shared_ptr<Window>& window) {
       return false;
     }
 
-    m_graphicsQueue_.QueueIndex = indices.GraphicsFamily.value();
-    m_presentQueue_.QueueIndex  = indices.PresentFamily.value();
-    m_computeQueue_.QueueIndex  = indices.ComputeFamily.value();
+    m_graphicsQueue_.m_queueIndex_ = indices.m_graphicsFamily_.value();
+    m_presentQueue_.m_queueIndex_  = indices.m_presentFamily_.value();
+    m_computeQueue_.m_queueIndex_  = indices.m_computeFamily_.value();
+    vkGetDeviceQueue(m_device_,
+                     m_graphicsQueue_.m_queueIndex_,
+                     0,
+                     &m_graphicsQueue_.m_queue_);
     vkGetDeviceQueue(
-        m_device_, m_graphicsQueue_.QueueIndex, 0, &m_graphicsQueue_.Queue);
+        m_device_, m_presentQueue_.m_queueIndex_, 0, &m_presentQueue_.m_queue_);
     vkGetDeviceQueue(
-        m_device_, m_presentQueue_.QueueIndex, 0, &m_presentQueue_.Queue);
-    vkGetDeviceQueue(
-        m_device_, m_computeQueue_.QueueIndex, 0, &m_computeQueue_.Queue);
+        m_device_, m_computeQueue_.m_queueIndex_, 0, &m_computeQueue_.m_queue_);
   }
 
   //  	// Check if the Vsync support
@@ -494,13 +496,13 @@ bool RhiVk::init(const std::shared_ptr<Window>& window) {
   m_fenceManager_ = new FenceManagerVk();
 
   m_commandBufferManager_ = new CommandBufferManagerVk();
-  m_commandBufferManager_->CreatePool(m_computeQueue_.QueueIndex);
+  m_commandBufferManager_->CreatePool(m_computeQueue_.m_queueIndex_);
 
   // Pipeline cache
   VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
   pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
   if (vkCreatePipelineCache(
-          m_device_, &pipelineCacheCreateInfo, nullptr, &PipelineCache)
+          m_device_, &pipelineCacheCreateInfo, nullptr, &m_pipelineCache_)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error,
                       "Failed to create Vulkan pipeline cache");
@@ -508,8 +510,8 @@ bool RhiVk::init(const std::shared_ptr<Window>& window) {
   }
 
   // Ring buffer
-  OneFrameUniformRingBuffers.resize(m_swapchain_->GetNumOfSwapchainImages());
-  for (auto& iter : OneFrameUniformRingBuffers) {
+  m_oneFrameUniformRingBuffers_.resize(m_swapchain_->GetNumOfSwapchainImages());
+  for (auto& iter : m_oneFrameUniformRingBuffers_) {
     iter = new RingBufferVk();
     iter->Create(
         EVulkanBufferBits::UNIFORM_BUFFER,
@@ -527,14 +529,14 @@ bool RhiVk::init(const std::shared_ptr<Window>& window) {
   //      (uint32_t)m_deviceProperties_.limits.minUniformBufferOffsetAlignment);
   //}
 
-  DescriptorPoolsSingleFrame.resize(m_swapchain_->GetNumOfSwapchainImages());
-  for (auto& iter : DescriptorPoolsSingleFrame) {
+  m_descriptorPoolsSingleFrame_.resize(m_swapchain_->GetNumOfSwapchainImages());
+  for (auto& iter : m_descriptorPoolsSingleFrame_) {
     iter = new DescriptorPoolVk();
     iter->Create(10'000);
   }
 
-  DescriptorPoolMultiFrame = new DescriptorPoolVk();
-  DescriptorPoolMultiFrame->Create(10'000);
+  m_descriptorPoolMultiFrame_ = new DescriptorPoolVk();
+  m_descriptorPoolMultiFrame_->Create(10'000);
 
   return true;
 }
@@ -544,18 +546,18 @@ void RhiVk::release() {
 
   RHI::release();  // TODO: consider whether need to remove
 
-  RenderPassPool.Release();
-  SamplerStatePool.Release();
-  RasterizationStatePool.Release();
-  StencilOpStatePool.Release();
-  DepthStencilStatePool.Release();
-  BlendingStatePool.Release();
-  PipelineStatePool.Release();
+  s_renderPassPool.Release();
+  s_samplerStatePool.Release();
+  s_rasterizationStatePool.Release();
+  s_stencilOpStatePool.Release();
+  s_depthStencilStatePool.Release();
+  s_blendingStatePool.Release();
+  s_pipelineStatePool.Release();
 
   FrameBufferPool::Release();
   RenderTargetPool::Release();
 
-  // TODO: consider removing 
+  // TODO: consider removing
   // delete m_swapchain_;
   // m_swapchain_ = nullptr;
   // TODO: consider using destructor
@@ -567,26 +569,26 @@ void RhiVk::release() {
   ShaderBindingLayoutVk::ClearPipelineLayout();
 
   {
-    ScopeWriteLock s(&ShaderBindingPoolLock);
-    for (auto& iter : ShaderBindingPool) {
+    ScopeWriteLock s(&m_shaderBindingPoolLock_);
+    for (auto& iter : s_shaderBindingPool) {
       delete iter.second;
     }
-    ShaderBindingPool.clear();
+    s_shaderBindingPool.clear();
   }
 
-  for (auto& iter : OneFrameUniformRingBuffers) {
+  for (auto& iter : m_oneFrameUniformRingBuffers_) {
     delete iter;
   }
-  OneFrameUniformRingBuffers.clear();
+  m_oneFrameUniformRingBuffers_.clear();
 
-  for (auto& iter : DescriptorPoolsSingleFrame) {
+  for (auto& iter : m_descriptorPoolsSingleFrame_) {
     delete iter;
   }
-  DescriptorPoolsSingleFrame.clear();
+  m_descriptorPoolsSingleFrame_.clear();
 
-  delete DescriptorPoolMultiFrame;
+  delete m_descriptorPoolMultiFrame_;
 
-  vkDestroyPipelineCache(m_device_, PipelineCache, nullptr);
+  vkDestroyPipelineCache(m_device_, m_pipelineCache_, nullptr);
 
   delete m_fenceManager_;
   m_fenceManager_ = nullptr;
@@ -636,56 +638,58 @@ std::shared_ptr<IndexBuffer> RhiVk::CreateIndexBuffer(
   }
 
   assert(streamData);
-  assert(streamData->stream);
+  assert(streamData->m_stream_);
   auto indexBufferPtr = std::make_shared<IndexBufferVk>();
   indexBufferPtr->Initialize(streamData);
   return indexBufferPtr;
 }
 
 std::shared_ptr<Texture> RhiVk::CreateTextureFromData(
-    const ImageData* InImageData) const {
-  assert(InImageData);
+    const ImageData* imageData) const {
+  assert(imageData);
 
-  int32_t MipLevel = InImageData->MipLevel;
-  if ((MipLevel == 1) && (InImageData->CreateMipmapIfPossible)) {
-    MipLevel = TextureVk::GetMipLevels(InImageData->Width, InImageData->Height);
+  int32_t MipLevel = imageData->m_mipLevel_;
+  if ((MipLevel == 1) && (imageData->m_createMipmapIfPossible_)) {
+    MipLevel
+        = TextureVk::GetMipLevels(imageData->m_width_, imageData->m_height_);
   }
 
   auto stagingBufferPtr = CreateBuffer(
       EVulkanBufferBits::TRANSFER_SRC,
       EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-      InImageData->imageBulkData.ImageData.size(),
+      imageData->m_imageBulkData_.m_imageData_.size(),
       EResourceLayout::TRANSFER_SRC);
 
-  stagingBufferPtr->UpdateBuffer(&InImageData->imageBulkData.ImageData[0],
-                                 InImageData->imageBulkData.ImageData.size());
+  stagingBufferPtr->UpdateBuffer(
+      &imageData->m_imageBulkData_.m_imageData_[0],
+      imageData->m_imageBulkData_.m_imageData_.size());
 
   std::shared_ptr<TextureVk> TexturePtr;
-  if (InImageData->TextureType == ETextureType::TEXTURE_CUBE) {
+  if (imageData->m_textureType_ == ETextureType::TEXTURE_CUBE) {
     TexturePtr = g_rhi->CreateCubeTexture<TextureVk>(
-        (uint32_t)InImageData->Width,
-        (uint32_t)InImageData->Height,
+        (uint32_t)imageData->m_width_,
+        (uint32_t)imageData->m_height_,
         MipLevel,
-        InImageData->Format,
+        imageData->m_format_,
         ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
             | ETextureCreateFlag::UAV,
         EResourceLayout::SHADER_READ_ONLY,
-        InImageData->imageBulkData);
+        imageData->m_imageBulkData_);
     if (!TexturePtr) {
       GlobalLogger::Log(LogLevel::Error, "Failed to create cube texture");
       return nullptr;
     }
   } else {
     TexturePtr = g_rhi->Create2DTexture<TextureVk>(
-        (uint32_t)InImageData->Width,
-        (uint32_t)InImageData->Height,
-        (uint32_t)InImageData->LayerCount,
+        (uint32_t)imageData->m_width_,
+        (uint32_t)imageData->m_height_,
+        (uint32_t)imageData->m_layerCount_,
         MipLevel,
-        InImageData->Format,
+        imageData->m_format_,
         ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
             | ETextureCreateFlag::UAV,
         EResourceLayout::SHADER_READ_ONLY,
-        InImageData->imageBulkData);
+        imageData->m_imageBulkData_);
     if (!TexturePtr) {
       GlobalLogger::Log(LogLevel::Error, "Failed to create 2D texture");
       return nullptr;
@@ -748,7 +752,7 @@ bool RhiVk::CreateShaderInternal(Shader*           OutShader,
     assert(!shader_vk->m_compiledShader);
     // TODO: check for memory leak, use smart pointer
     CompiledShaderVk* CurCompiledShader = new CompiledShaderVk();
-    shader_vk->m_compiledShader           = CurCompiledShader;
+    shader_vk->m_compiledShader         = CurCompiledShader;
 
     shader_vk->SetPermutationId(shaderInfo.GetPermutationId());
 
@@ -947,21 +951,22 @@ bool RhiVk::CreateShaderInternal(Shader*           OutShader,
         break;
     }
 
-    CurCompiledShader->ShaderStage.sType
+    CurCompiledShader->m_shaderStage_.sType
         = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    CurCompiledShader->ShaderStage.stage  = ShaderFlagBits;
-    CurCompiledShader->ShaderStage.module = shaderModule;
-    CurCompiledShader->ShaderStage.pName  = shaderInfo.GetEntryPoint().ToStr();
+    CurCompiledShader->m_shaderStage_.stage  = ShaderFlagBits;
+    CurCompiledShader->m_shaderStage_.module = shaderModule;
+    CurCompiledShader->m_shaderStage_.pName
+        = shaderInfo.GetEntryPoint().ToStr();
   }
-  shader_vk->shaderInfo = shaderInfo;
-  shader_vk->shaderInfo.SetIncludeShaderFilePaths(IncludeFilePaths);
+  shader_vk->m_shaderInfo_ = shaderInfo;
+  shader_vk->m_shaderInfo_.SetIncludeShaderFilePaths(IncludeFilePaths);
 
   return true;
 }
 
 FrameBuffer* RhiVk::CreateFrameBuffer(const FrameBufferInfo& info) const {
-  const VkFormat textureFormat      = GetVulkanTextureFormat(info.Format);
-  const bool     hasDepthAttachment = IsDepthFormat(info.Format);
+  const VkFormat textureFormat      = GetVulkanTextureFormat(info.m_format_);
+  const bool     hasDepthAttachment = IsDepthFormat(info.m_format_);
 
   const VkImageUsageFlagBits ImageUsageFlagBit
       = hasDepthAttachment ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -972,20 +977,20 @@ FrameBuffer* RhiVk::CreateFrameBuffer(const FrameBufferInfo& info) const {
 
   const VkImageTiling TilingMode = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
 
-  const int32_t mipLevels = info.IsGenerateMipmap ? TextureVk::GetMipLevels(
-                                info.Extent.width(), info.Extent.height())
-                                                  : 1;
+  const int32_t mipLevels = info.m_isGenerateMipmap ? TextureVk::GetMipLevels(
+                                info.m_extent_.width(), info.m_extent_.height())
+                                                    : 1;
 
-  assert(info.SampleCount >= 1);
+  assert(info.m_sampleCount_ >= 1);
 
   std::shared_ptr<TextureVk> TexturePtr;
-  switch (info.TextureType) {
+  switch (info.m_textureType_) {
     case ETextureType::TEXTURE_2D:
       TexturePtr = game_engine::Create2DTexture(
-          info.Extent.width(),
-          info.Extent.height(),
+          info.m_extent_.width(),
+          info.m_extent_.height(),
           mipLevels,
-          (VkSampleCountFlagBits)info.SampleCount,
+          (VkSampleCountFlagBits)info.m_sampleCount_,
           textureFormat,
           TilingMode,
           ImageUsageFlagBit,
@@ -998,11 +1003,11 @@ FrameBuffer* RhiVk::CreateFrameBuffer(const FrameBufferInfo& info) const {
       break;
     case ETextureType::TEXTURE_2D_ARRAY:
       TexturePtr = game_engine::CreateTexture2DArray(
-          info.Extent.width(),
-          info.Extent.height(),
-          info.LayerCount,
+          info.m_extent_.width(),
+          info.m_extent_.height(),
+          info.m_layerCount_,
           mipLevels,
-          (VkSampleCountFlagBits)info.SampleCount,
+          (VkSampleCountFlagBits)info.m_sampleCount_,
           textureFormat,
           TilingMode,
           ImageUsageFlagBit,
@@ -1015,10 +1020,10 @@ FrameBuffer* RhiVk::CreateFrameBuffer(const FrameBufferInfo& info) const {
       break;
     case ETextureType::TEXTURE_CUBE:
       TexturePtr = game_engine::CreateCubeTexture(
-          info.Extent.width(),
-          info.Extent.height(),
+          info.m_extent_.width(),
+          info.m_extent_.height(),
           mipLevels,
-          (VkSampleCountFlagBits)info.SampleCount,
+          (VkSampleCountFlagBits)info.m_sampleCount_,
           textureFormat,
           TilingMode,
           ImageUsageFlagBit,
@@ -1035,23 +1040,25 @@ FrameBuffer* RhiVk::CreateFrameBuffer(const FrameBufferInfo& info) const {
       return nullptr;
   }
 
-  auto fb_vk  = new FrameBufferVk();
-  fb_vk->Info = info;
-  fb_vk->Textures.push_back(TexturePtr);
-  fb_vk->AllTextures.push_back(TexturePtr);  // TODO: consider to remove
+  auto fb_vk     = new FrameBufferVk();
+  fb_vk->m_info_ = info;
+  fb_vk->m_textures_.push_back(TexturePtr);
+  fb_vk->m_allTextures.push_back(TexturePtr);  // TODO: consider to remove
 
   return fb_vk;
 }
 
 std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
     const RenderTargetInfo& info) const {
-  const VkFormat textureFormat      = GetVulkanTextureFormat(info.Format);
-  const bool     hasDepthAttachment = IsDepthFormat(info.Format);
+  const VkFormat textureFormat      = GetVulkanTextureFormat(info.m_format_);
+  const bool     hasDepthAttachment = IsDepthFormat(info.m_format_);
   const int32_t  mipLevels
-      = (info.SampleCount > EMSAASamples::COUNT_1 || !info.IsGenerateMipmap)
+      = (info.m_sampleCount_ > EMSAASamples::COUNT_1
+         || !info.m_isGenerateMipmap_)
           ? 1
-          : TextureVk::GetMipLevels(info.Extent.width(), info.Extent.height());
-  assert((int32_t)info.SampleCount >= 1);
+          : TextureVk::GetMipLevels(info.m_extent_.width(),
+                                    info.m_extent_.height());
+  assert((int32_t)info.m_sampleCount_ >= 1);
 
   // VkImageView                    imageViewUAV = nullptr;
   // std::map<int32_t, VkImageView> imageViewForMipMap;
@@ -1065,11 +1072,11 @@ std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
     TextureCreateFlag |= ETextureCreateFlag::RTV | ETextureCreateFlag::UAV;
   }
 
-  if (info.IsUseAsSubpassInput) {
+  if (info.m_isUseAsSubpassInput_) {
     TextureCreateFlag |= ETextureCreateFlag::SubpassInput;
   }
 
-  if (info.IsMemoryless) {
+  if (info.m_isMemoryless_) {
     TextureCreateFlag |= ETextureCreateFlag::Memoryless;
   }
 
@@ -1077,13 +1084,13 @@ std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
                                                ? VK_IMAGE_ASPECT_DEPTH_BIT
                                                : VK_IMAGE_ASPECT_COLOR_BIT;
 
-  switch (info.Type) {
+  switch (info.m_rype_) {
     case ETextureType::TEXTURE_2D:
-      TexturePtr = g_rhi->Create2DTexture<TextureVk>(info.Extent.width(),
-                                                     info.Extent.height(),
+      TexturePtr = g_rhi->Create2DTexture<TextureVk>(info.m_extent_.width(),
+                                                     info.m_extent_.height(),
                                                      1,
                                                      mipLevels,
-                                                     info.Format,
+                                                     info.m_format_,
                                                      TextureCreateFlag,
                                                      EResourceLayout::GENERAL);
       // TODO: remove (currently not needed)
@@ -1096,11 +1103,11 @@ std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
         }*/
       break;
     case ETextureType::TEXTURE_2D_ARRAY:
-      TexturePtr = g_rhi->Create2DTexture<TextureVk>(info.Extent.width(),
-                                                     info.Extent.height(),
-                                                     info.LayerCount,
+      TexturePtr = g_rhi->Create2DTexture<TextureVk>(info.m_extent_.width(),
+                                                     info.m_extent_.height(),
+                                                     info.m_layerCount_,
                                                      mipLevels,
-                                                     info.Format,
+                                                     info.m_format_,
                                                      TextureCreateFlag,
                                                      EResourceLayout::GENERAL);
       // TODO: remove (currently not needed)
@@ -1117,12 +1124,12 @@ std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
       }*/
       break;
     case ETextureType::TEXTURE_CUBE:
-      assert(info.LayerCount == 6);
+      assert(info.m_layerCount_ == 6);
       TexturePtr
-          = g_rhi->CreateCubeTexture<TextureVk>(info.Extent.width(),
-                                                info.Extent.height(),
+          = g_rhi->CreateCubeTexture<TextureVk>(info.m_extent_.width(),
+                                                info.m_extent_.height(),
                                                 mipLevels,
-                                                info.Format,
+                                                info.m_format_,
                                                 TextureCreateFlag,
                                                 EResourceLayout::GENERAL);
       // TODO: remove (currently not needed)
@@ -1163,9 +1170,9 @@ std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
   // TexturePtr->ViewUAV          = imageViewUAV;
   // TexturePtr->ViewUAVForMipMap = imageViewForMipMapUAV;
 
-  auto RenderTargetPtr        = std::make_shared<RenderTarget>();
-  RenderTargetPtr->Info       = info;
-  RenderTargetPtr->TexturePtr = TexturePtr;
+  auto RenderTargetPtr           = std::make_shared<RenderTarget>();
+  RenderTargetPtr->m_info_       = info;
+  RenderTargetPtr->m_texturePtr_ = TexturePtr;
 
   return RenderTargetPtr;
 }
@@ -1325,66 +1332,66 @@ std::shared_ptr<RenderTarget> RhiVk::CreateRenderTarget(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ShaderBindingLayout* RhiVk::CreateShaderBindings(
-    const ShaderBindingArray& InShaderBindingArray) const {
-  size_t hash = InShaderBindingArray.GetHash();
+    const ShaderBindingArray& shaderBindingArray) const {
+  size_t hash = shaderBindingArray.GetHash();
 
   {
-    ScopeReadLock sr(&ShaderBindingPoolLock);
+    ScopeReadLock sr(&m_shaderBindingPoolLock_);
 
-    auto it_find = ShaderBindingPool.find(hash);
-    if (ShaderBindingPool.end() != it_find) {
+    auto it_find = s_shaderBindingPool.find(hash);
+    if (s_shaderBindingPool.end() != it_find) {
       return it_find->second;
     }
   }
 
   {
-    ScopeWriteLock sw(&ShaderBindingPoolLock);
+    ScopeWriteLock sw(&m_shaderBindingPoolLock_);
 
     // Try again, to avoid entering creation section simultaneously.
-    auto it_find = ShaderBindingPool.find(hash);
-    if (ShaderBindingPool.end() != it_find) {
+    auto it_find = s_shaderBindingPool.find(hash);
+    if (s_shaderBindingPool.end() != it_find) {
       return it_find->second;
     }
 
     auto NewShaderBinding = new ShaderBindingLayoutVk();
-    NewShaderBinding->Initialize(InShaderBindingArray);
-    NewShaderBinding->Hash  = hash;
-    ShaderBindingPool[hash] = NewShaderBinding;
+    NewShaderBinding->Initialize(shaderBindingArray);
+    NewShaderBinding->m_hash_ = hash;
+    s_shaderBindingPool[hash] = NewShaderBinding;
 
     return NewShaderBinding;
   }
 }
 
 std::shared_ptr<ShaderBindingInstance> RhiVk::CreateShaderBindingInstance(
-    const ShaderBindingArray&       InShaderBindingArray,
-    const ShaderBindingInstanceType InType) const {
-  auto shaderBindingsLayout = CreateShaderBindings(InShaderBindingArray);
+    const ShaderBindingArray&       shaderBindingArray,
+    const ShaderBindingInstanceType type) const {
+  auto shaderBindingsLayout = CreateShaderBindings(shaderBindingArray);
   assert(shaderBindingsLayout);
-  return shaderBindingsLayout->CreateShaderBindingInstance(InShaderBindingArray,
-                                                           InType);
+  return shaderBindingsLayout->CreateShaderBindingInstance(shaderBindingArray,
+                                                           type);
 }
 
 std::shared_ptr<Buffer> RhiVk::CreateBufferInternal(
-    uint64_t          InSize,
-    uint64_t          InAlignment,
-    EBufferCreateFlag InBufferCreateFlag,
-    EResourceLayout   InInitialState,
-    const void*       InData,
-    uint64_t          InDataSize
-    /*, const wchar_t*    InResourceName = nullptr*/) const {
-  if (InAlignment > 0) {
-    InSize = Align(InSize, InAlignment);
+    uint64_t          size,
+    uint64_t          alignment,
+    EBufferCreateFlag bufferCreateFlag,
+    EResourceLayout   initialState,
+    const void*       data,
+    uint64_t          dataSize
+    /*, const wchar_t*    resourceName = nullptr*/) const {
+  if (alignment > 0) {
+    size = Align(size, alignment);
   }
 
   EVulkanBufferBits BufferBits = EVulkanBufferBits::SHADER_DEVICE_ADDRESS
                                | EVulkanBufferBits::TRANSFER_DST
                                | EVulkanBufferBits::TRANSFER_SRC;
-  if (!!(EBufferCreateFlag::UAV & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::UAV & bufferCreateFlag)) {
     BufferBits = BufferBits | EVulkanBufferBits::STORAGE_BUFFER;
   }
 
   if (!!(EBufferCreateFlag::AccelerationStructureBuildInput
-         & InBufferCreateFlag)) {
+         & bufferCreateFlag)) {
     // TODO: Ensure the extension for acceleration structure is enabled and
     // this flag is available in your Vulkan version
     BufferBits
@@ -1392,60 +1399,60 @@ std::shared_ptr<Buffer> RhiVk::CreateBufferInternal(
         | EVulkanBufferBits::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY;
   }
 
-  if (!!(EBufferCreateFlag::AccelerationStructure & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::AccelerationStructure & bufferCreateFlag)) {
     // TODO: Ensure the extension for acceleration structure is enabled and
     // this flag is available in your Vulkan version
     BufferBits = BufferBits | EVulkanBufferBits::ACCELERATION_STRUCTURE_STORAGE;
   }
 
-  if (!!(EBufferCreateFlag::VertexBuffer & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::VertexBuffer & bufferCreateFlag)) {
     BufferBits = BufferBits | EVulkanBufferBits::VERTEX_BUFFER;
   }
 
-  if (!!(EBufferCreateFlag::IndexBuffer & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::IndexBuffer & bufferCreateFlag)) {
     BufferBits = BufferBits | EVulkanBufferBits::INDEX_BUFFER;
   }
 
-  if (!!(EBufferCreateFlag::IndirectCommand & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::IndirectCommand & bufferCreateFlag)) {
     BufferBits = BufferBits | EVulkanBufferBits::INDIRECT_BUFFER;
   }
 
-  if (!!(EBufferCreateFlag::ShaderBindingTable & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::ShaderBindingTable & bufferCreateFlag)) {
     // TODO: Ensure the extension for ray tracing is enabled and this flag is
     // available in your Vulkan version
     BufferBits = BufferBits | EVulkanBufferBits::SHADER_BINDING_TABLE;
   }
 
   EVulkanMemoryBits MemoryBits = EVulkanMemoryBits::DEVICE_LOCAL;
-  if (!!(EBufferCreateFlag::CPUAccess & InBufferCreateFlag)) {
+  if (!!(EBufferCreateFlag::CPUAccess & bufferCreateFlag)) {
     MemoryBits
         |= EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT;
   }
 
-  auto bufferVk = CreateBuffer(BufferBits, MemoryBits, InSize, InInitialState);
-  if (InData && InDataSize > 0) {
-    if (!!(EBufferCreateFlag::CPUAccess & InBufferCreateFlag)) {
-      bufferVk->UpdateBuffer(InData, InDataSize);
+  auto bufferVk = CreateBuffer(BufferBits, MemoryBits, size, initialState);
+  if (data && dataSize > 0) {
+    if (!!(EBufferCreateFlag::CPUAccess & bufferCreateFlag)) {
+      bufferVk->UpdateBuffer(data, dataSize);
     } else {
       auto stagingBufferPtr
-          = g_rhi->CreateRawBuffer<BufferVk>(InDataSize,
-                                             InAlignment,
+          = g_rhi->CreateRawBuffer<BufferVk>(dataSize,
+                                             alignment,
                                              EBufferCreateFlag::CPUAccess,
                                              EResourceLayout::TRANSFER_SRC,
-                                             InData,
-                                             InDataSize
+                                             data,
+                                             dataSize
                                              /*, "StagingBuffer"*/);
-      CopyBuffer(*stagingBufferPtr, *bufferVk, InDataSize);
+      CopyBuffer(*stagingBufferPtr, *bufferVk, dataSize);
     }
   }
   return std::shared_ptr<BufferVk>(bufferVk);
 }
 
 std::shared_ptr<IUniformBufferBlock> RhiVk::CreateUniformBufferBlock(
-    Name InName, LifeTimeType InLifeTimeType, size_t InSize) const {
+    Name name, LifeTimeType lifeTimeType, size_t size) const {
   auto uniformBufferBlockPtr
-      = std::make_shared<UniformBufferBlockVk>(InName, InLifeTimeType);
-  uniformBufferBlockPtr->Init(InSize);
+      = std::make_shared<UniformBufferBlockVk>(name, lifeTimeType);
+  uniformBufferBlockPtr->Init(size);
   return uniformBufferBlockPtr;
 }
 
@@ -1508,74 +1515,74 @@ VkMemoryPropertyFlagBits RhiVk::GetMemoryPropertyFlagBits(
 }
 
 std::shared_ptr<Texture> RhiVk::Create2DTexture(
-    uint32_t             InWidth,
-    uint32_t             InHeight,
+    uint32_t             witdh,
+    uint32_t             height,
     uint32_t             InArrayLayers,
     uint32_t             InMipLevels,
-    ETextureFormat       InFormat,
+    ETextureFormat       format,
     ETextureCreateFlag   InTextureCreateFlag,
     EResourceLayout      InImageLayout,
     const ImageBulkData& InImageBulkData,
-    const RTClearValue& InClearValue,
-    const wchar_t*       InResourceName) const {
+    const RTClearValue&  InClearValue,
+    const wchar_t*       resourceName) const {
   VkImageCreateFlagBits          ImageCreateFlags{};
   const VkMemoryPropertyFlagBits PropertyFlagBits
       = GetMemoryPropertyFlagBits(InTextureCreateFlag);
   const VkImageUsageFlags UsageFlag = GetImageUsageFlags(InTextureCreateFlag);
-  assert(!IsDepthFormat(InFormat)
-         || (IsDepthFormat(InFormat)
+  assert(!IsDepthFormat(format)
+         || (IsDepthFormat(format)
              && (UsageFlag & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
 
-  auto TexturePtr
-      = game_engine::Create2DTexture(InWidth,
-                                     InHeight,
-                                     InMipLevels,
-                                     VK_SAMPLE_COUNT_1_BIT,
-                                     GetVulkanTextureFormat(InFormat),
-                                     VK_IMAGE_TILING_OPTIMAL,
-                                     UsageFlag,
-                                     PropertyFlagBits,
-                                     ImageCreateFlags,
-                                     VK_IMAGE_LAYOUT_UNDEFINED);
+  auto TexturePtr = game_engine::Create2DTexture(witdh,
+                                                 height,
+                                                 InMipLevels,
+                                                 VK_SAMPLE_COUNT_1_BIT,
+                                                 GetVulkanTextureFormat(format),
+                                                 VK_IMAGE_TILING_OPTIMAL,
+                                                 UsageFlag,
+                                                 PropertyFlagBits,
+                                                 ImageCreateFlags,
+                                                 VK_IMAGE_LAYOUT_UNDEFINED);
 
-  if (InImageBulkData.ImageData.size() > 0) {
+  if (InImageBulkData.m_imageData_.size() > 0) {
     // todo : recycle temp buffer
     auto stagingBufferPtr = CreateBuffer(
         EVulkanBufferBits::TRANSFER_SRC,
         EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-        InImageBulkData.ImageData.size(),
+        InImageBulkData.m_imageData_.size(),
         EResourceLayout::TRANSFER_SRC);
 
-    stagingBufferPtr->UpdateBuffer(&InImageBulkData.ImageData[0],
-                                   InImageBulkData.ImageData.size());
+    stagingBufferPtr->UpdateBuffer(&InImageBulkData.m_imageData_[0],
+                                   InImageBulkData.m_imageData_.size());
 
     auto commandBuffer = BeginSingleTimeCommands();
     assert(TransitionLayout(
         commandBuffer, TexturePtr.get(), EResourceLayout::TRANSFER_DST));
 
-    if (InImageBulkData.SubresourceFootprints.size() > 0) {
+    if (InImageBulkData.m_subresourceFootprints_.size() > 0) {
       for (int32_t i = 0;
-           i < (int32_t)InImageBulkData.SubresourceFootprints.size();
+           i < (int32_t)InImageBulkData.m_subresourceFootprints_.size();
            ++i) {
         const ImageSubResourceData SubResourceData
-            = InImageBulkData.SubresourceFootprints[i];
+            = InImageBulkData.m_subresourceFootprints_[i];
 
-        CopyBufferToTexture(commandBuffer->GetRef(),
-                            stagingBufferPtr->m_buffer,
-                            stagingBufferPtr->Offset + SubResourceData.Offset,
-                            TexturePtr->image,
-                            SubResourceData.Width,
-                            SubResourceData.Height,
-                            SubResourceData.MipLevel,
-                            SubResourceData.Depth);
+        CopyBufferToTexture(
+            commandBuffer->GetRef(),
+            stagingBufferPtr->m_buffer_,
+            stagingBufferPtr->m_offset_ + SubResourceData.m_offset_,
+            TexturePtr->m_image_,
+            SubResourceData.m_width_,
+            SubResourceData.m_height_,
+            SubResourceData.m_mipLevel_,
+            SubResourceData.m_depth_);
       }
     } else {
       CopyBufferToTexture(commandBuffer->GetRef(),
-                          stagingBufferPtr->m_buffer,
-                          stagingBufferPtr->Offset,
-                          TexturePtr->image,
-                          InWidth,
-                          InHeight);
+                          stagingBufferPtr->m_buffer_,
+                          stagingBufferPtr->m_offset_,
+                          TexturePtr->m_image_,
+                          witdh,
+                          height);
     }
 
     assert(TransitionLayout(commandBuffer, TexturePtr.get(), InImageLayout));
@@ -1587,73 +1594,74 @@ std::shared_ptr<Texture> RhiVk::Create2DTexture(
 }
 
 std::shared_ptr<Texture> RhiVk::CreateCubeTexture(
-    uint32_t             InWidth,
-    uint32_t             InHeight,
+    uint32_t             witdh,
+    uint32_t             height,
     uint32_t             InMipLevels,
-    ETextureFormat       InFormat,
+    ETextureFormat       format,
     ETextureCreateFlag   InTextureCreateFlag,
     EResourceLayout      InImageLayout,
     const ImageBulkData& InImageBulkData,
-    const RTClearValue& InClearValue,
-    const wchar_t*       InResourceName) const {
+    const RTClearValue&  InClearValue,
+    const wchar_t*       resourceName) const {
   VkImageCreateFlagBits ImageCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
   const VkMemoryPropertyFlagBits PropertyFlagBits
       = GetMemoryPropertyFlagBits(InTextureCreateFlag);
   const VkImageUsageFlags UsageFlag = GetImageUsageFlags(InTextureCreateFlag);
-  assert(!IsDepthFormat(InFormat)
-         || (IsDepthFormat(InFormat)
+  assert(!IsDepthFormat(format)
+         || (IsDepthFormat(format)
              && (UsageFlag & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
 
   auto TexturePtr
-      = game_engine::CreateCubeTexture(InWidth,
-                                       InHeight,
+      = game_engine::CreateCubeTexture(witdh,
+                                       height,
                                        InMipLevels,
                                        VK_SAMPLE_COUNT_1_BIT,
-                                       GetVulkanTextureFormat(InFormat),
+                                       GetVulkanTextureFormat(format),
                                        VK_IMAGE_TILING_OPTIMAL,
                                        UsageFlag,
                                        PropertyFlagBits,
                                        ImageCreateFlags,
                                        VK_IMAGE_LAYOUT_UNDEFINED);
 
-  if (InImageBulkData.ImageData.size() > 0) {
+  if (InImageBulkData.m_imageData_.size() > 0) {
     // todo : recycle temp buffer
     auto stagingBufferPtr = game_engine::CreateBuffer(
         EVulkanBufferBits::TRANSFER_SRC,
         EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-        InImageBulkData.ImageData.size(),
+        InImageBulkData.m_imageData_.size(),
         EResourceLayout::TRANSFER_SRC);
 
-    stagingBufferPtr->UpdateBuffer(&InImageBulkData.ImageData[0],
-                                   InImageBulkData.ImageData.size());
+    stagingBufferPtr->UpdateBuffer(&InImageBulkData.m_imageData_[0],
+                                   InImageBulkData.m_imageData_.size());
 
     auto commandBuffer = BeginSingleTimeCommands();
     assert(TransitionLayout(
         commandBuffer, TexturePtr.get(), EResourceLayout::TRANSFER_DST));
 
-    if (InImageBulkData.SubresourceFootprints.size() > 0) {
+    if (InImageBulkData.m_subresourceFootprints_.size() > 0) {
       for (int32_t i = 0;
-           i < (int32_t)InImageBulkData.SubresourceFootprints.size();
+           i < (int32_t)InImageBulkData.m_subresourceFootprints_.size();
            ++i) {
         const ImageSubResourceData SubResourceData
-            = InImageBulkData.SubresourceFootprints[i];
+            = InImageBulkData.m_subresourceFootprints_[i];
 
-        CopyBufferToTexture(commandBuffer->GetRef(),
-                            stagingBufferPtr->m_buffer,
-                            stagingBufferPtr->Offset + SubResourceData.Offset,
-                            TexturePtr->image,
-                            SubResourceData.Width,
-                            SubResourceData.Height,
-                            SubResourceData.MipLevel,
-                            SubResourceData.Depth);
+        CopyBufferToTexture(
+            commandBuffer->GetRef(),
+            stagingBufferPtr->m_buffer_,
+            stagingBufferPtr->m_offset_ + SubResourceData.m_offset_,
+            TexturePtr->m_image_,
+            SubResourceData.m_width_,
+            SubResourceData.m_height_,
+            SubResourceData.m_mipLevel_,
+            SubResourceData.m_depth_);
       }
     } else {
       CopyBufferToTexture(commandBuffer->GetRef(),
-                          stagingBufferPtr->m_buffer,
-                          stagingBufferPtr->Offset,
-                          TexturePtr->image,
-                          InWidth,
-                          InHeight);
+                          stagingBufferPtr->m_buffer_,
+                          stagingBufferPtr->m_offset_,
+                          TexturePtr->m_image_,
+                          witdh,
+                          height);
     }
 
     assert(TransitionLayout(commandBuffer, TexturePtr.get(), InImageLayout));
@@ -1665,14 +1673,14 @@ std::shared_ptr<Texture> RhiVk::CreateCubeTexture(
 }
 
 void RhiVk::DrawArrays(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    int32_t                                     vertStartIndex,
-    int32_t                                     vertCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDraw((VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+    int32_t                                    vertStartIndex,
+    int32_t                                    vertCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDraw((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
                 ->GetNativeHandle(),
             vertCount,
             1,
@@ -1681,15 +1689,15 @@ void RhiVk::DrawArrays(
 }
 
 void RhiVk::DrawArraysInstanced(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    int32_t                                     vertStartIndex,
-    int32_t                                     vertCount,
-    int32_t                                     instanceCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDraw((VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+    int32_t                                    vertStartIndex,
+    int32_t                                    vertCount,
+    int32_t                                    instanceCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDraw((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
                 ->GetNativeHandle(),
             vertCount,
             instanceCount,
@@ -1698,96 +1706,92 @@ void RhiVk::DrawArraysInstanced(
 }
 
 void RhiVk::DrawElements(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDrawIndexed(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
-          ->GetNativeHandle(),
-      indexCount,
-      1,
-      startIndex,
-      0,
-      0);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
+                       ->GetNativeHandle(),
+                   indexCount,
+                   1,
+                   startIndex,
+                   0,
+                   0);
 }
 
 void RhiVk::DrawElementsInstanced(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount,
-    int32_t                                     instanceCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDrawIndexed(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
-          ->GetNativeHandle(),
-      indexCount,
-      instanceCount,
-      startIndex,
-      0,
-      0);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount,
+    int32_t                                    instanceCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
+                       ->GetNativeHandle(),
+                   indexCount,
+                   instanceCount,
+                   startIndex,
+                   0,
+                   0);
 }
 
 void RhiVk::DrawElementsBaseVertex(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount,
-    int32_t                                     baseVertexIndex) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDrawIndexed(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
-          ->GetNativeHandle(),
-      indexCount,
-      1,
-      startIndex,
-      baseVertexIndex,
-      0);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount,
+    int32_t                                    baseVertexIndex) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
+                       ->GetNativeHandle(),
+                   indexCount,
+                   1,
+                   startIndex,
+                   baseVertexIndex,
+                   0);
 }
 
 void RhiVk::DrawElementsInstancedBaseVertex(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    int32_t                                     elementSize,
-    int32_t                                     startIndex,
-    int32_t                                     indexCount,
-    int32_t                                     baseVertexIndex,
-    int32_t                                     instanceCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDrawIndexed(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
-          ->GetNativeHandle(),
-      indexCount,
-      instanceCount,
-      startIndex,
-      baseVertexIndex,
-      0);
+    int32_t                                    elementSize,
+    int32_t                                    startIndex,
+    int32_t                                    indexCount,
+    int32_t                                    baseVertexIndex,
+    int32_t                                    instanceCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
+                       ->GetNativeHandle(),
+                   indexCount,
+                   instanceCount,
+                   startIndex,
+                   baseVertexIndex,
+                   0);
 }
 
 void RhiVk::DrawIndirect(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
     Buffer*                                    buffer,
-    int32_t                                     startIndex,
-    int32_t                                     drawCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
+    int32_t                                    startIndex,
+    int32_t                                    drawCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
   vkCmdDrawIndirect(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+      (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
           ->GetNativeHandle(),
       (VkBuffer)buffer->GetHandle(),
       startIndex * sizeof(VkDrawIndirectCommand),
@@ -1796,16 +1800,16 @@ void RhiVk::DrawIndirect(
 }
 
 void RhiVk::DrawElementsIndirect(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
     Buffer*                                    buffer,
-    int32_t                                     startIndex,
-    int32_t                                     drawCount) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
+    int32_t                                    startIndex,
+    int32_t                                    drawCount) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
   vkCmdDrawIndexedIndirect(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+      (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
           ->GetNativeHandle(),
       (VkBuffer)buffer->GetHandle(),
       startIndex * sizeof(VkDrawIndexedIndirectCommand),
@@ -1814,13 +1818,13 @@ void RhiVk::DrawElementsIndirect(
 }
 
 void RhiVk::DispatchCompute(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
-    uint32_t                                    numGroupsX,
-    uint32_t                                    numGroupsY,
-    uint32_t                                    numGroupsZ) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
-  vkCmdDispatch((VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
+    uint32_t                                   numGroupsX,
+    uint32_t                                   numGroupsY,
+    uint32_t                                   numGroupsZ) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
+  vkCmdDispatch((VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
                     ->GetNativeHandle(),
                 numGroupsX,
                 numGroupsY,
@@ -1835,15 +1839,15 @@ void RhiVk::Flush() const {
   // waiting for their completion. This might involve managing command buffers
   // and submissions more explicitly to track what has been submitted but not
   // yet completed.
-  vkQueueWaitIdle(m_graphicsQueue_.Queue);
-  vkQueueWaitIdle(m_computeQueue_.Queue);
-  vkQueueWaitIdle(m_presentQueue_.Queue);
+  vkQueueWaitIdle(m_graphicsQueue_.m_queue_);
+  vkQueueWaitIdle(m_computeQueue_.m_queue_);
+  vkQueueWaitIdle(m_presentQueue_.m_queue_);
 }
 
 void RhiVk::Finish() const {
-  vkQueueWaitIdle(m_graphicsQueue_.Queue);
-  vkQueueWaitIdle(m_computeQueue_.Queue);
-  vkQueueWaitIdle(m_presentQueue_.Queue);
+  vkQueueWaitIdle(m_graphicsQueue_.m_queue_);
+  vkQueueWaitIdle(m_computeQueue_.m_queue_);
+  vkQueueWaitIdle(m_presentQueue_.m_queue_);
 }
 
 // TODO: check whether it's called
@@ -1863,12 +1867,12 @@ void RhiVk::RecreateSwapChain() {
   // use std::shared_ptr instead of raw pointers
   delete m_commandBufferManager_;
   m_commandBufferManager_ = new CommandBufferManagerVk();
-  m_commandBufferManager_->CreatePool(m_graphicsQueue_.QueueIndex);
+  m_commandBufferManager_->CreatePool(m_graphicsQueue_.m_queueIndex_);
 
   FrameBufferPool::Release();
   RenderTargetPool::Release();
-  PipelineStatePool.Release();
-  RenderPassPool.Release();
+  s_pipelineStatePool.Release();
+  s_renderPassPool.Release();
 
   // delete m_swapchain_;
   // m_swapchain_ = new m_swapchain_();
@@ -1882,13 +1886,14 @@ std::shared_ptr<RenderFrameContext> RhiVk::BeginRenderFrame() {
       m_device_,
       (VkSwapchainKHR)m_swapchain_->GetHandle(),
       UINT64_MAX,
-      (VkSemaphore)m_swapchain_->GetSwapchainImage(CurrentFrameIndex)
-          ->Available->GetHandle(),
+      (VkSemaphore)m_swapchain_->GetSwapchainImage(m_currentFrameIndex_)
+          ->m_available_->GetHandle(),
       VK_NULL_HANDLE,
-      &CurrentFrameIndex);
+      &m_currentFrameIndex_);
 
   VkFence lastCommandBufferFence
-      = m_swapchain_->GetSwapchainImage(CurrentFrameIndex)->CommandBufferFence;
+      = m_swapchain_->GetSwapchainImage(m_currentFrameIndex_)
+            ->m_commandBufferFence_;
 
   if (acquireNextImageResult != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error,
@@ -1920,20 +1925,20 @@ std::shared_ptr<RenderFrameContext> RhiVk::BeginRenderFrame() {
   GetOneFrameUniformRingBuffer()->Reset();
   GetDescriptorPoolForSingleFrame()->Reset();
 
-  m_swapchain_->GetSwapchainImage(CurrentFrameIndex)->CommandBufferFence
+  m_swapchain_->GetSwapchainImage(m_currentFrameIndex_)->m_commandBufferFence_
       = (VkFence)commandBuffer->GetFenceHandle();
 
   auto renderFrameContextPtr
       = std::make_shared<RenderFrameContextVk>(commandBuffer);
   // renderFrameContextPtr->UseForwardRenderer =
   // !gOptions.UseDeferredRenderer;
-  renderFrameContextPtr->FrameIndex = CurrentFrameIndex;
-  renderFrameContextPtr->SceneRenderTargetPtr
+  renderFrameContextPtr->m_frameIndex_ = m_currentFrameIndex_;
+  renderFrameContextPtr->m_sceneRenderTargetPtr_
       = std::make_shared<SceneRenderTarget>();
-  renderFrameContextPtr->SceneRenderTargetPtr->Create(
-      m_window_, m_swapchain_->GetSwapchainImage(CurrentFrameIndex));
-  renderFrameContextPtr->CurrentWaitSemaphore
-      = m_swapchain_->GetSwapchainImage(CurrentFrameIndex)->Available;
+  renderFrameContextPtr->m_sceneRenderTargetPtr_->Create(
+      m_window_, m_swapchain_->GetSwapchainImage(m_currentFrameIndex_));
+  renderFrameContextPtr->m_currentWaitSemaphore_
+      = m_swapchain_->GetSwapchainImage(m_currentFrameIndex_)->m_available_;
 
   return renderFrameContextPtr;
 }
@@ -1941,11 +1946,11 @@ std::shared_ptr<RenderFrameContext> RhiVk::BeginRenderFrame() {
 void RhiVk::EndRenderFrame(
     const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {
   VkSemaphore signalSemaphore[]
-      = {(VkSemaphore)m_swapchain_->GetSwapchainImage(CurrentFrameIndex)
-             ->RenderFinished->GetHandle()};
+      = {(VkSemaphore)m_swapchain_->GetSwapchainImage(m_currentFrameIndex_)
+             ->m_renderFinished_->GetHandle()};
   QueueSubmit(
       renderFrameContextPtr,
-      m_swapchain_->GetSwapchainImage(CurrentFrameIndex)->RenderFinished);
+      m_swapchain_->GetSwapchainImage(m_currentFrameIndex_)->m_renderFinished_);
 
   VkPresentInfoKHR presentInfo   = {};
   presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1955,20 +1960,20 @@ void RhiVk::EndRenderFrame(
   VkSwapchainKHR swapChains[] = {(VkSwapchainKHR)m_swapchain_->GetHandle()};
   presentInfo.swapchainCount  = 1;
   presentInfo.pSwapchains     = swapChains;
-  presentInfo.pImageIndices   = &CurrentFrameIndex;
+  presentInfo.pImageIndices   = &m_currentFrameIndex_;
 
   presentInfo.pResults = nullptr;  // Optional
   VkResult queuePresentResult
-      = vkQueuePresentKHR(m_presentQueue_.Queue, &presentInfo);
+      = vkQueuePresentKHR(m_presentQueue_.m_queue_, &presentInfo);
 
-  CurrentFrameIndex
-      = (CurrentFrameIndex + 1) % m_swapchain_->GetNumOfSwapchainImages();
+  m_currentFrameIndex_
+      = (m_currentFrameIndex_ + 1) % m_swapchain_->GetNumOfSwapchainImages();
   renderFrameContextPtr->Destroy();
 
   if ((queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR)
-      || (queuePresentResult == VK_SUBOPTIMAL_KHR) || FramebufferResized) {
+      || (queuePresentResult == VK_SUBOPTIMAL_KHR) || m_isFramebufferResized_) {
     RecreateSwapChain();
-    FramebufferResized = false;
+    m_isFramebufferResized_ = false;
     return;
   } else if (queuePresentResult != VK_SUCCESS) {
     assert(0);
@@ -1997,7 +2002,7 @@ void RhiVk::QueueSubmit(
   submitInfo.sType        = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
   VkSemaphore waitsemaphores[]
-      = {(VkSemaphore)renderFrameContext->CurrentWaitSemaphore->GetHandle()};
+      = {(VkSemaphore)renderFrameContext->m_currentWaitSemaphore_->GetHandle()};
   VkPipelineStageFlags waitStages[]
       = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   submitInfo.waitSemaphoreCount = 1;
@@ -2006,7 +2011,7 @@ void RhiVk::QueueSubmit(
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers    = &vkCommandBuffer;
 
-  renderFrameContext->CurrentWaitSemaphore = InSignalSemaphore;
+  renderFrameContext->m_currentWaitSemaphore_ = InSignalSemaphore;
 
   VkSemaphore signalSemaphores[]
       = {(VkSemaphore)InSignalSemaphore->GetHandle()};
@@ -2016,7 +2021,7 @@ void RhiVk::QueueSubmit(
   vkResetFences(m_device_, 1, &vkFence);
 
   auto queueSubmitResult
-      = vkQueueSubmit(m_graphicsQueue_.Queue, 1, &submitInfo, vkFence);
+      = vkQueueSubmit(m_graphicsQueue_.m_queue_, 1, &submitInfo, vkFence);
   if ((queueSubmitResult == VK_ERROR_OUT_OF_DATE_KHR)
       || (queueSubmitResult == VK_SUBOPTIMAL_KHR)) {
     GlobalLogger::Log(LogLevel::Warning,
@@ -2074,33 +2079,34 @@ void RhiVk::EndSingleTimeCommands(CommandBuffer* commandBuffer) const {
 
   vkResetFences(m_device_, 1, &vkFence);
 
-  auto Result = vkQueueSubmit(m_graphicsQueue_.Queue, 1, &submitInfo, vkFence);
+  auto Result
+      = vkQueueSubmit(m_graphicsQueue_.m_queue_, 1, &submitInfo, vkFence);
   assert(VK_SUCCESS == Result);
 
-  Result = vkQueueWaitIdle(m_graphicsQueue_.Queue);
+  Result = vkQueueWaitIdle(m_graphicsQueue_.m_queue_);
   assert(VK_SUCCESS == Result);
 
   m_commandBufferManager_->ReturnCommandBuffer(commandBufferVk);
 }
 
 void RhiVk::BindGraphicsShaderBindingInstances(
-    const CommandBuffer*                InCommandBuffer,
-    const PipelineStateInfo*            InPiplineState,
-    const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-    uint32_t                             InFirstSet) const {
-  if (InShaderBindingInstanceCombiner.DescriptorSetHandles.NumOfData) {
-    assert(InCommandBuffer);
+    const CommandBuffer*                 commandBuffer,
+    const PipelineStateInfo*             piplineState,
+    const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+    uint32_t                             firstSet) const {
+  if (shaderBindingInstanceCombiner.m_descriptorSetHandles_.m_numOfData_) {
+    assert(commandBuffer);
     vkCmdBindDescriptorSets(
-        (VkCommandBuffer)InCommandBuffer->GetNativeHandle(),
+        (VkCommandBuffer)commandBuffer->GetNativeHandle(),
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        (VkPipelineLayout)InPiplineState->GetPipelineLayoutHandle(),
-        InFirstSet,
-        InShaderBindingInstanceCombiner.DescriptorSetHandles.NumOfData,
-        (const VkDescriptorSet*)&InShaderBindingInstanceCombiner
-            .DescriptorSetHandles[0],
-        InShaderBindingInstanceCombiner.DynamicOffsets.NumOfData,
-        (InShaderBindingInstanceCombiner.DynamicOffsets.NumOfData
-             ? &InShaderBindingInstanceCombiner.DynamicOffsets[0]
+        (VkPipelineLayout)piplineState->GetPipelineLayoutHandle(),
+        firstSet,
+        shaderBindingInstanceCombiner.m_descriptorSetHandles_.m_numOfData_,
+        (const VkDescriptorSet*)&shaderBindingInstanceCombiner
+            .m_descriptorSetHandles_[0],
+        shaderBindingInstanceCombiner.m_dynamicOffsets_.m_numOfData_,
+        (shaderBindingInstanceCombiner.m_dynamicOffsets_.m_numOfData_
+             ? &shaderBindingInstanceCombiner.m_dynamicOffsets_[0]
              : nullptr));
   }
 }
@@ -2235,7 +2241,7 @@ bool RhiVk::TransitionLayout(VkCommandBuffer commandBuffer,
       break;
   }
 
-  // Target layouts (new)
+  // m_target_ layouts (new)
   // Destination access mask controls the dependency for the new image layout
   switch (newLayout) {
     case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
@@ -2291,8 +2297,8 @@ bool RhiVk::TransitionLayout(VkCommandBuffer commandBuffer,
   return true;
 }
 
-bool RhiVk::TransitionLayout(CommandBuffer* commandBuffer,
-                             Texture*       texture,
+bool RhiVk::TransitionLayout(CommandBuffer*  commandBuffer,
+                             Texture*        texture,
                              EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(texture);
@@ -2309,36 +2315,36 @@ bool RhiVk::TransitionLayout(CommandBuffer* commandBuffer,
   }
 
   if (TransitionLayout((VkCommandBuffer)commandBuffer->GetNativeHandle(),
-                       texture_vk->image,
-                       GetVulkanTextureFormat(texture_vk->format),
-                       texture_vk->mipLevels,
-                       texture_vk->layerCount,
-                       GetVulkanImageLayout(texture_vk->imageLayout),
+                       texture_vk->m_image_,
+                       GetVulkanTextureFormat(texture_vk->m_format_),
+                       texture_vk->m_mipLevels_,
+                       texture_vk->m_layerCount_,
+                       GetVulkanImageLayout(texture_vk->m_imageLayout_),
                        GetVulkanImageLayout(newLayout))) {
-    ((TextureVk*)texture)->imageLayout = newLayout;
+    ((TextureVk*)texture)->m_imageLayout_ = newLayout;
     return true;
   }
   return true;
 }
 
 void RhiVk::BindComputeShaderBindingInstances(
-    const CommandBuffer*                InCommandBuffer,
-    const PipelineStateInfo*            InPiplineState,
-    const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-    uint32_t                             InFirstSet) const {
-  if (InShaderBindingInstanceCombiner.DescriptorSetHandles.NumOfData) {
-    assert(InCommandBuffer);
+    const CommandBuffer*                 commandBuffer,
+    const PipelineStateInfo*             piplineState,
+    const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+    uint32_t                             firstSet) const {
+  if (shaderBindingInstanceCombiner.m_descriptorSetHandles_.m_numOfData_) {
+    assert(commandBuffer);
     vkCmdBindDescriptorSets(
-        (VkCommandBuffer)InCommandBuffer->GetNativeHandle(),
+        (VkCommandBuffer)commandBuffer->GetNativeHandle(),
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        (VkPipelineLayout)InPiplineState->GetPipelineLayoutHandle(),
-        InFirstSet,
-        InShaderBindingInstanceCombiner.DescriptorSetHandles.NumOfData,
-        (const VkDescriptorSet*)&InShaderBindingInstanceCombiner
-            .DescriptorSetHandles[0],
-        InShaderBindingInstanceCombiner.DynamicOffsets.NumOfData,
-        (InShaderBindingInstanceCombiner.DynamicOffsets.NumOfData
-             ? &InShaderBindingInstanceCombiner.DynamicOffsets[0]
+        (VkPipelineLayout)piplineState->GetPipelineLayoutHandle(),
+        firstSet,
+        shaderBindingInstanceCombiner.m_descriptorSetHandles_.m_numOfData_,
+        (const VkDescriptorSet*)&shaderBindingInstanceCombiner
+            .m_descriptorSetHandles_[0],
+        shaderBindingInstanceCombiner.m_dynamicOffsets_.m_numOfData_,
+        (shaderBindingInstanceCombiner.m_dynamicOffsets_.m_numOfData_
+             ? &shaderBindingInstanceCombiner.m_dynamicOffsets_[0]
              : nullptr));
   }
 }
@@ -2385,8 +2391,8 @@ bool RhiVk::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
   if (extensionsSupported) {
     SwapChainSupportDetails swapChainSupport
         = QuerySwapChainSupport(device, surface);
-    swapChainAdequate = !swapChainSupport.Formats.empty()
-                     && !swapChainSupport.PresentModes.empty();
+    swapChainAdequate = !swapChainSupport.m_formats_.empty()
+                     && !swapChainSupport.m_presentModes_.empty();
   }
 
   return indices.IsComplete() && extensionsSupported && swapChainAdequate;
@@ -2401,8 +2407,8 @@ bool RhiVk::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
   vkEnumerateDeviceExtensionProperties(
       device, nullptr, &extensionCount, availableExtensions.data());
 
-  std::set<std::string> requiredExtensions(DeviceExtensions.begin(),
-                                           DeviceExtensions.end());
+  std::set<std::string> requiredExtensions(m_deviceExtensions_.begin(),
+                                           m_deviceExtensions_.end());
   for (const auto& extension : availableExtensions) {
     requiredExtensions.erase(extension.extensionName);
   }

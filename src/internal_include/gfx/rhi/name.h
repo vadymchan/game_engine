@@ -15,11 +15,11 @@ namespace game_engine {
 
 struct Name {
   private:
-  static std::unordered_map<uint32_t, std::shared_ptr<std::string>> s_NameTable;
-  static MutexRWLock                                                Lock;
+  static std::unordered_map<uint32_t, std::shared_ptr<std::string>> s_nameTable;
+  static MutexRWLock                                                s_lock;
 
   public:
-  static const Name Invalid;
+  static const Name s_kInvalid;
 
   static uint32_t GenerateNameHash(const char* pName, size_t size) {
     return XXH64(pName, size);
@@ -27,10 +27,10 @@ struct Name {
 
   Name() = default;
 
-  explicit Name(uint32_t InNameHash) {
-    NameHash         = InNameHash;
-    NameString       = nullptr;
-    NameStringLength = 0;
+  explicit Name(uint32_t nameHash) {
+    m_nameHash_         = nameHash;
+    m_nameString_       = nullptr;
+    m_nameStringLength_ = 0;
   }
 
   explicit Name(const char* pName) { Set(pName, strlen(pName)); }
@@ -46,37 +46,37 @@ struct Name {
     const uint32_t NewNameHash = GenerateNameHash(pName, size);
 
     auto find_func = [&]() {
-      const auto find_it = s_NameTable.find(NewNameHash);
-      if (s_NameTable.end() != find_it) {
-        NameHash         = NewNameHash;
-        NameString       = find_it->second->c_str();
-        NameStringLength = find_it->second->size();
+      const auto find_it = s_nameTable.find(NewNameHash);
+      if (s_nameTable.end() != find_it) {
+        m_nameHash_         = NewNameHash;
+        m_nameString_       = find_it->second->c_str();
+        m_nameStringLength_ = find_it->second->size();
         return true;
       }
       return false;
     };
 
     {
-      ScopeReadLock sr(&Lock);
+      ScopeReadLock sr(&s_lock);
       if (find_func()) {
         return;
       }
     }
 
     {
-      ScopeWriteLock sw(&Lock);
+      ScopeWriteLock sw(&s_lock);
 
       // Try again, to avoid entering creation section simultaneously.
       if (find_func()) {
         return;
       }
 
-      const auto it_ret = s_NameTable.emplace(
+      const auto it_ret = s_nameTable.emplace(
           NewNameHash, CreateNewName_Internal(pName, NewNameHash));
       if (it_ret.second) {
-        NameHash         = NewNameHash;
-        NameString       = it_ret.first->second->c_str();
-        NameStringLength = it_ret.first->second->size();
+        m_nameHash_         = NewNameHash;
+        m_nameString_       = it_ret.first->second->c_str();
+        m_nameStringLength_ = it_ret.first->second->size();
         return;
       }
     }
@@ -85,14 +85,14 @@ struct Name {
   }
 
   operator uint32_t() const {
-    assert(NameHash != -1);
-    return NameHash;
+    assert(m_nameHash_ != -1);
+    return m_nameHash_;
   }
 
   Name& operator=(const Name& In) {
-    NameHash         = In.NameHash;
-    NameString       = In.NameString;
-    NameStringLength = In.NameStringLength;
+    m_nameHash_         = In.m_nameHash_;
+    m_nameString_       = In.m_nameString_;
+    m_nameStringLength_ = In.m_nameStringLength_;
     return *this;
   }
 
@@ -100,26 +100,26 @@ struct Name {
     return GetNameHash() == rhs.GetNameHash();
   }
 
-  bool IsValid() const { return NameHash != -1; }
+  bool IsValid() const { return m_nameHash_ != -1; }
 
   const char* ToStr() const {
     if (!IsValid()) {
       return nullptr;
     }
 
-    if (NameString) {
-      return NameString;
+    if (m_nameString_) {
+      return m_nameString_;
     }
 
     {
-      ScopeReadLock s(&Lock);
-      const auto    it_find = s_NameTable.find(NameHash);
-      if (it_find == s_NameTable.end()) {
+      ScopeReadLock s(&s_lock);
+      const auto    it_find = s_nameTable.find(m_nameHash_);
+      if (it_find == s_nameTable.end()) {
         return nullptr;
       }
 
-      NameString       = it_find->second->c_str();
-      NameStringLength = it_find->second->size();
+      m_nameString_       = it_find->second->c_str();
+      m_nameStringLength_ = it_find->second->size();
 
       return it_find->second->c_str();
     }
@@ -130,25 +130,25 @@ struct Name {
       return 0;
     }
 
-    if (!NameStringLength) {
-      return NameStringLength;
+    if (!m_nameStringLength_) {
+      return m_nameStringLength_;
     }
 
     {
-      ScopeReadLock s(&Lock);
-      const auto    it_find = s_NameTable.find(NameHash);
-      if (it_find == s_NameTable.end()) {
+      ScopeReadLock s(&s_lock);
+      const auto    it_find = s_nameTable.find(m_nameHash_);
+      if (it_find == s_nameTable.end()) {
         return 0;
       }
 
-      NameString       = it_find->second->c_str();
-      NameStringLength = it_find->second->size();
+      m_nameString_       = it_find->second->c_str();
+      m_nameStringLength_ = it_find->second->size();
 
-      return NameStringLength;
+      return m_nameStringLength_;
     }
   }
 
-  uint32_t GetNameHash() const { return NameHash; }
+  uint32_t GetNameHash() const { return m_nameHash_; }
 
   private:
   static std::shared_ptr<std::string> CreateNewName_Internal(
@@ -158,9 +158,9 @@ struct Name {
     return std::make_shared<std::string>(pName);
   }
 
-  uint32_t            NameHash         = -1;
-  mutable const char* NameString       = nullptr;
-  mutable size_t      NameStringLength = 0;
+  uint32_t            m_nameHash_         = -1;
+  mutable const char* m_nameString_       = nullptr;
+  mutable size_t      m_nameStringLength_ = 0;
 };
 
 struct NameHashFunc {
@@ -172,27 +172,27 @@ struct NameHashFunc {
 struct PriorityName : public Name {
   PriorityName() = default;
 
-  explicit PriorityName(uint32_t InNameHash, uint32_t InPriority)
-      : Name(InNameHash)
-      , Priority(InPriority) {}
+  explicit PriorityName(uint32_t nameHash, uint32_t InPriority)
+      : Name(nameHash)
+      , m_priority_(InPriority) {}
 
   explicit PriorityName(const char* pName, uint32_t InPriority)
       : Name(pName)
-      , Priority(InPriority) {}
+      , m_priority_(InPriority) {}
 
   explicit PriorityName(const char* pName, size_t size, uint32_t InPriority)
       : Name(pName, size)
-      , Priority(InPriority) {}
+      , m_priority_(InPriority) {}
 
   explicit PriorityName(const std::string& name, uint32_t InPriority)
       : Name(name)
-      , Priority(InPriority) {}
+      , m_priority_(InPriority) {}
 
   explicit PriorityName(const Name& name, uint32_t InPriority)
       : Name(name)
-      , Priority(InPriority) {}
+      , m_priority_(InPriority) {}
 
-  uint32_t Priority = 0;
+  uint32_t m_priority_ = 0;
 };
 
 struct PriorityNameHashFunc {
@@ -203,179 +203,9 @@ struct PriorityNameHashFunc {
 
 struct PriorityNameComapreFunc {
   bool operator()(const PriorityName& lhs, const PriorityName& rhs) const {
-    return lhs.Priority < rhs.Priority;
+    return lhs.m_priority_ < rhs.m_priority_;
   }
 };
-
-//struct Name {
-//  private:
-//  static std::unordered_map<uint32_t, std::string> s_NameTable;
-//  static MutexRWLock                               Lock;
-//
-//  public:
-//  static const Name Invalid;
-//
-//  static uint32_t GenerateNameHash(const std::string& name) {
-//    // TODO: implement logic (xxHash)
-//    return XXH64(name, name.size());
-//  }
-//
-//  Name() = default;
-//
-//  explicit Name(uint32_t InNameHash) {
-//    NameHash   = InNameHash;
-//    NameString = "";
-//  }
-//
-//  explicit Name(const std::string& name) { Set(name); }
-//
-//  Name(const Name& name) { *this = name; }
-//
-//  void Set(const std::string& name) {
-//    assert(!name.empty());
-//    const uint32_t NewNameHash = GenerateNameHash(name);
-//
-//    auto find_func = [&]() {
-//      const auto find_it = s_NameTable.find(NewNameHash);
-//      if (s_NameTable.end() != find_it) {
-//        NameHash   = NewNameHash;
-//        NameString = find_it->second;
-//        return true;
-//      }
-//      return false;
-//    };
-//
-//    {
-//      ScopeReadLock sr(&Lock);
-//      if (find_func()) {
-//        return;
-//      }
-//    }
-//
-//    {
-//      ScopeWriteLock sw(&Lock);
-//
-//      // Try again, to avoid entering creation section simultaneously.
-//      if (find_func()) {
-//        return;
-//      }
-//
-//      const auto it_ret = s_NameTable.emplace(NewNameHash, name);
-//      if (it_ret.second) {
-//        NameHash   = NewNameHash;
-//        NameString = it_ret.first->second;
-//        return;
-//      }
-//    }
-//
-//    assert(0);
-//  }
-//
-//  operator uint32_t() const {
-//    assert(NameHash != -1);
-//    return NameHash;
-//  }
-//
-//  Name& operator=(const Name& In) {
-//    NameHash   = In.NameHash;
-//    NameString = In.NameString;
-//    return *this;
-//  }
-//
-//  bool operator==(const Name& rhs) const {
-//    return GetNameHash() == rhs.GetNameHash();
-//  }
-//
-//  bool IsValid() const { return NameHash != -1; }
-//
-//  const std::string& ToStr() const {
-//    if (!IsValid()) {
-//      static const std::string EmptyString;
-//      return EmptyString;
-//    }
-//
-//    if (!NameString.empty()) {
-//      return NameString;
-//    }
-//
-//    {
-//      ScopeReadLock s(&Lock);
-//      const auto    it_find = s_NameTable.find(NameHash);
-//      if (it_find == s_NameTable.end()) {
-//        static const std::string EmptyString;
-//        return EmptyString;
-//      }
-//
-//      NameString = it_find->second;
-//
-//      return it_find->second;
-//    }
-//  }
-//
-//  size_t GetStringLength() const {
-//    if (!IsValid()) {
-//      return 0;
-//    }
-//
-//    if (!NameString.empty()) {
-//      return NameString.size();
-//    }
-//
-//    {
-//      ScopeReadLock s(&Lock);
-//      const auto    it_find = s_NameTable.find(NameHash);
-//      if (it_find == s_NameTable.end()) {
-//        return 0;
-//      }
-//
-//      NameString = it_find->second;
-//
-//      return NameString.size();
-//    }
-//  }
-//
-//  uint32_t GetNameHash() const { return NameHash; }
-//
-//  private:
-//  uint32_t            NameHash;
-//  mutable std::string NameString;
-//};
-//
-//struct NameHashFunc {
-//  std::size_t operator()(const Name& name) const {
-//    return static_cast<size_t>(name.GetNameHash());
-//  }
-//};
-//
-//struct PriorityName : public Name {
-//  PriorityName() = default;
-//
-//  explicit PriorityName(uint32_t InNameHash, uint32_t InPriority)
-//      : Name(InNameHash)
-//      , Priority(InPriority) {}
-//
-//  explicit PriorityName(const std::string& name, uint32_t InPriority)
-//      : Name(name)
-//      , Priority(InPriority) {}
-//
-//  explicit PriorityName(const Name& name, uint32_t InPriority)
-//      : Name(name)
-//      , Priority(InPriority) {}
-//
-//  uint32_t Priority = 0;
-//};
-//
-//struct PriorityNameHashFunc {
-//  std::size_t operator()(const PriorityName& name) const {
-//    return name.GetNameHash();
-//  }
-//};
-//
-//struct PriorityNameCompareFunc {
-//  bool operator()(const PriorityName& lhs, const PriorityName& rhs) const {
-//    return lhs.Priority < rhs.Priority;
-//  }
-//};
 
 // TODO: remove this implementation
 #define NameStatic(STRING)    \

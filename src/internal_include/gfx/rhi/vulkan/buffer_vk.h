@@ -24,14 +24,14 @@ namespace game_engine {
 class BufferVk : public Buffer {
   public:
   BufferVk()
-      : m_buffer(VK_NULL_HANDLE)
-      , m_deviceMemory(VK_NULL_HANDLE)
-      , m_size(0)
-      , MappedPointer(nullptr)
-      , Offset(0)
-      , AllocatedSize(0)
-      , HasBufferOwnership(true)
-      , Layout(EResourceLayout::UNDEFINED) {}
+      : m_buffer_(VK_NULL_HANDLE)
+      , m_deviceMemory_(VK_NULL_HANDLE)
+      , m_size_(0)
+      , m_mappedPointer_(nullptr)
+      , m_offset_(0)
+      , m_allocatedSize_(0)
+      , m_hasBufferOwnership_(true)
+      , m_layout_(EResourceLayout::UNDEFINED) {}
 
   BufferVk(VkDeviceSize      size,
            EVulkanBufferBits usage,
@@ -52,7 +52,7 @@ class BufferVk : public Buffer {
 
   virtual void Unmap() override;
 
-  virtual void* GetMappedPointer() const override { return MappedPointer; }
+  virtual void* GetMappedPointer() const override { return m_mappedPointer_; }
 
   virtual void UpdateBuffer(const void* data, uint64_t size) override;
 
@@ -108,27 +108,27 @@ class BufferVk : public Buffer {
   // TODO: log error
   //}
 
-  virtual void* GetHandle() const override { return m_buffer; }
+  virtual void* GetHandle() const override { return m_buffer_; }
 
-  virtual uint64_t GetAllocatedSize() const override { return AllocatedSize; }
+  virtual uint64_t GetAllocatedSize() const override { return m_allocatedSize_; }
 
-  virtual uint64_t GetOffset() const override { return Offset; }
+  virtual uint64_t GetOffset() const override { return m_offset_; }
 
-  virtual uint64_t GetBufferSize() const override { return RealBufferSize; }
+  virtual uint64_t GetBufferSize() const override { return m_realBufferSize_; }
 
-  virtual EResourceLayout GetLayout() const override { return Layout; }
+  virtual EResourceLayout GetLayout() const override { return m_layout_; }
 
   // TODO: consider descriptive names for Memory and VkDeviceMemory
-  Memory          m_memory;
-  VkBuffer        m_buffer       = VK_NULL_HANDLE;
-  VkDeviceMemory  m_deviceMemory = VK_NULL_HANDLE;
-  VkDeviceSize    m_size;  // TODO: consider about placing to VertexBufferVk
-  void*           MappedPointer      = nullptr;
-  size_t          Offset             = 0;
-  uint64_t        AllocatedSize      = 0;
-  uint64_t        RealBufferSize     = 0;
-  bool            HasBufferOwnership = true;
-  EResourceLayout Layout
+  Memory          m_memory_;
+  VkBuffer        m_buffer_       = VK_NULL_HANDLE;
+  VkDeviceMemory  m_deviceMemory_ = VK_NULL_HANDLE;
+  VkDeviceSize    m_size_;  // TODO: consider about placing to VertexBufferVk
+  void*           m_mappedPointer_      = nullptr;
+  size_t          m_offset_             = 0;
+  uint64_t        m_allocatedSize_      = 0;
+  uint64_t        m_realBufferSize_     = 0;
+  bool            m_hasBufferOwnership_ = true;
+  EResourceLayout m_layout_
       = EResourceLayout::UNDEFINED;  // TODO: previously was m_imageLayout
 };
 
@@ -136,14 +136,15 @@ class BufferVk : public Buffer {
 
 // TODO: consider make general
 struct VertexStreamVk {
-  Name        name;
-  EBufferType BufferType = EBufferType::Static;
-  bool        Normalized = false;
-  int32_t     Stride     = 0;
-  size_t      Offset     = 0;
-  // int32_t            InstanceDivisor = 0;
+  Name        m_name_;
+  EBufferType m_bufferType_ = EBufferType::Static;
+  // TODO: not used (consider remove)
+  bool        m_normalized_ = false;
+  int32_t     m_stride_     = 0;
+  size_t      m_offset_     = 0;
+  // int32_t            m_instanceDivisor_ = 0;
 
-  std::shared_ptr<BufferVk> BufferPtr;
+  std::shared_ptr<BufferVk> m_bufferPtr_;
 };
 
 struct VertexBufferArrayVk;
@@ -152,38 +153,38 @@ struct VertexBufferVk : public VertexBuffer {
   struct BindInfo {
     void Reset();
 
-    std::vector<VkVertexInputBindingDescription>   InputBindingDescriptions;
-    std::vector<VkVertexInputAttributeDescription> AttributeDescriptions;
-
-    // m_buffer references VertexStreamVk, so no destruction needed
-    std::vector<VkBuffer>     m_buffers;
-    std::vector<VkDeviceSize> Offsets;
-
-    int32_t StartBindingIndex = 0;
-
     VkPipelineVertexInputStateCreateInfo CreateVertexInputState() const;
 
     size_t GetHash() const {
       size_t result = 0;
-      for (int32_t i = 0; i < (int32_t)InputBindingDescriptions.size(); ++i) {
-        result = XXH64(InputBindingDescriptions[i].binding, result);
-        result = XXH64(InputBindingDescriptions[i].stride, result);
-        result = XXH64(InputBindingDescriptions[i].inputRate, result);
+      for (int32_t i = 0; i < (int32_t)m_inputBindingDescriptions_.size(); ++i) {
+        result = XXH64(m_inputBindingDescriptions_[i].binding, result);
+        result = XXH64(m_inputBindingDescriptions_[i].stride, result);
+        result = XXH64(m_inputBindingDescriptions_[i].inputRate, result);
       }
 
-      for (int32_t i = 0; i < (int32_t)AttributeDescriptions.size(); ++i) {
-        result = XXH64(AttributeDescriptions[i].location, result);
-        result = XXH64(AttributeDescriptions[i].binding, result);
-        result = XXH64(AttributeDescriptions[i].format, result);
-        result = XXH64(AttributeDescriptions[i].offset, result);
+      for (int32_t i = 0; i < (int32_t)m_attributeDescriptions_.size(); ++i) {
+        result = XXH64(m_attributeDescriptions_[i].location, result);
+        result = XXH64(m_attributeDescriptions_[i].binding, result);
+        result = XXH64(m_attributeDescriptions_[i].format, result);
+        result = XXH64(m_attributeDescriptions_[i].offset, result);
       }
 
       return result;
     }
+
+    std::vector<VkVertexInputBindingDescription>   m_inputBindingDescriptions_;
+    std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions_;
+
+    // m_buffer references VertexStreamVk, so no destruction needed
+    std::vector<VkBuffer>     m_buffers_;
+    std::vector<VkDeviceSize> m_offsets_;
+
+    int32_t m_startBindingIndex_ = 0;
   };
 
   VkPipelineVertexInputStateCreateInfo CreateVertexInputState() const {
-    return m_bindInfos.CreateVertexInputState();
+    return m_bindInfos_.CreateVertexInputState();
   }
 
   VkPipelineInputAssemblyStateCreateInfo CreateInputAssemblyState() const;
@@ -192,22 +193,22 @@ struct VertexBufferVk : public VertexBuffer {
       VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
       std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
       std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-      const VertexBufferArray&                        InVertexBufferArray);
+      const VertexBufferArray&                        vertexBufferArray);
 
   virtual int32_t GetElementCount() const {
-    return vertexStreamData ? vertexStreamData->elementCount : 0;
+    return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
   }
 
   virtual size_t GetHash() const override {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GetVertexInputStateHash() ^ GetInputAssemblyStateHash();
-    return Hash;
+    m_hash_ = GetVertexInputStateHash() ^ GetInputAssemblyStateHash();
+    return m_hash_;
   }
 
-  size_t GetVertexInputStateHash() const { return m_bindInfos.GetHash(); }
+  size_t GetVertexInputStateHash() const { return m_bindInfos_.GetHash(); }
 
   size_t GetInputAssemblyStateHash() const {
     VkPipelineInputAssemblyStateCreateInfo state = CreateInputAssemblyState();
@@ -215,59 +216,60 @@ struct VertexBufferVk : public VertexBuffer {
   }
 
   virtual void Bind(const std::shared_ptr<RenderFrameContext>&
-                        InRenderFrameContext) const override;
+                        renderFrameContext) const override;
 
   virtual bool Initialize(
       const std::shared_ptr<VertexStreamData>& InStreamData) override;
 
   Buffer* GetBuffer(int32_t InStreamIndex) const override {
-    assert(Streams.size() > InStreamIndex);
-    return Streams[InStreamIndex].BufferPtr.get();
+    assert(m_streams_.size() > InStreamIndex);
+    return m_streams_[InStreamIndex].m_bufferPtr_.get();
   }
 
-  mutable size_t              Hash = 0;
-  BindInfo                    m_bindInfos;
-  std::vector<VertexStreamVk> Streams;
+  mutable size_t              m_hash_ = 0;
+  BindInfo                    m_bindInfos_;
+  std::vector<VertexStreamVk> m_streams_;
 };
 
 struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = 0;
+    m_hash_ = 0;
 
-    for (int32_t i = 0; i < NumOfData; ++i) {
-      Hash ^= (Data[i]->GetHash() << i);
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
+      m_hash_ ^= (m_data_[i]->GetHash() << i);
     }
-    return Hash;
+    return m_hash_;
   }
 
   private:
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 };
 
 // ================ Index m_buffer Vk ===========================
 
 struct IndexBufferVk : public IndexBuffer {
-  std::shared_ptr<BufferVk> BufferPtr;
 
   virtual int32_t GetElementCount() const {
-    return indexStreamData ? indexStreamData->elementCount : 0;
+    return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
   }
 
   virtual void Bind(const std::shared_ptr<RenderFrameContext>&
-                        InRenderFrameContext) const override;
+                        renderFrameContext) const override;
   virtual bool Initialize(
       const std::shared_ptr<IndexStreamData>& InStreamData) override;
 
-  virtual BufferVk* GetBuffer() const override { return BufferPtr.get(); }
+  virtual BufferVk* GetBuffer() const override { return m_bufferPtr_.get(); }
 
-  uint32_t GetIndexCount() const { return indexStreamData->elementCount; }
+  uint32_t GetIndexCount() const { return m_indexStreamData_->m_elementCount_; }
 
   VkIndexType GetVulkanIndexFormat(EBufferElementType IndexType) const;
   uint32_t    GetVulkanIndexStride(EBufferElementType IndexType) const;
+
+  std::shared_ptr<BufferVk> m_bufferPtr_;
 };
 
 }  // namespace game_engine

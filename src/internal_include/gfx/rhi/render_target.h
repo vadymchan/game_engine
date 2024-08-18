@@ -15,33 +15,32 @@ namespace game_engine {
 
 struct RenderTargetInfo {
   size_t GetHash() const {
-    return GETHASH_FROM_INSTANT_STRUCT(Type,
-                                       Format,
-                                       Extent.width(),
-                                       Extent.height(),
-                                       LayerCount,
-                                       IsGenerateMipmap,
-                                       SampleCount,
+    return GETHASH_FROM_INSTANT_STRUCT(m_rype_,
+                                       m_format_,
+                                       m_extent_.width(),
+                                       m_extent_.height(),
+                                       m_layerCount_,
+                                       m_isGenerateMipmap_,
+                                       m_sampleCount_,
                                        m_rtClearValue.GetHash(),
-                                       TextureCreateFlag,
-                                       IsUseAsSubpassInput,
-                                       IsMemoryless);
+                                       m_textureCreateFlag_,
+                                       m_isUseAsSubpassInput_,
+                                       m_isMemoryless_);
   }
 
-  ETextureType       Type                = ETextureType::TEXTURE_2D;
-  ETextureFormat     Format              = ETextureFormat::RGB8;
-  math::Dimension2Di Extent              = math::Dimension2Di(0);
-  int32_t            LayerCount          = 1;
-  bool               IsGenerateMipmap    = false;
-  EMSAASamples       SampleCount         = EMSAASamples::COUNT_1;
-  bool               IsUseAsSubpassInput = false;
-  bool               IsMemoryless        = false;
-  RTClearValue      m_rtClearValue        = RTClearValue::Invalid;
-  ETextureCreateFlag TextureCreateFlag   = ETextureCreateFlag::RTV;
+  ETextureType       m_rype_                = ETextureType::TEXTURE_2D;
+  ETextureFormat     m_format_              = ETextureFormat::RGB8;
+  math::Dimension2Di m_extent_              = math::Dimension2Di(0);
+  int32_t            m_layerCount_          = 1;
+  bool               m_isGenerateMipmap_    = false;
+  EMSAASamples       m_sampleCount_         = EMSAASamples::COUNT_1;
+  bool               m_isUseAsSubpassInput_ = false;
+  bool               m_isMemoryless_        = false;
+  RTClearValue       m_rtClearValue         = RTClearValue::s_kInvalid;
+  ETextureCreateFlag m_textureCreateFlag_   = ETextureCreateFlag::RTV;
 };
 
-struct RenderTarget final
-    : public std::enable_shared_from_this<RenderTarget> {
+struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
   // Create render target from texture, It is useful to create render target
   // from swapchain texture
   template <typename T1, class... T2>
@@ -58,57 +57,57 @@ struct RenderTarget final
   RenderTarget() = default;
 
   RenderTarget(const std::shared_ptr<Texture>& InTexturePtr)
-      : TexturePtr(InTexturePtr) {
+      : m_texturePtr_(InTexturePtr) {
     if (InTexturePtr) {
-      Info.Type        = InTexturePtr->type;
-      Info.Format      = InTexturePtr->format;
-      Info.Extent      = InTexturePtr->extent;
-      Info.LayerCount  = InTexturePtr->layerCount;
-      Info.SampleCount = InTexturePtr->sampleCount;
+      m_info_.m_rype_        = InTexturePtr->m_type_;
+      m_info_.m_format_      = InTexturePtr->m_format_;
+      m_info_.m_extent_      = InTexturePtr->m_extent_;
+      m_info_.m_layerCount_  = InTexturePtr->m_layerCount_;
+      m_info_.m_sampleCount_ = InTexturePtr->m_sampleCount_;
     }
   }
 
   ~RenderTarget() {}
 
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = Info.GetHash();
+    m_hash_ = m_info_.GetHash();
     if (GetTexture()) {
-      Hash = XXH64(reinterpret_cast<uint64_t>(GetTexture()->GetHandle()), Hash);
+      m_hash_ = XXH64(reinterpret_cast<uint64_t>(GetTexture()->GetHandle()), m_hash_);
     }
-    return Hash;
+    return m_hash_;
   }
 
   void Return();
 
   EResourceLayout GetLayout() const {
-    return TexturePtr ? TexturePtr->GetLayout() : EResourceLayout::UNDEFINED;
+    return m_texturePtr_ ? m_texturePtr_->GetLayout() : EResourceLayout::UNDEFINED;
   }
 
-  Texture* GetTexture() const { return TexturePtr.get(); }
+  Texture* GetTexture() const { return m_texturePtr_.get(); }
 
-  RenderTargetInfo         Info;
-  std::shared_ptr<Texture> TexturePtr;
+  RenderTargetInfo         m_info_;
+  std::shared_ptr<Texture> m_texturePtr_;
 
-  mutable size_t Hash                         = 0;
-  bool           bCreatedFromRenderTargetPool = false;
+  mutable size_t m_hash_                         = 0;
+  bool           m_isCreatedFromRenderTargetPool_ = false;
 };
 
 // ==================== SceneRenderTarget ( for Renderer) =====================
 
 struct SceneRenderTarget {
-  std::shared_ptr<RenderTarget> ColorPtr;
-  std::shared_ptr<RenderTarget> DepthPtr;
-  std::shared_ptr<RenderTarget> ResolvePtr;
+  std::shared_ptr<RenderTarget> m_colorPtr_;
+  std::shared_ptr<RenderTarget> m_depthPtr_;
+  std::shared_ptr<RenderTarget> m_resolvePtr_;
 
   // Final rendered image, post-processed
-  std::shared_ptr<RenderTarget> FinalColorPtr;
+  std::shared_ptr<RenderTarget> m_finalColorPtr_;
 
   void Create(std::shared_ptr<Window> window,
-              const SwapchainImage*  InSwapchain);
+              const SwapchainImage*   InSwapchain);
 
   void Return();
 };

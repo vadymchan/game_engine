@@ -13,8 +13,8 @@ namespace game_engine {
 struct ShaderBindingInstanceCombiner {
   const ShaderBindingInstanceArray* m_shaderBindingInstanceArray = nullptr;
 
-  ResourceContainer<void*>    DescriptorSetHandles;
-  ResourceContainer<uint32_t> DynamicOffsets;
+  ResourceContainer<void*>    m_descriptorSetHandles_;
+  ResourceContainer<uint32_t> m_dynamicOffsets_;
 };
 }  // namespace game_engine
 

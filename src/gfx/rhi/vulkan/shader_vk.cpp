@@ -6,9 +6,9 @@
 namespace game_engine {
 
 CompiledShaderVk::~CompiledShaderVk() {
-  if (ShaderStage.module) {
-    vkDestroyShaderModule(g_rhi_vk->m_device_, ShaderStage.module, nullptr);
+  if (m_shaderStage_.module) {
+    vkDestroyShaderModule(g_rhi_vk->m_device_, m_shaderStage_.module, nullptr);
   }
-  ShaderStage = {};
+  m_shaderStage_ = {};
 }
 }  // namespace game_engine

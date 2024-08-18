@@ -8,10 +8,10 @@ TextureDx12::~TextureDx12() {
 }
 
 void TextureDx12::Release() {
-  SRV.Free();
-  UAV.Free();
-  RTV.Free();
-  DSV.Free();
+  m_srv_.Free();
+  m_uav_.Free();
+  m_rtv_.Free();
+  m_dsv_.Free();
 }
 
 

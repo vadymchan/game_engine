@@ -26,15 +26,15 @@ struct Attachment {
               EResourceLayout InInitialLayout = EResourceLayout::UNDEFINED,
               EResourceLayout InFinalLayout = EResourceLayout::SHADER_READ_ONLY,
               bool            InIsResolveAttachment = false)
-      : RenderTargetPtr(InRTPtr)
-      , LoadStoreOp(InLoadStoreOp)
-      , StencilLoadStoreOp(InStencilLoadStoreOp)
+      : m_renderTargetPtr_(InRTPtr)
+      , m_loadStoreOp_(InLoadStoreOp)
+      , m_stencilLoadStoreOp_(InStencilLoadStoreOp)
       , m_rtClearValue(rtClearValue)
-      , InitialLayout(InInitialLayout)
-      , FinalLayout(InFinalLayout)
-      , bResolveAttachment(InIsResolveAttachment) {}
+      , m_initialLayout_(InInitialLayout)
+      , m_finalLayout_(InFinalLayout)
+      , m_ResolveAttachment(InIsResolveAttachment) {}
 
-  std::shared_ptr<RenderTarget> RenderTargetPtr;
+  std::shared_ptr<RenderTarget> m_renderTargetPtr_;
 
   // The two options below determine what to do with the data in the attachment
   // before and after rendering.
@@ -50,81 +50,82 @@ struct Attachment {
   // memory and can be read later.
   // - VK_ATTACHMENT_STORE_OP_DONT_CARE: After rendering, the contents of
   // the framebuffer are undefined.
-  EAttachmentLoadStoreOp LoadStoreOp = EAttachmentLoadStoreOp::CLEAR_STORE;
-  EAttachmentLoadStoreOp StencilLoadStoreOp
+  EAttachmentLoadStoreOp m_loadStoreOp_ = EAttachmentLoadStoreOp::CLEAR_STORE;
+  EAttachmentLoadStoreOp m_stencilLoadStoreOp_
       = EAttachmentLoadStoreOp::CLEAR_STORE;
 
   RTClearValue m_rtClearValue = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
 
-  EResourceLayout InitialLayout = EResourceLayout::UNDEFINED;
-  EResourceLayout FinalLayout   = EResourceLayout::SHADER_READ_ONLY;
+  EResourceLayout m_initialLayout_ = EResourceLayout::UNDEFINED;
+  EResourceLayout m_finalLayout_   = EResourceLayout::SHADER_READ_ONLY;
 
-  bool bResolveAttachment = false;
+  // TODO: consider rename
+  bool m_ResolveAttachment = false;
 
-  bool IsValid() const { return RenderTargetPtr != nullptr; }
+  bool IsValid() const { return m_renderTargetPtr_ != nullptr; }
 
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(
-        (RenderTargetPtr ? RenderTargetPtr->GetHash() : 0),
-        LoadStoreOp,
-        StencilLoadStoreOp,
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(
+        (m_renderTargetPtr_ ? m_renderTargetPtr_->GetHash() : 0),
+        m_loadStoreOp_,
+        m_stencilLoadStoreOp_,
         m_rtClearValue,
-        InitialLayout,
-        FinalLayout);
-    return Hash;
+        m_initialLayout_,
+        m_finalLayout_);
+    return m_hash_;
   }
 
   bool IsDepthAttachment() const {
-    assert(RenderTargetPtr);
-    return IsDepthFormat(RenderTargetPtr->Info.Format);
+    assert(m_renderTargetPtr_);
+    return IsDepthFormat(m_renderTargetPtr_->m_info_.m_format_);
   }
 
-  bool IsResolveAttachment() const { return bResolveAttachment; }
+  bool IsResolveAttachment() const { return m_ResolveAttachment; }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 };
 
 struct Subpass {
   void Initialize(int32_t            InSourceSubpassIndex,
-                  int32_t            InDestSubpassIndex,
+                  int32_t            destSubpassIndex,
                   EPipelineStageMask InAttachmentProducePipelineBit,
                   EPipelineStageMask InAttachmentConsumePipelineBit) {
-    SourceSubpassIndex           = InSourceSubpassIndex;
-    DestSubpassIndex             = InDestSubpassIndex;
-    AttachmentProducePipelineBit = InAttachmentProducePipelineBit;
-    AttachmentConsumePipelineBit = InAttachmentConsumePipelineBit;
+    m_sourceSubpassIndex_           = InSourceSubpassIndex;
+    m_destSubpassIndex_             = destSubpassIndex;
+    m_attachmentProducePipelineBit_ = InAttachmentProducePipelineBit;
+    m_attachmentConsumePipelineBit_ = InAttachmentConsumePipelineBit;
   }
 
-  std::vector<int32_t> InputAttachments;
+  std::vector<int32_t> m_inputAttachments_;
 
-  std::vector<int32_t>   OutputColorAttachments;
-  std::optional<int32_t> OutputDepthAttachment;
-  std::optional<int32_t> OutputResolveAttachment;
+  std::vector<int32_t>   m_outputColorAttachments_;
+  std::optional<int32_t> m_outputDepthAttachment_;
+  std::optional<int32_t> m_outputResolveAttachment_;
 
   // If both SourceSubpass and DstSubpass of all subpasses are -1, subpasses
   // will be executed in order
-  int32_t SourceSubpassIndex = -1;
-  int32_t DestSubpassIndex   = -1;
+  int32_t m_sourceSubpassIndex_ = -1;
+  int32_t m_destSubpassIndex_   = -1;
 
   // Default is the most strong pipeline stage mask
-  EPipelineStageMask AttachmentProducePipelineBit = EPipelineStageMask::
+  EPipelineStageMask m_attachmentProducePipelineBit_ = EPipelineStageMask::
       COLOR_ATTACHMENT_OUTPUT_BIT;  // The pipeline which attachments would use
                                     // for this subpass
-  EPipelineStageMask AttachmentConsumePipelineBit
+  EPipelineStageMask m_attachmentConsumePipelineBit_
       = EPipelineStageMask::FRAGMENT_SHADER_BIT;  // The pipeline which
                                                   // attachments would use for
                                                   // next subapss
 
   bool IsSubpassForExecuteInOrder() const {
-    if ((SourceSubpassIndex == -1) && (DestSubpassIndex == -1)) {
+    if ((m_sourceSubpassIndex_ == -1) && (m_destSubpassIndex_ == -1)) {
       return true;
     }
 
-    if (SourceSubpassIndex != -1 && DestSubpassIndex != -1) {
+    if (m_sourceSubpassIndex_ != -1 && m_destSubpassIndex_ != -1) {
       return false;
     }
 
@@ -136,48 +137,49 @@ struct Subpass {
 
   size_t GetHash() const {
     size_t Hash = 0;
-    if (InputAttachments.size() > 0) {
-      Hash = ::XXH64(InputAttachments.data(),
-                     InputAttachments.size() * sizeof(int32_t),
+    if (m_inputAttachments_.size() > 0) {
+      Hash = ::XXH64(m_inputAttachments_.data(),
+                     m_inputAttachments_.size() * sizeof(int32_t),
                      Hash);
     }
-    if (OutputColorAttachments.size() > 0) {
-      Hash = ::XXH64(OutputColorAttachments.data(),
-                     OutputColorAttachments.size() * sizeof(int32_t),
+    if (m_outputColorAttachments_.size() > 0) {
+      Hash = ::XXH64(m_outputColorAttachments_.data(),
+                     m_outputColorAttachments_.size() * sizeof(int32_t),
                      Hash);
     }
-    if (OutputDepthAttachment) {
-      Hash = ::XXH64(&OutputDepthAttachment.value(), sizeof(int32_t), Hash);
+    if (m_outputDepthAttachment_) {
+      Hash = ::XXH64(&m_outputDepthAttachment_.value(), sizeof(int32_t), Hash);
     }
-    if (OutputResolveAttachment) {
-      Hash = ::XXH64(&OutputResolveAttachment.value(), sizeof(int32_t), Hash);
+    if (m_outputResolveAttachment_) {
+      Hash = ::XXH64(&m_outputResolveAttachment_.value(), sizeof(int32_t), Hash);
     }
-    Hash = ::XXH64(&SourceSubpassIndex, sizeof(int32_t), Hash);
-    Hash = ::XXH64(&DestSubpassIndex, sizeof(int32_t), Hash);
+    Hash = ::XXH64(&m_sourceSubpassIndex_, sizeof(int32_t), Hash);
+    Hash = ::XXH64(&m_destSubpassIndex_, sizeof(int32_t), Hash);
     Hash = ::XXH64(
-        &AttachmentProducePipelineBit, sizeof(EPipelineStageMask), Hash);
+        &m_attachmentProducePipelineBit_, sizeof(EPipelineStageMask), Hash);
     Hash = ::XXH64(
-        &AttachmentConsumePipelineBit, sizeof(EPipelineStageMask), Hash);
+        &m_attachmentConsumePipelineBit_, sizeof(EPipelineStageMask), Hash);
     return Hash;
   }
 };
 
 struct RenderPassInfo {
-  std::vector<Attachment> Attachments;
-  Attachment              ResolveAttachment;
-  std::vector<Subpass>    Subpasses;
+  std::vector<Attachment> m_attachments_;
+  // TODO: consider remove (currently not used)
+  Attachment              m_resolveAttachment_;
+  std::vector<Subpass>    m_subpasses_;
 
   void Reset() {
-    Attachments.clear();
-    Subpasses.clear();
+    m_attachments_.clear();
+    m_subpasses_.clear();
   }
 
   size_t GetHash() const {
     int64_t Hash = 0;
-    for (const auto& iter : Attachments) {
+    for (const auto& iter : m_attachments_) {
       Hash = XXH64(iter.GetHash(), Hash);
     }
-    for (const auto& iter : Subpasses) {
+    for (const auto& iter : m_subpasses_) {
       Hash = XXH64(iter.GetHash(), Hash);
     }
     return Hash;
@@ -186,18 +188,18 @@ struct RenderPassInfo {
   // If both SourceSubpass and DstSubpass of all subpasses are -1, subpasses
   // will be executed in order
   bool IsSubpassForExecuteInOrder() const {
-    assert(Subpasses.size());
+    assert(m_subpasses_.size());
 
     int32_t i = 0;
     bool    isSubpassForExecuteInOrder
-        = Subpasses[i++].IsSubpassForExecuteInOrder();
-    for (; i < (int32_t)Subpasses.size(); ++i) {
+        = m_subpasses_[i++].IsSubpassForExecuteInOrder();
+    for (; i < (int32_t)m_subpasses_.size(); ++i) {
       // All isSubpassForExecuteInOrder of subpasses must be same.
       assert(isSubpassForExecuteInOrder
-             == Subpasses[i].IsSubpassForExecuteInOrder());
+             == m_subpasses_[i].IsSubpassForExecuteInOrder());
 
       if (isSubpassForExecuteInOrder
-          != Subpasses[i].IsSubpassForExecuteInOrder()) {
+          != m_subpasses_[i].IsSubpassForExecuteInOrder()) {
         return false;
       }
     }
@@ -205,31 +207,31 @@ struct RenderPassInfo {
   }
 
   bool Validate() const {
-    for (const auto& iter : Subpasses) {
-      for (const auto& inputIndex : iter.InputAttachments) {
-        assert(Attachments.size() > inputIndex);
-        if (Attachments.size() > inputIndex) {
+    for (const auto& iter : m_subpasses_) {
+      for (const auto& inputIndex : iter.m_inputAttachments_) {
+        assert(m_attachments_.size() > inputIndex);
+        if (m_attachments_.size() > inputIndex) {
           return false;
         }
       }
-      for (const auto& outputIndex : iter.OutputColorAttachments) {
-        assert(Attachments.size() > outputIndex);
+      for (const auto& outputIndex : iter.m_outputColorAttachments_) {
+        assert(m_attachments_.size() > outputIndex);
 
-        if (Attachments.size() > outputIndex) {
+        if (m_attachments_.size() > outputIndex) {
           return false;
         }
       }
-      if (iter.OutputDepthAttachment) {
-        assert(Attachments.size() > iter.OutputDepthAttachment.value());
+      if (iter.m_outputDepthAttachment_) {
+        assert(m_attachments_.size() > iter.m_outputDepthAttachment_.value());
 
-        if (Attachments.size() > iter.OutputDepthAttachment.value()) {
+        if (m_attachments_.size() > iter.m_outputDepthAttachment_.value()) {
           return false;
         }
       }
-      if (iter.OutputResolveAttachment) {
-        assert(Attachments.size() > iter.OutputResolveAttachment.value());
+      if (iter.m_outputResolveAttachment_) {
+        assert(m_attachments_.size() > iter.m_outputResolveAttachment_.value());
 
-        if (Attachments.size() > iter.OutputResolveAttachment.value()) {
+        if (m_attachments_.size() > iter.m_outputResolveAttachment_.value()) {
           return false;
         }
       }
@@ -270,17 +272,17 @@ class RenderPass {
 
   void SetAttachemnt(const std::vector<Attachment>& colorAttachments) {
     // Add output color attachment
-    const int32_t startColorIndex = (int32_t)m_renderPassInfo.Attachments.size();
-    m_renderPassInfo.Attachments.insert(m_renderPassInfo.Attachments.end(),
+    const int32_t startColorIndex = (int32_t)m_renderPassInfo_.m_attachments_.size();
+    m_renderPassInfo_.m_attachments_.insert(m_renderPassInfo_.m_attachments_.end(),
                                       colorAttachments.begin(),
                                       colorAttachments.end());
 
-    if (m_renderPassInfo.Subpasses.empty()) {
-      m_renderPassInfo.Subpasses.resize(1);
+    if (m_renderPassInfo_.m_subpasses_.empty()) {
+      m_renderPassInfo_.m_subpasses_.resize(1);
     }
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
-      m_renderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
+      m_renderPassInfo_.m_subpasses_[0].m_outputColorAttachments_.push_back(
           startColorIndex + i);
     }
   }
@@ -288,25 +290,25 @@ class RenderPass {
   void SetAttachemnt(const std::vector<Attachment>& colorAttachments,
                      const Attachment&              depthAttachment) {
     // Add output color attachment
-    const int32_t startColorIndex = (int32_t)m_renderPassInfo.Attachments.size();
-    m_renderPassInfo.Attachments.insert(m_renderPassInfo.Attachments.end(),
+    const int32_t startColorIndex = (int32_t)m_renderPassInfo_.m_attachments_.size();
+    m_renderPassInfo_.m_attachments_.insert(m_renderPassInfo_.m_attachments_.end(),
                                       colorAttachments.begin(),
                                       colorAttachments.end());
 
-    if (m_renderPassInfo.Subpasses.empty()) {
-      m_renderPassInfo.Subpasses.resize(1);
+    if (m_renderPassInfo_.m_subpasses_.empty()) {
+      m_renderPassInfo_.m_subpasses_.resize(1);
     }
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
-      m_renderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
+      m_renderPassInfo_.m_subpasses_[0].m_outputColorAttachments_.push_back(
           startColorIndex + i);
     }
 
     // Add output depth attachment
-    const int32_t startDepthIndex = (int32_t)m_renderPassInfo.Attachments.size();
-    m_renderPassInfo.Attachments.push_back(depthAttachment);
+    const int32_t startDepthIndex = (int32_t)m_renderPassInfo_.m_attachments_.size();
+    m_renderPassInfo_.m_attachments_.push_back(depthAttachment);
 
-    m_renderPassInfo.Subpasses[0].OutputDepthAttachment = startDepthIndex;
+    m_renderPassInfo_.m_subpasses_[0].m_outputDepthAttachment_ = startDepthIndex;
   }
 
   // TODO: consider using  std::optional and std::nullopt
@@ -314,44 +316,44 @@ class RenderPass {
                      const Attachment&              depthAttachment,
                      const Attachment&              colorResolveAttachment) {
     // Add output color attachment
-    const int32_t startColorIndex = (int32_t)m_renderPassInfo.Attachments.size();
-    m_renderPassInfo.Attachments.insert(m_renderPassInfo.Attachments.end(),
+    const int32_t startColorIndex = (int32_t)m_renderPassInfo_.m_attachments_.size();
+    m_renderPassInfo_.m_attachments_.insert(m_renderPassInfo_.m_attachments_.end(),
                                       colorAttachments.begin(),
                                       colorAttachments.end());
 
-    if (m_renderPassInfo.Subpasses.empty()) {
-      m_renderPassInfo.Subpasses.resize(1);
+    if (m_renderPassInfo_.m_subpasses_.empty()) {
+      m_renderPassInfo_.m_subpasses_.resize(1);
     }
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
-      m_renderPassInfo.Subpasses[0].OutputColorAttachments.push_back(
+      m_renderPassInfo_.m_subpasses_[0].m_outputColorAttachments_.push_back(
           startColorIndex + i);
     }
 
     // Add output depth attachment
-    const int32_t startDepthIndex = (int32_t)m_renderPassInfo.Attachments.size();
-    m_renderPassInfo.Attachments.push_back(depthAttachment);
+    const int32_t startDepthIndex = (int32_t)m_renderPassInfo_.m_attachments_.size();
+    m_renderPassInfo_.m_attachments_.push_back(depthAttachment);
 
-    m_renderPassInfo.Subpasses[0].OutputDepthAttachment = startDepthIndex;
+    m_renderPassInfo_.m_subpasses_[0].m_outputDepthAttachment_ = startDepthIndex;
 
     // Add output resolve attachment
     const int32_t startResolveIndex
-        = (int32_t)m_renderPassInfo.Attachments.size();
-    m_renderPassInfo.Attachments.push_back(colorResolveAttachment);
+        = (int32_t)m_renderPassInfo_.m_attachments_.size();
+    m_renderPassInfo_.m_attachments_.push_back(colorResolveAttachment);
 
-    m_renderPassInfo.Subpasses[0].OutputResolveAttachment = startResolveIndex;
+    m_renderPassInfo_.m_subpasses_[0].m_outputResolveAttachment_ = startResolveIndex;
   }
 
   void SetRenderArea(const math::Vector2Di& offset,
                      const math::Vector2Di& extent) {
-    RenderOffset = offset;
-    RenderExtent = extent;
+    m_renderOffset_ = offset;
+    m_renderExtent_ = extent;
   }
 
   RenderPass(const RenderPassInfo& renderPassInfo,
               const math::Vector2Di& offset,
               const math::Vector2Di& extent) {
-    m_renderPassInfo = renderPassInfo;
+    m_renderPassInfo_ = renderPassInfo;
     SetRenderArea(offset, extent);
   }
 
@@ -362,29 +364,29 @@ class RenderPass {
   virtual void EndRenderPass() {}
 
   virtual size_t GetHash() const final {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(
-        m_renderPassInfo.GetHash(), RenderOffset, RenderExtent);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(
+        m_renderPassInfo_.GetHash(), m_renderOffset_, m_renderExtent_);
+    return m_hash_;
   }
 
   virtual void* GetRenderPass() const { return nullptr; }
 
   virtual void* GetFrameBuffer() const { return nullptr; }
 
-  RenderPassInfo m_renderPassInfo;
+  RenderPassInfo m_renderPassInfo_;
 
   // std::vector<Attachment> ColorAttachments;
   // Attachment DepthAttachment;
   // Attachment ColorAttachmentResolve;
 
   // TODO: consider using Dimension2Di
-  math::Vector2Di RenderOffset;
-  math::Vector2Di RenderExtent;
-  mutable size_t  Hash = 0;
+  math::Vector2Di m_renderOffset_;
+  math::Vector2Di m_renderExtent_;
+  mutable size_t  m_hash_ = 0;
 };
 
 }  // namespace game_engine

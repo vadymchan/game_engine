@@ -10,97 +10,97 @@ namespace game_engine {
 
 // TODO: consider moving this to a separate file
 struct DescriptorDx12 {
-  static const DescriptorDx12 Invalid;
-
-  D3D12_CPU_DESCRIPTOR_HANDLE               CPUHandle = {};
-  D3D12_GPU_DESCRIPTOR_HANDLE               GPUHandle = {};
-  uint32_t                                  Index     = uint32_t(-1);
-  std::weak_ptr<class DescriptorHeapDx12> DescriptorHeap;
-
   void Free();
 
-  bool IsValid() const { return Index != -1; }
+  bool IsValid() const { return m_index_ != -1; }
+
+  static const DescriptorDx12 s_kInvalid;
+
+  D3D12_CPU_DESCRIPTOR_HANDLE             m_cpuHandle_ = {};
+  D3D12_GPU_DESCRIPTOR_HANDLE             m_gpuHandle_ = {};
+  uint32_t                                m_index_     = uint32_t(-1);
+  std::weak_ptr<class DescriptorHeapDx12> m_descriptorHeap_;
 };
 
 class DescriptorHeapDx12
     : public std::enable_shared_from_this<DescriptorHeapDx12> {
   public:
-  static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
+  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
 
   struct PendingForFree {
-    uint32_t DescriptorIndex = UINT_MAX;
-    uint32_t FrameIndex      = 0;
+    uint32_t m_descriptorIndex_ = UINT_MAX;
+    uint32_t m_frameIndex_      = 0;
   };
 
-  void Initialize(EDescriptorHeapTypeDX12 InHeapType,
-                  bool                    InShaderVisible,
-                  uint32_t                InNumOfDescriptors = 1024);
+  void Initialize(EDescriptorHeapTypeDX12 heapType,
+                  bool                    shaderVisible,
+                  uint32_t                numOfDescriptors = 1024);
   void Release();
 
   DescriptorDx12 Alloc() {
-    ScopedLock s(&DescriptorLock);
+    ScopedLock s(&m_descriptorLock_);
 
-    if (Pools.empty()) {
+    if (m_pools_.empty()) {
       return DescriptorDx12();
     }
 
     DescriptorDx12 Descriptor;
-    Descriptor.Index = *Pools.begin();
-    Pools.erase(Pools.begin());
+    Descriptor.m_index_ = *m_pools_.begin();
+    m_pools_.erase(m_pools_.begin());
 
-    Descriptor.CPUHandle      = CPUHandleStart;
-    Descriptor.CPUHandle.ptr += Descriptor.Index * DescriptorSize;
+    Descriptor.m_cpuHandle_      = m_cpuHandleStart_;
+    Descriptor.m_cpuHandle_.ptr += Descriptor.m_index_ * m_descriptorSize_;
 
-    Descriptor.GPUHandle      = GPUHandleStart;
-    Descriptor.GPUHandle.ptr += Descriptor.Index * DescriptorSize;
+    Descriptor.m_gpuHandle_      = m_gpuHandleStart_;
+    Descriptor.m_gpuHandle_.ptr += Descriptor.m_index_ * m_descriptorSize_;
 
-    Descriptor.DescriptorHeap = shared_from_this();
+    Descriptor.m_descriptorHeap_ = shared_from_this();
     return Descriptor;
   }
 
   DescriptorDx12 OneFrameAlloc() {
     DescriptorDx12 NewAlloc = Alloc();
-    Free(NewAlloc.Index, NumOfFramesToWaitBeforeReleasing);
+    Free(NewAlloc.m_index_, s_kNumOfFramesToWaitBeforeReleasing);
     return NewAlloc;
   }
 
-  void Free(uint32_t InIndex) {
-    ScopedLock s(&DescriptorLock);
+  void Free(uint32_t index) {
+    ScopedLock s(&m_descriptorLock_);
 
-    assert(!Pools.contains(InIndex));
-    Pools.insert(InIndex);
+    assert(!m_pools_.contains(index));
+    m_pools_.insert(index);
   }
 
-  void Free(uint32_t InIndex, uint32_t InDelayFrames);
+  void Free(uint32_t index, uint32_t delayFrames);
   void ProcessPendingDescriptorPoolFree();
 
   // Create a Descriptor that will be used only for this frame
   // DescriptorDx12 OneFrameCreateConstantBufferView(RingBufferDx12*
-  // InBuffer, uint64_t InOffset, uint32_t InSize, ETextureFormat InFormat =
+  // buffer, uint64_t offset, uint32_t size, ETextureFormat format =
   // ETextureFormat::MAX); DescriptorDx12
-  // OneFrameCreateShaderResourceView(RingBufferDx12* InBuffer, uint64_t
-  // InOffset, uint32_t InStride, uint32_t InNumOfElement, ETextureFormat
-  // InFormat = ETextureFormat::MAX);
+  // OneFrameCreateShaderResourceView(RingBufferDx12* buffer, uint64_t
+  // offset, uint32_t stride, uint32_t numOfElement, ETextureFormat
+  // format = ETextureFormat::MAX);
 
-  ComPtr<ID3D12DescriptorHeap> Heap;
-  EDescriptorHeapTypeDX12      HeapType = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
-  D3D12_CPU_DESCRIPTOR_HANDLE  CPUHandleStart   = {};
-  D3D12_GPU_DESCRIPTOR_HANDLE  GPUHandleStart   = {};
-  uint32_t                     DescriptorSize   = 0;
-  uint32_t                     NumOfDescriptors = 0;
-  std::set<uint32_t>           Pools;
-  mutable MutexLock            DescriptorLock;
+  ComPtr<ID3D12DescriptorHeap> m_heap_;
+  EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
+  D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandleStart_   = {};
+  D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandleStart_   = {};
+  uint32_t                    m_descriptorSize_   = 0;
+  uint32_t                    m_numOfDescriptors_ = 0;
+  std::set<uint32_t>          m_pools_;
+  mutable MutexLock           m_descriptorLock_;
 
-  std::vector<PendingForFree> PendingFree;
-  int32_t CanReleasePendingFreeShaderBindingInstanceFrameNumber = 0;
+  std::vector<PendingForFree> m_pendingFree_;
+  int32_t m_canReleasePendingFreeShaderBindingInstanceFrameNumber_ = 0;
 };
 
 struct DescriptorBlockDx12 {
-  class OnlineDescriptorHeapBlocksDx12* DescriptorHeapBlocks = nullptr;
-  EDescriptorHeapTypeDX12       HeapType = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
-  int32_t                       Index    = 0;
-  int32_t                       AllocatedSize = 0;
-  std::vector<DescriptorDx12> Descriptors;
+  class OnlineDescriptorHeapBlocksDx12* m_descriptorHeapBlocks_ = nullptr;
+  EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
+  int32_t                 m_index_    = 0;
+  int32_t                 m_allocatedSize_ = 0;
+  std::vector<DescriptorDx12> m_descriptors_;
 };
 
 class OnlineDescriptorHeapDx12;
@@ -109,47 +109,47 @@ class OnlineDescriptorHeapDx12;
 // - The Block name is OnlineDescriptorHeapDx12
 class OnlineDescriptorHeapBlocksDx12 {
   public:
-  static constexpr int32_t DescriptorsInBlock        = 5000;
-  static constexpr int32_t TotalHeapSize             = 500'000;
-  static constexpr int32_t SamplerDescriptorsInBlock = 100;
-  static constexpr int32_t SamplerTotalHeapSize      = 2000;
+  static constexpr int32_t s_kDescriptorsInBlock        = 5000;
+  static constexpr int32_t s_kTotalHeapSize             = 500'000;
+  static constexpr int32_t s_kSamplerDescriptorsInBlock = 100;
+  static constexpr int32_t s_kSamplerTotalHeapSize      = 2000;
 
-  static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
+  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
 
   struct FreeData {
-    bool IsValid() const { return Index != -1; }
+    bool IsValid() const { return m_index_ != -1; }
 
-    uint32_t ReleasedFrame = 0;
-    int32_t  Index         = -1;
+    uint32_t m_releasedFrame_ = 0;
+    int32_t  m_index_         = -1;
   };
 
   struct FreeDataLessReleasedFrameFirstComp {
     bool operator()(const FreeData& InA, const FreeData& InB) const {
-      return ((uint64_t)InA.ReleasedFrame << 32 | (uint64_t)InA.Index)
-           < ((uint64_t)InB.ReleasedFrame << 32 | (uint64_t)InB.Index);
+      return ((uint64_t)InA.m_releasedFrame_ << 32 | (uint64_t)InA.m_index_)
+           < ((uint64_t)InB.m_releasedFrame_ << 32 | (uint64_t)InB.m_index_);
     }
   };
 
-  void Initialize(EDescriptorHeapTypeDX12 InHeapType,
-                  uint32_t                InTotalHeapSize,
-                  uint32_t                InDescriptorsInBlock);
+  void Initialize(EDescriptorHeapTypeDX12 heapType,
+                  uint32_t                totalHeapSize,
+                  uint32_t                descriptorsInBlock);
   void Release();
 
   OnlineDescriptorHeapDx12* Alloc();
-  void                        Free(int32_t InIndex);
+  void                      Free(int32_t index);
 
-  ComPtr<ID3D12DescriptorHeap> Heap;
-  EDescriptorHeapTypeDX12      HeapType = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
-  D3D12_CPU_DESCRIPTOR_HANDLE  CPUHandleStart   = {};
-  D3D12_GPU_DESCRIPTOR_HANDLE  GPUHandleStart   = {};
-  uint32_t                     DescriptorSize   = 0;
-  uint32_t                     NumOfDescriptors = 0;
-  std::set<FreeData, FreeDataLessReleasedFrameFirstComp> FreeLists;
+  ComPtr<ID3D12DescriptorHeap> m_heap_;
+  EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
+  D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandleStart_   = {};
+  D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandleStart_   = {};
+  uint32_t                    m_descriptorSize_   = 0;
+  uint32_t                    m_numOfDescriptors_ = 0;
+  std::set<FreeData, FreeDataLessReleasedFrameFirstComp> m_freeLists_;
 
-  std::vector<OnlineDescriptorHeapDx12*> OnlineDescriptorHeap;
-  std::vector<DescriptorBlockDx12>       DescriptorBlocks;
+  std::vector<OnlineDescriptorHeapDx12*> m_onlineDescriptorHeap_;
+  std::vector<DescriptorBlockDx12>       m_descriptorBlocks_;
 
-  mutable MutexLock DescriptorBlockLock;
+  mutable MutexLock m_descriptorBlockLock_;
 };
 
 // Each CommandList has its own OnlineDescriptorHeap, allocated from
@@ -159,70 +159,74 @@ class OnlineDescriptorHeapBlocksDx12 {
 class OnlineDescriptorHeapDx12 {
   public:
   void Initialize(DescriptorBlockDx12* InDescriptorBlocks) {
-    DescriptorBlocks = InDescriptorBlocks;
-    if (DescriptorBlocks) {
-      CPUHandle = DescriptorBlocks->Descriptors[0].CPUHandle;
-      GPUHandle = DescriptorBlocks->Descriptors[0].GPUHandle;
-      Heap      = DescriptorBlocks->DescriptorHeapBlocks->Heap.Get();
+    m_descriptorBlocks_ = InDescriptorBlocks;
+    if (m_descriptorBlocks_) {
+      m_cpuHandle_ = m_descriptorBlocks_->m_descriptors_[0].m_cpuHandle_;
+      m_gpuHandle_ = m_descriptorBlocks_->m_descriptors_[0].m_gpuHandle_;
+      m_heap_ = m_descriptorBlocks_->m_descriptorHeapBlocks_->m_heap_.Get();
     }
   }
 
   void Release() {
-    if (DescriptorBlocks) {
-      assert(DescriptorBlocks->DescriptorHeapBlocks);
-      DescriptorBlocks->DescriptorHeapBlocks->Free(DescriptorBlocks->Index);
+    if (m_descriptorBlocks_) {
+      assert(m_descriptorBlocks_->m_descriptorHeapBlocks_);
+      m_descriptorBlocks_->m_descriptorHeapBlocks_->Free(
+          m_descriptorBlocks_->m_index_);
     }
   }
 
   DescriptorDx12 Alloc() {
-    if (NumOfAllocated < DescriptorBlocks->Descriptors.size()) {
-      return DescriptorBlocks->Descriptors[NumOfAllocated++];
+    if (m_numOfAllocated_ < m_descriptorBlocks_->m_descriptors_.size()) {
+      return m_descriptorBlocks_->m_descriptors_[m_numOfAllocated_++];
     }
 
     return DescriptorDx12();
   }
 
-  void Reset() { NumOfAllocated = 0; }
+  void Reset() { m_numOfAllocated_ = 0; }
 
-  bool CanAllocate(int32_t InSize) const {
-    return (DescriptorBlocks->Descriptors.size() - NumOfAllocated) >= InSize;
+  bool CanAllocate(int32_t size) const {
+    return (m_descriptorBlocks_->m_descriptors_.size() - m_numOfAllocated_)
+        >= size;
   }
 
-  int32_t GetNumOfAllocated() const { return NumOfAllocated; }
+  int32_t GetNumOfAllocated() const { return m_numOfAllocated_; }
 
-  D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(size_t InIndex) const {
+  D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(size_t index) const {
     return D3D12_GPU_DESCRIPTOR_HANDLE(
-        GPUHandle.ptr
-        + InIndex * DescriptorBlocks->DescriptorHeapBlocks->DescriptorSize);
+        m_gpuHandle_.ptr
+        + index
+              * m_descriptorBlocks_->m_descriptorHeapBlocks_
+                    ->m_descriptorSize_);
   }
 
-  D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return CPUHandle; }
+  D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return m_cpuHandle_; }
 
-  D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const { return GPUHandle; }
+  D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const { return m_gpuHandle_; }
 
-  ID3D12DescriptorHeap* GetHeap() const { return Heap; }
+  ID3D12DescriptorHeap* GetHeap() const { return m_heap_; }
 
   uint32_t GetDescriptorSize() const {
-    assert(DescriptorBlocks);
-    assert(DescriptorBlocks->DescriptorHeapBlocks);
-    return DescriptorBlocks->DescriptorHeapBlocks->DescriptorSize;
+    assert(m_descriptorBlocks_);
+    assert(m_descriptorBlocks_->m_descriptorHeapBlocks_);
+    return m_descriptorBlocks_->m_descriptorHeapBlocks_->m_descriptorSize_;
   }
 
   private:
-  ID3D12DescriptorHeap*       Heap             = nullptr;
-  DescriptorBlockDx12*      DescriptorBlocks = nullptr;
-  D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle        = {};
-  D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle        = {};
-  int32_t                     NumOfAllocated   = 0;
+  ID3D12DescriptorHeap*       m_heap_             = nullptr;
+  DescriptorBlockDx12*        m_descriptorBlocks_ = nullptr;
+  D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle_        = {};
+  D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle_        = {};
+  int32_t                     m_numOfAllocated_   = 0;
 };
 
 // Manages the OnlineDescriptorHeapBlock and allocates additional
 // DescriptorHeapBlocks when needed.
 class OnlineDescriptorManager {
   public:
-  OnlineDescriptorHeapDx12* Alloc(EDescriptorHeapTypeDX12 InType) {
+  OnlineDescriptorHeapDx12* Alloc(EDescriptorHeapTypeDX12 type) {
     std::vector<OnlineDescriptorHeapBlocksDx12*>& DescriptorHeapBlocks
-        = OnlineDescriptorHeapBlocks[(int32_t)InType];
+        = m_onlineDescriptorHeapBlocks_[(int32_t)type];
 
     // Check if allocation is possible from an existing HeapBlock
     for (int32_t i = 0; i < static_cast<int32_t>(DescriptorHeapBlocks.size());
@@ -238,19 +242,19 @@ class OnlineDescriptorManager {
     // If all existing HeapBlocks are full, add a new HeapBlock
     auto SelectedHeapBlocks = new OnlineDescriptorHeapBlocksDx12();
 
-    switch (InType) {
+    switch (type) {
       case EDescriptorHeapTypeDX12::CBV_SRV_UAV: {
         SelectedHeapBlocks->Initialize(
             EDescriptorHeapTypeDX12::CBV_SRV_UAV,
-            OnlineDescriptorHeapBlocksDx12::TotalHeapSize,
-            OnlineDescriptorHeapBlocksDx12::DescriptorsInBlock);
+            OnlineDescriptorHeapBlocksDx12::s_kTotalHeapSize,
+            OnlineDescriptorHeapBlocksDx12::s_kDescriptorsInBlock);
         break;
       }
       case EDescriptorHeapTypeDX12::SAMPLER: {
         SelectedHeapBlocks->Initialize(
             EDescriptorHeapTypeDX12::SAMPLER,
-            OnlineDescriptorHeapBlocksDx12::SamplerTotalHeapSize,
-            OnlineDescriptorHeapBlocksDx12::SamplerDescriptorsInBlock);
+            OnlineDescriptorHeapBlocksDx12::s_kSamplerTotalHeapSize,
+            OnlineDescriptorHeapBlocksDx12::s_kSamplerDescriptorsInBlock);
         break;
       }
       default:
@@ -267,7 +271,7 @@ class OnlineDescriptorManager {
               DescriptorHeapBlocks.end(),
               [](OnlineDescriptorHeapBlocksDx12* InA,
                  OnlineDescriptorHeapBlocksDx12* InB) {
-                return InA->FreeLists.size() > InB->FreeLists.size();
+                return InA->m_freeLists_.size() > InB->m_freeLists_.size();
               });
 
     OnlineDescriptorHeapDx12* AllocatedBlocks = SelectedHeapBlocks->Alloc();
@@ -283,62 +287,62 @@ class OnlineDescriptorManager {
   void Release() {
     for (int32_t i = 0; i < (int32_t)EDescriptorHeapTypeDX12::MAX; ++i) {
       for (OnlineDescriptorHeapBlocksDx12* iter :
-           OnlineDescriptorHeapBlocks[i]) {
+           m_onlineDescriptorHeapBlocks_[i]) {
         delete iter;
       }
-      OnlineDescriptorHeapBlocks[i].clear();
+      m_onlineDescriptorHeapBlocks_[i].clear();
     }
   }
 
   std::vector<OnlineDescriptorHeapBlocksDx12*>
-      OnlineDescriptorHeapBlocks[(int32_t)EDescriptorHeapTypeDX12::MAX];
+      m_onlineDescriptorHeapBlocks_[(int32_t)EDescriptorHeapTypeDX12::MAX];
 };
 
 class OfflineDescriptorHeapDx12 {
   public:
-  void Initialize(EDescriptorHeapTypeDX12 InHeapType) {
-    assert(!IsInitialized);
+  void Initialize(EDescriptorHeapTypeDX12 heapType) {
+    assert(!m_isInitialized_);
 
-    HeapType      = InHeapType;
-    CurrentHeap   = CreateDescriptorHeap();
-    IsInitialized = true;
+    m_heapType_      = heapType;
+    m_currentHeap_   = CreateDescriptorHeap();
+    m_isInitialized_ = true;
   }
 
   DescriptorDx12 Alloc() {
-    if (!IsInitialized) {
+    if (!m_isInitialized_) {
       return DescriptorDx12();
     }
 
-    if (!CurrentHeap) {
-      CurrentHeap = CreateDescriptorHeap();
-      assert(CurrentHeap);
+    if (!m_currentHeap_) {
+      m_currentHeap_ = CreateDescriptorHeap();
+      assert(m_currentHeap_);
     }
 
-    DescriptorDx12 NewDescriptor = CurrentHeap->Alloc();
+    DescriptorDx12 NewDescriptor = m_currentHeap_->Alloc();
     if (!NewDescriptor.IsValid()) {
-      if (Heap.size() > 0) {
+      if (m_heap_.size() > 0) {
         // Reorder the Heap to place those with more available allocations at
         // the front
-        std::sort(Heap.begin(),
-                  Heap.end(),
+        std::sort(m_heap_.begin(),
+                  m_heap_.end(),
                   [](const std::shared_ptr<DescriptorHeapDx12>& InA,
                      const std::shared_ptr<DescriptorHeapDx12>& InB) {
-                    return InA->Pools.size() > InB->Pools.size();
+                    return InA->m_pools_.size() > InB->m_pools_.size();
                   });
 
-        if (Heap[0]->Pools.size() > 0) {
-          CurrentHeap = Heap[0];
+        if (m_heap_[0]->m_pools_.size() > 0) {
+          m_currentHeap_ = m_heap_[0];
 
-          NewDescriptor = CurrentHeap->Alloc();
+          NewDescriptor = m_currentHeap_->Alloc();
           assert(NewDescriptor.IsValid());
           return NewDescriptor;
         }
       }
 
-      CurrentHeap = CreateDescriptorHeap();
-      assert(CurrentHeap);
+      m_currentHeap_ = CreateDescriptorHeap();
+      assert(m_currentHeap_);
 
-      NewDescriptor = CurrentHeap->Alloc();
+      NewDescriptor = m_currentHeap_->Alloc();
       assert(NewDescriptor.IsValid());
     }
 
@@ -346,17 +350,17 @@ class OfflineDescriptorHeapDx12 {
   }
 
   void Free(const DescriptorDx12& InDescriptor) {
-    if (!InDescriptor.DescriptorHeap.expired()) {
-      InDescriptor.DescriptorHeap.lock()->Free(InDescriptor.Index);
+    if (!InDescriptor.m_descriptorHeap_.expired()) {
+      InDescriptor.m_descriptorHeap_.lock()->Free(InDescriptor.m_index_);
     }
   }
 
   void Release() {
-    if (!IsInitialized) {
+    if (!m_isInitialized_) {
       return;
     }
 
-    Heap.clear();
+    m_heap_.clear();
   }
 
   private:
@@ -364,17 +368,17 @@ class OfflineDescriptorHeapDx12 {
     auto DescriptorHeap = std::make_shared<DescriptorHeapDx12>();
     assert(DescriptorHeap);
 
-    DescriptorHeap->Initialize(HeapType, false);
+    DescriptorHeap->Initialize(m_heapType_, false);
 
-    Heap.push_back(DescriptorHeap);
+    m_heap_.push_back(DescriptorHeap);
     return DescriptorHeap;
   }
 
-  bool                    IsInitialized = false;
-  EDescriptorHeapTypeDX12 HeapType      = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
+  bool                    m_isInitialized_ = false;
+  EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
 
-  std::shared_ptr<DescriptorHeapDx12>              CurrentHeap;
-  std::vector<std::shared_ptr<DescriptorHeapDx12>> Heap;
+  std::shared_ptr<DescriptorHeapDx12>              m_currentHeap_;
+  std::vector<std::shared_ptr<DescriptorHeapDx12>> m_heap_;
 };
 
 }  // namespace game_engine

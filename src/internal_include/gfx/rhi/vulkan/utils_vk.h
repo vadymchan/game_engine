@@ -24,9 +24,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL
                   void*                                       pUserData);
 
 struct SwapChainSupportDetails {
-  VkSurfaceCapabilitiesKHR        Capabilities;
-  std::vector<VkSurfaceFormatKHR> Formats;
-  std::vector<VkPresentModeKHR>   PresentModes;
+  VkSurfaceCapabilitiesKHR        m_capabilities_;
+  std::vector<VkSurfaceFormatKHR> m_formats_;
+  std::vector<VkPresentModeKHR>   m_presentModes_;
 };
 
 SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device,
@@ -37,14 +37,14 @@ VkPresentModeKHR ChooseSwapPresentMode(
     bool                                 isVSyncEnabled);
 
 struct QueueFamilyIndices {
-  std::optional<uint32_t> GraphicsFamily;
-  std::optional<uint32_t> ComputeFamily;
-  std::optional<uint32_t> PresentFamily;
-
   bool IsComplete() const {
-    return GraphicsFamily.has_value() && ComputeFamily.has_value()
-        && PresentFamily.has_value();
+    return m_graphicsFamily_.has_value() && m_computeFamily_.has_value()
+        && m_presentFamily_.has_value();
   }
+
+  std::optional<uint32_t> m_graphicsFamily_;
+  std::optional<uint32_t> m_computeFamily_;
+  std::optional<uint32_t> m_presentFamily_;
 };
 
 QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device,
@@ -186,19 +186,19 @@ uint32_t FindMemoryType(VkPhysicalDevice      physicalDevice,
 
 size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
                              EVulkanMemoryBits InProperties,
-                             uint64_t          InSize,
+                             uint64_t          size,
                              VkBuffer&         OutBuffer,
                              VkDeviceMemory&   OutBufferMemory,
                              uint64_t&         OutAllocatedSize);
 
 std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
                                        EVulkanMemoryBits InProperties,
-                                       uint64_t          InSize,
+                                       uint64_t          size,
                                        EResourceLayout   InResourceLayout);
 
 // size_t AllocateBuffer(VkBufferUsageFlags    InUsage,
 //                       VkMemoryPropertyFlags InProperties,
-//                       uint64_t              InSize,
+//                       uint64_t              size,
 //                       BufferVk&             OutBuffer);
 
 void CopyBuffer(VkCommandBuffer commandBuffer,
@@ -239,7 +239,6 @@ void CopyBufferToTexture(VkBuffer buffer,
                          uint32_t height,
                          int32_t  miplevel   = 0,
                          int32_t  layerIndex = 0);
-
 
 }  // namespace game_engine
 

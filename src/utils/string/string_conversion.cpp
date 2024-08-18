@@ -5,24 +5,24 @@
 
 namespace game_engine {
 
-std::wstring ConvertToWchar(const char* InPath, int32_t InLength) {
-  assert(InPath);
+std::wstring ConvertToWchar(const char* path, int32_t length) {
+  assert(path);
 
   std::wstring result;
-  if (InLength > 0) {
-    result.resize(InLength + 1);
+  if (length > 0) {
+    result.resize(length + 1);
     {
       const int32_t ResultFilePathLength
-          = MultiByteToWideChar(CP_ACP, 0, InPath, -1, NULL, NULL);
+          = MultiByteToWideChar(CP_ACP, 0, path, -1, NULL, NULL);
       assert(ResultFilePathLength < 256);
 
       MultiByteToWideChar(CP_ACP,
                           0,
-                          InPath,
-                          InLength,
+                          path,
+                          length,
                           &result[0],
                           (int32_t)(result.size() - 1));
-      result[InLength] = 0;
+      result[length] = 0;
     }
   }
   return result;

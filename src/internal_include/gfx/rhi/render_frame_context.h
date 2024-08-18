@@ -18,32 +18,32 @@ struct RenderFrameContext
 
   RenderFrameContext() = default;
 
-  RenderFrameContext(CommandBuffer* InCommandBuffer)
-      : m_commandBuffer(InCommandBuffer) {}
+  RenderFrameContext(CommandBuffer* commandBuffer)
+      : m_commandBuffer_(commandBuffer) {}
 
   virtual ~RenderFrameContext();
 
   virtual void Destroy();
 
   virtual CommandBuffer* GetActiveCommandBuffer() const {
-    return m_commandBuffer;
+    return m_commandBuffer_;
   }
 
   virtual bool BeginActiveCommandBuffer();
   virtual bool EndActiveCommandBuffer();
 
   virtual void SubmitCurrentActiveCommandBuffer(
-      ECurrentRenderPass InCurrentRenderPass) {}
+      ECurrentRenderPass currentRenderPass) {}
 
   public:
   // RaytracingScene*                   raytracingScene            = nullptr;
-  std::shared_ptr<SceneRenderTarget> SceneRenderTargetPtr       = nullptr;
-  uint32_t                           FrameIndex                 = -1;
-  bool                               UseForwardRenderer         = true;
-  bool                               IsBeginActiveCommandbuffer = false;
+  std::shared_ptr<SceneRenderTarget> m_sceneRenderTargetPtr_       = nullptr;
+  uint32_t                           m_frameIndex_                 = -1;
+  bool                               m_useForwardRenderer_         = true;
+  bool                               m_isBeginActiveCommandbuffer_ = false;
 
   protected:
-  CommandBuffer* m_commandBuffer = nullptr;
+  CommandBuffer* m_commandBuffer_ = nullptr;
 };
 
 }  // namespace game_engine

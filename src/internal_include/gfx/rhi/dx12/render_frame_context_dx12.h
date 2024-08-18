@@ -8,15 +8,15 @@ namespace game_engine {
 struct RenderFrameContextDx12 : public RenderFrameContext {
   RenderFrameContextDx12() = default;
 
-  RenderFrameContextDx12(CommandBuffer* InCommandBuffer)
-      : RenderFrameContext(InCommandBuffer) {}
+  RenderFrameContextDx12(CommandBuffer* commandBuffer)
+      : RenderFrameContext(commandBuffer) {}
 
   virtual ~RenderFrameContextDx12() {}
 
   // TODO: seems this method is not used
   virtual void QueueSubmitCurrentActiveCommandBuffer();
   virtual void SubmitCurrentActiveCommandBuffer(
-      ECurrentRenderPass InCurrentRenderPass) override;
+      ECurrentRenderPass currentRenderPass) override;
 };
 
 }  // namespace game_engine

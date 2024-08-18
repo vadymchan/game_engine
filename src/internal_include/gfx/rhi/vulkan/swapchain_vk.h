@@ -22,22 +22,22 @@ class SwapchainImageVk : public SwapchainImage {
 
   void ReleaseInternal();
 
-  VkFence CommandBufferFence = nullptr;  // signal command buffer completion.
+  VkFence m_commandBufferFence_ = nullptr;  // signal command buffer completion.
 
   // Semaphores are used to synchronize between GPUs. They allow multiple frames
   // to be created simultaneously.
   // Semaphores are designed for synchronizing commands within a command queue
   // or between queues.
-  Semaphore* Available
+  Semaphore* m_available_
       = nullptr;  // This is signaled (lock is released) when an image is
                   // acquired and rendering preparation is complete.
-  Semaphore* RenderFinished
+  Semaphore* m_renderFinished_
       = nullptr;  // This is signaled when rendering is finished and the image
                   // is ready for presentation.
-  Semaphore* RenderFinishedAfterShadow
+  Semaphore* m_renderFinishedAfterShadow_
       = nullptr;  // This is signaled when rendering is finished after the
                   // shadow pass and the image is ready for presentation.
-  Semaphore* RenderFinishedAfterBasePass
+  Semaphore* m_renderFinishedAfterBasePass_
       = nullptr;  // This is signaled when rendering is finished after the base
                   // pass and the image is ready for presentation.
 
@@ -55,25 +55,25 @@ class SwapchainVk : public Swapchain {
 
   void* GetHandle() const override { return m_swapChain_; }
 
-  ETextureFormat GetFormat() const override { return Format; }
+  ETextureFormat GetFormat() const override { return m_format_; }
 
-  const math::Dimension2Di& GetExtent() const override { return Extent; }
+  const math::Dimension2Di& GetExtent() const override { return m_extent_; }
 
   SwapchainImageVk* GetSwapchainImage(int32_t index) const override {
     // Ensure index is within range
-    assert(Images.size() > index);
-    return Images[index];
+    assert(m_images_.size() > index);
+    return m_images_[index];
   }
 
   int32_t GetNumOfSwapchainImages() const override {
-    return static_cast<int32_t>(Images.size());
+    return static_cast<int32_t>(m_images_.size());
   }
 
   private:
   VkSwapchainKHR                 m_swapChain_ = nullptr;
-  ETextureFormat                 Format       = ETextureFormat::RGB8;
-  math::Dimension2Di             Extent;
-  std::vector<SwapchainImageVk*> Images;
+  ETextureFormat                 m_format_       = ETextureFormat::RGB8;
+  math::Dimension2Di             m_extent_;
+  std::vector<SwapchainImageVk*> m_images_;
 
   bool isVSyncEnabled = {false};
 };

@@ -9,32 +9,33 @@
 namespace game_engine {
 
 struct ImageSubResourceData {
-  int32_t  Format   = 0;
-  uint32_t Width    = 0;
-  uint32_t Height   = 0;
-  uint32_t MipLevel = 0;
-  uint32_t Depth    = 0;
-  uint32_t RowPitch = 0;
-  uint64_t Offset   = 0;
+  int32_t  m_format_   = 0;
+  uint32_t m_width_    = 0;
+  uint32_t m_height_   = 0;
+  uint32_t m_mipLevel_ = 0;
+  uint32_t m_depth_    = 0;
+  uint32_t m_rowPitch_ = 0;
+  uint64_t m_offset_   = 0;
 };
 
 struct ImageBulkData {
-  std::vector<unsigned char>        ImageData;
-  std::vector<ImageSubResourceData> SubresourceFootprints;
+  std::vector<unsigned char>        m_imageData_;
+  std::vector<ImageSubResourceData> m_subresourceFootprints_;
 };
 
 struct ImageData {
-  bool           CreateMipmapIfPossible = true;
-  bool           sRGB                   = false;
-  int32_t        Width                  = 0;
-  int32_t        Height                 = 0;
-  int32_t        MipLevel               = 1;
-  int32_t        LayerCount             = 1;
-  Name           Filename;
-  ETextureFormat Format      = ETextureFormat::RGBA8;
-  EFormatType    FormatType  = EFormatType::UNSIGNED_BYTE;
-  ETextureType   TextureType = ETextureType::TEXTURE_2D;
-  ImageBulkData  imageBulkData;  // TODO: ImageBulkData rhi_vk
+  bool           m_createMipmapIfPossible_ = true;
+  bool           m_sRGB_                   = false;
+  int32_t        m_width_                  = 0;
+  int32_t        m_height_                 = 0;
+  int32_t        m_mipLevel_               = 1;
+  int32_t        m_layerCount_             = 1;
+  // TODO: currently not used
+  Name           m_filename_;
+  ETextureFormat m_format_      = ETextureFormat::RGBA8;
+  EFormatType    m_formatType_  = EFormatType::UNSIGNED_BYTE;
+  ETextureType   m_textureType_ = ETextureType::TEXTURE_2D;
+  ImageBulkData  m_imageBulkData_;  // TODO: ImageBulkData rhi_vk
 };
 }  // namespace game_engine
 

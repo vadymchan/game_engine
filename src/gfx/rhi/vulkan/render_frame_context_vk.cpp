@@ -8,18 +8,18 @@ namespace game_engine {
 
 
 void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
-    ECurrentRenderPass InCurrentRenderPass) {
+    ECurrentRenderPass currentRenderPass) {
   SwapchainImageVk* swapchainImageVk
-      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_->GetSwapchainImage(FrameIndex);
+      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_->GetSwapchainImage(m_frameIndex_);
 
-  switch (InCurrentRenderPass) {
+  switch (currentRenderPass) {
     case RenderFrameContextVk::ShadowPass:
       QueueSubmitCurrentActiveCommandBuffer(
-          swapchainImageVk->RenderFinishedAfterShadow);
+          swapchainImageVk->m_renderFinishedAfterShadow_);
       break;
     case RenderFrameContextVk::BasePass:
       QueueSubmitCurrentActiveCommandBuffer(
-          swapchainImageVk->RenderFinishedAfterBasePass);
+          swapchainImageVk->m_renderFinishedAfterBasePass_);
       break;
     default:
       break;
@@ -37,7 +37,7 @@ void RenderFrameContextVk::QueueSubmitCurrentActiveCommandBuffer(
 
     // get new command buffer
     m_commandBuffer_ = g_rhi_vk->m_commandBufferManager_->GetOrCreateCommandBuffer();
-    g_rhi_vk->m_swapchain_->GetSwapchainImage(FrameIndex)->CommandBufferFence
+    g_rhi_vk->m_swapchain_->GetSwapchainImage(m_frameIndex_)->m_commandBufferFence_
         = (VkFence)m_commandBuffer_->GetFenceHandle();
   }
 }

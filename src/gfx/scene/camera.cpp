@@ -9,6 +9,6 @@
 
 namespace game_engine {
 
-  std::map<int, Camera*> Camera::CameraMap;
+  std::map<int, Camera*> Camera::s_cameraMap;
 
 }  // namespace game_engine

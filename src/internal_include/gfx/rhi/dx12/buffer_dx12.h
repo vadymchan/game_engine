@@ -18,232 +18,240 @@ struct CommandBufferDx12;
 struct BufferDx12 : public Buffer {
   BufferDx12() = default;
 
-  BufferDx12(std::shared_ptr<CreatedResource> InBuffer,
-               uint64_t                          InSize,
-               uint64_t                          InAlignment,
-               EBufferCreateFlag InBufferCreateFlag = EBufferCreateFlag::NONE)
-      : m_buffer(InBuffer)
-      , Size(InSize)
-      , Alignment(InAlignment)
-      , BufferCreateFlag(InBufferCreateFlag) {}
+  BufferDx12(std::shared_ptr<CreatedResource> buffer,
+             uint64_t                         size,
+             uint64_t                         alignment,
+             EBufferCreateFlag bufferCreateFlag = EBufferCreateFlag::NONE)
+      : m_buffer(buffer)
+      , m_size_(size)
+      , m_alignment_(alignment)
+      , m_bufferCreateFlag_(bufferCreateFlag) {}
 
   virtual ~BufferDx12() { Release(); }
 
   virtual void Release() override;
 
-  virtual void* GetMappedPointer() const override { return CPUAddress; }
+  virtual void* GetMappedPointer() const override { return m_cpuAddress_; }
 
   virtual void* Map(uint64_t offset, uint64_t size) override {
     assert(m_buffer && m_buffer->IsValid());
 
-    if (!(BufferCreateFlag & EBufferCreateFlag::CPUAccess
+    if (!(m_bufferCreateFlag_ & EBufferCreateFlag::CPUAccess
           | EBufferCreateFlag::Readback)) {
       return nullptr;
     }
 
-    if (CPUAddress) {
+    if (m_cpuAddress_) {
       Unmap();
     }
 
     D3D12_RANGE range = {};
     range.Begin       = offset;
     range.End         = offset + size;
-    m_buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&CPUAddress));
+    m_buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&m_cpuAddress_));
 
-    return CPUAddress;
+    return m_cpuAddress_;
   }
 
   virtual void* Map() override {
     assert(m_buffer && m_buffer->IsValid());
 
-    if (!(BufferCreateFlag
+    if (!(m_bufferCreateFlag_
           & (EBufferCreateFlag::CPUAccess | EBufferCreateFlag::Readback))) {
       return nullptr;
     }
 
-    if (CPUAddress) {
+    if (m_cpuAddress_) {
       Unmap();
     }
 
     D3D12_RANGE range = {};
-    m_buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&CPUAddress));
+    m_buffer->Get()->Map(0, &range, reinterpret_cast<void**>(&m_cpuAddress_));
 
-    return CPUAddress;
+    return m_cpuAddress_;
   }
 
   virtual void Unmap() override {
     assert(m_buffer && m_buffer->IsValid());
 
-    if (!(BufferCreateFlag & EBufferCreateFlag::CPUAccess
+    if (!(m_bufferCreateFlag_ & EBufferCreateFlag::CPUAccess
           | EBufferCreateFlag::Readback)) {
       return;
     }
 
     m_buffer->Get()->Unmap(0, nullptr);
-    CPUAddress = nullptr;
+    m_cpuAddress_ = nullptr;
   }
 
   virtual void UpdateBuffer(const void* data, uint64_t size) override {
-    assert(CPUAddress);
-    if (CPUAddress) {
-      assert(Size >= size);
-      memcpy(CPUAddress, data, size);
+    assert(m_cpuAddress_);
+    if (m_cpuAddress_) {
+      assert(m_size_ >= size);
+      memcpy(m_cpuAddress_, data, size);
     }
   }
 
   virtual void* GetHandle() const override { return m_buffer->Get(); }
 
-  virtual uint64_t GetAllocatedSize() const override { return (uint32_t)Size; }
+  virtual uint64_t GetAllocatedSize() const override { return (uint32_t)m_size_; }
 
-  virtual uint64_t GetBufferSize() const { return (uint32_t)Size; }
+  virtual uint64_t GetBufferSize() const { return (uint32_t)m_size_; }
 
-  virtual uint64_t GetOffset() const { return Offset; }
+  virtual uint64_t GetOffset() const { return m_offset_; }
 
   inline uint64_t GetGPUAddress() const {
-    return m_buffer->GetGPUVirtualAddress() + Offset;
+    return m_buffer->GetGPUVirtualAddress() + m_offset_;
   }
 
-  virtual EResourceLayout GetLayout() const { return Layout; }
+  virtual EResourceLayout GetLayout() const { return m_layout_; }
 
-  EBufferCreateFlag                 BufferCreateFlag = EBufferCreateFlag::NONE;
-  uint64_t                          Size             = 0;
-  uint64_t                          Alignment        = 0;
-  uint64_t                          Offset           = 0;
-  uint8_t*                          CPUAddress       = nullptr;
+  EBufferCreateFlag                m_bufferCreateFlag_ = EBufferCreateFlag::NONE;
+  uint64_t                         m_size_             = 0;
+  uint64_t                         m_alignment_        = 0;
+  uint64_t                         m_offset_           = 0;
+  uint8_t*                         m_cpuAddress_       = nullptr;
   // TODO: consider renaming to CreatedRedource
   std::shared_ptr<CreatedResource> m_buffer;
-  DescriptorDx12                  CBV;
-  DescriptorDx12                  SRV;
-  DescriptorDx12                  UAV;
-  EResourceLayout                   Layout = EResourceLayout::UNDEFINED;
+  DescriptorDx12                   m_cbv_;
+  DescriptorDx12                   m_srv_;
+  DescriptorDx12                   m_uav_;
+  EResourceLayout                  m_layout_ = EResourceLayout::UNDEFINED;
 };
 
 struct VertexStreamDx12 {
-  Name       name;
-  // uint32_t Count;
-  EBufferType BufferType = EBufferType::Static;
-  // EBufferElementType ElementType = EBufferElementType::BYTE;
-  bool        Normalized      = false;
-  int32_t     Stride          = 0;
-  size_t      Offset          = 0;
-  int32_t     InstanceDivisor = 0;
-
   template <typename T>
   T* GetBuffer() const {
-    return (T*)BufferPtr.get();
+    return (T*)m_bufferPtr_.get();
   }
 
-  std::shared_ptr<BufferDx12> BufferPtr;
+  Name        m_name_;
+  // uint32_t Count;
+  EBufferType m_bufferType_ = EBufferType::Static;
+  // EBufferElementType ElementType = EBufferElementType::BYTE;
+  // TODO: seems not used
+  bool        m_normalized_      = false;
+  int32_t     m_stride_          = 0;
+  size_t      m_offset_          = 0;
+  // TODO: not used
+  //int32_t     m_instanceDivisor_ = 0;
+
+  std::shared_ptr<BufferDx12> m_bufferPtr_;
 };
 
 struct VertexBufferDx12 : public VertexBuffer {
   struct BindInfo {
     void Reset() {
-      InputElementDescs.clear();
+      m_inputElementDescs_.clear();
       // m_buffers.clear();
       // Offsets.clear();
-      StartBindingIndex = 0;
+      m_startBindingIndex_ = 0;
     }
-
-    std::vector<D3D12_INPUT_ELEMENT_DESC> InputElementDescs;
-
-    // m_buffer references VertexStreamDx12, so there's no need for separate
-    // destruction
-    std::vector<ID3D12Resource*> m_buffers;
-    std::vector<size_t>          Offsets;
-
-    int32_t StartBindingIndex = 0;
 
     D3D12_INPUT_LAYOUT_DESC CreateVertexInputLayoutDesc() const {
       D3D12_INPUT_LAYOUT_DESC Desc;
-      Desc.pInputElementDescs = InputElementDescs.data();
-      Desc.NumElements        = (uint32_t)InputElementDescs.size();
+      Desc.pInputElementDescs = m_inputElementDescs_.data();
+      Desc.NumElements        = (uint32_t)m_inputElementDescs_.size();
       return Desc;
     }
 
     inline size_t GetHash() const {
       size_t result = 0;
-      for (int32_t i = 0; i < (int32_t)InputElementDescs.size(); ++i) {
-        if (InputElementDescs[i].SemanticName) {
-          result = ::XXH64(InputElementDescs[i].SemanticName,
-                           strlen(InputElementDescs[i].SemanticName),
+      for (int32_t i = 0; i < (int32_t)m_inputElementDescs_.size(); ++i) {
+        if (m_inputElementDescs_[i].SemanticName) {
+          result = ::XXH64(m_inputElementDescs_[i].SemanticName,
+                           strlen(m_inputElementDescs_[i].SemanticName),
                            result);
         }
-        result = XXH64(InputElementDescs[i].SemanticIndex, result);
-        result = XXH64(InputElementDescs[i].Format, result);
-        result = XXH64(InputElementDescs[i].InputSlot, result);
-        result = XXH64(InputElementDescs[i].AlignedByteOffset, result);
-        result = XXH64(InputElementDescs[i].InputSlotClass, result);
-        result = XXH64(InputElementDescs[i].InstanceDataStepRate, result);
+        result = XXH64(m_inputElementDescs_[i].SemanticIndex, result);
+        result = XXH64(m_inputElementDescs_[i].Format, result);
+        result = XXH64(m_inputElementDescs_[i].InputSlot, result);
+        result = XXH64(m_inputElementDescs_[i].AlignedByteOffset, result);
+        result = XXH64(m_inputElementDescs_[i].InputSlotClass, result);
+        result = XXH64(m_inputElementDescs_[i].InstanceDataStepRate, result);
       }
       return result;
     }
+
+    std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescs_;
+
+    // m_buffer references VertexStreamDx12, so there's no need for separate
+    // destruction
+    std::vector<ID3D12Resource*> m_buffers_;
+    std::vector<size_t>          m_offsets_;
+
+    int32_t m_startBindingIndex_ = 0;
   };
 
   virtual size_t GetHash() const override {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GetVertexInputStateHash() ^ (size_t)vertexStreamData->PrimitiveType;
-    return Hash;
+    m_hash_ = GetVertexInputStateHash()
+            ^ (size_t)m_vertexStreamData_->m_primitiveType_;
+    return m_hash_;
   }
 
-  inline size_t GetVertexInputStateHash() const { return m_bindInfos.GetHash(); }
+  inline size_t GetVertexInputStateHash() const {
+    return m_bindInfos_.GetHash();
+  }
 
   inline D3D12_INPUT_LAYOUT_DESC CreateVertexInputLayoutDesc() const {
-    return m_bindInfos.CreateVertexInputLayoutDesc();
+    return m_bindInfos_.CreateVertexInputLayoutDesc();
   }
 
   inline D3D12_PRIMITIVE_TOPOLOGY_TYPE GetTopologyTypeOnly() const {
-    return GetDX12PrimitiveTopologyTypeOnly(vertexStreamData->PrimitiveType);
+    return GetDX12PrimitiveTopologyTypeOnly(
+        m_vertexStreamData_->m_primitiveType_);
   }
 
   inline D3D12_PRIMITIVE_TOPOLOGY GetTopology() const {
-    return GetDX12PrimitiveTopology(vertexStreamData->PrimitiveType);
+    return GetDX12PrimitiveTopology(m_vertexStreamData_->m_primitiveType_);
   }
 
   static void CreateVertexInputState(
       std::vector<D3D12_INPUT_ELEMENT_DESC>& OutInputElementDescs,
-      const VertexBufferArray&              InVertexBufferArray) {
-    for (int32_t i = 0; i < InVertexBufferArray.NumOfData; ++i) {
-      assert(InVertexBufferArray[i]);
+      const VertexBufferArray&               vertexBufferArray) {
+    for (int32_t i = 0; i < vertexBufferArray.m_numOfData_; ++i) {
+      assert(vertexBufferArray[i]);
       const BindInfo& bindInfo
-          = ((const VertexBufferDx12*)InVertexBufferArray[i])->m_bindInfos;
+          = ((const VertexBufferDx12*)vertexBufferArray[i])->m_bindInfos_;
       OutInputElementDescs.insert(OutInputElementDescs.end(),
-                                  bindInfo.InputElementDescs.begin(),
-                                  bindInfo.InputElementDescs.end());
+                                  bindInfo.m_inputElementDescs_.begin(),
+                                  bindInfo.m_inputElementDescs_.end());
     }
   }
 
-  BindInfo                             m_bindInfos;
-  std::vector<VertexStreamDx12>       Streams;
-  std::vector<D3D12_VERTEX_BUFFER_VIEW> VBView;
-  mutable size_t                        Hash = 0;
-
   virtual bool Initialize(
       const std::shared_ptr<VertexStreamData>& InStreamData) override;
-  virtual void     Bind(const std::shared_ptr<RenderFrameContext>&
-                            InRenderFrameContext) const override;
-  virtual void     Bind(CommandBufferDx12* InCommandList) const;
+  virtual void    Bind(const std::shared_ptr<RenderFrameContext>&
+                           renderFrameContext) const override;
+  virtual void    Bind(CommandBufferDx12* commandList) const;
   virtual Buffer* GetBuffer(int32_t InStreamIndex) const override;
+
+  BindInfo                              m_bindInfos_;
+  std::vector<VertexStreamDx12>         m_streams_;
+  // TODO: consider renaming
+  std::vector<D3D12_VERTEX_BUFFER_VIEW> m_VBView_;
+  mutable size_t                        m_hash_ = 0;
 };
 
 struct IndexBufferDx12 : public IndexBuffer {
-  std::shared_ptr<BufferDx12> BufferPtr;
   virtual void Bind(const std::shared_ptr<RenderFrameContext>&
-                        InRenderFrameContext) const override;
-  virtual void Bind(CommandBufferDx12* InCommandList) const;
+                        renderFrameContext) const override;
+  virtual void Bind(CommandBufferDx12* commandList) const;
   virtual bool Initialize(
       const std::shared_ptr<IndexStreamData>& InStreamData) override;
 
-  D3D12_INDEX_BUFFER_VIEW IBView;
-
   inline uint32_t GetIndexCount() const {
-    return indexStreamData->elementCount;
+    return m_indexStreamData_->m_elementCount_;
   }
 
-  virtual BufferDx12* GetBuffer() const override { return BufferPtr.get(); }
+  virtual BufferDx12* GetBuffer() const override { return m_bufferPtr_.get(); }
+
+  std::shared_ptr<BufferDx12> m_bufferPtr_;
+  // TODO: consider renaming
+  D3D12_INDEX_BUFFER_VIEW     m_IBView_;
 };
 }  // namespace game_engine
 #endif  // GAME_ENGINE_BUFFER_DX12_H

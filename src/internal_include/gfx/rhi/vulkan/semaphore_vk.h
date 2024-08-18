@@ -36,8 +36,8 @@ class SemaphoreManagerVk : public SemaphoreManager {
   void Release();
 
   private:
-  std::unordered_set<Semaphore*> UsingSemaphores;
-  std::unordered_set<Semaphore*> PendingSemaphores;
+  std::unordered_set<Semaphore*> m_usingSemaphores_;
+  std::unordered_set<Semaphore*> m_pendingSemaphores_;
 };
 
 }  // namespace game_engine

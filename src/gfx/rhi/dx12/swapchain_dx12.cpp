@@ -13,7 +13,7 @@ void SwapchainImageDx12::Release() {
 }
 
 void SwapchainImageDx12::ReleaseInternal() {
-  TexturePtr = nullptr;
+  m_TexturePtr_ = nullptr;
   // if (Available)
   //{
   //     g_rhi->GetSemaphoreManager()->ReturnSemaphore(Available);
@@ -41,7 +41,7 @@ void SwapchainImageDx12::ReleaseInternal() {
 //////////////////////////////////////////////////////////////////////////
 bool SwapchainDx12::Create(const std::shared_ptr<Window>& window) {
   DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-  swapChainDesc.BufferCount      = RhiDx12::MaxFrameCount;
+  swapChainDesc.BufferCount      = RhiDx12::s_kMaxFrameCount;
   swapChainDesc.Width            = window->getSize().width();
   swapChainDesc.Height           = window->getSize().height();
   swapChainDesc.Format           = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -54,12 +54,12 @@ bool SwapchainDx12::Create(const std::shared_ptr<Window>& window) {
 
   assert(g_rhi_dx12);
   assert(!!g_rhi_dx12->m_hWnd);
-  assert(g_rhi_dx12->Factory);
-  assert(g_rhi_dx12->m_commandBufferManager);
+  assert(g_rhi_dx12->m_factory_);
+  assert(g_rhi_dx12->m_commandBufferManager_);
 
   ComPtr<IDXGISwapChain1> swapChainTemp;
-  HRESULT                 hr = g_rhi_dx12->Factory->CreateSwapChainForHwnd(
-      g_rhi_dx12->m_commandBufferManager->GetCommandQueue().Get(),
+  HRESULT                 hr = g_rhi_dx12->m_factory_->CreateSwapChainForHwnd(
+      g_rhi_dx12->m_commandBufferManager_->GetCommandQueue().Get(),
       g_rhi_dx12->m_hWnd,
       &swapChainDesc,
       nullptr,
@@ -71,21 +71,21 @@ bool SwapchainDx12::Create(const std::shared_ptr<Window>& window) {
     return false;
   }
 
-  hr = swapChainTemp->QueryInterface(IID_PPV_ARGS(&SwapChain));
+  hr = swapChainTemp->QueryInterface(IID_PPV_ARGS(&m_swapChain_));
   assert(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return false;
   }
 
 
-  Extent = window->getSize();
+  m_extent_ = window->getSize();
 
-  Images.resize(RhiDx12::MaxFrameCount);
-  for (int32_t i = 0; i < Images.size(); ++i) {
+  m_images_.resize(RhiDx12::s_kMaxFrameCount);
+  for (int32_t i = 0; i < m_images_.size(); ++i) {
     SwapchainImageDx12* swapchainImage = new SwapchainImageDx12();
 
     ComPtr<ID3D12Resource> NewResource;
-    HRESULT hr = SwapChain->GetBuffer(i, IID_PPV_ARGS(&NewResource));
+    HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&NewResource));
     assert(SUCCEEDED(hr));
 
     if (FAILED(hr)) {
@@ -96,21 +96,21 @@ bool SwapchainDx12::Create(const std::shared_ptr<Window>& window) {
     std::shared_ptr<CreatedResource> RenderTargetResource
         = CreatedResource::CreatedFromSwapchain(NewResource);
 
-    Images[i] = swapchainImage;
+    m_images_[i] = swapchainImage;
 
     auto TextureDX12Ptr
         = std::make_shared<TextureDx12>(ETextureType::TEXTURE_2D,
-                                          Format,
-                                          Extent,
+                                          m_format_,
+                                          m_extent_,
                                           1,
                                           EMSAASamples::COUNT_1,
                                           false,
-                                          RTClearValue::Invalid,
+                                          RTClearValue::s_kInvalid,
                                           RenderTargetResource);
-    swapchainImage->TexturePtr = TextureDX12Ptr;
+    swapchainImage->m_TexturePtr_ = TextureDX12Ptr;
 
-    CreateRenderTargetView((TextureDx12*)swapchainImage->TexturePtr.get());
-    TextureDX12Ptr->Layout = EResourceLayout::PRESENT_SRC;
+    CreateRenderTargetView((TextureDx12*)swapchainImage->m_TexturePtr_.get());
+    TextureDX12Ptr->m_layout_ = EResourceLayout::PRESENT_SRC;
   }
 
   return true;
@@ -120,22 +120,22 @@ void SwapchainDx12::Release() {
   ReleaseInternal();
 }
 
-bool SwapchainDx12::Resize(int32_t InWidth, int32_t InHeight) {
-  bool isSwapChainValid = SwapChain;
+bool SwapchainDx12::Resize(int32_t witdh, int32_t height) {
+  bool isSwapChainValid = m_swapChain_;
   assert(isSwapChainValid);
 
   if (isSwapChainValid) {
-    for (int32_t i = 0; i < g_rhi_dx12->MaxFrameCount; ++i) {
-      SwapchainImage* swapchainImage = Images[i];
-      auto TexDX12 = (TextureDx12*)swapchainImage->TexturePtr.get();
-      TexDX12->m_texture->Resource.get()->Reset();
+    for (int32_t i = 0; i < g_rhi_dx12->s_kMaxFrameCount; ++i) {
+      SwapchainImage* swapchainImage = m_images_[i];
+      auto TexDX12 = (TextureDx12*)swapchainImage->m_TexturePtr_.get();
+      TexDX12->m_texture->m_resource_.get()->Reset();
     }
 
-    SwapChain->SetFullscreenState(false, nullptr);
-    HRESULT hr = SwapChain->ResizeBuffers(
-        g_rhi_dx12->MaxFrameCount,
-        InWidth,
-        InHeight,
+    m_swapChain_->SetFullscreenState(false, nullptr);
+    HRESULT hr = m_swapChain_->ResizeBuffers(
+        g_rhi_dx12->s_kMaxFrameCount,
+        witdh,
+        height,
         DXGI_FORMAT_R8G8B8A8_UNORM,
         DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
             | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
@@ -147,7 +147,7 @@ bool SwapchainDx12::Resize(int32_t InWidth, int32_t InHeight) {
       sprintf_s(buff,
                 "Device Lost on ResizeBuffers: Reason code 0x%08X\n",
                 (hr == DXGI_ERROR_DEVICE_REMOVED)
-                    ? g_rhi_dx12->Device->GetDeviceRemovedReason()
+                    ? g_rhi_dx12->m_device_->GetDeviceRemovedReason()
                     : hr);
       OutputDebugStringA(buff);
 #endif
@@ -161,11 +161,11 @@ bool SwapchainDx12::Resize(int32_t InWidth, int32_t InHeight) {
     }
   }
 
-  for (int32_t i = 0; i < g_rhi_dx12->MaxFrameCount; ++i) {
-    SwapchainImage* swapchainImage = Images[i];
+  for (int32_t i = 0; i < g_rhi_dx12->s_kMaxFrameCount; ++i) {
+    SwapchainImage* swapchainImage = m_images_[i];
 
     ComPtr<ID3D12Resource> NewResource;
-    HRESULT hr = SwapChain->GetBuffer(i, IID_PPV_ARGS(&NewResource));
+    HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&NewResource));
     assert(SUCCEEDED(hr));
 
     if (FAILED(hr)) {
@@ -180,31 +180,31 @@ bool SwapchainDx12::Resize(int32_t InWidth, int32_t InHeight) {
         ETextureType::TEXTURE_2D,
         GetDX12TextureFormat(DXGI_FORMAT_R8G8B8A8_UNORM),
         // TODO: remove casting
-        math::Dimension2Di{static_cast<int>(InWidth),
-                           static_cast<int>(InHeight)},
+        math::Dimension2Di{static_cast<int>(witdh),
+                           static_cast<int>(height)},
         1,
         EMSAASamples::COUNT_1,
         false,
-        RTClearValue::Invalid,
+        RTClearValue::s_kInvalid,
         RenderTargetResource);
-    swapchainImage->TexturePtr = TextureDX12Ptr;
+    swapchainImage->m_TexturePtr_ = TextureDX12Ptr;
 
-    CreateRenderTargetView((TextureDx12*)swapchainImage->TexturePtr.get());
+    CreateRenderTargetView((TextureDx12*)swapchainImage->m_TexturePtr_.get());
   }
 
-  g_rhi_dx12->RenderPassPool.Release();
-  g_rhi_dx12->PipelineStatePool.Release();
+  g_rhi_dx12->s_renderPassPool.Release();
+  g_rhi_dx12->s_pipelineStatePool.Release();
   return true;
 }
 
 void SwapchainDx12::ReleaseInternal() {
-  for (auto& iter : Images) {
+  for (auto& iter : m_images_) {
     delete iter;
   }
-  Images.clear();
+  m_images_.clear();
 
-  if (SwapChain) {
-    SwapChain = nullptr;
+  if (m_swapChain_) {
+    m_swapChain_ = nullptr;
   }
 }
 

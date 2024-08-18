@@ -34,20 +34,20 @@ struct UniformBufferResource : public ShaderBindingResource {
   UniformBufferResource() = default;
 
   UniformBufferResource(const IUniformBufferBlock* InUniformBuffer)
-      : UniformBuffer(InUniformBuffer) {}
+      : m_uniformBuffer_(InUniformBuffer) {}
 
   virtual ~UniformBufferResource() {}
 
-  virtual const void* GetResource() const override { return UniformBuffer; }
+  virtual const void* GetResource() const override { return m_uniformBuffer_; }
 
-  const IUniformBufferBlock* UniformBuffer = nullptr;
+  const IUniformBufferBlock* m_uniformBuffer_ = nullptr;
 };
 
 struct BufferResource : public ShaderBindingResource {
   BufferResource() = default;
 
-  BufferResource(const Buffer* InBuffer)
-      : m_buffer(InBuffer) {}
+  BufferResource(const Buffer* buffer)
+      : m_buffer(buffer) {}
 
   virtual ~BufferResource() {}
 
@@ -60,13 +60,13 @@ struct SamplerResource : public ShaderBindingResource {
   SamplerResource() = default;
 
   SamplerResource(const SamplerStateInfo* InSamplerState)
-      : SamplerState(InSamplerState) {}
+      : m_samplerState_(InSamplerState) {}
 
   virtual ~SamplerResource() {}
 
-  virtual const void* GetResource() const override { return SamplerState; }
+  virtual const void* GetResource() const override { return m_samplerState_; }
 
-  const SamplerStateInfo* SamplerState = nullptr;
+  const SamplerStateInfo* m_samplerState_ = nullptr;
 };
 
 struct TextureResource : public SamplerResource {
@@ -77,14 +77,14 @@ struct TextureResource : public SamplerResource {
                   int32_t                 InMipLevel = 0)
       : SamplerResource(InSamplerState)
       , m_texture(InTexture)
-      , MipLevel(InMipLevel) {}
+      , m_mipLevel_(InMipLevel) {}
 
   virtual ~TextureResource() {}
 
   virtual const void* GetResource() const override { return m_texture; }
 
-  const Texture* m_texture = nullptr;
-  const int32_t  MipLevel  = 0;
+  const Texture* m_texture   = nullptr;
+  const int32_t  m_mipLevel_ = 0;
 };
 
 struct TextureArrayResource : public ShaderBindingResource {
@@ -92,17 +92,17 @@ struct TextureArrayResource : public ShaderBindingResource {
 
   TextureArrayResource(const Texture** InTextureArray,
                        const int32_t   InNumOfTexure)
-      : TextureArray(InTextureArray)
-      , NumOfTexure(InNumOfTexure) {}
+      : m_textureArray_(InTextureArray)
+      , m_mumOfTexures_(InNumOfTexure) {}
 
   virtual ~TextureArrayResource() {}
 
-  virtual const void* GetResource() const override { return TextureArray; }
+  virtual const void* GetResource() const override { return m_textureArray_; }
 
-  virtual int32_t NumOfResource() const override { return NumOfTexure; }
+  virtual int32_t NumOfResource() const override { return m_mumOfTexures_; }
 
-  const Texture** TextureArray = nullptr;
-  const int32_t   NumOfTexure  = 1;
+  const Texture** m_textureArray_ = nullptr;
+  const int32_t   m_mumOfTexures_ = 1;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,33 +113,33 @@ struct UniformBufferResourceBindless : public ShaderBindingResource {
 
   UniformBufferResourceBindless(
       const std::vector<const IUniformBufferBlock*>& InUniformBuffers)
-      : UniformBuffers(InUniformBuffers) {}
+      : m_uniformBuffers_(InUniformBuffers) {}
 
   virtual ~UniformBufferResourceBindless() {}
 
-  virtual const void* GetResource(int32_t InIndex) const {
-    return UniformBuffers[InIndex];
+  virtual const void* GetResource(int32_t index) const {
+    return m_uniformBuffers_[index];
   }
 
   virtual int32_t GetNumOfResources() const {
-    return (int32_t)UniformBuffers.size();
+    return (int32_t)m_uniformBuffers_.size();
   }
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<const IUniformBufferBlock*> UniformBuffers;
+  std::vector<const IUniformBufferBlock*> m_uniformBuffers_;
 };
 
 struct BufferResourceBindless : public ShaderBindingResource {
   BufferResourceBindless() = default;
 
-  BufferResourceBindless(const std::vector<const Buffer*>& InBuffers)
-      : m_buffers(InBuffers) {}
+  BufferResourceBindless(const std::vector<const Buffer*>& buffers)
+      : m_buffers(buffers) {}
 
   virtual ~BufferResourceBindless() {}
 
-  virtual const void* GetResource(int32_t InIndex) const {
-    return m_buffers[InIndex];
+  virtual const void* GetResource(int32_t index) const {
+    return m_buffers[index];
   }
 
   virtual bool IsBindless() const { return true; }
@@ -152,17 +152,17 @@ struct SamplerResourceBindless : public ShaderBindingResource {
 
   SamplerResourceBindless(
       const std::vector<const SamplerStateInfo*>& InSamplerStates)
-      : SamplerStates(InSamplerStates) {}
+      : m_samplerStates_(InSamplerStates) {}
 
   virtual ~SamplerResourceBindless() {}
 
-  virtual const void* GetResource(int32_t InIndex) const {
-    return SamplerStates[InIndex];
+  virtual const void* GetResource(int32_t index) const {
+    return m_samplerStates_[index];
   }
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<const SamplerStateInfo*> SamplerStates;
+  std::vector<const SamplerStateInfo*> m_samplerStates_;
 };
 
 struct TextureResourceBindless : public ShaderBindingResource {
@@ -173,55 +173,55 @@ struct TextureResourceBindless : public ShaderBindingResource {
                     SamplerStateInfo* InSamplerState,
                     int32_t           InMipLevel = 0)
         : m_texture(InTexture)
-        , SamplerState(InSamplerState)
-        , MipLevel(InMipLevel) {}
+        , m_samplerState_(InSamplerState)
+        , m_mipLevel_(InMipLevel) {}
 
-    Texture*          m_texture    = nullptr;
-    SamplerStateInfo* SamplerState = nullptr;
-    int32_t           MipLevel     = 0;
+    Texture*          m_texture       = nullptr;
+    SamplerStateInfo* m_samplerState_ = nullptr;
+    int32_t           m_mipLevel_     = 0;
   };
 
   TextureResourceBindless() = default;
 
   TextureResourceBindless(const std::vector<TextureBindData>& InTextureBindData)
-      : TextureBindDatas(InTextureBindData) {}
+      : m_textureBindDatas_(InTextureBindData) {}
 
   virtual ~TextureResourceBindless() {}
 
-  virtual const void* GetResource(int32_t InIndex) const {
-    return &TextureBindDatas[0];
+  virtual const void* GetResource(int32_t index) const {
+    return &m_textureBindDatas_[0];
   }
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<TextureBindData> TextureBindDatas;
+  std::vector<TextureBindData> m_textureBindDatas_;
 };
 
 struct TextureArrayResourceBindless : public ShaderBindingResource {
   struct TextureArrayBindData {
-    Texture** TextureArray  = nullptr;
-    int32_t   InNumOfTexure = 0;
+    Texture** m_textureArray_ = nullptr;
+    int32_t   m_numOfTexure_  = 0;
   };
 
   TextureArrayResourceBindless() = default;
 
   TextureArrayResourceBindless(
       const std::vector<TextureArrayBindData>& InTextureArrayBindDatas)
-      : TextureArrayBindDatas(InTextureArrayBindDatas) {}
+      : m_textureArrayBindDatas_(InTextureArrayBindDatas) {}
 
   virtual ~TextureArrayResourceBindless() {}
 
-  virtual const void* GetResource(int32_t InIndex) const {
-    return &TextureArrayBindDatas[InIndex];
+  virtual const void* GetResource(int32_t index) const {
+    return &m_textureArrayBindDatas_[index];
   }
 
-  virtual int32_t NumOfResource(int32_t InIndex) const {
-    return TextureArrayBindDatas[InIndex].InNumOfTexure;
+  virtual int32_t NumOfResource(int32_t index) const {
+    return m_textureArrayBindDatas_[index].m_numOfTexure_;
   }
 
   virtual bool IsBindless() const { return true; }
 
-  std::vector<TextureArrayBindData> TextureArrayBindDatas;
+  std::vector<TextureArrayBindData> m_textureArrayBindDatas_;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -229,38 +229,40 @@ struct TextureArrayResourceBindless : public ShaderBindingResource {
 struct ShaderBindingResourceInlineAllocator {
   template <typename T, typename... T1>
   T* Alloc(T1... args) {
-    assert((Offset + sizeof(T)) < sizeof(Data));
+    assert((m_offset_ + sizeof(T)) < sizeof(m_data_));
 
-    T* AllocatedAddress  = new (&Data[0] + Offset) T(args...);
-    Offset              += sizeof(T);
+    T* AllocatedAddress  = new (&m_data_[0] + m_offset_) T(args...);
+    m_offset_           += sizeof(T);
     return AllocatedAddress;
   }
 
-  void Reset() { Offset = 0; }
+  void Reset() { m_offset_ = 0; }
 
-  uint8_t Data[1024];
-  int32_t Offset = 0;
+  uint8_t m_data_[1024];
+  int32_t m_offset_ = 0;
 };
 
 struct ShaderBinding {
-  static constexpr int32_t APPEND_LAST = -1;  // BindingPoint is appending last
+  // TODO: rename according to the convention
+  static constexpr int32_t s_kAppendLast
+      = -1;  // m_bindingPoint_ is appending last
 
   ShaderBinding() = default;
 
   ShaderBinding(const int32_t                InBindingPoint,
-                const int32_t                InNumOfDescriptors,
+                const int32_t                numOfDescriptors,
                 const EShaderBindingType     InBindingType,
                 const bool                   InIsBindless,
                 const EShaderAccessStageFlag InAccessStageFlags,
                 const ShaderBindingResource* InResource = nullptr,
                 bool                         InIsInline = false)
-      : BindingPoint(InBindingPoint)
-      , NumOfDescriptors(InNumOfDescriptors)
-      , BindingType(InBindingType)
-      , IsBindless(InIsBindless)
-      , AccessStageFlags(InAccessStageFlags)
-      , Resource(InResource)
-      , IsInline(InIsInline) {
+      : m_bindingPoint_(InBindingPoint)
+      , m_numOfDescriptors_(numOfDescriptors)
+      , m_bindingType_(InBindingType)
+      , m_isBindless_(InIsBindless)
+      , m_accessStageFlags_(InAccessStageFlags)
+      , m_resource_(InResource)
+      , m_isInline_(InIsInline) {
     // SubpassInputAttachment must have the stageflag 0.
     assert(EShaderBindingType::SUBPASS_INPUT_ATTACHMENT != InBindingType
            || InAccessStageFlags == EShaderAccessStageFlag::FRAGMENT);
@@ -273,111 +275,115 @@ struct ShaderBinding {
   }
 
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(IsInline,
-                                       BindingPoint,
-                                       NumOfDescriptors,
-                                       BindingType,
-                                       AccessStageFlags,
-                                       IsBindless);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_isInline_,
+                                          m_bindingPoint_,
+                                          m_numOfDescriptors_,
+                                          m_bindingType_,
+                                          m_accessStageFlags_,
+                                          m_isBindless_);
+    return m_hash_;
   }
 
   void CloneWithoutResource(ShaderBinding& OutReslut) const {
-    OutReslut.IsInline         = IsInline;
-    OutReslut.BindingPoint     = BindingPoint;
-    OutReslut.NumOfDescriptors = NumOfDescriptors;
-    OutReslut.BindingType      = BindingType;
-    OutReslut.AccessStageFlags = AccessStageFlags;
-    OutReslut.IsBindless       = IsBindless;
-    OutReslut.Hash             = Hash;
+    OutReslut.m_isInline_         = m_isInline_;
+    OutReslut.m_bindingPoint_     = m_bindingPoint_;
+    OutReslut.m_numOfDescriptors_ = m_numOfDescriptors_;
+    OutReslut.m_bindingType_      = m_bindingType_;
+    OutReslut.m_accessStageFlags_ = m_accessStageFlags_;
+    OutReslut.m_isBindless_       = m_isBindless_;
+    OutReslut.m_hash_             = m_hash_;
   }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  bool                   IsInline         = false;
-  bool                   IsBindless       = false;
-  int32_t                BindingPoint     = 0;
-  int32_t                NumOfDescriptors = 1;
-  EShaderBindingType     BindingType      = EShaderBindingType::UNIFORMBUFFER;
-  EShaderAccessStageFlag AccessStageFlags
+  bool                   m_isInline_         = false;
+  bool                   m_isBindless_       = false;
+  int32_t                m_bindingPoint_     = 0;
+  int32_t                m_numOfDescriptors_ = 1;
+  EShaderBindingType     m_bindingType_ = EShaderBindingType::UNIFORMBUFFER;
+  EShaderAccessStageFlag m_accessStageFlags_
       = EShaderAccessStageFlag::ALL_GRAPHICS;
 
-  const ShaderBindingResource* Resource = nullptr;
+  const ShaderBindingResource* m_resource_ = nullptr;
 };
 
 struct ShaderBindingArray {
-  static constexpr int32_t NumOfInlineData = 10;
+  // TODO: rename according to the convention
+  static constexpr int32_t s_kNumOfInlineData = 10;
 
   template <typename... T>
   void Add(T... args) {
     static_assert(std::is_trivially_copyable<ShaderBinding>::value,
                   "ShaderBinding should be trivially copyable");
 
-    assert(NumOfInlineData > NumOfData);
-    new (&Data[NumOfData]) ShaderBinding(args...);
-    ++NumOfData;
+    assert(s_kNumOfInlineData > m_numOfData_);
+    new (&m_data_[m_numOfData_]) ShaderBinding(args...);
+    ++m_numOfData_;
   }
 
   void Add(const ShaderBinding& args) {
     static_assert(std::is_trivially_copyable<ShaderBinding>::value,
                   "ShaderBinding should be trivially copyable");
 
-    assert(NumOfInlineData > NumOfData);
-    Data[NumOfData] = args;
-    ++NumOfData;
+    assert(s_kNumOfInlineData > m_numOfData_);
+    m_data_[m_numOfData_] = args;
+    ++m_numOfData_;
   }
 
   size_t GetHash() const {
-    size_t         Hash    = 0;
-    ShaderBinding* Address = (ShaderBinding*)&Data[0];
-    for (int32_t i = 0; i < NumOfData; ++i) {
-      Hash ^= ((Address + i)->GetHash() << i);
+    size_t         hash    = 0;
+    ShaderBinding* address = (ShaderBinding*)&m_data_[0];
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
+      hash ^= ((address + i)->GetHash() << i);
     }
-    return Hash;
+    return hash;
   }
 
   ShaderBindingArray& operator=(const ShaderBindingArray& In) {
-    memcpy(&Data[0], &In.Data[0], sizeof(ShaderBinding) * In.NumOfData);
-    NumOfData = In.NumOfData;
+    memcpy(
+        &m_data_[0], &In.m_data_[0], sizeof(ShaderBinding) * In.m_numOfData_);
+    m_numOfData_ = In.m_numOfData_;
     return *this;
   }
 
-  const ShaderBinding* operator[](int32_t InIndex) const {
-    assert(InIndex < NumOfData);
-    return (ShaderBinding*)(&Data[InIndex]);
+  const ShaderBinding* operator[](int32_t index) const {
+    assert(index < m_numOfData_);
+    return (ShaderBinding*)(&m_data_[index]);
   }
 
   void CloneWithoutResource(ShaderBindingArray& OutResult) const {
-    memcpy(&OutResult.Data[0], &Data[0], sizeof(ShaderBinding) * NumOfData);
+    memcpy(&OutResult.m_data_[0],
+           &m_data_[0],
+           sizeof(ShaderBinding) * m_numOfData_);
 
-    for (int32_t i = 0; i < NumOfData; ++i) {
-      ShaderBinding* SrcAddress = (ShaderBinding*)&Data[i];
-      ShaderBinding* DstAddress = (ShaderBinding*)&OutResult.Data[i];
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
+      ShaderBinding* SrcAddress = (ShaderBinding*)&m_data_[i];
+      ShaderBinding* DstAddress = (ShaderBinding*)&OutResult.m_data_[i];
       SrcAddress->CloneWithoutResource(*DstAddress);
     }
-    OutResult.NumOfData = NumOfData;
+    OutResult.m_numOfData_ = m_numOfData_;
   }
 
-  ShaderBinding Data[NumOfInlineData];
-  int32_t       NumOfData = 0;
+  ShaderBinding m_data_[s_kNumOfInlineData];
+  int32_t       m_numOfData_ = 0;
 };
 
 template <typename T>
 struct TShaderBinding : public ShaderBinding {
   TShaderBinding(const int32_t                InBindingPoint,
-                 const int32_t                InNumOfDescriptors,
+                 const int32_t                numOfDescriptors,
                  const EShaderBindingType     InBindingType,
                  const EShaderAccessStageFlag InAccessStageFlags,
-                 const T&                     InData)
+                 const T&                     data)
       : ShaderBinding(
-          InBindingPoint, InNumOfDescriptors, InBindingType, InAccessStageFlags)
-      , Data(InData) {}
+          InBindingPoint, numOfDescriptors, InBindingType, InAccessStageFlags)
+      , m_data_(data) {}
 
-  T Data = T();
+  T m_data_ = T();
 };
 
 // struct ShaderBindingArray {
@@ -395,17 +401,17 @@ struct TShaderBinding : public ShaderBinding {
 //   uint64_t    AllocateOffset = 0;
 //
 //   template <typename T>
-//   void Add(const TShaderBinding<T>& InShaderBinding) {
+//   void Add(const TShaderBinding<T>& shaderBinding) {
 //     const bool NotEnoughInlineStorage
-//         = (sizeof(Data) < AllocateOffset + sizeof(InShaderBinding));
+//         = (sizeof(Data) < AllocateOffset + sizeof(shaderBinding));
 //     if (NotEnoughInlineStorage) {
 //       // Allocate additional memory
 //       assert(0);
 //     }
 //
 //     memcpy(Data.GetAddress() + AllocateOffset,
-//            InShaderBinding,
-//            sizeof(InShaderBinding));
+//            shaderBinding,
+//            sizeof(shaderBinding));
 //   }
 // };
 
@@ -419,12 +425,13 @@ struct ShaderBindingInstance
     : public std::enable_shared_from_this<ShaderBindingInstance> {
   virtual ~ShaderBindingInstance() {}
 
-  const struct ShaderBindingLayout* ShaderBindingsLayouts = nullptr;
+  // TODO: check according to naming conventions
+  const struct ShaderBindingLayout* m_shaderBindingsLayouts_ = nullptr;
 
-  virtual void Initialize(const ShaderBindingArray& InShaderBindingArray) {}
+  virtual void Initialize(const ShaderBindingArray& shaderBindingArray) {}
 
   virtual void UpdateShaderBindings(
-      const ShaderBindingArray& InShaderBindingArray) {}
+      const ShaderBindingArray& shaderBindingArray) {}
 
   virtual void* GetHandle() const { return nullptr; }
 
@@ -434,17 +441,15 @@ struct ShaderBindingInstance
 
   virtual void Free() {}
 
-  virtual ShaderBindingInstanceType GetType() const { return Type; }
+  virtual ShaderBindingInstanceType GetType() const { return m_type_; }
 
-  virtual void SetType(const ShaderBindingInstanceType InType) {
-    Type = InType;
-  }
+  virtual void SetType(const ShaderBindingInstanceType type) { m_type_ = type; }
 
   private:
-  ShaderBindingInstanceType Type = ShaderBindingInstanceType::SingleFrame;
+  ShaderBindingInstanceType m_type_ = ShaderBindingInstanceType::SingleFrame;
 };
 
-// todo : MemStack for ShaderBindingInstanceArray to allocate fast memory
+// TODO: MemStack for ShaderBindingInstanceArray to allocate fast memory
 using ShaderBindingInstanceArray
     = ResourceContainer<const ShaderBindingInstance*>;
 using ShaderBindingInstancePtrArray
@@ -453,23 +458,23 @@ using ShaderBindingInstancePtrArray
 struct ShaderBindingLayout {
   virtual ~ShaderBindingLayout() {}
 
-  virtual bool Initialize(const ShaderBindingArray& InShaderBindingArray) {
+  virtual bool Initialize(const ShaderBindingArray& shaderBindingArray) {
     return false;
   }
 
   virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
-      const ShaderBindingArray&       InShaderBindingArray,
-      const ShaderBindingInstanceType InType) const {
+      const ShaderBindingArray&       shaderBindingArray,
+      const ShaderBindingInstanceType type) const {
     return nullptr;
   }
 
   virtual size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = m_shaderBindingArray_.GetHash();
-    return Hash;
+    m_hash_ = m_shaderBindingArray_.GetHash();
+    return m_hash_;
   }
 
   virtual const ShaderBindingArray& GetShaderBindingsLayout() const {
@@ -478,7 +483,7 @@ struct ShaderBindingLayout {
 
   virtual void* GetHandle() const { return nullptr; }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
   protected:
   ShaderBindingArray m_shaderBindingArray_;  // Resource information is empty
@@ -496,61 +501,62 @@ uint32_t GetCurrentFrameNumber();
 // inflighting GPU Data (ex. ShaderBindingInstance, IUniformBufferBlock)
 template <typename T>
 struct DeallocatorMultiFrameResource {
-  static constexpr int32_t NumOfFramesToWaitBeforeReleasing = 3;
+  // TODO: check if according to naming conventions
+  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
 
   struct PendingFreeData {
     PendingFreeData() = default;
 
-    PendingFreeData(int32_t InFrameIndex, std::shared_ptr<T> InDataPtr)
-        : FrameIndex(InFrameIndex)
-        , DataPtr(InDataPtr) {}
+    PendingFreeData(int32_t InFrameIndex, std::shared_ptr<T> dataPtr)
+        : m_frameIndex_(InFrameIndex)
+        , m_dataPtr_(dataPtr) {}
 
-    int32_t            FrameIndex = 0;
-    std::shared_ptr<T> DataPtr    = nullptr;
+    int32_t            m_frameIndex_ = 0;
+    std::shared_ptr<T> m_dataPtr_    = nullptr;
   };
 
-  std::vector<PendingFreeData> PendingFree;
-  int32_t                      CanReleasePendingFreeDataFrameNumber = 0;
-  std::function<void(std::shared_ptr<T>)> FreeDelegate;
+  std::vector<PendingFreeData> m_pendingFree_;
+  int32_t                      m_canReleasePendingFreeDataFrameNumber_ = 0;
+  std::function<void(std::shared_ptr<T>)> m_freeDelegate_;
 
-  void Free(std::shared_ptr<T> InDataPtr) {
+  void Free(std::shared_ptr<T> dataPtr) {
     const int32_t CurrentFrameNumber = test::GetCurrentFrameNumber();
     const int32_t OldestFrameToKeep
-        = CurrentFrameNumber - NumOfFramesToWaitBeforeReleasing;
+        = CurrentFrameNumber - s_kNumOfFramesToWaitBeforeReleasing;
 
     // ProcessPendingDescriptorPoolFree
     {
       // Check it is too early
-      if (CurrentFrameNumber >= CanReleasePendingFreeDataFrameNumber) {
+      if (CurrentFrameNumber >= m_canReleasePendingFreeDataFrameNumber_) {
         // Release pending memory
         int32_t i = 0;
-        for (; i < PendingFree.size(); ++i) {
-          PendingFreeData& pendingFreeData = PendingFree[i];
-          if (pendingFreeData.FrameIndex < OldestFrameToKeep) {
+        for (; i < m_pendingFree_.size(); ++i) {
+          PendingFreeData& pendingFreeData = m_pendingFree_[i];
+          if (pendingFreeData.m_frameIndex_ < OldestFrameToKeep) {
             // Return to pending descriptor set
-            if (FreeDelegate) {
-              FreeDelegate(pendingFreeData.DataPtr);
+            if (m_freeDelegate_) {
+              m_freeDelegate_(pendingFreeData.m_dataPtr_);
             }
           } else {
-            CanReleasePendingFreeDataFrameNumber
-                = pendingFreeData.FrameIndex + NumOfFramesToWaitBeforeReleasing
-                + 1;
+            m_canReleasePendingFreeDataFrameNumber_
+                = pendingFreeData.m_frameIndex_
+                + s_kNumOfFramesToWaitBeforeReleasing + 1;
             break;
           }
         }
         if (i > 0) {
-          const size_t RemainingSize = (PendingFree.size() - i);
+          const size_t RemainingSize = (m_pendingFree_.size() - i);
           if (RemainingSize > 0) {
             for (int32_t k = 0; k < RemainingSize; ++k) {
-              PendingFree[k] = PendingFree[i + k];
+              m_pendingFree_[k] = m_pendingFree_[i + k];
             }
           }
-          PendingFree.resize(RemainingSize);
+          m_pendingFree_.resize(RemainingSize);
         }
       }
     }
 
-    PendingFree.emplace_back(PendingFreeData(CurrentFrameNumber, InDataPtr));
+    m_pendingFree_.emplace_back(PendingFreeData(CurrentFrameNumber, dataPtr));
   }
 };
 

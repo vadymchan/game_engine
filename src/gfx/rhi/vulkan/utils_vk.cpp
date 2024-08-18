@@ -35,7 +35,7 @@ SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device,
 
   // Retrieve the basic surface capabilities.
   VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-      device, surface, &details.Capabilities);
+      device, surface, &details.m_capabilities_);
   if (result != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error,
                       "Failed to get physical device surface capabilities");
@@ -45,9 +45,9 @@ SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device,
   uint32_t formatCount;
   vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
   if (formatCount != 0) {
-    details.Formats.resize(formatCount);
+    details.m_formats_.resize(formatCount);
     vkGetPhysicalDeviceSurfaceFormatsKHR(
-        device, surface, &formatCount, details.Formats.data());
+        device, surface, &formatCount, details.m_formats_.data());
   }
 
   // Retrieve the supported presentation modes.
@@ -55,9 +55,9 @@ SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device,
   vkGetPhysicalDeviceSurfacePresentModesKHR(
       device, surface, &presentModeCount, nullptr);
   if (presentModeCount != 0) {
-    details.PresentModes.resize(presentModeCount);
+    details.m_presentModes_.resize(presentModeCount);
     vkGetPhysicalDeviceSurfacePresentModesKHR(
-        device, surface, &presentModeCount, details.PresentModes.data());
+        device, surface, &presentModeCount, details.m_presentModes_.data());
   }
 
   // Future expansions:
@@ -101,7 +101,7 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device,
        const auto& queueFamilyProperties : queueFamilies) {
     // Check for Graphics Queue Support
     if (queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      indices.GraphicsFamily = queueFamilyIndex;
+      indices.m_graphicsFamily_ = queueFamilyIndex;
     }
 
     // Check for Presentation Support
@@ -109,12 +109,12 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device,
     vkGetPhysicalDeviceSurfaceSupportKHR(
         device, queueFamilyIndex, surface, &supportsPresent);
     if (supportsPresent) {
-      indices.PresentFamily = queueFamilyIndex;
+      indices.m_presentFamily_ = queueFamilyIndex;
     }
 
     // Check for Compute Queue Support
     if (queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-      indices.ComputeFamily = queueFamilyIndex;
+      indices.m_computeFamily_ = queueFamilyIndex;
     }
 
     if (indices.IsComplete()) {
@@ -476,23 +476,23 @@ std::shared_ptr<TextureVk> CreateTexture2DArray(
                                     properties,
                                     imageLayout,
                                     imageCreateFlags,
-                                    TexturePtr->image,
-                                    TexturePtr->deviceMemory)) {
-    TexturePtr->type            = ETextureType::TEXTURE_2D_ARRAY;
-    TexturePtr->extent.width()  = width;
-    TexturePtr->extent.height() = height;
-    TexturePtr->layerCount      = arrayLayers;
-    TexturePtr->mipLevels       = mipLevels;
-    TexturePtr->sampleCount     = (EMSAASamples)numSamples;
-    TexturePtr->format          = GetVulkanTextureFormat(format);
-    TexturePtr->imageLayout     = GetVulkanImageLayout(imageLayout);
+                                    TexturePtr->m_image_,
+                                    TexturePtr->m_deviceMemory_)) {
+    TexturePtr->m_type_            = ETextureType::TEXTURE_2D_ARRAY;
+    TexturePtr->m_extent_.width()  = width;
+    TexturePtr->m_extent_.height() = height;
+    TexturePtr->m_layerCount_      = arrayLayers;
+    TexturePtr->m_mipLevels_       = mipLevels;
+    TexturePtr->m_sampleCount_     = (EMSAASamples)numSamples;
+    TexturePtr->m_format_          = GetVulkanTextureFormat(format);
+    TexturePtr->m_imageLayout_     = GetVulkanImageLayout(imageLayout);
 
-    const bool hasDepthAttachment = IsDepthFormat(TexturePtr->format);
+    const bool hasDepthAttachment = IsDepthFormat(TexturePtr->m_format_);
     const VkImageAspectFlagBits ImageAspectFlagBit
         = hasDepthAttachment ? VK_IMAGE_ASPECT_DEPTH_BIT
                              : VK_IMAGE_ASPECT_COLOR_BIT;
-    TexturePtr->imageView = CreateTextureView(
-        TexturePtr->image, format, ImageAspectFlagBit, mipLevels);
+    TexturePtr->m_imageView_ = CreateTextureView(
+        TexturePtr->m_image_, format, ImageAspectFlagBit, mipLevels);
   } else {
     GlobalLogger::Log(LogLevel::Error, "Failed to create 2D array texture");
   }
@@ -548,23 +548,23 @@ std::shared_ptr<TextureVk> Create2DTexture(
                                properties,
                                imageLayout,
                                imageCreateFlags,
-                               TexturePtr->image,
-                               TexturePtr->deviceMemory)) {
-    TexturePtr->type            = ETextureType::TEXTURE_2D;
-    TexturePtr->extent.width()  = width;
-    TexturePtr->extent.height() = height;
-    TexturePtr->layerCount      = 1;
-    TexturePtr->mipLevels       = mipLevels;
-    TexturePtr->sampleCount     = (EMSAASamples)numSamples;
-    TexturePtr->format          = GetVulkanTextureFormat(format);
-    TexturePtr->imageLayout     = GetVulkanImageLayout(imageLayout);
+                               TexturePtr->m_image_,
+                               TexturePtr->m_deviceMemory_)) {
+    TexturePtr->m_type_            = ETextureType::TEXTURE_2D;
+    TexturePtr->m_extent_.width()  = width;
+    TexturePtr->m_extent_.height() = height;
+    TexturePtr->m_layerCount_      = 1;
+    TexturePtr->m_mipLevels_       = mipLevels;
+    TexturePtr->m_sampleCount_     = (EMSAASamples)numSamples;
+    TexturePtr->m_format_          = GetVulkanTextureFormat(format);
+    TexturePtr->m_imageLayout_     = GetVulkanImageLayout(imageLayout);
 
-    const bool hasDepthAttachment = IsDepthFormat(TexturePtr->format);
+    const bool hasDepthAttachment = IsDepthFormat(TexturePtr->m_format_);
     const VkImageAspectFlagBits ImageAspectFlagBit
         = hasDepthAttachment ? VK_IMAGE_ASPECT_DEPTH_BIT
                              : VK_IMAGE_ASPECT_COLOR_BIT;
-    TexturePtr->imageView = CreateTextureView(
-        TexturePtr->image, format, ImageAspectFlagBit, mipLevels);
+    TexturePtr->m_imageView_ = CreateTextureView(
+        TexturePtr->m_image_, format, ImageAspectFlagBit, mipLevels);
   }
   return TexturePtr;
 }
@@ -620,23 +620,23 @@ std::shared_ptr<TextureVk> CreateCubeTexture(
                                  properties,
                                  imageCreateFlags,
                                  imageLayout,
-                                 TexturePtr->image,
-                                 TexturePtr->deviceMemory)) {
-    TexturePtr->type            = ETextureType::TEXTURE_CUBE;
-    TexturePtr->extent.width()  = width;
-    TexturePtr->extent.height() = height;
-    TexturePtr->layerCount      = 6;
-    TexturePtr->mipLevels       = mipLevels;
-    TexturePtr->sampleCount     = (EMSAASamples)numSamples;
-    TexturePtr->format          = GetVulkanTextureFormat(format);
-    TexturePtr->imageLayout     = GetVulkanImageLayout(imageLayout);
+                                 TexturePtr->m_image_,
+                                 TexturePtr->m_deviceMemory_)) {
+    TexturePtr->m_type_            = ETextureType::TEXTURE_CUBE;
+    TexturePtr->m_extent_.width()  = width;
+    TexturePtr->m_extent_.height() = height;
+    TexturePtr->m_layerCount_      = 6;
+    TexturePtr->m_mipLevels_       = mipLevels;
+    TexturePtr->m_sampleCount_     = (EMSAASamples)numSamples;
+    TexturePtr->m_format_          = GetVulkanTextureFormat(format);
+    TexturePtr->m_imageLayout_     = GetVulkanImageLayout(imageLayout);
 
-    const bool hasDepthAttachment = IsDepthFormat(TexturePtr->format);
+    const bool hasDepthAttachment = IsDepthFormat(TexturePtr->m_format_);
     const VkImageAspectFlagBits ImageAspectFlagBit
         = hasDepthAttachment ? VK_IMAGE_ASPECT_DEPTH_BIT
                              : VK_IMAGE_ASPECT_COLOR_BIT;
-    TexturePtr->imageView = CreateTextureCubeView(
-        TexturePtr->image, format, ImageAspectFlagBit, mipLevels);
+    TexturePtr->m_imageView_ = CreateTextureCubeView(
+        TexturePtr->m_image_, format, ImageAspectFlagBit, mipLevels);
   } else {
     GlobalLogger::Log(LogLevel::Error, "Failed to create cube texture");
   }
@@ -663,14 +663,14 @@ uint32_t FindMemoryType(VkPhysicalDevice      physicalDevice,
 
 size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
                              EVulkanMemoryBits InProperties,
-                             uint64_t          InSize,
+                             uint64_t          size,
                              VkBuffer&         OutBuffer,
                              VkDeviceMemory&   OutBufferMemory,
                              uint64_t&         OutAllocatedSize) {
-  assert(InSize);
+  assert(size);
   VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-  bufferInfo.size               = InSize;
+  bufferInfo.size               = size;
   bufferInfo.usage              = GetVulkanBufferBits(InUsage);
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -710,21 +710,21 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
 
 std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
                                        EVulkanMemoryBits InProperties,
-                                       uint64_t          InSize,
+                                       uint64_t          size,
                                        EResourceLayout   InResourceLayout) {
   auto BufferPtr            = std::make_shared<BufferVk>();
-  BufferPtr->RealBufferSize = InSize;
+  BufferPtr->m_realBufferSize_ = size;
 #if USE_VK_MEMORY_POOL
   assert(g_rhi->GetMemoryPool());
   const Memory& m_memory
-      = g_rhi->GetMemoryPool()->Alloc(InUsage, InProperties, InSize);
+      = g_rhi->GetMemoryPool()->Alloc(InUsage, InProperties, size);
   BufferPtr->InitializeWithMemory(m_memory);
 #else
   if (!CreateBuffer_LowLevel(g_rhi_vk->m_device_,
                              g_rhi_vk->m_physicalDevice_,
                              InUsage,
                              InProperties,
-                             InSize,
+                             size,
                              BufferPtr->m_buffer,
                              BufferPtr->m_deviceMemory,
                              BufferPtr->AllocatedSize)) {
@@ -744,7 +744,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
 
 // size_t AllocateBuffer(VkBufferUsageFlags    InUsage,
 //                       VkMemoryPropertyFlags InProperties,
-//                       uint64_t              InSize,
+//                       uint64_t              size,
 //                       BufferVk&             OutBuffer) {
 // #if USE_VK_MEMORY_POOL
 //// TODO: add memory pool logic
@@ -753,7 +753,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
 //                       g_rhi_vk->m_physicalDevice_,
 //                       InUsage,
 //                       InProperties,
-//                       InSize,
+//                       size,
 //                       OutBuffer.m_buffer,
 //                       OutBuffer.m_deviceMemory,
 //                       OutBuffer.AllocatedSize);
@@ -777,13 +777,13 @@ void CopyBuffer(VkCommandBuffer commandBuffer,
                 const BufferVk& srcBuffer,
                 const BufferVk& dstBuffer,
                 VkDeviceSize    size) {
-  assert(srcBuffer.AllocatedSize >= size && dstBuffer.AllocatedSize >= size);
+  assert(srcBuffer.m_allocatedSize_ >= size && dstBuffer.m_allocatedSize_ >= size);
   CopyBuffer(commandBuffer,
-             srcBuffer.m_buffer,
-             dstBuffer.m_buffer,
+             srcBuffer.m_buffer_,
+             dstBuffer.m_buffer_,
              size,
-             srcBuffer.Offset,
-             dstBuffer.Offset);
+             srcBuffer.m_offset_,
+             dstBuffer.m_offset_);
 }
 
 void CopyBufferToTexture(VkCommandBuffer commandBuffer,
@@ -830,14 +830,14 @@ void CopyBuffer(VkBuffer     srcBuffer,
 void CopyBuffer(const BufferVk& srcBuffer,
                 const BufferVk& dstBuffer,
                 VkDeviceSize    size) {
-  assert(srcBuffer.AllocatedSize >= size && dstBuffer.AllocatedSize >= size);
+  assert(srcBuffer.m_allocatedSize_ >= size && dstBuffer.m_allocatedSize_ >= size);
   auto* commandBuffer = g_rhi_vk->BeginSingleTimeCommands();
   CopyBuffer(commandBuffer->GetRef(),
-             srcBuffer.m_buffer,
-             dstBuffer.m_buffer,
+             srcBuffer.m_buffer_,
+             dstBuffer.m_buffer_,
              size,
-             srcBuffer.Offset,
-             dstBuffer.Offset);
+             srcBuffer.m_offset_,
+             dstBuffer.m_offset_);
   g_rhi_vk->EndSingleTimeCommands(commandBuffer);
 }
 

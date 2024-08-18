@@ -9,12 +9,12 @@ namespace game_engine {
 struct ShaderBindableResource {
   ShaderBindableResource() = default;
 
-  ShaderBindableResource(const Name& InName)
-      : ResourceName(InName) {}
+  ShaderBindableResource(const Name& name)
+      : m_resourceName_(name) {}
 
   virtual ~ShaderBindableResource() {}
 
-  Name ResourceName;
+  Name m_resourceName_;
 };
 
 }  // namespace game_engine

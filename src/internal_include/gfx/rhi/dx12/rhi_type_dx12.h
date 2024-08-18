@@ -118,9 +118,9 @@ inline auto GetDX12TexturePixelSize(ETextureFormat type) {
 
 // clang-format on
 
-inline ETextureType GetDX12TextureDemension(D3D12_RESOURCE_DIMENSION InType,
+inline ETextureType GetDX12TextureDemension(D3D12_RESOURCE_DIMENSION type,
                                             bool InIsArray) {
-  switch (InType) {
+  switch (type) {
     case D3D12_RESOURCE_DIMENSION_TEXTURE2D: {
       return InIsArray ? ETextureType::TEXTURE_2D_ARRAY
                        : ETextureType::TEXTURE_2D;
@@ -137,8 +137,8 @@ inline ETextureType GetDX12TextureDemension(D3D12_RESOURCE_DIMENSION InType,
   }
 }
 
-inline D3D12_RESOURCE_DIMENSION GetDX12TextureDemension(ETextureType InType) {
-  switch (InType) {
+inline D3D12_RESOURCE_DIMENSION GetDX12TextureDemension(ETextureType type) {
+  switch (type) {
     case ETextureType::TEXTURE_1D:
       return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
     case ETextureType::TEXTURE_2D:
@@ -522,8 +522,7 @@ GENERATE_CONVERSION_FUNCTION(GetDX12ResourceLayout,
 // clang-format on
 
 // Generated from CreateResource, CreateUploadResource
-struct CreatedResource
-    : public std::enable_shared_from_this<CreatedResource> {
+struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
   ~CreatedResource() { Free(); }
 
   enum class EType : uint8_t {
@@ -550,28 +549,28 @@ struct CreatedResource
         new CreatedResource(EType::Swapchain, InResource));
   }
 
-  EType                                   ResourceType = EType::Standalone;
-  // TODO: consider remove shared ptr and use pure Resource
-  std::shared_ptr<ComPtr<ID3D12Resource>> Resource;
+  bool IsValid() const { return m_resource_ && (*m_resource_).Get(); }
 
-  bool IsValid() const { return Resource && (*Resource).Get(); }
+  ID3D12Resource* Get() const { return m_resource_ ? (*m_resource_).Get() : nullptr; }
 
-  ID3D12Resource* Get() const { return Resource ? (*Resource).Get() : nullptr; }
-
-  const ComPtr<ID3D12Resource>& GetPtr() const { return *Resource; }
+  const ComPtr<ID3D12Resource>& GetPtr() const { return *m_resource_; }
 
   uint64_t GetGPUVirtualAddress() const {
-    return Resource ? (*Resource)->GetGPUVirtualAddress() : 0;
+    return m_resource_ ? (*m_resource_)->GetGPUVirtualAddress() : 0;
   }
 
   void Free();
 
+  EType                                   m_resourceType_ = EType::Standalone;
+  // TODO: consider remove shared ptr and use pure Resource
+  std::shared_ptr<ComPtr<ID3D12Resource>> m_resource_;
+
   private:
   CreatedResource() {}
 
-  CreatedResource(EType InType, const ComPtr<ID3D12Resource>& InResource)
-      : ResourceType(InType)
-      , Resource(std::make_shared<ComPtr<ID3D12Resource>>(InResource)) {}
+  CreatedResource(EType type, const ComPtr<ID3D12Resource>& InResource)
+      : m_resourceType_(type)
+      , m_resource_(std::make_shared<ComPtr<ID3D12Resource>>(InResource)) {}
 
   // prevent copying
   CreatedResource(const CreatedResource&)            = delete;

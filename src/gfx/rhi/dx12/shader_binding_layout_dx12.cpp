@@ -6,8 +6,8 @@
 namespace game_engine {
 
 std::unordered_map<size_t, ComPtr<ID3D12RootSignature>>
-            ShaderBindingLayoutDx12::GRootSignaturePool;
-MutexRWLock ShaderBindingLayoutDx12::GRootSignatureLock;
+            ShaderBindingLayoutDx12::s_rootSignaturePool;
+MutexRWLock ShaderBindingLayoutDx12::s_rootSignatureLock;
 
 // Below option will be work like switch
 #define FORCE_USE_DESCRIPTOR_OFFSET_BY_USING_AUTO_CALCULATION_FOR_BINDLESS 1
@@ -17,32 +17,32 @@ MutexRWLock ShaderBindingLayoutDx12::GRootSignatureLock;
 void RootParameterExtractor::Extract(
     int32_t&                   InOutDescriptorOffset,
     int32_t&                   InOutSamplerDescriptorOffset,
-    const ShaderBindingArray& InShaderBindingArray,
+    const ShaderBindingArray& shaderBindingArray,
     int32_t                    InRegisterSpace) {
   // Always place inline descriptors at the very beginning of InRootParameters.
   int32_t BindingIndex = 0;  // To support both APIs (Vulkan, DX12): Vulkan
                              // requires a unique binding index.
 
-  for (int32_t i = 0; i < InShaderBindingArray.NumOfData; ++i) {
-    const ShaderBinding* shaderBinding = InShaderBindingArray[i];
-    const bool            IsBindless    = shaderBinding->IsBindless;
+  for (int32_t i = 0; i < shaderBindingArray.m_numOfData_; ++i) {
+    const ShaderBinding* shaderBinding = shaderBindingArray[i];
+    const bool            IsBindless    = shaderBinding->m_isBindless_;
 
     assert(
-        !shaderBinding->IsInline
-        || (shaderBinding->IsInline
-            && (shaderBinding->BindingType == EShaderBindingType::UNIFORMBUFFER
-                || shaderBinding->BindingType
+        !shaderBinding->m_isInline_
+        || (shaderBinding->m_isInline_
+            && (shaderBinding->m_bindingType_ == EShaderBindingType::UNIFORMBUFFER
+                || shaderBinding->m_bindingType_
                        == EShaderBindingType::UNIFORMBUFFER_DYNAMIC
-                || shaderBinding->BindingType == EShaderBindingType::BUFFER_SRV
-                || shaderBinding->BindingType
+                || shaderBinding->m_bindingType_ == EShaderBindingType::BUFFER_SRV
+                || shaderBinding->m_bindingType_
                        == EShaderBindingType::ACCELERATION_STRUCTURE_SRV
-                || shaderBinding->BindingType
+                || shaderBinding->m_bindingType_
                        == EShaderBindingType::BUFFER_UAV)));
 
-    switch (shaderBinding->BindingType) {
+    switch (shaderBinding->m_bindingType_) {
       case EShaderBindingType::UNIFORMBUFFER:
       case EShaderBindingType::UNIFORMBUFFER_DYNAMIC: {
-        if (shaderBinding->IsInline) {
+        if (shaderBinding->m_isInline_) {
           D3D12_ROOT_PARAMETER1 rootParameter = {};
           rootParameter.ParameterType         = D3D12_ROOT_PARAMETER_TYPE_CBV;
           rootParameter.ShaderVisibility      = D3D12_SHADER_VISIBILITY_ALL;
@@ -50,11 +50,11 @@ void RootParameterExtractor::Extract(
               = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC;
           rootParameter.Descriptor.ShaderRegister = BindingIndex;
           rootParameter.Descriptor.RegisterSpace  = InRegisterSpace;
-          RootParameters.emplace_back(rootParameter);
+          m_rootParameters_.emplace_back(rootParameter);
         } else {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->m_numOfDescriptors_;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -75,11 +75,11 @@ void RootParameterExtractor::Extract(
             range.Flags
                 = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
           }
-          InOutDescriptorOffset += shaderBinding->NumOfDescriptors;
-          Descriptors.emplace_back(range);
+          InOutDescriptorOffset += shaderBinding->m_numOfDescriptors_;
+          m_descriptors_.emplace_back(range);
         }
 
-        BindingIndex += shaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->m_numOfDescriptors_;
         break;
       }
       case EShaderBindingType::TEXTURE_SAMPLER_SRV:
@@ -88,9 +88,9 @@ void RootParameterExtractor::Extract(
       case EShaderBindingType::BUFFER_SRV:
       case EShaderBindingType::BUFFER_TEXEL_SRV:
       case EShaderBindingType::ACCELERATION_STRUCTURE_SRV: {
-        if (shaderBinding->IsInline
-            && (shaderBinding->BindingType == EShaderBindingType::BUFFER_SRV
-                || shaderBinding->BindingType
+        if (shaderBinding->m_isInline_
+            && (shaderBinding->m_bindingType_ == EShaderBindingType::BUFFER_SRV
+                || shaderBinding->m_bindingType_
                        == EShaderBindingType::ACCELERATION_STRUCTURE_SRV)) {
           D3D12_ROOT_PARAMETER1 rootParameter = {};
           rootParameter.ParameterType         = D3D12_ROOT_PARAMETER_TYPE_SRV;
@@ -99,11 +99,11 @@ void RootParameterExtractor::Extract(
               = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
           rootParameter.Descriptor.ShaderRegister = BindingIndex;
           rootParameter.Descriptor.RegisterSpace  = InRegisterSpace;
-          RootParameters.emplace_back(rootParameter);
+          m_rootParameters_.emplace_back(rootParameter);
         } else {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->m_numOfDescriptors_;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -124,18 +124,18 @@ void RootParameterExtractor::Extract(
             range.Flags
                 = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
           }
-          InOutDescriptorOffset += shaderBinding->NumOfDescriptors;
-          Descriptors.emplace_back(range);
+          InOutDescriptorOffset += shaderBinding->m_numOfDescriptors_;
+          m_descriptors_.emplace_back(range);
         }
 
         // TODO: Since Texture Sampler SRV defines both Texture and Sampler
         // simultaneously, add Sampler here. Need to consider not using it since
         // it's a Vulkan syntax.
-        if (shaderBinding->BindingType
+        if (shaderBinding->m_bindingType_
             == EShaderBindingType::TEXTURE_SAMPLER_SRV) {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->m_numOfDescriptors_;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -157,20 +157,20 @@ void RootParameterExtractor::Extract(
 #endif
             range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
           }
-          InOutSamplerDescriptorOffset += shaderBinding->NumOfDescriptors;
-          SamplerDescriptors.emplace_back(range);
+          InOutSamplerDescriptorOffset += shaderBinding->m_numOfDescriptors_;
+          m_samplerDescriptors_.emplace_back(range);
 
           // SamplerIndex += shaderBinding->NumOfDescriptors;
         }
 
-        BindingIndex += shaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->m_numOfDescriptors_;
         break;
       }
       case EShaderBindingType::TEXTURE_UAV:
       case EShaderBindingType::BUFFER_UAV:
       case EShaderBindingType::BUFFER_UAV_DYNAMIC:
       case EShaderBindingType::BUFFER_TEXEL_UAV: {
-        if (shaderBinding->IsInline) {
+        if (shaderBinding->m_isInline_) {
           D3D12_ROOT_PARAMETER1 rootParameter = {};
           rootParameter.ParameterType         = D3D12_ROOT_PARAMETER_TYPE_UAV;
           rootParameter.ShaderVisibility      = D3D12_SHADER_VISIBILITY_ALL;
@@ -178,11 +178,11 @@ void RootParameterExtractor::Extract(
               = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_VOLATILE;
           rootParameter.Descriptor.ShaderRegister = BindingIndex;
           rootParameter.Descriptor.RegisterSpace  = InRegisterSpace;
-          RootParameters.emplace_back(rootParameter);
+          m_rootParameters_.emplace_back(rootParameter);
         } else {
           D3D12_DESCRIPTOR_RANGE1 range = {};
           range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-          range.NumDescriptors          = shaderBinding->NumOfDescriptors;
+          range.NumDescriptors          = shaderBinding->m_numOfDescriptors_;
           range.BaseShaderRegister      = BindingIndex;
           range.RegisterSpace           = InRegisterSpace;
           if (IsBindless) {
@@ -202,17 +202,17 @@ void RootParameterExtractor::Extract(
 #endif
             range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
           }
-          InOutDescriptorOffset += shaderBinding->NumOfDescriptors;
-          Descriptors.emplace_back(range);
+          InOutDescriptorOffset += shaderBinding->m_numOfDescriptors_;
+          m_descriptors_.emplace_back(range);
         }
 
-        BindingIndex += shaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->m_numOfDescriptors_;
         break;
       }
       case EShaderBindingType::SAMPLER: {
         D3D12_DESCRIPTOR_RANGE1 range = {};
         range.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-        range.NumDescriptors          = shaderBinding->NumOfDescriptors;
+        range.NumDescriptors          = shaderBinding->m_numOfDescriptors_;
         range.BaseShaderRegister      = BindingIndex;
         range.RegisterSpace           = InRegisterSpace;
         if (IsBindless) {
@@ -234,10 +234,10 @@ void RootParameterExtractor::Extract(
 #endif
           range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
         }
-        InOutSamplerDescriptorOffset += shaderBinding->NumOfDescriptors;
-        SamplerDescriptors.emplace_back(range);
+        InOutSamplerDescriptorOffset += shaderBinding->m_numOfDescriptors_;
+        m_samplerDescriptors_.emplace_back(range);
 
-        BindingIndex += shaderBinding->NumOfDescriptors;
+        BindingIndex += shaderBinding->m_numOfDescriptors_;
         break;
       }
       case EShaderBindingType::SUBPASS_INPUT_ATTACHMENT:
@@ -254,7 +254,7 @@ void RootParameterExtractor::Extract(
     int32_t                          InRegisterSpace /*= 0*/) {
   int32_t InOutDescriptorOffset        = 0;
   int32_t InOutSamplerDescriptorOffset = 0;
-  for (int32_t i = 0; i < InBindingLayoutArray.NumOfData; ++i) {
+  for (int32_t i = 0; i < InBindingLayoutArray.m_numOfData_; ++i) {
     ShaderBindingLayoutDx12* Layout
         = (ShaderBindingLayoutDx12*)InBindingLayoutArray[i];
     assert(Layout);
@@ -265,26 +265,26 @@ void RootParameterExtractor::Extract(
             i);
   }
 
-  NumOfInlineRootParameter = (int32_t)RootParameters.size();
+  m_numOfInlineRootParameter_ = (int32_t)m_rootParameters_.size();
 
-  if (Descriptors.size() > 0) {
+  if (m_descriptors_.size() > 0) {
     D3D12_ROOT_PARAMETER1 rootParameter = {};
     rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameter.DescriptorTable.NumDescriptorRanges
-        = (uint32_t)Descriptors.size();
-    rootParameter.DescriptorTable.pDescriptorRanges = &Descriptors[0];
-    RootParameters.emplace_back(rootParameter);
+        = (uint32_t)m_descriptors_.size();
+    rootParameter.DescriptorTable.pDescriptorRanges = &m_descriptors_[0];
+    m_rootParameters_.emplace_back(rootParameter);
   }
 
-  if (SamplerDescriptors.size() > 0) {
+  if (m_samplerDescriptors_.size() > 0) {
     D3D12_ROOT_PARAMETER1 rootParameter = {};
     rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameter.DescriptorTable.NumDescriptorRanges
-        = (uint32_t)SamplerDescriptors.size();
-    rootParameter.DescriptorTable.pDescriptorRanges = &SamplerDescriptors[0];
-    RootParameters.emplace_back(rootParameter);
+        = (uint32_t)m_samplerDescriptors_.size();
+    rootParameter.DescriptorTable.pDescriptorRanges = &m_samplerDescriptors_[0];
+    m_rootParameters_.emplace_back(rootParameter);
   }
 }
 
@@ -293,14 +293,14 @@ void RootParameterExtractor::Extract(
     int32_t                            InRegisterSpace /*= 0*/) {
   int32_t InOutDescriptorOffset        = 0;
   int32_t InOutSamplerDescriptorOffset = 0;
-  for (int32_t i = 0; i < InBindingInstanceArray.NumOfData; ++i) {
+  for (int32_t i = 0; i < InBindingInstanceArray.m_numOfData_; ++i) {
     ShaderBindingInstanceDx12* Instance
         = (ShaderBindingInstanceDx12*)InBindingInstanceArray[i];
     assert(Instance);
-    assert(Instance->ShaderBindingsLayouts);
+    assert(Instance->m_shaderBindingsLayouts_);
 
     ShaderBindingLayoutDx12* Layout
-        = (ShaderBindingLayoutDx12*)Instance->ShaderBindingsLayouts;
+        = (ShaderBindingLayoutDx12*)Instance->m_shaderBindingsLayouts_;
     assert(Layout);
     Extract(InOutDescriptorOffset,
             InOutSamplerDescriptorOffset,
@@ -308,64 +308,64 @@ void RootParameterExtractor::Extract(
             i);
   }
 
-  NumOfInlineRootParameter = (int32_t)RootParameters.size();
+  m_numOfInlineRootParameter_ = (int32_t)m_rootParameters_.size();
 
-  if (Descriptors.size() > 0) {
+  if (m_descriptors_.size() > 0) {
     D3D12_ROOT_PARAMETER1 rootParameter = {};
     rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameter.DescriptorTable.NumDescriptorRanges
-        = (uint32_t)Descriptors.size();
-    rootParameter.DescriptorTable.pDescriptorRanges = &Descriptors[0];
-    RootParameters.emplace_back(rootParameter);
+        = (uint32_t)m_descriptors_.size();
+    rootParameter.DescriptorTable.pDescriptorRanges = &m_descriptors_[0];
+    m_rootParameters_.emplace_back(rootParameter);
   }
 
-  if (SamplerDescriptors.size() > 0) {
+  if (m_samplerDescriptors_.size() > 0) {
     D3D12_ROOT_PARAMETER1 rootParameter = {};
     rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameter.DescriptorTable.NumDescriptorRanges
-        = (uint32_t)SamplerDescriptors.size();
-    rootParameter.DescriptorTable.pDescriptorRanges = &SamplerDescriptors[0];
-    RootParameters.emplace_back(rootParameter);
+        = (uint32_t)m_samplerDescriptors_.size();
+    rootParameter.DescriptorTable.pDescriptorRanges = &m_samplerDescriptors_[0];
+    m_rootParameters_.emplace_back(rootParameter);
   }
 }
 
 bool ShaderBindingLayoutDx12::Initialize(
-    const ShaderBindingArray& InShaderBindingArray) {
-  InShaderBindingArray.CloneWithoutResource(m_shaderBindingArray_);
+    const ShaderBindingArray& shaderBindingArray) {
+  shaderBindingArray.CloneWithoutResource(m_shaderBindingArray_);
 
   return true;
 }
 
 std::shared_ptr<ShaderBindingInstance>
     ShaderBindingLayoutDx12::CreateShaderBindingInstance(
-        const ShaderBindingArray&       InShaderBindingArray,
-        const ShaderBindingInstanceType InType) const {
+        const ShaderBindingArray&       shaderBindingArray,
+        const ShaderBindingInstanceType type) const {
   auto shaderBindingInstance = new ShaderBindingInstanceDx12();
-  shaderBindingInstance->ShaderBindingsLayouts = this;
-  shaderBindingInstance->Initialize(InShaderBindingArray);
-  shaderBindingInstance->SetType(InType);
+  shaderBindingInstance->m_shaderBindingsLayouts_ = this;
+  shaderBindingInstance->Initialize(shaderBindingArray);
+  shaderBindingInstance->SetType(type);
 
   return std::shared_ptr<ShaderBindingInstance>(shaderBindingInstance);
 }
 
 ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
-    size_t InHash, FuncGetRootParameterExtractor InFunc) {
+    size_t hash, FuncGetRootParameterExtractor InFunc) {
   {
-    ScopeReadLock sr(&GRootSignatureLock);
-    auto          it_find = GRootSignaturePool.find(InHash);
-    if (GRootSignaturePool.end() != it_find) {
+    ScopeReadLock sr(&s_rootSignatureLock);
+    auto          it_find = s_rootSignaturePool.find(hash);
+    if (s_rootSignaturePool.end() != it_find) {
       return it_find->second.Get();
     }
   }
 
   {
-    ScopeWriteLock sw(&GRootSignatureLock);
+    ScopeWriteLock sw(&s_rootSignatureLock);
 
     // Try again, to avoid entering creation section simultaneously.
-    auto it_find = GRootSignaturePool.find(InHash);
-    if (GRootSignaturePool.end() != it_find) {
+    auto it_find = s_rootSignaturePool.find(hash);
+    if (s_rootSignaturePool.end() != it_find) {
       return it_find->second.Get();
     }
 
@@ -375,8 +375,8 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
     // Create RootSignature
     D3D12_ROOT_SIGNATURE_DESC1 rootSignatureDesc = {};
     rootSignatureDesc.NumParameters
-        = static_cast<uint32_t>(DescriptorExtractor.RootParameters.size());
-    rootSignatureDesc.pParameters = DescriptorExtractor.RootParameters.data();
+        = static_cast<uint32_t>(DescriptorExtractor.m_rootParameters_.size());
+    rootSignatureDesc.pParameters = DescriptorExtractor.m_rootParameters_.data();
     rootSignatureDesc.NumStaticSamplers = 0;
     rootSignatureDesc.pStaticSamplers   = nullptr;
     rootSignatureDesc.Flags
@@ -405,7 +405,7 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
 
     ComPtr<ID3D12RootSignature> RootSignature;
     HRESULT                     hr_create
-        = g_rhi_dx12->Device->CreateRootSignature(0,
+        = g_rhi_dx12->m_device_->CreateRootSignature(0,
                                                   signature->GetBufferPointer(),
                                                   signature->GetBufferSize(),
                                                   IID_PPV_ARGS(&RootSignature));
@@ -415,21 +415,21 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
       return nullptr;
     }
 
-    GRootSignaturePool[InHash] = RootSignature;
+    s_rootSignaturePool[hash] = RootSignature;
     return RootSignature.Get();
   }
 }
 
 ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
     const ShaderBindingInstanceArray& InBindingInstanceArray) {
-  if (InBindingInstanceArray.NumOfData <= 0) {
+  if (InBindingInstanceArray.m_numOfData_ <= 0) {
     return nullptr;
   }
 
   size_t hash = 0;
-  for (int32_t i = 0; i < InBindingInstanceArray.NumOfData; ++i) {
+  for (int32_t i = 0; i < InBindingInstanceArray.m_numOfData_; ++i) {
     ShaderBindingLayoutArray::GetHash(
-        hash, i, InBindingInstanceArray[i]->ShaderBindingsLayouts);
+        hash, i, InBindingInstanceArray[i]->m_shaderBindingsLayouts_);
   }
 
   return CreateRootSignatureInternal(
@@ -442,7 +442,7 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
 
 ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
     const ShaderBindingLayoutArray& InBindingLayoutArray) {
-  if (InBindingLayoutArray.NumOfData <= 0) {
+  if (InBindingLayoutArray.m_numOfData_ <= 0) {
     return nullptr;
   }
 

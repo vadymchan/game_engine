@@ -27,8 +27,8 @@ namespace game_engine {
     static constexpr int  Count        = std::size(Value); \
   };
 
-// Shader Permutation. by using Shader Permutation Define, generate permutation
-// of defines and convert it to permutation id.
+// Shader Permutation. by using Shader Permutation Define, generate m_permutation_
+// of defines and convert it to m_permutation_ id.
 template <typename... T>
 class Permutation {
   public:
@@ -132,16 +132,16 @@ class Permutation<T, T1...> : public Permutation<T1...> {
 struct ShaderInfo {
   ShaderInfo() = default;
 
-  ShaderInfo(Name                   InName,
-             Name                   InShaderFilepath,
+  ShaderInfo(Name                   name,
+             Name                   shaderFilepath,
              Name                   InPreProcessors,
              Name                   InEntryPoint,
-             EShaderAccessStageFlag InShaderType)
-      : name(InName)
-      , ShaderFilepath(InShaderFilepath)
-      , PreProcessors(InPreProcessors)
-      , EntryPoint(InEntryPoint)
-      , ShaderType(InShaderType) {}
+             EShaderAccessStageFlag shaderType)
+      : m_name_(name)
+      , m_shaderFilepath_(shaderFilepath)
+      , m_preProcessors_(InPreProcessors)
+      , m_entryPoint_(InEntryPoint)
+      , m_shaderType_(shaderType) {}
 
   void Initialize() {}
 
@@ -150,75 +150,75 @@ struct ShaderInfo {
       return Hash;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(name.GetNameHash(),
-                                       ShaderFilepath.GetNameHash(),
-                                       PreProcessors.GetNameHash(),
-                                       EntryPoint.GetNameHash(),
-                                       ShaderType,
-                                       PermutationId);
+    Hash = GETHASH_FROM_INSTANT_STRUCT(m_name_.GetNameHash(),
+                                       m_shaderFilepath_.GetNameHash(),
+                                       m_preProcessors_.GetNameHash(),
+                                       m_entryPoint_.GetNameHash(),
+                                       m_shaderType_,
+                                       m_permutationId_);
     return Hash;
   }
 
   mutable size_t Hash = 0;
 
-  const Name& GetName() const { return name; }
+  const Name& GetName() const { return m_name_; }
 
-  const Name& GetShaderFilepath() const { return ShaderFilepath; }
+  const Name& GetShaderFilepath() const { return m_shaderFilepath_; }
 
-  const Name& GetPreProcessors() const { return PreProcessors; }
+  const Name& GetPreProcessors() const { return m_preProcessors_; }
 
-  const Name& GetEntryPoint() const { return EntryPoint; }
+  const Name& GetEntryPoint() const { return m_entryPoint_; }
 
-  const EShaderAccessStageFlag GetShaderType() const { return ShaderType; }
+  const EShaderAccessStageFlag GetShaderType() const { return m_shaderType_; }
 
-  const uint32_t& GetPermutationId() const { return PermutationId; }
+  const uint32_t& GetPermutationId() const { return m_permutationId_; }
 
   const std::vector<Name>& GetIncludeShaderFilePaths() const {
-    return IncludeShaderFilePaths;
+    return m_includeShaderFilePaths_;
   }
 
-  void SetName(const Name& InName) {
-    name = InName;
+  void SetName(const Name& name) {
+    m_name_ = name;
     Hash = 0;
   }
 
-  void SetShaderFilepath(const Name& InShaderFilepath) {
-    ShaderFilepath = InShaderFilepath;
+  void SetShaderFilepath(const Name& shaderFilepath) {
+    m_shaderFilepath_ = shaderFilepath;
     Hash           = 0;
   }
 
   void SetPreProcessors(const Name& InPreProcessors) {
-    PreProcessors = InPreProcessors;
+    m_preProcessors_ = InPreProcessors;
     Hash          = 0;
   }
 
   void SetEntryPoint(const Name& InEntryPoint) {
-    EntryPoint = InEntryPoint;
+    m_entryPoint_ = InEntryPoint;
     Hash       = 0;
   }
 
-  void SetShaderType(const EShaderAccessStageFlag InShaderType) {
-    ShaderType = InShaderType;
+  void SetShaderType(const EShaderAccessStageFlag shaderType) {
+    m_shaderType_ = shaderType;
     Hash       = 0;
   }
 
   void SetPermutationId(const uint32_t InPermutationId) {
-    PermutationId = InPermutationId;
+    m_permutationId_ = InPermutationId;
     Hash          = 0;
   }
 
-  void SetIncludeShaderFilePaths(const std::vector<Name>& InPaths) {
-    IncludeShaderFilePaths = InPaths;
+  void SetIncludeShaderFilePaths(const std::vector<Name>& paths) {
+    m_includeShaderFilePaths_ = paths;
   }
 
   private:
-  Name                   name;
-  Name                   PreProcessors;
-  Name                   EntryPoint = Name("main");
-  Name                   ShaderFilepath;
-  std::vector<Name>      IncludeShaderFilePaths;
-  EShaderAccessStageFlag ShaderType    = (EShaderAccessStageFlag)0;
-  uint32_t               PermutationId = 0;
+  Name                   m_name_;
+  Name                   m_preProcessors_;
+  Name                   m_entryPoint_ = Name("main");
+  Name                   m_shaderFilepath_;
+  std::vector<Name>      m_includeShaderFilePaths_;
+  EShaderAccessStageFlag m_shaderType_    = (EShaderAccessStageFlag)0;
+  uint32_t               m_permutationId_ = 0;
 };
 
 struct CompiledShader {
@@ -226,16 +226,17 @@ struct CompiledShader {
 };
 
 struct Shader {
-  static bool                 IsRunningCheckUpdateShaderThread;
-  static std::thread          CheckUpdateShaderThread;
-  static std::vector<Shader*> WaitForUpdateShaders;
+  // TODO: consider renaming 
+  static bool                 s_isRunningCheckUpdateShaderThread;
+  static std::thread          s_checkUpdateShaderThread;
+  static std::vector<Shader*> s_waitForUpdateShaders;
   static std::map<const Shader*, std::vector<size_t>>
-      gConnectedPipelineStateHash;
+      s_connectedPipelineStateHash;
 
   Shader() {}
 
   Shader(const ShaderInfo& shaderInfo)
-      : shaderInfo(shaderInfo) {}
+      : m_shaderInfo_(shaderInfo) {}
 
   virtual ~Shader();
 
@@ -245,8 +246,8 @@ struct Shader {
   bool         UpdateShader();
   virtual void Initialize();
 
-  uint64_t   TimeStamp = 0;
-  ShaderInfo shaderInfo;
+  uint64_t   m_timeStamp_ = 0;
+  ShaderInfo m_shaderInfo_;
 
   CompiledShader* GetCompiledShader() const { return m_compiledShader; }
 
@@ -262,6 +263,7 @@ struct Shader {
   // TODO: add abstraction (should be related to Vulkan)
 };
 
+// TODO: refactor
 #define DECLARE_SHADER_WITH_PERMUTATION(ShaderClass, PermutationVariable) \
   public:                                                                 \
   static ShaderInfo   GShaderInfo;                                        \
@@ -288,9 +290,9 @@ struct ShaderForwardPixelShader : public Shader {
 
   using ShaderPermutation
       = Permutation</*USE_VARIABLE_SHADING_RATE,*/ USE_REVERSEZ>;
-  ShaderPermutation permutation;
+  ShaderPermutation m_permutation_;
 
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, permutation)
+  DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, m_permutation_)
 };
 
 struct ShaderGBufferVertexShader : public Shader {
@@ -303,9 +305,9 @@ struct ShaderGBufferVertexShader : public Shader {
                                         USE_VERTEX_BITANGENT,
                                         USE_ALBEDO_TEXTURE,
                                         USE_SPHERICAL_MAP>;
-  ShaderPermutation permutation;
+  ShaderPermutation m_permutation_;
 
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, permutation)
+  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, m_permutation_)
 };
 
 struct ShaderGBufferPixelShader : public Shader {
@@ -321,9 +323,9 @@ struct ShaderGBufferPixelShader : public Shader {
                                         USE_SRGB_ALBEDO_TEXTURE,
                                         /*USE_VARIABLE_SHADING_RATE,*/
                                         USE_PBR>;
-  ShaderPermutation permutation;
+  ShaderPermutation m_permutation_;
 
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, permutation)
+  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, m_permutation_)
 };
 
 // TODO: currently not used
@@ -333,10 +335,10 @@ struct ShaderGBufferPixelShader : public Shader {
 //  DECLARE_DEFINE(USE_PBR, 0, 1);
 //
 //  using ShaderPermutation = Permutation<USE_SUBPASS, USE_SHADOW_MAP,
-//  USE_PBR>; ShaderPermutation permutation;
+//  USE_PBR>; ShaderPermutation m_permutation_;
 //
 //  DECLARE_SHADER_WITH_PERMUTATION(ShaderDirectionalLightPixelShader,
-//                                  permutation)
+//                                  m_permutation_)
 //};
 //
 // struct ShaderPointLightPixelShader : public Shader {
@@ -345,9 +347,9 @@ struct ShaderGBufferPixelShader : public Shader {
 //  DECLARE_DEFINE(USE_PBR, 0, 1);
 //
 //  using ShaderPermutation = Permutation<USE_SUBPASS, USE_SHADOW_MAP,
-//  USE_PBR>; ShaderPermutation permutation;
+//  USE_PBR>; ShaderPermutation m_permutation_;
 //
-//  DECLARE_SHADER_WITH_PERMUTATION(ShaderPointLightPixelShader, permutation)
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderPointLightPixelShader, m_permutation_)
 //};
 //
 // struct ShaderSpotLightPixelShader : public Shader {
@@ -358,15 +360,15 @@ struct ShaderGBufferPixelShader : public Shader {
 //
 //  using ShaderPermutation
 //      = Permutation<USE_SUBPASS, USE_SHADOW_MAP, USE_REVERSEZ, USE_PBR>;
-//  ShaderPermutation permutation;
+//  ShaderPermutation m_permutation_;
 //
-//  DECLARE_SHADER_WITH_PERMUTATION(ShaderSpotLightPixelShader, permutation)
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderSpotLightPixelShader, m_permutation_)
 //};
 
 struct GraphicsPipelineShader {
-  Shader* VertexShader   = nullptr;
-  Shader* GeometryShader = nullptr;
-  Shader* PixelShader    = nullptr;
+  Shader* m_vertexShader_   = nullptr;
+  Shader* m_geometryShader_ = nullptr;
+  Shader* m_pixelShader_    = nullptr;
 
   size_t GetHash() const;
 };

@@ -5,8 +5,8 @@
 namespace game_engine {
 
 std::map<size_t, std::list<FrameBufferPool::FrameBufferPoolResource> >
-                                FrameBufferPool::FrameBufferResourceMap;
-std::map<FrameBuffer*, size_t> FrameBufferPool::FrameBufferHashVariableMap;
+                                FrameBufferPool::s_frameBufferResourceMap;
+std::map<FrameBuffer*, size_t> FrameBufferPool::s_frameBufferHashVariableMap;
 
 //struct Texture* FrameBufferPool::GetNullTexture(ETextureType type) {
 //  switch (type) {
@@ -43,13 +43,13 @@ std::shared_ptr<FrameBuffer> FrameBufferPool::GetFrameBuffer(
     const FrameBufferInfo& info) {
   auto hash = info.GetHash();
 
-  auto it_find = FrameBufferResourceMap.find(hash);
-  if (FrameBufferResourceMap.end() != it_find) {
+  auto it_find = s_frameBufferResourceMap.find(hash);
+  if (s_frameBufferResourceMap.end() != it_find) {
     auto& renderTargets = it_find->second;
     for (auto& iter : renderTargets) {
-      if (!iter.IsUsing) {
-        iter.IsUsing = true;
-        return iter.FrameBufferPtr;
+      if (!iter.m_isUsing_) {
+        iter.m_isUsing_ = true;
+        return iter.m_frameBufferPtr_;
       }
     }
   }
@@ -57,23 +57,23 @@ std::shared_ptr<FrameBuffer> FrameBufferPool::GetFrameBuffer(
   auto renderTargetPtr
       = std::shared_ptr<FrameBuffer>(g_rhi->CreateFrameBuffer(info));
   if (renderTargetPtr) {
-    FrameBufferResourceMap[hash].push_back({true, renderTargetPtr});
-    FrameBufferHashVariableMap[renderTargetPtr.get()] = hash;
+    s_frameBufferResourceMap[hash].push_back({true, renderTargetPtr});
+    s_frameBufferHashVariableMap[renderTargetPtr.get()] = hash;
   }
 
   return renderTargetPtr;
 }
 
 void FrameBufferPool::ReturnFrameBuffer(FrameBuffer* renderTarget) {
-  auto it_find = FrameBufferHashVariableMap.find(renderTarget);
-  if (FrameBufferHashVariableMap.end() == it_find) {
+  auto it_find = s_frameBufferHashVariableMap.find(renderTarget);
+  if (s_frameBufferHashVariableMap.end() == it_find) {
     return;
   }
 
   const size_t hash = it_find->second;
-  for (auto& iter : FrameBufferResourceMap[hash]) {
-    if (renderTarget == iter.FrameBufferPtr.get()) {
-      iter.IsUsing = false;
+  for (auto& iter : s_frameBufferResourceMap[hash]) {
+    if (renderTarget == iter.m_frameBufferPtr_.get()) {
+      iter.m_isUsing_ = false;
       break;
     }
   }

@@ -16,59 +16,60 @@ BufferVk::BufferVk(VkDeviceSize      size,
                    EVulkanBufferBits usage,
                    EVulkanMemoryBits properties,
                    EResourceLayout   imageLayout)
-    : m_size(size)
-    , Layout(imageLayout) {
+    : m_size_(size)
+    , m_layout_(imageLayout) {
   CreateBuffer(usage, properties, size, imageLayout);
 }
 
 void BufferVk::InitializeWithMemory(const Memory& InMemory) {
   assert(InMemory.IsValid());
-  HasBufferOwnership = false;
-  m_buffer           = (VkBuffer)InMemory.GetBuffer();
-  MappedPointer      = InMemory.GetMappedPointer();
-  m_deviceMemory           = (VkDeviceMemory)InMemory.GetMemory();
-  Offset             = InMemory.m_range.Offset;
-  AllocatedSize      = InMemory.m_range.DataSize;
-  m_memory             = InMemory;
+  m_hasBufferOwnership_ = false;
+  m_buffer_             = (VkBuffer)InMemory.GetBuffer();
+  m_mappedPointer_      = InMemory.GetMappedPointer();
+  m_deviceMemory_       = (VkDeviceMemory)InMemory.GetMemory();
+  m_offset_             = InMemory.m_range.m_offset_;
+  m_allocatedSize_      = InMemory.m_range.m_dataSize_;
+  m_memory_             = InMemory;
 }
 
 void BufferVk::Release() {
   // TODO: currently not deleted correctly
 
-  if (!HasBufferOwnership) {
+  if (!m_hasBufferOwnership_) {
     // Return an allocated memory to vulkan memory pool
-    if (m_memory.IsValid()) {
-      m_memory.Free();
+    if (m_memory_.IsValid()) {
+      m_memory_.Free();
     }
 
     return;
   }
 
-  if (m_buffer != VK_NULL_HANDLE) {
-    vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer, nullptr);
+  if (m_buffer_ != VK_NULL_HANDLE) {
+    vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer_, nullptr);
   }
-  if (m_deviceMemory != VK_NULL_HANDLE) {
-    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory, nullptr);
+  if (m_deviceMemory_ != VK_NULL_HANDLE) {
+    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory_, nullptr);
   }
 
-  m_deviceMemory = nullptr;
+  m_deviceMemory_ = nullptr;
 
-  AllocatedSize = 0;
-  MappedPointer = nullptr;
+  m_allocatedSize_ = 0;
+  m_mappedPointer_ = nullptr;
 }
 
 void* BufferVk::Map(uint64_t offset, uint64_t size) {
-  if (!HasBufferOwnership || MappedPointer) {
+  if (!m_hasBufferOwnership_ || m_mappedPointer_) {
     return nullptr;
   }
-  if (size > AllocatedSize) {
+  if (size > m_allocatedSize_) {
     GlobalLogger::Log(
         LogLevel::Error,
         "Failed to map buffer: Invalid buffer ownership or already mapped");
     return nullptr;
   }
-  vkMapMemory(g_rhi_vk->m_device_, m_deviceMemory, offset, size, 0, &MappedPointer);
-  return MappedPointer;
+  vkMapMemory(
+      g_rhi_vk->m_device_, m_deviceMemory_, offset, size, 0, &m_mappedPointer_);
+  return m_mappedPointer_;
 }
 
 void* BufferVk::Map() {
@@ -76,15 +77,15 @@ void* BufferVk::Map() {
 }
 
 void BufferVk::Unmap() {
-  if (!HasBufferOwnership || !MappedPointer) {
+  if (!m_hasBufferOwnership_ || !m_mappedPointer_) {
     return;
   }
-  vkUnmapMemory(g_rhi_vk->m_device_, m_deviceMemory);
-  MappedPointer = nullptr;
+  vkUnmapMemory(g_rhi_vk->m_device_, m_deviceMemory_);
+  m_mappedPointer_ = nullptr;
 }
 
 void BufferVk::UpdateBuffer(const void* data, uint64_t size) {
-  if (size > AllocatedSize) {
+  if (size > m_allocatedSize_) {
     GlobalLogger::Log(
         LogLevel::Error,
         "Failed to map buffer: Requested size is larger than allocated size");
@@ -94,7 +95,7 @@ void BufferVk::UpdateBuffer(const void* data, uint64_t size) {
   // Check if the buffer is part of a larger memory management system
   // (e.g., pooled memory). This example assumes that BufferVk owns its
   // memory.
-  if (HasBufferOwnership) {
+  if (m_hasBufferOwnership_) {
     void* ptr = Map(0, size);
     if (ptr) {
       memcpy(ptr, data, size);
@@ -106,8 +107,8 @@ void BufferVk::UpdateBuffer(const void* data, uint64_t size) {
     // For buffers that don't own their memory, write directly to the mapped
     // memory. This assumes that void* is valid and points to the
     // correct memory region.
-    if (MappedPointer) {
-      memcpy(static_cast<uint8_t*>(MappedPointer) + Offset, data, size);
+    if (m_mappedPointer_) {
+      memcpy(static_cast<uint8_t*>(m_mappedPointer_) + m_offset_, data, size);
     } else {
       GlobalLogger::Log(LogLevel::Error,
                         "Buffer is not mapped or does not own its memory");
@@ -119,11 +120,11 @@ void BufferVk::UpdateBuffer(const void* data, uint64_t size) {
 // ================================================================================
 
 void VertexBufferVk::BindInfo::Reset() {
-  InputBindingDescriptions.clear();
-  AttributeDescriptions.clear();
-  m_buffers.clear();
-  Offsets.clear();
-  StartBindingIndex = 0;
+  m_inputBindingDescriptions_.clear();
+  m_attributeDescriptions_.clear();
+  m_buffers_.clear();
+  m_offsets_.clear();
+  m_startBindingIndex_ = 0;
 }
 
 VkPipelineVertexInputStateCreateInfo
@@ -138,27 +139,27 @@ VkPipelineVertexInputStateCreateInfo
       = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
   vertexInputInfo.vertexBindingDescriptionCount
-      = (uint32_t)InputBindingDescriptions.size();
-  vertexInputInfo.pVertexBindingDescriptions = &InputBindingDescriptions[0];
+      = (uint32_t)m_inputBindingDescriptions_.size();
+  vertexInputInfo.pVertexBindingDescriptions = &m_inputBindingDescriptions_[0];
   vertexInputInfo.vertexAttributeDescriptionCount
-      = (uint32_t)AttributeDescriptions.size();
+      = (uint32_t)m_attributeDescriptions_.size();
   ;
-  vertexInputInfo.pVertexAttributeDescriptions = &AttributeDescriptions[0];
+  vertexInputInfo.pVertexAttributeDescriptions = &m_attributeDescriptions_[0];
 
   return vertexInputInfo;
 }
 
 void VertexBufferVk::Bind(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
   vkCmdBindVertexBuffers(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+      (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
           ->GetNativeHandle(),
-      m_bindInfos.StartBindingIndex,
-      (uint32_t)m_bindInfos.m_buffers.size(),
-      &m_bindInfos.m_buffers[0],
-      &m_bindInfos.Offsets[0]);
+      m_bindInfos_.m_startBindingIndex_,
+      (uint32_t)m_bindInfos_.m_buffers_.size(),
+      &m_bindInfos_.m_buffers_[0],
+      &m_bindInfos_.m_offsets_[0]);
 }
 
 bool VertexBufferVk::Initialize(
@@ -167,24 +168,24 @@ bool VertexBufferVk::Initialize(
     return false;
   }
 
-  vertexStreamData = InStreamData;
-  m_bindInfos.Reset();
-  m_bindInfos.StartBindingIndex = InStreamData->bindingIndex;
+  m_vertexStreamData_ = InStreamData;
+  m_bindInfos_.Reset();
+  m_bindInfos_.m_startBindingIndex_ = InStreamData->m_bindingIndex_;
 
   std::list<uint32_t> buffers;
-  int32_t             locationIndex = InStreamData->startLocation;
-  int32_t             bindingIndex  = InStreamData->bindingIndex;
-  for (const auto& iter : InStreamData->streams) {
-    if (iter->Stride <= 0) {
+  int32_t             locationIndex = InStreamData->m_startLocation_;
+  int32_t             bindingIndex  = InStreamData->m_bindingIndex_;
+  for (const auto& iter : InStreamData->m_streams_) {
+    if (iter->m_stride_ <= 0) {
       continue;
     }
 
     VertexStreamVk stream;
     // TODO: consider use buffer type from iter
-    stream.BufferType = EBufferType::Static;
-    stream.name       = iter->name;
-    stream.Stride     = iter->Stride;
-    stream.Offset     = 0;
+    stream.m_bufferType_ = EBufferType::Static;
+    stream.m_name_       = iter->m_name_;
+    stream.m_stride_     = iter->m_stride_;
+    stream.m_offset_     = 0;
 
     if (iter->GetBufferSize() > 0) {
       // TODO: old code (remove)
@@ -232,13 +233,14 @@ bool VertexBufferVk::Initialize(
       // stagingBuffer.Release();
 
       // m_bindInfos.m_buffers.push_back(stream.BufferPtr->m_buffer);
-      // m_bindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
+      // m_bindInfos.Offsets.push_back(stream.Offset +
+      // stream.BufferPtr->Offset);
 
       VkDeviceSize bufferSize = iter->GetBufferSize();
-      stream.BufferPtr        = g_rhi->CreateStructuredBuffer<BufferVk>(
+      stream.m_bufferPtr_     = g_rhi->CreateStructuredBuffer<BufferVk>(
           bufferSize,
-          stream.Stride,
-          stream.Stride,
+          stream.m_stride_,
+          stream.m_stride_,
           EBufferCreateFlag::VertexBuffer
               | EBufferCreateFlag::AccelerationStructureBuildInput
               | EBufferCreateFlag::UAV,
@@ -246,21 +248,21 @@ bool VertexBufferVk::Initialize(
           iter->GetBufferData(),
           bufferSize);
 
-      m_bindInfos.m_buffers.push_back(stream.BufferPtr->m_buffer);
-      m_bindInfos.Offsets.push_back(stream.Offset + stream.BufferPtr->Offset);
+      m_bindInfos_.m_buffers_.push_back(stream.m_bufferPtr_->m_buffer_);
+      m_bindInfos_.m_offsets_.push_back(stream.m_offset_ + stream.m_bufferPtr_->m_offset_);
     }
 
     /////////////////////////////////////////////////////////////
     VkVertexInputBindingDescription bindingDescription = {};
     // All data is in one array, so the binding index is 0
     bindingDescription.binding = bindingIndex;
-    bindingDescription.stride  = iter->Stride;
+    bindingDescription.stride  = iter->m_stride_;
 
     // VK_VERTEX_INPUT_RATE_VERTEX : go to next data for each vertex
     // VK_VERTEX_INPUT_RATE_INSTANCE : go to next data for each instance
     bindingDescription.inputRate
-        = GetVulkanVertexInputRate(InStreamData->VertexInputRate);
-    m_bindInfos.InputBindingDescriptions.push_back(bindingDescription);
+        = GetVulkanVertexInputRate(InStreamData->m_vertexInputRate_);
+    m_bindInfos_.m_inputBindingDescriptions_.push_back(bindingDescription);
     /////////////////////////////////////////////////////////////
 
     // for (const IBufferAttribute::Attribute& element : iter->Attributes) {
@@ -274,15 +276,15 @@ bool VertexBufferVk::Initialize(
     //  ++locationIndex;
     //}
 
-    for (IBufferAttribute::Attribute& element : iter->Attributes) {
+    for (IBufferAttribute::Attribute& element : iter->m_attributes_) {
       VkVertexInputAttributeDescription attributeDescription = {};
       attributeDescription.binding                           = bindingIndex;
       attributeDescription.location                          = locationIndex;
 
       VkFormat AttrFormat = VK_FORMAT_UNDEFINED;
-      switch (element.UnderlyingType) {
+      switch (element.m_underlyingType_) {
         case EBufferElementType::BYTE: {
-          const int32_t elementCount = element.stride / sizeof(char);
+          const int32_t elementCount = element.m_stride_ / sizeof(char);
           switch (elementCount) {
             case 1:
               AttrFormat = VK_FORMAT_R8_SINT;
@@ -303,7 +305,7 @@ bool VertexBufferVk::Initialize(
           break;
         }
         case EBufferElementType::BYTE_UNORM: {
-          const int32_t elementCount = element.stride / sizeof(char);
+          const int32_t elementCount = element.m_stride_ / sizeof(char);
           switch (elementCount) {
             case 1:
               AttrFormat = VK_FORMAT_R8_UNORM;
@@ -324,7 +326,7 @@ bool VertexBufferVk::Initialize(
           break;
         }
         case EBufferElementType::UINT16: {
-          const int32_t elementCount = element.stride / sizeof(uint16_t);
+          const int32_t elementCount = element.m_stride_ / sizeof(uint16_t);
           switch (elementCount) {
             case 1:
               AttrFormat = VK_FORMAT_R16_UINT;
@@ -345,7 +347,7 @@ bool VertexBufferVk::Initialize(
           break;
         }
         case EBufferElementType::UINT32: {
-          const int32_t elementCount = element.stride / sizeof(uint32_t);
+          const int32_t elementCount = element.m_stride_ / sizeof(uint32_t);
           switch (elementCount) {
             case 1:
               AttrFormat = VK_FORMAT_R32_UINT;
@@ -366,7 +368,7 @@ bool VertexBufferVk::Initialize(
           break;
         }
         case EBufferElementType::FLOAT: {
-          const int32_t elementCount = element.stride / sizeof(float);
+          const int32_t elementCount = element.m_stride_ / sizeof(float);
           switch (elementCount) {
             case 1:
               AttrFormat = VK_FORMAT_R32_SFLOAT;
@@ -400,14 +402,14 @@ bool VertexBufferVk::Initialize(
       // 32-bit unsigned integers double: VK_FORMAT_R64_SFLOAT, a
       // double-precision (64-bit) float
       attributeDescription.format = AttrFormat;
-      attributeDescription.offset = element.offset;
-      m_bindInfos.AttributeDescriptions.push_back(attributeDescription);
+      attributeDescription.offset = element.m_offset_;
+      m_bindInfos_.m_attributeDescriptions_.push_back(attributeDescription);
 
       ++locationIndex;
     }
 
     /////////////////////////////////////////////////////////////
-    Streams.emplace_back(stream);
+    m_streams_.emplace_back(stream);
 
     ++bindingIndex;
   }
@@ -416,13 +418,13 @@ bool VertexBufferVk::Initialize(
 
 VkPipelineInputAssemblyStateCreateInfo
     VertexBufferVk::CreateInputAssemblyState() const {
-  assert(vertexStreamData != nullptr);  // TODO: consider remove
+  assert(m_vertexStreamData_ != nullptr);  // TODO: consider remove
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
   inputAssembly.sType
       = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   inputAssembly.topology
-      = GetVulkanPrimitiveTopology(vertexStreamData->PrimitiveType);
+      = GetVulkanPrimitiveTopology(m_vertexStreamData_->m_primitiveType_);
 
   // If the primitiveRestartEnable option is VK_TRUE, line and triangle
   // topology modes can be used by using a special index 0xFFFF or 0xFFFFFFFF
@@ -436,18 +438,18 @@ void VertexBufferVk::CreateVertexInputState(
     VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
     std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
     std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
-    const VertexBufferArray&                       InVertexBufferArray) {
-  for (int32_t i = 0; i < InVertexBufferArray.NumOfData; ++i) {
+    const VertexBufferArray&                        vertexBufferArray) {
+  for (int32_t i = 0; i < vertexBufferArray.m_numOfData_; ++i) {
     // TODO: consider replace assertion
-    assert(InVertexBufferArray[i] != nullptr);
+    assert(vertexBufferArray[i] != nullptr);
     const auto& bindInfo
-        = ((const VertexBufferVk*)InVertexBufferArray[i])->m_bindInfos;
+        = ((const VertexBufferVk*)vertexBufferArray[i])->m_bindInfos_;
     OutBindingDescriptions.insert(OutBindingDescriptions.end(),
-                                  bindInfo.InputBindingDescriptions.begin(),
-                                  bindInfo.InputBindingDescriptions.end());
+                                  bindInfo.m_inputBindingDescriptions_.begin(),
+                                  bindInfo.m_inputBindingDescriptions_.end());
     OutAttributeDescriptions.insert(OutAttributeDescriptions.end(),
-                                    bindInfo.AttributeDescriptions.begin(),
-                                    bindInfo.AttributeDescriptions.end());
+                                    bindInfo.m_attributeDescriptions_.begin(),
+                                    bindInfo.m_attributeDescriptions_.end());
   }
 
   OutVertexInputInfo.sType
@@ -464,7 +466,7 @@ void VertexBufferVk::CreateVertexInputState(
 // IndexBufferVk
 // ================================================================================
 void IndexBufferVk::Bind(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
   // TODO: old code (remove)
   // assert(indexStreamData->stream->Attributes.size() != 0);
   // VkIndexType IndexType
@@ -485,33 +487,32 @@ void IndexBufferVk::Bind(
   //     // TODO: log error
   //     break;
   // }
-  // assert(InRenderFrameContext);
-  // assert(InRenderFrameContext->GetActiveCommandBuffer());
+  // assert(renderFrameContext);
+  // assert(renderFrameContext->GetActiveCommandBuffer());
   // vkCmdBindIndexBuffer(
-  //     (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+  //     (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
   //         ->GetNativeHandle(),
   //     BufferPtr->m_buffer,
   //     BufferPtr->Offset,
   //     IndexType);
 
-  assert(indexStreamData->stream->Attributes.size() != 0);
+  assert(m_indexStreamData_->m_stream_->m_attributes_.size() != 0);
 
-  assert(InRenderFrameContext);
-  assert(InRenderFrameContext->GetActiveCommandBuffer());
+  assert(renderFrameContext);
+  assert(renderFrameContext->GetActiveCommandBuffer());
   const VkIndexType IndexType = GetVulkanIndexFormat(
-      indexStreamData->stream->Attributes[0].UnderlyingType);
+      m_indexStreamData_->m_stream_->m_attributes_[0].m_underlyingType_);
   vkCmdBindIndexBuffer(
-      (VkCommandBuffer)InRenderFrameContext->GetActiveCommandBuffer()
+      (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
           ->GetNativeHandle(),
-      BufferPtr->m_buffer,
-      BufferPtr->Offset,
+      m_bufferPtr_->m_buffer_,
+      m_bufferPtr_->m_offset_,
       IndexType);
 }
 
-VkIndexType IndexBufferVk::GetVulkanIndexFormat(
-    EBufferElementType InType) const {
+VkIndexType IndexBufferVk::GetVulkanIndexFormat(EBufferElementType type) const {
   VkIndexType IndexType = VK_INDEX_TYPE_UINT32;
-  switch (InType) {
+  switch (type) {
     case EBufferElementType::BYTE:
       IndexType = VK_INDEX_TYPE_UINT8_EXT;
       break;
@@ -530,8 +531,8 @@ VkIndexType IndexBufferVk::GetVulkanIndexFormat(
   return IndexType;
 }
 
-uint32_t IndexBufferVk::GetVulkanIndexStride(EBufferElementType InType) const {
-  switch (InType) {
+uint32_t IndexBufferVk::GetVulkanIndexStride(EBufferElementType type) const {
+  switch (type) {
     case EBufferElementType::BYTE:
       return 1;
     case EBufferElementType::UINT16:
@@ -554,8 +555,8 @@ bool IndexBufferVk::Initialize(
     return false;
   }
 
-  indexStreamData         = InStreamData;
-  VkDeviceSize bufferSize = InStreamData->stream->GetBufferSize();
+  m_indexStreamData_      = InStreamData;
+  VkDeviceSize bufferSize = InStreamData->m_stream_->GetBufferSize();
 
   // TODO: remove (old code)
   // BufferVk stagingBuffer;
@@ -581,14 +582,14 @@ bool IndexBufferVk::Initialize(
   const EBufferCreateFlag BufferCreateFlag
       = EBufferCreateFlag::IndexBuffer | EBufferCreateFlag::UAV
       | EBufferCreateFlag::AccelerationStructureBuildInput;
-  BufferPtr = g_rhi->CreateStructuredBuffer<BufferVk>(
+  m_bufferPtr_ = g_rhi->CreateStructuredBuffer<BufferVk>(
       bufferSize,
       0,
       GetVulkanIndexStride(
-          indexStreamData->stream->Attributes[0].UnderlyingType),
+          m_indexStreamData_->m_stream_->m_attributes_[0].m_underlyingType_),
       BufferCreateFlag,
       EResourceLayout::TRANSFER_DST,
-      InStreamData->stream->GetBufferData(),
+      InStreamData->m_stream_->GetBufferData(),
       bufferSize
       /*, TEXT("IndexBuffer")*/);
 

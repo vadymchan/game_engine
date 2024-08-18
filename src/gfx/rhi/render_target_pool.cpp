@@ -7,8 +7,8 @@ namespace game_engine {
 // std::shared_ptr<RenderTarget> g_EyeAdaptationBRTPtr;
 
 std::map<size_t, std::list<RenderTargetPool::RenderTargetPoolResource> >
-                                 RenderTargetPool::RenderTargetResourceMap;
-std::map<RenderTarget*, size_t> RenderTargetPool::RenderTargetHashVariableMap;
+                                 RenderTargetPool::m_renderTargetResourceMap_;
+std::map<RenderTarget*, size_t> RenderTargetPool::m_renderTargetHashVariableMap_;
 
 // struct Texture* RenderTargetPool::GetNullTexture(ETextureType type) {
 //   static std::shared_ptr<RenderTarget> RTPtr
@@ -27,37 +27,37 @@ std::shared_ptr<RenderTarget> RenderTargetPool::GetRenderTarget(
     const RenderTargetInfo& info) {
   auto hash = info.GetHash();
 
-  auto it_find = RenderTargetResourceMap.find(hash);
-  if (RenderTargetResourceMap.end() != it_find) {
+  auto it_find = m_renderTargetResourceMap_.find(hash);
+  if (m_renderTargetResourceMap_.end() != it_find) {
     auto& renderTargets = it_find->second;
     for (auto& iter : renderTargets) {
-      if (!iter.IsUsing) {
-        iter.IsUsing = true;
-        return iter.RenderTargetPtr;
+      if (!iter.m_isUsing_) {
+        iter.m_isUsing_ = true;
+        return iter.m_renderTargetPtr_;
       }
     }
   }
 
   auto renderTargetPtr = g_rhi->CreateRenderTarget(info);
   if (renderTargetPtr) {
-    renderTargetPtr->bCreatedFromRenderTargetPool = true;
-    RenderTargetResourceMap[hash].push_back({true, renderTargetPtr});
-    RenderTargetHashVariableMap[renderTargetPtr.get()] = hash;
+    renderTargetPtr->m_isCreatedFromRenderTargetPool_ = true;
+    m_renderTargetResourceMap_[hash].push_back({true, renderTargetPtr});
+    m_renderTargetHashVariableMap_[renderTargetPtr.get()] = hash;
   }
 
   return renderTargetPtr;
 }
 
 void RenderTargetPool::ReturnRenderTarget(RenderTarget* renderTarget) {
-  auto it_find = RenderTargetHashVariableMap.find(renderTarget);
-  if (RenderTargetHashVariableMap.end() == it_find) {
+  auto it_find = m_renderTargetHashVariableMap_.find(renderTarget);
+  if (m_renderTargetHashVariableMap_.end() == it_find) {
     return;
   }
 
   const size_t hash = it_find->second;
-  for (auto& iter : RenderTargetResourceMap[hash]) {
-    if (renderTarget == iter.RenderTargetPtr.get()) {
-      iter.IsUsing = false;
+  for (auto& iter : m_renderTargetResourceMap_[hash]) {
+    if (renderTarget == iter.m_renderTargetPtr_.get()) {
+      iter.m_isUsing_ = false;
       break;
     }
   }

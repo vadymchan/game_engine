@@ -4,8 +4,8 @@
 namespace game_engine {
 
 CompiledShaderDx12::~CompiledShaderDx12() {
-  ShaderBlob.Reset();
-  ShaderBlob = nullptr;
+  m_shaderBlob_.Reset();
+  m_shaderBlob_ = nullptr;
 }
 
 

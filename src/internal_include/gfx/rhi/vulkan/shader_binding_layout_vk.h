@@ -25,11 +25,11 @@ namespace game_engine {
 struct WriteDescriptorInfo {
   WriteDescriptorInfo() = default;
 
-  WriteDescriptorInfo(VkDescriptorBufferInfo InBufferInfo)
-      : BufferInfo(InBufferInfo) {}
+  WriteDescriptorInfo(VkDescriptorBufferInfo bufferInfo)
+      : m_bufferInfo_(bufferInfo) {}
 
   WriteDescriptorInfo(VkDescriptorImageInfo InImageInfo)
-      : ImageInfo(InImageInfo) {}
+      : m_imageInfo_(InImageInfo) {}
 
   // Raytracing (WIP)
   // WriteDescriptorInfo(
@@ -37,8 +37,8 @@ struct WriteDescriptorInfo {
   //     InAccelerationStructureInfo) :
   //     AccelerationStructureInfo(InAccelerationStructureInfo) {}
 
-  VkDescriptorBufferInfo BufferInfo{};
-  VkDescriptorImageInfo  ImageInfo{};
+  VkDescriptorBufferInfo m_bufferInfo_{};
+  VkDescriptorImageInfo  m_imageInfo_{};
   // Raytracing (WIP)
   // VkWriteDescriptorSetAccelerationStructureKHR AccelerationStructureInfo{};
 };
@@ -46,14 +46,14 @@ struct WriteDescriptorInfo {
 struct WriteDescriptorSet {
   void Reset();
 
-  void SetWriteDescriptorInfo(int32_t               InIndex,
-                              const ShaderBinding* InShaderBinding);
+  void SetWriteDescriptorInfo(int32_t               index,
+                              const ShaderBinding* shaderBinding);
 
-  bool                              IsInitialized = false;
-  std::vector<WriteDescriptorInfo>  WriteDescriptorInfos;
+  bool                              m_isInitialized_ = false;
+  std::vector<WriteDescriptorInfo>  m_writeDescriptorInfos_;
   // This is the final result, generated using WriteDescriptorInfos
-  std::vector<VkWriteDescriptorSet> DescriptorWrites;
-  std::vector<uint32_t>             DynamicOffsets;
+  std::vector<VkWriteDescriptorSet> m_descriptorWrites_;
+  std::vector<uint32_t>             m_dynamicOffsets_;
 };
 
 // ----------------------
@@ -67,40 +67,40 @@ struct ShaderBindingInstanceVk : public ShaderBindingInstance {
   static void CreateWriteDescriptorSet(
       WriteDescriptorSet&        OutDescriptorWrites,
       const VkDescriptorSet      InDescriptorSet,
-      const ShaderBindingArray& InShaderBindingArray);
+      const ShaderBindingArray& shaderBindingArray);
 
   static void UpdateWriteDescriptorSet(
       WriteDescriptorSet&        OutDescriptorWrites,
-      const ShaderBindingArray& InShaderBindingArray);
+      const ShaderBindingArray& shaderBindingArray);
 
   virtual void Initialize(
-      const ShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& shaderBindingArray) override;
 
   virtual void UpdateShaderBindings(
-      const ShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& shaderBindingArray) override;
 
-  virtual void* GetHandle() const override { return DescriptorSet; }
+  virtual void* GetHandle() const override { return m_descriptorSet_; }
 
   virtual const std::vector<uint32_t>* GetDynamicOffsets() const override {
-    return &writeDescriptorSet.DynamicOffsets;
+    return &m_writeDescriptorSet_.m_dynamicOffsets_;
   }
 
   virtual void Free() override;
 
-  virtual ShaderBindingInstanceType GetType() const { return Type; }
+  virtual ShaderBindingInstanceType GetType() const { return m_type_; }
 
-  virtual void SetType(const ShaderBindingInstanceType InType) {
-    Type = InType;
+  virtual void SetType(const ShaderBindingInstanceType type) {
+    m_type_ = type;
   }
 
   private:
-  ShaderBindingInstanceType Type = ShaderBindingInstanceType::SingleFrame;
+  ShaderBindingInstanceType m_type_ = ShaderBindingInstanceType::SingleFrame;
 
   public:
   // When the DescriptorPool is released, everything can be handled, so it is
   // not separately destroyed
-  VkDescriptorSet    DescriptorSet = nullptr;
-  WriteDescriptorSet writeDescriptorSet;
+  VkDescriptorSet    m_descriptorSet_ = nullptr;
+  WriteDescriptorSet m_writeDescriptorSet_;
 };
 
 struct ShaderBindingLayoutVk;
@@ -109,47 +109,47 @@ struct ShaderBindingLayoutVk : public ShaderBindingLayout {
   virtual ~ShaderBindingLayoutVk() { Release(); }
 
   virtual bool Initialize(
-      const ShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& shaderBindingArray) override;
 
   virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
-      const ShaderBindingArray&       InShaderBindingArray,
-      const ShaderBindingInstanceType InType) const override;
+      const ShaderBindingArray&       shaderBindingArray,
+      const ShaderBindingInstanceType type) const override;
 
   virtual size_t GetHash() const override;
 
   virtual const ShaderBindingArray& GetShaderBindingsLayout() const {
-    return shaderBindingArray;
+    return m_shaderBindingArray_;
   }
 
-  virtual void* GetHandle() const override { return DescriptorSetLayout; }
+  virtual void* GetHandle() const override { return m_descriptorSetLayout_; }
 
   void Release();
 
   std::vector<VkDescriptorPoolSize> GetDescriptorPoolSizeArray(
       uint32_t maxAllocations) const;
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
   protected:
-  ShaderBindingArray shaderBindingArray;
+  ShaderBindingArray m_shaderBindingArray_;
 
   public:
-  VkDescriptorSetLayout DescriptorSetLayout = nullptr;
-
   static VkDescriptorSetLayout CreateDescriptorSetLayout(
-      const ShaderBindingArray& InShaderBindingArray);
+      const ShaderBindingArray& shaderBindingArray);
 
   static VkPipelineLayout CreatePipelineLayout(
-      const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+      const ShaderBindingLayoutArray& shaderBindingLayoutArray,
       const PushConstant*             pushConstant);
 
   static void ClearPipelineLayout();
 
-  static MutexRWLock DescriptorLayoutPoolLock;
-  static std::unordered_map<size_t, VkDescriptorSetLayout> DescriptorLayoutPool;
+  VkDescriptorSetLayout m_descriptorSetLayout_ = nullptr;
 
-  static MutexRWLock                                  PipelineLayoutPoolLock;
-  static std::unordered_map<size_t, VkPipelineLayout> PipelineLayoutPool;
+  static MutexRWLock s_descriptorLayoutPoolLock;
+  static std::unordered_map<size_t, VkDescriptorSetLayout> s_descriptorLayoutPool;
+
+  static MutexRWLock                                  s_pipelineLayoutPoolLock;
+  static std::unordered_map<size_t, VkPipelineLayout> s_pipelineLayoutPool;
 };
 
 }  // namespace game_engine

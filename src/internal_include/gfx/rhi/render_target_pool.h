@@ -22,8 +22,8 @@ class RenderTargetPool {
   static void ReturnRenderTarget(RenderTarget* renderTarget);
 
   static void ReleaseForRecreateSwapchain() {
-    RenderTargetResourceMap.clear();
-    RenderTargetHashVariableMap.clear();
+    m_renderTargetResourceMap_.clear();
+    m_renderTargetHashVariableMap_.clear();
   }
 
   static void Release() {
@@ -36,18 +36,18 @@ class RenderTargetPool {
     //   g_EyeAdaptationBRTPtr.reset();
     // }
 
-    RenderTargetResourceMap.clear();
-    RenderTargetHashVariableMap.clear();
+    m_renderTargetResourceMap_.clear();
+    m_renderTargetHashVariableMap_.clear();
   }
 
   struct RenderTargetPoolResource {
-    bool                          IsUsing = false;
-    std::shared_ptr<RenderTarget> RenderTargetPtr;
+    bool                          m_isUsing_ = false;
+    std::shared_ptr<RenderTarget> m_renderTargetPtr_;
   };
 
   static std::map<size_t, std::list<RenderTargetPoolResource> >
-                                         RenderTargetResourceMap;
-  static std::map<RenderTarget*, size_t> RenderTargetHashVariableMap;
+                                         m_renderTargetResourceMap_;
+  static std::map<RenderTarget*, size_t> m_renderTargetHashVariableMap_;
 
   // static struct Texture* GetNullTexture(ETextureType type);
 };

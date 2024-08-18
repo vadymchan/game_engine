@@ -86,8 +86,8 @@ void Game::SpawnTestPrimitives() {
                                  math::g_oneVector<float, 3>(),
                                  math::Vector3Df(1.0, 1.0, 1.0),
                                  math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f));
-  triangle->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-    //thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  triangle->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+    //thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
     //                                     + math::Vector3Df(5.0f, 0.0f, 0.0f)
     //                                           * deltaTime);
   };
@@ -99,14 +99,14 @@ void Game::SpawnTestPrimitives() {
   //                       math::Vector3Df(1000.0f, 1000.0f, 1000.0f),
   //                       math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f));
   //quad->SetPlane(math::Plane(math::Vector3Df(0.0, 1.0, 0.0), -0.1f));
-  //quad->SkipUpdateShadowVolume = true;
+  //quad->m_skipUpdateShadowVolume_ = true;
   //Object::AddObject(quad);
   //SpawnedObjects.push_back(quad);
 
   //auto gizmo              = CreateGizmo(math::g_zeroVector<float, 3>(),
   //                         math::g_zeroVector<float, 3>(),
   //                         math::g_oneVector<float, 3>());
-  //gizmo->SkipShadowMapGen = true;
+  //gizmo->m_skipShadowMapGen_ = true;
   //Object::AddObject(gizmo);
   //SpawnedObjects.push_back(gizmo);
 
@@ -114,8 +114,8 @@ void Game::SpawnTestPrimitives() {
   //                               math::g_oneVector<float, 3>(),
   //                               math::Vector3Df(40.0, 40.0, 40.0),
   //                               math::Vector4Df(0.5f, 0.1f, 1.0f, 1.0f));
-  //triangle->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-  //  thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  //triangle->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+  //  thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
   //                                       + math::Vector3Df(5.0f, 0.0f, 0.0f)
   //                                             * deltaTime);
   //};
@@ -126,8 +126,8 @@ void Game::SpawnTestPrimitives() {
   //                       math::g_oneVector<float, 3>(),
   //                       math::Vector3Df(50.0f, 50.0f, 50.0f),
   //                       math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
-  //cube->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-  //  thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  //cube->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+  //  thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
   //                                       + math::Vector3Df(0.0f, 0.0f, 0.5f)
   //                                             * deltaTime);
   //};
@@ -147,8 +147,8 @@ void Game::SpawnTestPrimitives() {
   //                             20,
   //                             math::Vector3Df(1.0f),
   //                             math::Vector4Df(1.0f, 1.0f, 0.0f, 1.0f));
-  //capsule->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-  //  thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  //capsule->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+  //  thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
   //                                       + math::Vector3Df(-1.0f, 0.0f, 0.0f)
   //                                             * deltaTime);
   //};
@@ -161,8 +161,8 @@ void Game::SpawnTestPrimitives() {
   //                       15,
   //                       math::g_oneVector<float, 3>(),
   //                       math::Vector4Df(1.0f, 1.0f, 0.0f, 1.0f));
-  //cone->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-  //  thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  //cone->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+  //  thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
   //                                       + math::Vector3Df(0.0f, 3.0f, 0.0f)
   //                                             * deltaTime);
   //};
@@ -175,8 +175,8 @@ void Game::SpawnTestPrimitives() {
   //                               20,
   //                               math::g_oneVector<float, 3>(),
   //                               math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f));
-  //cylinder->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-  //  thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  //cylinder->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+  //  thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
   //                                       + math::Vector3Df(5.0f, 0.0f, 0.0f)
   //                                             * deltaTime);
   //};
@@ -187,8 +187,8 @@ void Game::SpawnTestPrimitives() {
   //                        math::g_oneVector<float, 3>(),
   //                        math::Vector3Df(20.0f, 20.0f, 20.0f),
   //                        math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f));
-  //quad2->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
-  //  thisObject->RenderObjects[0]->SetRot(thisObject->RenderObjects[0]->GetRot()
+  //quad2->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+  //  thisObject->m_renderObjects_[0]->SetRot(thisObject->m_renderObjects_[0]->GetRot()
   //                                       + math::Vector3Df(0.0f, 0.0f, 8.0f)
   //                                             * deltaTime);
   //};
@@ -201,10 +201,10 @@ void Game::SpawnTestPrimitives() {
   //                           75,
   //                           math::Vector3Df(30.0f),
   //                           math::Vector4Df(0.8f, 0.0f, 0.0f, 1.0f));
-  //sphere->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+  //sphere->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
   //  float RotationSpeed = 100.0f;
-  //  thisObject->RenderObjects[0]->SetRot(
-  //      thisObject->RenderObjects[0]->GetRot()
+  //  thisObject->m_renderObjects_[0]->SetRot(
+  //      thisObject->m_renderObjects_[0]->GetRot()
   //      + math::Vector3Df(0.0f, 0.0f, math::g_degreeToRadian(180.0f))
   //            * RotationSpeed * deltaTime);
   //};
@@ -217,18 +217,18 @@ void Game::SpawnTestPrimitives() {
   //                            75,
   //                            math::Vector3Df(10.0f),
   //                            math::Vector4Df(0.8f, 0.4f, 0.6f, 1.0f));
-  //sphere2->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+  //sphere2->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
   //  const float startY  = 5.0f;
   //  const float endY    = 100;
   //  const float speed   = 150.0f * deltaTime;
   //  static bool dir     = true;
-  //  auto        Pos     = thisObject->RenderObjects[0]->GetPos();
-  //  Pos.y()            += dir ? speed : -speed;
-  //  if (Pos.y() < startY || Pos.y() > endY) {
+  //  auto        m_position_     = thisObject->m_renderObjects_[0]->GetPos();
+  //  m_position_.y()            += dir ? speed : -speed;
+  //  if (m_position_.y() < startY || m_position_.y() > endY) {
   //    dir      = !dir;
-  //    Pos.y() += dir ? speed : -speed;
+  //    m_position_.y() += dir ? speed : -speed;
   //  }
-  //  thisObject->RenderObjects[0]->SetPos(Pos);
+  //  thisObject->m_renderObjects_[0]->SetPos(m_position_);
   //};
   //Object::AddObject(sphere2);
   //SpawnedObjects.push_back(sphere2);
@@ -277,7 +277,7 @@ void Game::SpawnGraphTestFunc() {
                                  true);
       pCamera->UpdateCamera();
       int  cnt = 0;
-      auto MV  = pCamera->Projection * pCamera->view;
+      auto MV  = pCamera->m_projection_ * pCamera->m_view_;
       for (int i = 0; i < 90; ++i) {
         PerspectiveVector[cnt++] = math::g_transformPoint(
             math::Vector3Df({0.0f, 0.0f, 10.0f + static_cast<float>(i)}), MV);
@@ -300,7 +300,7 @@ void Game::SpawnGraphTestFunc() {
                                  false);
       pCamera->UpdateCamera();
       int  cnt = 0;
-      auto MV  = pCamera->Projection * pCamera->view;
+      auto MV  = pCamera->m_projection_ * pCamera->m_view_;
       for (int i = 0; i < 90; ++i) {
         OrthographicVector[cnt++] = math::g_transformPoint(
             math::Vector3Df({0.0f, 0.0f, 10.0f + static_cast<float>(i)}), MV);
@@ -370,8 +370,8 @@ void Game::SapwnCubePrimitives() {
 
 void Game::SpawnInstancingPrimitives() {
   struct InstanceData {
-    math::Vector4Df Color;
-    math::Vector3Df W;
+    math::Vector4Df m_color;
+    math::Vector3Df m_w;
   };
 
   const int    numInstances = 100;
@@ -384,8 +384,8 @@ void Game::SpawnInstancingPrimitives() {
   for (int32_t i = 0; i < std::size(instanceData); ++i) {
     float x               = (float)(i / 10);
     float y               = (float)(i % 10);
-    instanceData[i].W     = math::Vector3Df(y * 10.0f, x * 10.0f, 0.0f);
-    instanceData[i].Color = curStep;
+    instanceData[i].m_w     = math::Vector3Df(y * 10.0f, x * 10.0f, 0.0f);
+    instanceData[i].m_color = curStep;
     if (i < std::size(instanceData) / 3) {
       curStep.x() += colorStep;
     } else if (i < std::size(instanceData) / 2) {
@@ -425,23 +425,23 @@ void Game::SpawnInstancingPrimitives() {
     // streamParam->Data.resize(numInstances);
     // memcpy(&streamParam->Data[0], instanceData, sizeof(instanceData));
 
-    auto& GeometryDataPtr = obj->RenderObjects[0]->GeometryDataPtr;
+    auto& GeometryDataPtr = obj->m_renderObjects_[0]->m_geometryDataPtr_;
 
-    GeometryDataPtr->VertexStream_InstanceDataPtr
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_
         = std::make_shared<VertexStreamData>();
-    GeometryDataPtr->VertexStream_InstanceDataPtr->elementCount
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_elementCount_
         = std::size(instanceData);
-    GeometryDataPtr->VertexStream_InstanceDataPtr->startLocation
-        = (int32_t)GeometryDataPtr->VertexStreamPtr->GetEndLocation();
-    GeometryDataPtr->VertexStream_InstanceDataPtr->bindingIndex
-        = (int32_t)GeometryDataPtr->VertexStreamPtr->streams.size();
-    GeometryDataPtr->VertexStream_InstanceDataPtr->VertexInputRate
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_startLocation_
+        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->GetEndLocation();
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_bindingIndex_
+        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->m_streams_.size();
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_vertexInputRate_
         = EVertexInputRate::INSTANCE;
-    GeometryDataPtr->VertexStream_InstanceDataPtr->streams.push_back(
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_streams_.push_back(
         streamParam);
-    GeometryDataPtr->VertexBuffer_InstanceDataPtr
+    GeometryDataPtr->m_vertexBufferInstanceDataPtr_
         = g_rhi->CreateVertexBuffer(
-            GeometryDataPtr->VertexStream_InstanceDataPtr);
+            GeometryDataPtr->m_vertexStreamInstanceDataPtr_);
 
     Object::AddObject(obj);
     SpawnedObjects.push_back(obj);
@@ -450,8 +450,8 @@ void Game::SpawnInstancingPrimitives() {
 
 void Game::SpawnIndirectDrawPrimitives() {
   struct InstanceData {
-    math::Vector4Df Color;
-    math::Vector3Df W;
+    math::Vector4Df m_color;
+    math::Vector3Df m_w;
   };
 
   const int    numInstances = 100;
@@ -464,8 +464,8 @@ void Game::SpawnIndirectDrawPrimitives() {
   for (int32_t i = 0; i < std::size(instanceData); ++i) {
     float x               = (float)(i / 10);
     float y               = (float)(i % 10);
-    instanceData[i].W     = math::Vector3Df(y * 10.0f, x * 10.0f, 0.0f);
-    instanceData[i].Color = curStep;
+    instanceData[i].m_w     = math::Vector3Df(y * 10.0f, x * 10.0f, 0.0f);
+    instanceData[i].m_color = curStep;
     if (i < std::size(instanceData) / 3) {
       curStep.x() += colorStep;
     } else if (i < std::size(instanceData) / 2) {
@@ -506,22 +506,22 @@ void Game::SpawnIndirectDrawPrimitives() {
     // streamParam->Data.resize(numInstances);
     // memcpy(&streamParam->Data[0], instanceData, sizeof(instanceData));
 
-    auto& GeometryDataPtr = obj->RenderObjects[0]->GeometryDataPtr;
-    GeometryDataPtr->VertexStream_InstanceDataPtr
+    auto& GeometryDataPtr = obj->m_renderObjects_[0]->m_geometryDataPtr_;
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_
         = std::make_shared<VertexStreamData>();
-    GeometryDataPtr->VertexStream_InstanceDataPtr->elementCount
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_elementCount_
         = std::size(instanceData);
-    GeometryDataPtr->VertexStream_InstanceDataPtr->startLocation
-        = (int32_t)GeometryDataPtr->VertexStreamPtr->GetEndLocation();
-    GeometryDataPtr->VertexStream_InstanceDataPtr->bindingIndex
-        = (int32_t)GeometryDataPtr->VertexStreamPtr->streams.size();
-    GeometryDataPtr->VertexStream_InstanceDataPtr->VertexInputRate
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_startLocation_
+        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->GetEndLocation();
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_bindingIndex_
+        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->m_streams_.size();
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_vertexInputRate_
         = EVertexInputRate::INSTANCE;
-    GeometryDataPtr->VertexStream_InstanceDataPtr->streams.push_back(
+    GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_streams_.push_back(
         streamParam);
-    GeometryDataPtr->VertexBuffer_InstanceDataPtr
+    GeometryDataPtr->m_vertexBufferInstanceDataPtr_
         = g_rhi->CreateVertexBuffer(
-            GeometryDataPtr->VertexStream_InstanceDataPtr);
+            GeometryDataPtr->m_vertexStreamInstanceDataPtr_);
 
     // Create indirect draw buffer
     // TODO: Refactor this code to decouple it from Vulkan-specific classes and
@@ -529,14 +529,14 @@ void Game::SpawnIndirectDrawPrimitives() {
     // Consider using an abstract rendering interface to handle draw calls and
     // resource management.
     {
-      assert(GeometryDataPtr->VertexStream_InstanceDataPtr);
+      assert(GeometryDataPtr->m_vertexStreamInstanceDataPtr_);
 
       std::vector<VkDrawIndirectCommand> indrectCommands;
 
       const int32_t instanceCount
-          = GeometryDataPtr->VertexStream_InstanceDataPtr->elementCount;
+          = GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_elementCount_;
       const int32_t vertexCount
-          = GeometryDataPtr->VertexStreamPtr->elementCount;
+          = GeometryDataPtr->m_vertexStreamPtr_->m_elementCount_;
       for (int32_t i = 0; i < instanceCount; ++i) {
         VkDrawIndirectCommand command;
         command.vertexCount   = vertexCount;
@@ -549,8 +549,8 @@ void Game::SpawnIndirectDrawPrimitives() {
       const size_t bufferSize
           = indrectCommands.size() * sizeof(VkDrawIndirectCommand);
 
-      assert(!GeometryDataPtr->IndirectCommandBufferPtr);
-      GeometryDataPtr->IndirectCommandBufferPtr
+      assert(!GeometryDataPtr->m_indirectCommandBufferPtr_);
+      GeometryDataPtr->m_indirectCommandBufferPtr_
           = g_rhi->CreateStructuredBuffer(bufferSize,
                                              0,
                                              sizeof(VkDrawIndirectCommand),
@@ -585,7 +585,7 @@ void Game::Update(float deltaTime) {
     MainCamera->UpdateCamera();
   }
 
-  // gOptions.CameraPos = MainCamera->Pos;
+  // gOptions.CameraPos = MainCamera->m_position_;
 
   // for (auto iter : Object::GetStaticObject())
   //	iter->Update(deltaTime);
@@ -608,7 +608,7 @@ void Game::Update(float deltaTime) {
   for (auto& iter : Object::GetStaticObject()) {
     iter->Update(deltaTime);
 
-    for (auto& RenderObject : iter->RenderObjects) {
+    for (auto& RenderObject : iter->m_renderObjects_) {
       RenderObject->UpdateWorldMatrix();
     }
   }
@@ -616,7 +616,7 @@ void Game::Update(float deltaTime) {
   for (auto& iter : Object::GetDebugObject()) {
     iter->Update(deltaTime);
 
-    for (auto& RenderObject : iter->RenderObjects) {
+    for (auto& RenderObject : iter->m_renderObjects_) {
       RenderObject->UpdateWorldMatrix();
     }
   }
@@ -644,8 +644,8 @@ void Game::Draw() {
 
 void Game::Resize(int32_t width, int32_t height) {
   if (MainCamera) {
-    MainCamera->Width  = width;
-    MainCamera->Height = height;
+    MainCamera->m_width_  = width;
+    MainCamera->m_height_ = height;
   }
 }
 

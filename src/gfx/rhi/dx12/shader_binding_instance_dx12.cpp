@@ -1,75 +1,79 @@
 #include "gfx/rhi/dx12/shader_binding_instance_dx12.h"
-#include "gfx/rhi/dx12/rhi_dx12.h"
-#include "gfx/rhi/dx12/uniform_buffer_block_dx12.h"
-#include "gfx/rhi/dx12/rhi_type_dx12.h"
-#include "gfx/rhi/dx12/command_list_dx12.h"
 
+#include "gfx/rhi/dx12/command_list_dx12.h"
+#include "gfx/rhi/dx12/rhi_dx12.h"
+#include "gfx/rhi/dx12/rhi_type_dx12.h"
+#include "gfx/rhi/dx12/uniform_buffer_block_dx12.h"
 
 namespace game_engine {
 
 void ShaderBindingInstanceDx12::Initialize(
-    const ShaderBindingArray& InShaderBindingArray) {
-  UpdateShaderBindings(InShaderBindingArray);
+    const ShaderBindingArray& shaderBindingArray) {
+  UpdateShaderBindings(shaderBindingArray);
 }
 
 void ShaderBindingInstanceDx12::UpdateShaderBindings(
-    const ShaderBindingArray& InShaderBindingArray) {
+    const ShaderBindingArray& shaderBindingArray) {
   // Let's copy the descriptors to the online descriptor set.
   // CopySimpleDescriptor
   // Let's find the descriptor layout and bind it.
   // Should we copy from the layout and actually create the root signature?
   // Let's think about this part.
 
-  assert(ShaderBindingsLayouts);
-  assert(ShaderBindingsLayouts->GetShaderBindingsLayout().NumOfData
-         == InShaderBindingArray.NumOfData);
+  assert(m_shaderBindingsLayouts_);
+  assert(m_shaderBindingsLayouts_->GetShaderBindingsLayout().m_numOfData_
+         == shaderBindingArray.m_numOfData_);
 
-  Descriptors.clear();
-  SamplerDescriptors.clear();
-  RootParameterInlines.clear();
+  m_descriptors_.clear();
+  m_samplerDescriptors_.clear();
+  m_rootParameterInlines_.clear();
 
-  for (int32_t i = 0; i < InShaderBindingArray.NumOfData; ++i) {
-    const ShaderBinding* shaderBinding = InShaderBindingArray[i];
+  for (int32_t i = 0; i < shaderBindingArray.m_numOfData_; ++i) {
+    const ShaderBinding* shaderBinding = shaderBindingArray[i];
     assert(shaderBinding);
-    assert(shaderBinding->Resource);
-    assert(shaderBinding->IsBindless == shaderBinding->Resource->IsBindless());
+    assert(shaderBinding->m_resource_);
+    assert(shaderBinding->m_isBindless_
+           == shaderBinding->m_resource_->IsBindless());
 
-    const bool IsBindless = shaderBinding->IsBindless;
-    assert((IsBindless && !shaderBinding->IsInline)
+    const bool IsBindless = shaderBinding->m_isBindless_;
+    assert((IsBindless && !shaderBinding->m_isInline_)
            || !IsBindless);  // Bindless must note be inline
 
-    switch (shaderBinding->BindingType) {
+    switch (shaderBinding->m_bindingType_) {
       case EShaderBindingType::UNIFORMBUFFER:
       case EShaderBindingType::UNIFORMBUFFER_DYNAMIC: {
         if (IsBindless) {
           auto UniformResourceBindless
-              = (UniformBufferResourceBindless*)shaderBinding->Resource;
-          for (auto Resource : UniformResourceBindless->UniformBuffers) {
+              = (UniformBufferResourceBindless*)shaderBinding->m_resource_;
+          for (auto Resource : UniformResourceBindless->m_uniformBuffers_) {
             assert(Resource);
 
             UniformBufferBlockDx12* UniformBuffer
                 = (UniformBufferBlockDx12*)Resource;
-            Descriptors.push_back({.Descriptor   = UniformBuffer->GetCBV(),
-                                   .ResourceName = UniformBuffer->ResourceName,
-                                   .Resource     = UniformBuffer});
+            m_descriptors_.push_back(
+                {.m_descriptor_   = UniformBuffer->GetCBV(),
+                 .m_resourceName_ = UniformBuffer->m_resourceName_,
+                 .m_resource_     = UniformBuffer});
           }
         } else {
           UniformBufferBlockDx12* UniformBuffer
               = (UniformBufferBlockDx12*)
-                    shaderBinding->Resource->GetResource();
+                    shaderBinding->m_resource_->GetResource();
           assert(UniformBuffer->GetLowLevelResource());
-          // assert(!UniformBuffer->IsUseRingBuffer() ||
-          // (UniformBuffer->IsUseRingBuffer() && shaderBinding->IsInline));
-          if (shaderBinding->IsInline) {
-            RootParameterInlines.push_back(
-                {.Type              = InlineRootParamType::CBV,
-                 .GPUVirtualAddress = UniformBuffer->GetGPUAddress(),
-                 .ResourceName      = UniformBuffer->ResourceName,
-                 .Resource          = UniformBuffer});
+          // assert(!m_uniformBuffer_->IsUseRingBuffer() ||
+          // (m_uniformBuffer_->IsUseRingBuffer() &&
+          // shaderBinding->m_isInline_));
+          if (shaderBinding->m_isInline_) {
+            m_rootParameterInlines_.push_back(
+                {.m_type_              = InlineRootParamType::CBV,
+                 .m_gpuVirtualAddress_ = UniformBuffer->GetGPUAddress(),
+                 .m_resourceName_      = UniformBuffer->m_resourceName_,
+                 .m_resource_          = UniformBuffer});
           } else {
-            Descriptors.push_back({.Descriptor   = UniformBuffer->GetCBV(),
-                                   .ResourceName = UniformBuffer->ResourceName,
-                                   .Resource     = UniformBuffer});
+            m_descriptors_.push_back(
+                {.m_descriptor_   = UniformBuffer->GetCBV(),
+                 .m_resourceName_ = UniformBuffer->m_resourceName_,
+                 .m_resource_     = UniformBuffer});
           }
         }
         break;
@@ -77,79 +81,79 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_SAMPLER_SRV: {
         if (IsBindless) {
           auto TextureResourceResourceBindless
-              = (TextureResourceBindless*)shaderBinding->Resource;
+              = (TextureResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource :
-               TextureResourceResourceBindless->TextureBindDatas) {
+               TextureResourceResourceBindless->m_textureBindDatas_) {
             assert(Resource.m_texture);
 
             TextureDx12* TexDX12 = (TextureDx12*)Resource.m_texture;
-            Descriptors.push_back({.Descriptor   = TexDX12->SRV,
-                                   .ResourceName = TexDX12->ResourceName,
-                                   .Resource     = TexDX12});
+            m_descriptors_.push_back(
+                {.m_descriptor_   = TexDX12->m_srv_,
+                 .m_resourceName_ = TexDX12->m_resourceName_,
+                 .m_resource_     = TexDX12});
 
-            if (Resource.SamplerState) {
+            if (Resource.m_samplerState_) {
               SamplerStateInfoDx12* SamplerDX12
-                  = (SamplerStateInfoDx12*)Resource.SamplerState;
+                  = (SamplerStateInfoDx12*)Resource.m_samplerState_;
               assert(SamplerDX12);
-              SamplerDescriptors.push_back(
-                  {.Descriptor   = SamplerDX12->SamplerSRV,
-                   .ResourceName = SamplerDX12->ResourceName,
-                   .Resource     = SamplerDX12});
+              m_samplerDescriptors_.push_back(
+                  {.m_descriptor_   = SamplerDX12->m_samplerSRV_,
+                   .m_resourceName_ = SamplerDX12->m_resourceName_,
+                   .m_resource_     = SamplerDX12});
             } else {
               // assert(0);   // todo : need to set DefaultSamplerState
-              const SamplerStateInfoDx12* SamplerDX12
-                  = (SamplerStateInfoDx12*)
-                      TSamplerStateInfo<ETextureFilter::LINEAR_MIPMAP_LINEAR,
-                                        ETextureFilter::LINEAR_MIPMAP_LINEAR,
-                                        ETextureAddressMode::REPEAT,
-                                        ETextureAddressMode::REPEAT,
-                                        ETextureAddressMode::REPEAT,
-                                        0.0f,
-                                        16.0f>::Create();
+              const SamplerStateInfoDx12* SamplerDX12 = (SamplerStateInfoDx12*)
+                  TSamplerStateInfo<ETextureFilter::LINEAR_MIPMAP_LINEAR,
+                                    ETextureFilter::LINEAR_MIPMAP_LINEAR,
+                                    ETextureAddressMode::REPEAT,
+                                    ETextureAddressMode::REPEAT,
+                                    ETextureAddressMode::REPEAT,
+                                    0.0f,
+                                    16.0f>::Create();
               assert(SamplerDX12);
-              SamplerDescriptors.push_back(
-                  {.Descriptor   = SamplerDX12->SamplerSRV,
-                   .ResourceName = SamplerDX12->ResourceName,
-                   .Resource     = SamplerDX12});
+              m_samplerDescriptors_.push_back(
+                  {.m_descriptor_   = SamplerDX12->m_samplerSRV_,
+                   .m_resourceName_ = SamplerDX12->m_resourceName_,
+                   .m_resource_     = SamplerDX12});
             }
           }
         } else {
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
-                  shaderBinding->Resource);
+                  shaderBinding->m_resource_);
           assert(tbor && tbor->m_texture);
 
           if (tbor && tbor->m_texture) {
             TextureDx12* TexDX12 = (TextureDx12*)tbor->m_texture;
-            Descriptors.push_back({.Descriptor   = TexDX12->SRV,
-                                   .ResourceName = TexDX12->ResourceName,
-                                   .Resource     = TexDX12});
+            m_descriptors_.push_back(
+                {.m_descriptor_   = TexDX12->m_srv_,
+                 .m_resourceName_ = TexDX12->m_resourceName_,
+                 .m_resource_     = TexDX12});
 
-            if (tbor->SamplerState) {
+            if (tbor->m_samplerState_) {
               SamplerStateInfoDx12* SamplerDX12
-                  = (SamplerStateInfoDx12*)tbor->SamplerState;
+                  = (SamplerStateInfoDx12*)tbor->m_samplerState_;
               assert(SamplerDX12);
-              SamplerDescriptors.push_back(
-                  {.Descriptor   = SamplerDX12->SamplerSRV,
-                   .ResourceName = SamplerDX12->ResourceName,
-                   .Resource     = SamplerDX12});
+              m_samplerDescriptors_.push_back(
+                  {.m_descriptor_   = SamplerDX12->m_samplerSRV_,
+                   .m_resourceName_ = SamplerDX12->m_resourceName_,
+                   .m_resource_     = SamplerDX12});
             } else {
               // assert(0);   // TODO: need to set DefaultSamplerState
 
-              const SamplerStateInfoDx12* SamplerDX12
-                  = (SamplerStateInfoDx12*)
-                      TSamplerStateInfo<ETextureFilter::LINEAR_MIPMAP_LINEAR,
-                                        ETextureFilter::LINEAR_MIPMAP_LINEAR,
-                                        ETextureAddressMode::REPEAT,
-                                        ETextureAddressMode::REPEAT,
-                                        ETextureAddressMode::REPEAT,
-                                        0.0f,
-                                        16.0f>::Create();
+              const SamplerStateInfoDx12* SamplerDX12 = (SamplerStateInfoDx12*)
+                  TSamplerStateInfo<ETextureFilter::LINEAR_MIPMAP_LINEAR,
+                                    ETextureFilter::LINEAR_MIPMAP_LINEAR,
+                                    ETextureAddressMode::REPEAT,
+                                    ETextureAddressMode::REPEAT,
+                                    ETextureAddressMode::REPEAT,
+                                    0.0f,
+                                    16.0f>::Create();
               assert(SamplerDX12);
-              SamplerDescriptors.push_back(
-                  {.Descriptor   = SamplerDX12->SamplerSRV,
-                   .ResourceName = SamplerDX12->ResourceName,
-                   .Resource     = SamplerDX12});
+              m_samplerDescriptors_.push_back(
+                  {.m_descriptor_   = SamplerDX12->m_samplerSRV_,
+                   .m_resourceName_ = SamplerDX12->m_resourceName_,
+                   .m_resource_     = SamplerDX12});
             }
           }
         }
@@ -158,46 +162,48 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_SRV: {
         if (IsBindless) {
           auto TextureResourceResourceBindless
-              = (TextureResourceBindless*)shaderBinding->Resource;
+              = (TextureResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource :
-               TextureResourceResourceBindless->TextureBindDatas) {
+               TextureResourceResourceBindless->m_textureBindDatas_) {
             TextureDx12* Tex = (TextureDx12*)Resource.m_texture;
-            Descriptors.push_back({.Descriptor   = Tex->SRV,
-                                   .ResourceName = Tex->ResourceName,
-                                   .Resource     = Tex});
+            m_descriptors_.push_back({.m_descriptor_   = Tex->m_srv_,
+                                      .m_resourceName_ = Tex->m_resourceName_,
+                                      .m_resource_     = Tex});
           }
         } else {
           TextureDx12* Tex
-              = (TextureDx12*)shaderBinding->Resource->GetResource();
-          Descriptors.push_back({.Descriptor   = Tex->SRV,
-                                 .ResourceName = Tex->ResourceName,
-                                 .Resource     = Tex});
+              = (TextureDx12*)shaderBinding->m_resource_->GetResource();
+          m_descriptors_.push_back({.m_descriptor_   = Tex->m_srv_,
+                                    .m_resourceName_ = Tex->m_resourceName_,
+                                    .m_resource_     = Tex});
         }
         break;
       }
       case EShaderBindingType::TEXTURE_ARRAY_SRV: {
         if (IsBindless) {
           auto TextureResourceResourceArrayBindless
-              = (TextureArrayResourceBindless*)shaderBinding->Resource;
+              = (TextureArrayResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource :
-               TextureResourceResourceArrayBindless->TextureArrayBindDatas) {
-            TextureDx12** TexArray = (TextureDx12**)Resource.TextureArray;
-            for (int32_t i = 0; i < Resource.InNumOfTexure; ++i) {
+               TextureResourceResourceArrayBindless->m_textureArrayBindDatas_) {
+            TextureDx12** TexArray = (TextureDx12**)Resource.m_textureArray_;
+            for (int32_t i = 0; i < Resource.m_numOfTexure_; ++i) {
               assert(TexArray[i]);
-              Descriptors.push_back({.Descriptor   = TexArray[i]->SRV,
-                                     .ResourceName = TexArray[i]->ResourceName,
-                                     .Resource     = TexArray[i]});
+              m_descriptors_.push_back(
+                  {.m_descriptor_   = TexArray[i]->m_srv_,
+                   .m_resourceName_ = TexArray[i]->m_resourceName_,
+                   .m_resource_     = TexArray[i]});
             }
           }
         } else {
           TextureDx12** Tex
-              = (TextureDx12**)shaderBinding->Resource->GetResource();
-          for (int32_t i = 0; i < shaderBinding->Resource->NumOfResource();
+              = (TextureDx12**)shaderBinding->m_resource_->GetResource();
+          for (int32_t i = 0; i < shaderBinding->m_resource_->NumOfResource();
                ++i) {
             assert(Tex[i]);
-            Descriptors.push_back({.Descriptor   = Tex[i]->SRV,
-                                   .ResourceName = Tex[i]->ResourceName,
-                                   .Resource     = Tex[i]});
+            m_descriptors_.push_back(
+                {.m_descriptor_   = Tex[i]->m_srv_,
+                 .m_resourceName_ = Tex[i]->m_resourceName_,
+                 .m_resource_     = Tex[i]});
           }
         }
         break;
@@ -207,28 +213,28 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
       case EShaderBindingType::ACCELERATION_STRUCTURE_SRV: {
         if (IsBindless) {
           auto bufferResourceBindless
-              = (BufferResourceBindless*)shaderBinding->Resource;
+              = (BufferResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource : bufferResourceBindless->m_buffers) {
             BufferDx12* Buf = (BufferDx12*)Resource;
-            Descriptors.push_back({.Descriptor   = Buf->SRV,
-                                   .ResourceName = Buf->ResourceName,
-                                   .Resource     = Buf});
+            m_descriptors_.push_back({.m_descriptor_   = Buf->m_srv_,
+                                      .m_resourceName_ = Buf->m_resourceName_,
+                                      .m_resource_     = Buf});
           }
         } else {
           BufferDx12* Buf
-              = (BufferDx12*)shaderBinding->Resource->GetResource();
-          assert(Buf->m_buffer->Resource);
+              = (BufferDx12*)shaderBinding->m_resource_->GetResource();
+          assert(Buf->m_buffer->m_resource_);
 
-          if (shaderBinding->IsInline) {
-            RootParameterInlines.push_back(
-                {.Type              = InlineRootParamType::SRV,
-                 .GPUVirtualAddress = Buf->GetGPUAddress(),
-                 .ResourceName      = Buf->ResourceName,
-                 .Resource          = Buf});
+          if (shaderBinding->m_isInline_) {
+            m_rootParameterInlines_.push_back(
+                {.m_type_              = InlineRootParamType::SRV,
+                 .m_gpuVirtualAddress_ = Buf->GetGPUAddress(),
+                 .m_resourceName_      = Buf->m_resourceName_,
+                 .m_resource_          = Buf});
           } else {
-            Descriptors.push_back({.Descriptor   = Buf->SRV,
-                                   .ResourceName = Buf->ResourceName,
-                                   .Resource     = Buf});
+            m_descriptors_.push_back({.m_descriptor_   = Buf->m_srv_,
+                                      .m_resourceName_ = Buf->m_resourceName_,
+                                      .m_resource_     = Buf});
           }
         }
         break;
@@ -236,48 +242,51 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
       case EShaderBindingType::TEXTURE_UAV: {
         if (IsBindless) {
           auto TextureResourceResourceBindless
-              = (TextureResourceBindless*)shaderBinding->Resource;
+              = (TextureResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource :
-               TextureResourceResourceBindless->TextureBindDatas) {
+               TextureResourceResourceBindless->m_textureBindDatas_) {
             TextureDx12* Tex = (TextureDx12*)Resource.m_texture;
-            if (Resource.MipLevel == 0) {
-              Descriptors.push_back({.Descriptor   = Tex->UAV,
-                                     .ResourceName = Tex->ResourceName,
-                                     .Resource     = Tex});
+            if (Resource.m_mipLevel_ == 0) {
+              m_descriptors_.push_back({.m_descriptor_   = Tex->m_uav_,
+                                        .m_resourceName_ = Tex->m_resourceName_,
+                                        .m_resource_     = Tex});
             } else {
-              auto it_find = Tex->UAVMipMap.find(Resource.MipLevel);
-              if (it_find != Tex->UAVMipMap.end()
+              auto it_find = Tex->m_uavMipMap.find(Resource.m_mipLevel_);
+              if (it_find != Tex->m_uavMipMap.end()
                   && it_find->second.IsValid()) {
-                Descriptors.push_back({.Descriptor   = it_find->second,
-                                       .ResourceName = Tex->ResourceName,
-                                       .Resource     = Tex});
+                m_descriptors_.push_back(
+                    {.m_descriptor_   = it_find->second,
+                     .m_resourceName_ = Tex->m_resourceName_,
+                     .m_resource_     = Tex});
               } else {
-                Descriptors.push_back({.Descriptor   = Tex->UAV,
-                                       .ResourceName = Tex->ResourceName,
-                                       .Resource     = Tex});
+                m_descriptors_.push_back(
+                    {.m_descriptor_   = Tex->m_uav_,
+                     .m_resourceName_ = Tex->m_resourceName_,
+                     .m_resource_     = Tex});
               }
             }
           }
         } else {
           TextureDx12* Tex
-              = (TextureDx12*)shaderBinding->Resource->GetResource();
+              = (TextureDx12*)shaderBinding->m_resource_->GetResource();
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
-                  shaderBinding->Resource);
-          if (tbor->MipLevel == 0) {
-            Descriptors.push_back({.Descriptor   = Tex->UAV,
-                                   .ResourceName = Tex->ResourceName,
-                                   .Resource     = Tex});
+                  shaderBinding->m_resource_);
+          if (tbor->m_mipLevel_ == 0) {
+            m_descriptors_.push_back({.m_descriptor_   = Tex->m_uav_,
+                                      .m_resourceName_ = Tex->m_resourceName_,
+                                      .m_resource_     = Tex});
           } else {
-            auto it_find = Tex->UAVMipMap.find(tbor->MipLevel);
-            if (it_find != Tex->UAVMipMap.end() && it_find->second.IsValid()) {
-              Descriptors.push_back({.Descriptor   = it_find->second,
-                                     .ResourceName = Tex->ResourceName,
-                                     .Resource     = Tex});
+            auto it_find = Tex->m_uavMipMap.find(tbor->m_mipLevel_);
+            if (it_find != Tex->m_uavMipMap.end()
+                && it_find->second.IsValid()) {
+              m_descriptors_.push_back({.m_descriptor_   = it_find->second,
+                                        .m_resourceName_ = Tex->m_resourceName_,
+                                        .m_resource_     = Tex});
             } else {
-              Descriptors.push_back({.Descriptor   = Tex->UAV,
-                                     .ResourceName = Tex->ResourceName,
-                                     .Resource     = Tex});
+              m_descriptors_.push_back({.m_descriptor_   = Tex->m_uav_,
+                                        .m_resourceName_ = Tex->m_resourceName_,
+                                        .m_resource_     = Tex});
             }
           }
         }
@@ -288,27 +297,27 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
       case EShaderBindingType::BUFFER_TEXEL_UAV: {
         if (IsBindless) {
           auto bufferResourceBindless
-              = (BufferResourceBindless*)shaderBinding->Resource;
+              = (BufferResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource : bufferResourceBindless->m_buffers) {
             BufferDx12* Buf = (BufferDx12*)Resource;
-            Descriptors.push_back({.Descriptor   = Buf->UAV,
-                                   .ResourceName = Buf->ResourceName,
-                                   .Resource     = Buf});
+            m_descriptors_.push_back({.m_descriptor_   = Buf->m_uav_,
+                                      .m_resourceName_ = Buf->m_resourceName_,
+                                      .m_resource_     = Buf});
           }
         } else {
           BufferDx12* Buf
-              = (BufferDx12*)shaderBinding->Resource->GetResource();
-          assert(Buf->m_buffer->Resource);
-          if (shaderBinding->IsInline) {
-            RootParameterInlines.push_back(
-                {.Type              = InlineRootParamType::UAV,
-                 .GPUVirtualAddress = Buf->GetGPUAddress(),
-                 .ResourceName      = Buf->ResourceName,
-                 .Resource          = Buf});
+              = (BufferDx12*)shaderBinding->m_resource_->GetResource();
+          assert(Buf->m_buffer->m_resource_);
+          if (shaderBinding->m_isInline_) {
+            m_rootParameterInlines_.push_back(
+                {.m_type_              = InlineRootParamType::UAV,
+                 .m_gpuVirtualAddress_ = Buf->GetGPUAddress(),
+                 .m_resourceName_      = Buf->m_resourceName_,
+                 .m_resource_          = Buf});
           } else {
-            Descriptors.push_back({.Descriptor   = Buf->UAV,
-                                   .ResourceName = Buf->ResourceName,
-                                   .Resource     = Buf});
+            m_descriptors_.push_back({.m_descriptor_   = Buf->m_uav_,
+                                      .m_resourceName_ = Buf->m_resourceName_,
+                                      .m_resource_     = Buf});
           }
         }
         break;
@@ -316,21 +325,24 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
       case EShaderBindingType::SAMPLER: {
         if (IsBindless) {
           auto samplerResourceBindless
-              = (SamplerResourceBindless*)shaderBinding->Resource;
-          for (auto Resource : samplerResourceBindless->SamplerStates) {
+              = (SamplerResourceBindless*)shaderBinding->m_resource_;
+          for (auto Resource : samplerResourceBindless->m_samplerStates_) {
             SamplerStateInfoDx12* Sampler = (SamplerStateInfoDx12*)Resource;
             assert(Sampler);
-            SamplerDescriptors.push_back({.Descriptor   = Sampler->SamplerSRV,
-                                          .ResourceName = Sampler->ResourceName,
-                                          .Resource     = Sampler});
+            m_samplerDescriptors_.push_back(
+                {.m_descriptor_   = Sampler->m_samplerSRV_,
+                 .m_resourceName_ = Sampler->m_resourceName_,
+                 .m_resource_     = Sampler});
           }
         } else {
           SamplerStateInfoDx12* Sampler
-              = (SamplerStateInfoDx12*)shaderBinding->Resource->GetResource();
+              = (SamplerStateInfoDx12*)
+                    shaderBinding->m_resource_->GetResource();
           assert(Sampler);
-          SamplerDescriptors.push_back({.Descriptor   = Sampler->SamplerSRV,
-                                        .ResourceName = Sampler->ResourceName,
-                                        .Resource     = Sampler});
+          m_samplerDescriptors_.push_back(
+              {.m_descriptor_   = Sampler->m_samplerSRV_,
+               .m_resourceName_ = Sampler->m_resourceName_,
+               .m_resource_     = Sampler});
         }
         break;
       }
@@ -344,74 +356,80 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
 
 #if _DEBUG
   // validation
-  for (int32_t i = 0; i < (int32_t)Descriptors.size(); ++i) {
-    assert(Descriptors[i].IsValid());
+  for (int32_t i = 0; i < (int32_t)m_descriptors_.size(); ++i) {
+    assert(m_descriptors_[i].IsValid());
   }
 #endif
 }
 
 void* ShaderBindingInstanceDx12::GetHandle() const {
-  return ShaderBindingsLayouts->GetHandle();
+  return m_shaderBindingsLayouts_->GetHandle();
 }
 
 void ShaderBindingInstanceDx12::Free() {
   if (GetType() == ShaderBindingInstanceType::MultiFrame) {
-    ScopedLock s(&g_rhi_dx12->MultiFrameShaderBindingInstanceLock);
-    g_rhi_dx12->m_deallocatorMultiFrameShaderBindingInstance.Free(
+    ScopedLock s(&g_rhi_dx12->m_multiFrameShaderBindingInstanceLock_);
+    g_rhi_dx12->m_deallocatorMultiFrameShaderBindingInstance_.Free(
         shared_from_this());
   }
 }
 
-void ShaderBindingInstanceDx12::BindGraphics(
-    CommandBufferDx12* InCommandList, int32_t& InOutStartIndex) const {
-  assert(InCommandList);
+void ShaderBindingInstanceDx12::BindGraphics(CommandBufferDx12* commandList,
+                                             int32_t& InOutStartIndex) const {
+  assert(commandList);
 
-  auto CommandList = InCommandList->Get();
+  auto CommandList = commandList->Get();
   assert(CommandList);
 
   int32_t index = 0;
-  for (index = 0; index < RootParameterInlines.size();
+  for (index = 0; index < m_rootParameterInlines_.size();
        ++index, ++InOutStartIndex) {
-    switch (RootParameterInlines[index].Type) {
+    switch (m_rootParameterInlines_[index].m_type_) {
       case InlineRootParamType::CBV:
         CommandList->SetGraphicsRootConstantBufferView(
-            InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
+            InOutStartIndex,
+            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::SRV:
         CommandList->SetGraphicsRootShaderResourceView(
-            InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
+            InOutStartIndex,
+            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::UAV:
         CommandList->SetGraphicsRootUnorderedAccessView(
-            InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
+            InOutStartIndex,
+            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
       default:
         break;
     }
   }
 }
 
-void ShaderBindingInstanceDx12::BindCompute(
-    CommandBufferDx12* InCommandList, int32_t& InOutStartIndex) {
-  assert(InCommandList);
+void ShaderBindingInstanceDx12::BindCompute(CommandBufferDx12* commandList,
+                                            int32_t& InOutStartIndex) {
+  assert(commandList);
 
-  auto CommandList = InCommandList->Get();
+  auto CommandList = commandList->Get();
   assert(CommandList);
 
   int32_t index = 0;
-  for (index = 0; index < RootParameterInlines.size();
+  for (index = 0; index < m_rootParameterInlines_.size();
        ++index, ++InOutStartIndex) {
-    switch (RootParameterInlines[index].Type) {
+    switch (m_rootParameterInlines_[index].m_type_) {
       case InlineRootParamType::CBV:
         CommandList->SetComputeRootConstantBufferView(
-            InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
+            InOutStartIndex,
+            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::SRV:
         CommandList->SetComputeRootShaderResourceView(
-            InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
+            InOutStartIndex,
+            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::UAV:
         CommandList->SetComputeRootUnorderedAccessView(
-            InOutStartIndex, RootParameterInlines[index].GPUVirtualAddress);
+            InOutStartIndex,
+            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
       default:
         break;
     }
@@ -419,52 +437,53 @@ void ShaderBindingInstanceDx12::BindCompute(
 }
 
 void ShaderBindingInstanceDx12::CopyToOnlineDescriptorHeap(
-    CommandBufferDx12* InCommandList) {
+    CommandBufferDx12* commandList) {
   assert(g_rhi_dx12);
-  assert(g_rhi_dx12->Device);
+  assert(g_rhi_dx12->m_device_);
 
-  if (Descriptors.size() > 0) {
-    assert(Descriptors.size() <= 1000);
-    ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> DestDescriptor; 
+  if (m_descriptors_.size() > 0) {
+    assert(m_descriptors_.size() <= 1000);
+    ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> DestDescriptor;
     ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> SrcDescriptor;
 
-    for (int32_t i = 0; i < Descriptors.size(); ++i) {
-      SrcDescriptor.Add(Descriptors[i].Descriptor.CPUHandle);
+    for (int32_t i = 0; i < m_descriptors_.size(); ++i) {
+      SrcDescriptor.Add(m_descriptors_[i].m_descriptor_.m_cpuHandle_);
 
-      DescriptorDx12 Descriptor
-          = InCommandList->OnlineDescriptorHeap->Alloc();
+      DescriptorDx12 Descriptor = commandList->m_onlineDescriptorHeap_->Alloc();
       assert(Descriptor.IsValid());
-      DestDescriptor.Add(Descriptor.CPUHandle);
+      DestDescriptor.Add(Descriptor.m_cpuHandle_);
     }
 
-    g_rhi_dx12->Device->CopyDescriptors((uint32_t)DestDescriptor.NumOfData,
-                                        &DestDescriptor[0],
-                                        nullptr,
-                                        (uint32_t)SrcDescriptor.NumOfData,
-                                        &SrcDescriptor[0],
-                                        nullptr,
-                                        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    g_rhi_dx12->m_device_->CopyDescriptors(
+        (uint32_t)DestDescriptor.m_numOfData_,
+        &DestDescriptor[0],
+        nullptr,
+        (uint32_t)SrcDescriptor.m_numOfData_,
+        &SrcDescriptor[0],
+        nullptr,
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   }
 
-  if (SamplerDescriptors.size() > 0) {
-    assert(Descriptors.size() <= 200);
+  if (m_samplerDescriptors_.size() > 0) {
+    assert(m_descriptors_.size() <= 200);
     ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> DestSamplerDescriptor;
     ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> SrcSamplerDescriptor;
 
-    for (int32_t i = 0; i < SamplerDescriptors.size(); ++i) {
-      SrcSamplerDescriptor.Add(SamplerDescriptors[i].Descriptor.CPUHandle);
+    for (int32_t i = 0; i < m_samplerDescriptors_.size(); ++i) {
+      SrcSamplerDescriptor.Add(
+          m_samplerDescriptors_[i].m_descriptor_.m_cpuHandle_);
 
       DescriptorDx12 Descriptor
-          = InCommandList->OnlineSamplerDescriptorHeap->Alloc();
+          = commandList->m_onlineSamplerDescriptorHeap_->Alloc();
       assert(Descriptor.IsValid());
-      DestSamplerDescriptor.Add(Descriptor.CPUHandle);
+      DestSamplerDescriptor.Add(Descriptor.m_cpuHandle_);
     }
 
-    g_rhi_dx12->Device->CopyDescriptors(
-        (uint32_t)DestSamplerDescriptor.NumOfData,
+    g_rhi_dx12->m_device_->CopyDescriptors(
+        (uint32_t)DestSamplerDescriptor.m_numOfData_,
         &DestSamplerDescriptor[0],
         nullptr,
-        (uint32_t)SrcSamplerDescriptor.NumOfData,
+        (uint32_t)SrcSamplerDescriptor.m_numOfData_,
         &SrcSamplerDescriptor[0],
         nullptr,
         D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);

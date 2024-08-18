@@ -32,27 +32,22 @@ namespace game_engine {
 //};
 
 const std::unordered_map<VkDescriptorType, float> DefaultPoolSizes = {
-  {                   VK_DESCRIPTOR_TYPE_SAMPLER,       2},
-  {    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,       2},
-  {             VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,       2},
-  {             VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 / 8.0},
-  {      VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1 / 2.0},
-  {      VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1 / 8.0},
-  {            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 / 4.0},
-  {            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 / 8.0},
-  {    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,       4},
-  {    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 / 8.0},
-  {          VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 / 8.0},
-  {      VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK, 1 / 8.0},
-  //{VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 / 8.0},
+  {               VK_DESCRIPTOR_TYPE_SAMPLER,       2},
+  {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,       2},
+  {         VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,       2},
+  {         VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 / 8.0},
+  {  VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1 / 2.0},
+  {  VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1 / 8.0},
+  {        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 / 4.0},
+  {        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 / 8.0},
+  {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,       4},
+  {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 / 8.0},
+  {      VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 / 8.0},
+  {  VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK, 1 / 8.0},
+ //{VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 / 8.0},
 };
 
 struct DescriptorPoolVk {
-  std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
-      PendingDescriptorSets;
-  std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
-      AllocatedDescriptorSets;
-
   DescriptorPoolVk() = default;
 
   virtual ~DescriptorPoolVk();
@@ -65,23 +60,28 @@ struct DescriptorPoolVk {
       VkDescriptorSetLayout InLayout);
 
   virtual void Free(
-      std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance);
+      std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);
 
   void Release();
 
   // This will be called from 'DeallocatorMultiFrameShaderBindingInstance'
   void FreedFromPendingDelegate(
-      std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance);
+      std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);
 
-  uint32_t         MaxDescriptorSets = 128;
+  std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
+      m_pendingDescriptorSets_;
+  std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
+      m_allocatedDescriptorSets_;
+
+  uint32_t         m_maxDescriptorSets_ = 128;
   // TODO: check that std::size works as _countof
   // uint32_t         PoolSizes[std::size(DefaultPoolSizes)];
-  VkDescriptorPool DescriptorPool = nullptr;
+  VkDescriptorPool m_descriptorPool_ = nullptr;
   ;
-  mutable MutexLock DescriptorPoolLock;
+  mutable MutexLock m_descriptorPoolLock_;
 
   DeallocatorMultiFrameShaderBindingInstance
-      DeallocateMultiframeShaderBindingInstance;
+      m_deallocateMultiframeShaderBindingInstance_;
 };
 
 }  // namespace game_engine

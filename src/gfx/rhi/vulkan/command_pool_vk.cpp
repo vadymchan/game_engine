@@ -13,7 +13,7 @@ bool CommandBufferManagerVk::CreatePool(uint32_t QueueIndex) {
 
   poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;  // Optional
 
-  if (vkCreateCommandPool(g_rhi_vk->m_device_, &poolInfo, nullptr, &CommandPool)
+  if (vkCreateCommandPool(g_rhi_vk->m_device_, &poolInfo, nullptr, &m_commandPool_)
       != VK_SUCCESS) {
     // TODO: Handle errors appropriately
     return false;
@@ -22,46 +22,46 @@ bool CommandBufferManagerVk::CreatePool(uint32_t QueueIndex) {
 }
 
 void CommandBufferManagerVk::ReleaseInternal() {
-  ScopedLock s(&CommandListLock);
+  ScopedLock s(&m_commandListLock_);
 
   // vkFreeCommandBuffers(device, m_commandBufferManager.GetPool(),
   // static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-  for (auto& iter : UsingCommandBuffers) {
+  for (auto& iter : m_usingCommandBuffers_) {
     iter->GetFence()->WaitForFence();
     g_rhi_vk->GetFenceManager()->ReturnFence(iter->GetFence());
     delete iter;
   }
-  UsingCommandBuffers.clear();
+  m_usingCommandBuffers_.clear();
 
-  for (auto& iter : AvailableCommandBuffers) {
+  for (auto& iter : m_availableCommandBuffers_) {
     iter->GetFence()->WaitForFence();
     g_rhi_vk->GetFenceManager()->ReturnFence(iter->GetFence());
     delete iter;
   }
-  AvailableCommandBuffers.clear();
+  m_availableCommandBuffers_.clear();
 
-  if (CommandPool) {
-    vkDestroyCommandPool(g_rhi_vk->m_device_, CommandPool, nullptr);
-    CommandPool = nullptr;
+  if (m_commandPool_) {
+    vkDestroyCommandPool(g_rhi_vk->m_device_, m_commandPool_, nullptr);
+    m_commandPool_ = nullptr;
   }
 }
 
 CommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
-  ScopedLock s(&CommandListLock);
+  ScopedLock s(&m_commandListLock_);
 
   CommandBufferVk* SelectedCommandBuffer = nullptr;
-  if (AvailableCommandBuffers.size() > 0) {
-    for (int32_t i = 0; i < (int32_t)AvailableCommandBuffers.size(); ++i) {
+  if (m_availableCommandBuffers_.size() > 0) {
+    for (int32_t i = 0; i < (int32_t)m_availableCommandBuffers_.size(); ++i) {
       const VkResult Result = vkGetFenceStatus(
           g_rhi_vk->m_device_,
-          (VkFence)AvailableCommandBuffers[i]->GetFenceHandle());
+          (VkFence)m_availableCommandBuffers_[i]->GetFenceHandle());
       if (Result == VK_SUCCESS)  // VK_SUCCESS Signaled
       {
-        CommandBufferVk* commandBuffer = AvailableCommandBuffers[i];
-        AvailableCommandBuffers.erase(AvailableCommandBuffers.begin() + i);
+        CommandBufferVk* commandBuffer = m_availableCommandBuffers_[i];
+        m_availableCommandBuffers_.erase(m_availableCommandBuffers_.begin() + i);
 
-        UsingCommandBuffers.push_back(commandBuffer);
+        m_usingCommandBuffers_.push_back(commandBuffer);
         commandBuffer->Reset();
         SelectedCommandBuffer = commandBuffer;
         break;
@@ -95,7 +95,7 @@ CommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
     newCommandBuffer->GetRef() = vkCommandBuffer;
     newCommandBuffer->SetFence(g_rhi_vk->m_fenceManager_->GetOrCreateFence());
 
-    UsingCommandBuffers.push_back(newCommandBuffer);
+    m_usingCommandBuffers_.push_back(newCommandBuffer);
 
     SelectedCommandBuffer = newCommandBuffer;
   }
@@ -105,7 +105,7 @@ CommandBuffer* CommandBufferManagerVk::GetOrCreateCommandBuffer() {
 
 void CommandBufferManagerVk::ReturnCommandBuffer(
     CommandBuffer* commandBuffer) {
-  ScopedLock s(&CommandListLock);
+  ScopedLock s(&m_commandListLock_);
   // auto       it = std::find(
   //     UsingCommandBuffers.begin(), UsingCommandBuffers.end(), commandBuffer);
   // if (it != UsingCommandBuffers.end()) {
@@ -114,16 +114,16 @@ void CommandBufferManagerVk::ReturnCommandBuffer(
   //   //commandBuffer->Reset();  // Reset the command buffer before reusing
   //   AvailableCommandBuffers.push_back(commandBuffer);
   // }
-  for (int32_t i = 0; i < UsingCommandBuffers.size(); ++i) {
-    if (UsingCommandBuffers[i]->GetNativeHandle()
+  for (int32_t i = 0; i < m_usingCommandBuffers_.size(); ++i) {
+    if (m_usingCommandBuffers_[i]->GetNativeHandle()
         == commandBuffer->GetNativeHandle()) {
       //std::cout << "------------------------------------\n";
       //GlobalLogger::Log(LogLevel::Debug,
       //                  "Number of UsingCommandBuffers before: "
       //                      + std::to_string(UsingCommandBuffers.size()));
 
-      UsingCommandBuffers.erase(UsingCommandBuffers.begin() + i);
-      AvailableCommandBuffers.push_back((CommandBufferVk*)commandBuffer);
+      m_usingCommandBuffers_.erase(m_usingCommandBuffers_.begin() + i);
+      m_availableCommandBuffers_.push_back((CommandBufferVk*)commandBuffer);
 
       //GlobalLogger::Log(LogLevel::Debug,
       //                  "Number of UsingCommandBuffers after: "

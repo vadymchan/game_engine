@@ -4,7 +4,7 @@
 namespace game_engine {
 
 void RenderTarget::Return() {
-  if (bCreatedFromRenderTargetPool) {
+  if (m_isCreatedFromRenderTargetPool_) {
     RenderTargetPool::ReturnRenderTarget(this);
   }
 }
@@ -31,7 +31,7 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
     //, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT  // TODO: remove
   };
   // ColorRTInfo.ResourceName = TEXT("ColorPtr");
-  ColorPtr = RenderTargetPool::GetRenderTarget(ColorRTInfo);
+  m_colorPtr_ = RenderTargetPool::GetRenderTarget(ColorRTInfo);
 
   RenderTargetInfo DepthRTInfo = {
     ETextureType::TEXTURE_2D,
@@ -46,27 +46,27 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
     //, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT  // TODO: remove
   };
   // DepthRTInfo.ResourceName = TEXT("DepthPtr");
-  DepthPtr = RenderTargetPool::GetRenderTarget(DepthRTInfo);
+  m_depthPtr_ = RenderTargetPool::GetRenderTarget(DepthRTInfo);
 
   if ((int32_t)MsaaSamples > 1) {
     assert(InSwapchain);
-    ResolvePtr = RenderTarget::CreateFromTexture(InSwapchain->TexturePtr);
+    m_resolvePtr_ = RenderTarget::CreateFromTexture(InSwapchain->m_TexturePtr_);
   }
 
-  if (!FinalColorPtr) {
-    FinalColorPtr = RenderTarget::CreateFromTexture(InSwapchain->TexturePtr);
+  if (!m_finalColorPtr_) {
+    m_finalColorPtr_ = RenderTarget::CreateFromTexture(InSwapchain->m_TexturePtr_);
   }
 }
 
 void SceneRenderTarget::Return() {
-  if (ColorPtr) {
-    ColorPtr->Return();
+  if (m_colorPtr_) {
+    m_colorPtr_->Return();
   }
-  if (DepthPtr) {
-    DepthPtr->Return();
+  if (m_depthPtr_) {
+    m_depthPtr_->Return();
   }
-  if (ResolvePtr) {
-    ResolvePtr->Return();
+  if (m_resolvePtr_) {
+    m_resolvePtr_->Return();
   }
 }
 

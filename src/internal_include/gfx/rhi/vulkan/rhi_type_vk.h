@@ -136,8 +136,8 @@ inline auto GetVulkanTexturePixelSize(ETextureFormat type) {
 
 inline void GetVulkanAttachmentLoadStoreOp(VkAttachmentLoadOp&    OutLoadOp,
                                     VkAttachmentStoreOp&   OutStoreOp,
-                                    EAttachmentLoadStoreOp InType) {
-  switch (InType) {
+                                    EAttachmentLoadStoreOp type) {
+  switch (type) {
     case EAttachmentLoadStoreOp::LOAD_STORE:
       OutLoadOp  = VK_ATTACHMENT_LOAD_OP_LOAD;
       OutStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -483,8 +483,8 @@ inline VkPipelineStageFlagBits GetPipelineStageMask(EPipelineStageMask type) {
   return VK_PIPELINE_STAGE_NONE;
 }
 
-inline VkDescriptorType GetVulkanShaderBindingType(EShaderBindingType InType) {
-  switch (InType) {
+inline VkDescriptorType GetVulkanShaderBindingType(EShaderBindingType type) {
+  switch (type) {
     case EShaderBindingType::UNIFORMBUFFER:
       return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     case EShaderBindingType::UNIFORMBUFFER_DYNAMIC:

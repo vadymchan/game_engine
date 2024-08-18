@@ -19,28 +19,28 @@ void RingBufferVk::Create(EVulkanBufferBits bufferBits,
       bufferBits,
       EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
       VkDeviceSize(totalSize),
-      m_buffer,
-      BufferMemory,
-      RingBufferSize);
+      m_buffer_,
+      m_bufferMemory_,
+      m_ringBufferSize_);
 
-  RingBufferOffset = 0;
-  Alignment        = alignment;
+  m_ringBufferOffset_ = 0;
+  m_alignment_        = alignment;
 
-  Map(0, RingBufferSize);
+  Map(0, m_ringBufferSize_);
 }
 
 void RingBufferVk::Reset() {
   ScopedLock s(&Lock);
 
-  RingBufferOffset = 0;
+  m_ringBufferOffset_ = 0;
 }
 
 uint64_t RingBufferVk::Alloc(uint64_t allocSize) {
   ScopedLock s(&Lock);
 
-  const uint64_t allocOffset = Align<uint64_t>(RingBufferOffset, Alignment);
-  if (allocOffset + allocSize <= RingBufferSize) {
-    RingBufferOffset = allocOffset + allocSize;
+  const uint64_t allocOffset = Align<uint64_t>(m_ringBufferOffset_, m_alignment_);
+  if (allocOffset + allocSize <= m_ringBufferSize_) {
+    m_ringBufferOffset_ = allocOffset + allocSize;
     return allocOffset;
   }
 
@@ -70,48 +70,48 @@ uint64_t RingBufferVk::Alloc(uint64_t allocSize) {
 void RingBufferVk::Release() {
   assert(g_rhi_vk->m_device_);
 
-  if (m_buffer) {
-    vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer, nullptr);
-    m_buffer = nullptr;
+  if (m_buffer_) {
+    vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer_, nullptr);
+    m_buffer_ = nullptr;
   }
 
-  if (BufferMemory) {
-    vkFreeMemory(g_rhi_vk->m_device_, BufferMemory, nullptr);
-    BufferMemory = nullptr;
+  if (m_bufferMemory_) {
+    vkFreeMemory(g_rhi_vk->m_device_, m_bufferMemory_, nullptr);
+    m_bufferMemory_ = nullptr;
   }
 
-  RingBufferSize = 0;
-  MappedPointer  = nullptr;
+  m_ringBufferSize_ = 0;
+  m_mappedPointer_  = nullptr;
 }
 
 void* RingBufferVk::Map(uint64_t offset, uint64_t size) {
   assert(size);
-  assert(offset + size <= RingBufferSize);
-  assert(!MappedPointer);
+  assert(offset + size <= m_ringBufferSize_);
+  assert(!m_mappedPointer_);
   vkMapMemory(
-      g_rhi_vk->m_device_, BufferMemory, offset, size, 0, &MappedPointer);
-  return MappedPointer;
+      g_rhi_vk->m_device_, m_bufferMemory_, offset, size, 0, &m_mappedPointer_);
+  return m_mappedPointer_;
 }
 
 void* RingBufferVk::Map() {
-  assert(RingBufferSize);
-  assert(!MappedPointer);
+  assert(m_ringBufferSize_);
+  assert(!m_mappedPointer_);
   vkMapMemory(
-      g_rhi_vk->m_device_, BufferMemory, 0, VK_WHOLE_SIZE, 0, &MappedPointer);
-  return MappedPointer;
+      g_rhi_vk->m_device_, m_bufferMemory_, 0, VK_WHOLE_SIZE, 0, &m_mappedPointer_);
+  return m_mappedPointer_;
 }
 
 void RingBufferVk::Unmap() {
-  assert(MappedPointer);
-  vkUnmapMemory(g_rhi_vk->m_device_, BufferMemory);
-  MappedPointer = nullptr;
+  assert(m_mappedPointer_);
+  vkUnmapMemory(g_rhi_vk->m_device_, m_bufferMemory_);
+  m_mappedPointer_ = nullptr;
 }
 
 void RingBufferVk::UpdateBuffer(const void* data, uint64_t size) {
-  assert(size <= RingBufferSize);
+  assert(size <= m_ringBufferSize_);
 
   if (Map(0, size) != nullptr) {
-    memcpy(MappedPointer, data, size);
+    memcpy(m_mappedPointer_, data, size);
     Unmap();
   } else {
     GlobalLogger::Log(LogLevel::Error, "Failed to map ring buffer");

@@ -23,7 +23,7 @@ class RenderPassVk : public RenderPass {
   void Release();
 
   // bool Initialize(const RenderPassInfoVk& renderPassInfo) {
-  //   m_renderPassInfo = renderPassInfo;
+  //   m_renderPassInfo_ = renderPassInfo;
   //   if (!CreateRenderPass()) {
   //     return false;
   //   }
@@ -39,9 +39,9 @@ class RenderPassVk : public RenderPass {
 
   void EndRenderPass() override;
 
-  virtual void* GetRenderPass() const override { return m_renderPass; }
+  virtual void* GetRenderPass() const override { return m_renderPass_; }
 
-  virtual void* GetFrameBuffer() const override { return m_frameBuffer; }
+  virtual void* GetFrameBuffer() const override { return m_frameBuffer_; }
 
   bool CreateRenderPass();
 
@@ -49,13 +49,13 @@ class RenderPassVk : public RenderPass {
 
   void SetFinalLayoutToAttachment(const Attachment& attachment) const;
 
-  const CommandBuffer* m_commandBuffer = nullptr;
+  const CommandBuffer* m_commandBuffer_ = nullptr;
 
-  VkRenderPassBeginInfo     RenderPassBeginInfo{};
+  VkRenderPassBeginInfo     m_renderPassBeginInfo_{};
   // TODO: consider remove it (already have in attachment)
-  std::vector<VkClearValue> ClearValues;
-  VkRenderPass              m_renderPass  = VK_NULL_HANDLE;
-  VkFramebuffer             m_frameBuffer = VK_NULL_HANDLE;
+  std::vector<VkClearValue> m_clearValues_;
+  VkRenderPass              m_renderPass_  = VK_NULL_HANDLE;
+  VkFramebuffer             m_frameBuffer_ = VK_NULL_HANDLE;
 };
 
 }  // namespace game_engine

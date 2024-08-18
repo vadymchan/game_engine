@@ -12,27 +12,27 @@ namespace game_engine {
 void View::PrepareViewUniformBufferShaderBindingInstance() {
   // Prepare & Get ViewUniformBuffer
   struct ViewUniformBuffer {
-    math::Matrix4f  V;
-    math::Matrix4f  P;
-    math::Matrix4f  VP;
-    math::Vector3Df EyeWorld;
-    float           padding0;
+    math::Matrix4f  m_view;
+    math::Matrix4f  m_projection;
+    math::Matrix4f  m_VP;
+    math::Vector3Df m_eyeWorld;
+    float           m_padding0;
   };
 
   ViewUniformBuffer ubo;
-  ubo.P        = Camera->Projection;
-  ubo.V        = Camera->view;
-  ubo.VP       = Camera->Projection * Camera->view;
-  ubo.EyeWorld = Camera->Pos;
+  ubo.m_projection = m_camera_->m_projection_;
+  ubo.m_view       = m_camera_->m_view_;
+  ubo.m_VP         = m_camera_->m_projection_ * m_camera_->m_view_;
+  ubo.m_eyeWorld   = m_camera_->m_position_;
 
-  ViewUniformBufferPtr = std::shared_ptr<IUniformBufferBlock>(
+  m_viewUniformBufferPtr_ = std::shared_ptr<IUniformBufferBlock>(
       g_rhi->CreateUniformBufferBlock(NameStatic("ViewUniformParameters"),
                                       LifeTimeType::OneFrame,
                                       sizeof(ubo)));
-  ViewUniformBufferPtr->UpdateBufferData(&ubo, sizeof(ubo));
+  m_viewUniformBufferPtr_->UpdateBufferData(&ubo, sizeof(ubo));
 
   int32_t                              BindingPoint = 0;
-  ShaderBindingArray                  shaderBindingArray;
+  ShaderBindingArray                   shaderBindingArray;
   ShaderBindingResourceInlineAllocator ResourceInlineAllactor;
 
   shaderBindingArray.Add(
@@ -42,17 +42,18 @@ void View::PrepareViewUniformBufferShaderBindingInstance() {
                     false,
                     EShaderAccessStageFlag::ALL_GRAPHICS,
                     ResourceInlineAllactor.Alloc<UniformBufferResource>(
-                        ViewUniformBufferPtr.get())));
+                        m_viewUniformBufferPtr_.get())));
 
-  ViewUniformBufferShaderBindingInstance = g_rhi->CreateShaderBindingInstance(
-      shaderBindingArray, ShaderBindingInstanceType::SingleFrame);
+  m_viewUniformBufferShaderBindingInstance_
+      = g_rhi->CreateShaderBindingInstance(
+          shaderBindingArray, ShaderBindingInstanceType::SingleFrame);
 }
 
 void View::GetShaderBindingInstance(
     ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
-    bool                         InIsForwardRenderer) const {
+    bool                        InIsForwardRenderer) const {
   OutShaderBindingInstanceArray.Add(
-      ViewUniformBufferShaderBindingInstance.get());
+      m_viewUniformBufferShaderBindingInstance_.get());
 
   // Get light uniform buffers
   // if (InIsForwardRenderer) {
@@ -70,9 +71,9 @@ void View::GetShaderBindingInstance(
 // TODO: currently not used
 void View::GetShaderBindingLayout(
     ShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
-    bool                       InIsForwardRenderer) const {
+    bool                      InIsForwardRenderer) const {
   OutShaderBindingsLayoutArray.Add(
-      ViewUniformBufferShaderBindingInstance->ShaderBindingsLayouts);
+      m_viewUniformBufferShaderBindingInstance_->m_shaderBindingsLayouts_);
 
   // Get light uniform buffers
   // if (InIsForwardRenderer) {
@@ -81,7 +82,7 @@ void View::GetShaderBindingLayout(
   //    if (viewLight.Light) {
   //      assert(viewLight.m_shaderBindingInstance);
   //      OutShaderBindingsLayoutArray.Add(
-  //          viewLight.m_shaderBindingInstance->ShaderBindingsLayouts);
+  //          viewLight.m_shaderBindingInstance->m_shaderBindingsLayouts_);
   //    }
   //  }
   //}

@@ -37,7 +37,7 @@ class File {
 static uint64_t GetFileTimeStamp(const std::string& filename);
 
   File()
-      : m_fp(nullptr) {}
+      : m_fp_(nullptr) {}
 
   ~File();
 
@@ -57,11 +57,11 @@ static uint64_t GetFileTimeStamp(const std::string& filename);
                  const std::string& startToken,
                  const std::string& endToken);
 
-  bool IsBufferEmpty() const { return m_buffer.empty(); }
+  bool IsBufferEmpty() const { return m_buffer_.empty(); }
 
   private:
-  std::FILE*                m_fp;
-  std::vector<ELEMENT_TYPE> m_buffer;
+  std::FILE*                m_fp_;
+  std::vector<ELEMENT_TYPE> m_buffer_;
 };
 
 }  // namespace game_engine

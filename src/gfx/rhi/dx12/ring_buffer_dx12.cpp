@@ -5,17 +5,17 @@
 namespace game_engine {
 
 void RingBufferDx12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
-  ScopedLock s(&Lock);
+  ScopedLock s(&m_lock_);
 
   Release();
 
-  RingBufferSize   = Align(totalSize, (uint64_t)alignment);
-  RingBufferOffset = 0;
-  Alignment        = alignment;
+  m_ringBufferSize_   = Align(totalSize, (uint64_t)alignment);
+  m_ringBufferOffset_ = 0;
+  m_alignment_        = alignment;
 
   D3D12_RESOURCE_DESC desc = {};
   desc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
-  desc.Width               = uint32_t(RingBufferSize);
+  desc.Width               = uint32_t(m_ringBufferSize_);
   desc.Height              = 1;
   desc.DepthOrArraySize    = 1;
   desc.MipLevels           = 1;
@@ -27,11 +27,11 @@ void RingBufferDx12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
   desc.Alignment           = 0;
 
   assert(g_rhi_dx12);
-  m_buffer = g_rhi_dx12->CreateUploadResource(&desc,
+  m_buffer_ = g_rhi_dx12->CreateUploadResource(&desc,
                                             D3D12_RESOURCE_STATE_GENERIC_READ);
 
   // TODO: refactor
-  auto resource = m_buffer->Resource;
+  auto resource = m_buffer_->m_resource_;
   assert(resource);
 
   if (!resource) {
@@ -39,19 +39,19 @@ void RingBufferDx12::Create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
   }
 
   {
-    assert(!CBV.IsValid());
-    CBV = g_rhi_dx12->DescriptorHeaps.Alloc();
+    assert(!m_cbv_.IsValid());
+    m_cbv_ = g_rhi_dx12->m_descriptorHeaps_.Alloc();
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC Desc;
-    Desc.BufferLocation = m_buffer->GetGPUVirtualAddress();
-    Desc.SizeInBytes    = (uint32_t)RingBufferSize;
+    Desc.BufferLocation = m_buffer_->GetGPUVirtualAddress();
+    Desc.SizeInBytes    = (uint32_t)m_ringBufferSize_;
 
-    g_rhi_dx12->Device->CreateConstantBufferView(&Desc, CBV.CPUHandle);
+    g_rhi_dx12->m_device_->CreateConstantBufferView(&Desc, m_cbv_.m_cpuHandle_);
   }
 
   D3D12_RANGE readRange = {};
-  HRESULT     hr        = m_buffer->Resource.get()->Get()->Map(
-      0, &readRange, reinterpret_cast<void**>(&MappedPointer));
+  HRESULT     hr        = m_buffer_->m_resource_.get()->Get()->Map(
+      0, &readRange, reinterpret_cast<void**>(&m_mappedPointer_));
   assert(SUCCEEDED(hr));
 
   if (FAILED(hr)) {

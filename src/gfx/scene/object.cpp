@@ -7,16 +7,16 @@
 
 namespace game_engine {
 
-   std::vector<Object*>       Object::s_ShadowCasterObject;
-   std::vector<RenderObject*> Object::s_ShadowCasterRenderObject;
-   std::vector<Object*>       Object::s_StaticObjects;
-   std::vector<RenderObject*> Object::s_StaticRenderObjects;
-   std::vector<Object*>       Object::s_BoundBoxObjects;
-   std::vector<Object*>       Object::s_BoundSphereObjects;
-   std::vector<Object*>       Object::s_DebugObjects;
+   std::vector<Object*>       Object::s_shadowCasterObject;
+   std::vector<RenderObject*> Object::s_shadowCasterRenderObject;
+   std::vector<Object*>       Object::s_staticObjects;
+   std::vector<RenderObject*> Object::s_staticRenderObjects;
+   std::vector<Object*>       Object::s_boundBoxObjects;
+   std::vector<Object*>       Object::s_boundSphereObjects;
+   std::vector<Object*>       Object::s_debugObjects;
    std::vector<Object*>       Object::s_UIObjects;
    std::vector<Object*>       Object::s_UIDebugObjects;
-   std::set<Object*>          Object::s_DirtyStateObjects;
+   std::set<Object*>          Object::s_dirtyStateObjects;
 
 
 }  // namespace game_engine

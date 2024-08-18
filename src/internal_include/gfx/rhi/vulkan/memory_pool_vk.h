@@ -23,14 +23,14 @@ class SubMemoryAllocatorVk : public SubMemoryAllocator {
 
   virtual void Initialize(EVulkanBufferBits InUsage,
                           EVulkanMemoryBits InProperties,
-                          uint64_t          InSize) override;
+                          uint64_t          size) override;
 
-  virtual void* GetBuffer() const { return m_buffer; }
+  virtual void* GetBuffer() const { return m_buffer_; }
 
-  virtual void* GetMemory() const { return DeviceMemory; }
+  virtual void* GetMemory() const { return m_deviceMemory_; }
 
-  VkBuffer       m_buffer       = nullptr;
-  VkDeviceMemory DeviceMemory = nullptr;
+  VkBuffer       m_buffer_       = nullptr;
+  VkDeviceMemory m_deviceMemory_ = nullptr;
 };
 
 class MemoryPoolVk : public MemoryPool {

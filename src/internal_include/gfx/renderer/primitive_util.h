@@ -6,7 +6,6 @@
 #include "gfx/rhi/buffer.h"
 #include "gfx/rhi/pipeline_state_info.h"
 #include "gfx/rhi/shader.h"
-
 #include "gfx/scene/camera.h"
 #include "utils/math/plane.h"
 
@@ -19,52 +18,52 @@ class QuadPrimitive : public Object {
   public:
   void SetPlane(const math::Plane& plane);
 
-  math::Plane plane;
+  math::Plane m_plane_;
 };
 
 class ConePrimitive : public Object {
   public:
-  float           Height = 0.0f;
-  float           Radius = 0.0f;
-  math::Vector4Df Color;
+  float           m_height_ = 0.0f;
+  float           m_radius_ = 0.0f;
+  math::Vector4Df m_color_;
 };
 
 class CylinderPrimitive : public Object {
   public:
-  float           Height = 0.0f;
-  float           Radius = 0.0f;
-  math::Vector4Df Color;
+  float           m_height_ = 0.0f;
+  float           m_radius_ = 0.0f;
+  math::Vector4Df m_color_;
 };
 
 class BillboardQuadPrimitive : public QuadPrimitive {
   public:
-  Camera* camera = nullptr;
+  Camera* m_camera_ = nullptr;
 
   virtual void Update(float deltaTime) override;
 };
 
 class UIQuadPrimitive : public Object {
   public:
-  math::Vector2Df Pos;
-  math::Vector2Df Size;
+  math::Vector2Df m_position_;
+  math::Vector2Df m_size_;
 
   // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
-  // InRenderFrameContext, const Camera* camera, const Shader* shader, const
+  // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
-  void             SetTexture(const Texture* texture);
-  void             SetUniformParams(const Shader* shader) const;
+  void           SetTexture(const Texture* texture);
+  void           SetUniformParams(const Shader* shader) const;
   const Texture* GetTexture() const;
 };
 
 class FullscreenQuadPrimitive : public Object {
   public:
   // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
-  // InRenderFrameContext, const Camera* camera, const Shader* shader, const
+  // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
   void SetUniformBuffer(const Shader* shader) const;
-  void SetTexture(int                       index,
+  void SetTexture(int                     index,
                   const Texture*          texture,
                   const SamplerStateInfo* samplerState);
 };
@@ -75,30 +74,30 @@ class BoundBoxObject : public Object {
   void UpdateBoundBox(const BoundBox& boundBox);
   void UpdateBoundBox();
 
-  math::Vector4Df Color = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
-  BoundBox        boundBox;
-  Object*         OwnerObject = nullptr;
+  math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+  BoundBox        m_boundBox_;
+  Object*         m_ownerObject_ = nullptr;
 };
 
 class BoundSphereObject : public Object {
   public:
   void SetUniformBuffer(const Shader* shader);
 
-  math::Vector4Df Color = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
-  BoundSphere     boundSphere;
-  Object*         OwnerObject = nullptr;
+  math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+  BoundSphere     m_boundSphere_;
+  Object*         m_ownerObject_ = nullptr;
 };
 
 class SegmentPrimitive : public Object {
   public:
   math::Vector3Df GetCurrentEnd() const {
-    float           t   = std::clamp(Time, 0.0f, 1.0f);
-    math::Vector3Df end = (End - Start);
-    return end * t + Start;
+    float           t   = std::clamp(m_time_, 0.0f, 1.0f);
+    math::Vector3Df end = (m_end_ - m_start_);
+    return end * t + m_start_;
   }
 
   math::Vector3Df GetDirectionNormalized() const {
-    auto result = (End - Start).normalized();
+    auto result = (m_end_ - m_start_).normalized();
     return result;
   }
 
@@ -108,10 +107,10 @@ class SegmentPrimitive : public Object {
                      const math::Vector4Df& color,
                      float                  time = 1.0f);
 
-  math::Vector3Df Start;
-  math::Vector3Df End;
-  math::Vector4Df Color = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
-  float           Time  = 0.0f;
+  math::Vector3Df m_start_;
+  math::Vector3Df m_end_;
+  math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+  float           m_time_  = 0.0f;
 
   virtual void Update(float deltaTime) override;
 };
@@ -119,8 +118,8 @@ class SegmentPrimitive : public Object {
 class ArrowSegmentPrimitive : public Object {
   public:
   virtual ~ArrowSegmentPrimitive() {
-    delete SegmentObject;
-    delete ConeObject;
+    delete m_segmentObject_;
+    delete m_coneObject_;
   }
 
   virtual void Update(float deltaTime) override;
@@ -130,8 +129,8 @@ class ArrowSegmentPrimitive : public Object {
   void SetEnd(const math::Vector3Df& end);
   void SetTime(float time);
 
-  SegmentPrimitive* SegmentObject = nullptr;
-  ConePrimitive*    ConeObject    = nullptr;
+  SegmentPrimitive* m_segmentObject_ = nullptr;
+  ConePrimitive*    m_coneObject_    = nullptr;
 };
 
 // class DirectionalLightPrimitive : public Object {
@@ -145,7 +144,7 @@ class ArrowSegmentPrimitive : public Object {
 //
 //   BillboardQuadPrimitive* BillboardObject     = nullptr;
 //   ArrowSegmentPrimitive*  ArrowSegementObject = nullptr;
-//   math::Vector3Df          Pos                 = Vector(0.0f);
+//   math::Vector3Df          m_position_                 = Vector(0.0f);
 //   DirectionalLight*       Light               = nullptr;
 // };
 //
@@ -184,31 +183,31 @@ class FrustumPrimitive : public Object {
   FrustumPrimitive() = default;
 
   FrustumPrimitive(const Camera* targetCamera)
-      : TargetCamera(targetCamera) {}
+      : m_targetCamera_(targetCamera) {}
 
   virtual ~FrustumPrimitive() {
-    for (int32_t i = 0; i < std::size(Segments); ++i) {
-      delete Segments[i];
+    for (int32_t i = 0; i < std::size(m_segments_); ++i) {
+      delete m_segments_[i];
     }
 
-    for (int32_t i = 0; i < std::size(Plane); ++i) {
-      delete Plane[i];
+    for (int32_t i = 0; i < std::size(m_plane_); ++i) {
+      delete m_plane_[i];
     }
   }
 
   virtual void Update(float deltaTime) override;
   // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
-  // InRenderFrameContext, const Camera* camera, const Shader* shader, const
+  // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
 
-  SegmentPrimitive* Segments[16]    = {};
-  QuadPrimitive*    Plane[6]        = {};
-  const Camera*     TargetCamera    = nullptr;
-  bool              PostPerspective = false;
-  bool              DrawPlane       = false;
-  math::Vector3Df   Offset;
-  math::Vector3Df   Scale = math::g_oneVector<float, 3>();
+  SegmentPrimitive* m_segments_[16]    = {};
+  QuadPrimitive*    m_plane_[6]        = {};
+  const Camera*     m_targetCamera_    = nullptr;
+  bool              m_postPerspective_ = false;
+  bool              m_drawPlane_       = false;
+  math::Vector3Df   m_offset_;
+  math::Vector3Df   m_scale_ = math::g_oneVector<float, 3>();
 };
 
 class Graph2D : public Object {
@@ -218,20 +217,22 @@ class Graph2D : public Object {
   void SethPos(const math::Vector2Df& pos);
   void SetPoints(const std::vector<math::Vector2Df>& points);
 
-  void SetGuardLineSize(const math::Vector2Df& size) { GuardLineSize = size; }
+  void SetGuardLineSize(const math::Vector2Df& size) {
+    m_guardLineSize_ = size;
+  }
 
   void UpdateBuffer();
 
   int32_t GetMaxInstancCount() const {
-    return static_cast<int32_t>(ResultMatrices.size());
+    return static_cast<int32_t>(m_resultMatrices_.size());
   }
 
-  bool                         DirtyFlag = false;
-  math::Vector2Df              Pos;
-  math::Vector2Df              GuardLineSize = math::Vector2Df(100.0f, 100.0f);
-  std::vector<math::Vector2Df> Points;
-  std::vector<math::Vector2Df> ResultPoints;
-  std::vector<math::Matrix4f>  ResultMatrices;
+  bool            m_dirtyFlag_ = false;
+  math::Vector2Df m_position_;
+  math::Vector2Df m_guardLineSize_ = math::Vector2Df(100.0f, 100.0f);
+  std::vector<math::Vector2Df> m_points_;
+  std::vector<math::Vector2Df> m_resultPoints_;
+  std::vector<math::Matrix4f>  m_resultMatrices_;
 };
 
 std::vector<float> GenerateColor(const math::Vector4Df& color,
@@ -299,7 +300,7 @@ BillboardQuadPrimitive*  CreateBillobardQuad(const math::Vector3Df& pos,
                                              Camera*                camera);
 UIQuadPrimitive*         CreateUIQuad(const math::Vector2Df& pos,
                                       const math::Vector2Df& size,
-                                      Texture*             texture);
+                                      Texture*               texture);
 FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture);
 SegmentPrimitive*        CreateSegment(const math::Vector3Df& start,
                                        const math::Vector3Df& end,

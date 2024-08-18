@@ -29,42 +29,42 @@ bool RenderPassDx12::BeginRenderPass(const CommandBuffer* commandBuffer) {
 
   m_commandBuffer_ = (const CommandBufferDx12*)commandBuffer;
 
-  if (RTVCPUHandles.size() > 0) {
-    m_commandBuffer_->CommandList->OMSetRenderTargets(
-        (uint32_t)RTVCPUHandles.size(),
-        &RTVCPUHandles[0],
+  if (m_rtvCPUHandles_.size() > 0) {
+    m_commandBuffer_->m_commandList_->OMSetRenderTargets(
+        (uint32_t)m_rtvCPUHandles_.size(),
+        &m_rtvCPUHandles_[0],
         false,
-        (DSVCPUDHandle.ptr ? &DSVCPUDHandle : nullptr));
+        (m_dsvCPUDHandle_.ptr ? &m_dsvCPUDHandle_ : nullptr));
   } else {
-    m_commandBuffer_->CommandList->OMSetRenderTargets(
-        0, nullptr, false, (DSVCPUDHandle.ptr ? &DSVCPUDHandle : nullptr));
+    m_commandBuffer_->m_commandList_->OMSetRenderTargets(
+        0, nullptr, false, (m_dsvCPUDHandle_.ptr ? &m_dsvCPUDHandle_ : nullptr));
   }
 
-  for (int32_t i = 0; i < RTVClears.size(); ++i) {
-    if (RTVClears[i].GetType() != ERTClearType::Color) {
+  for (int32_t i = 0; i < m_rtvClears_.size(); ++i) {
+    if (m_rtvClears_[i].GetType() != ERTClearType::Color) {
       continue;
     }
 
-    m_commandBuffer_->CommandList->ClearRenderTargetView(
-        RTVCPUHandles[i], RTVClears[i].GetCleraColor(), 0, nullptr);
+    m_commandBuffer_->m_commandList_->ClearRenderTargetView(
+        m_rtvCPUHandles_[i], m_rtvClears_[i].GetCleraColor(), 0, nullptr);
   }
 
-  if (DSVClear.GetType() == ERTClearType::DepthStencil) {
-    if (DSVDepthClear || DSVStencilClear) {
+  if (m_dsvClear_.GetType() == ERTClearType::DepthStencil) {
+    if (m_dsvDepthClear_ || m_dsvStencilClear_) {
       D3D12_CLEAR_FLAGS DSVClearFlags = (D3D12_CLEAR_FLAGS)0;
-      if (DSVDepthClear) {
+      if (m_dsvDepthClear_) {
         DSVClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
       }
 
-      if (DSVStencilClear) {
+      if (m_dsvStencilClear_) {
         DSVClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
       }
 
-      m_commandBuffer_->CommandList->ClearDepthStencilView(
-          DSVCPUDHandle,
+      m_commandBuffer_->m_commandList_->ClearDepthStencilView(
+          m_dsvCPUDHandle_,
           DSVClearFlags,
-          DSVClear.GetCleraDepth(),
-          (uint8_t)DSVClear.GetCleraStencil(),
+          m_dsvClear_.GetCleraDepth(),
+          (uint8_t)m_dsvClear_.GetCleraStencil(),
           0,
           nullptr);
     }
@@ -80,7 +80,7 @@ void RenderPassDx12::EndRenderPass() {
   // vkCmdEndRenderPass((VkCommandBuffer)m_commandBuffer->GetHandle());
 
   //// Apply layout to attachments
-  // for(Attachment& iter : m_renderPassInfo.Attachments)
+  // for(Attachment& iter : m_renderPassInfo_.Attachments)
   //{
   //     check(iter.IsValid());
   //     SetFinalLayoutToAttachment(iter);
@@ -104,37 +104,37 @@ void RenderPassDx12::Initialize() {
 bool RenderPassDx12::CreateRenderPass() {
   // Create m_renderPass
   {
-    for (int32_t i = 0; i < (int32_t)m_renderPassInfo.Attachments.size(); ++i) {
-      const Attachment& attachment = m_renderPassInfo.Attachments[i];
+    for (int32_t i = 0; i < (int32_t)m_renderPassInfo_.m_attachments_.size(); ++i) {
+      const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
       assert(attachment.IsValid());
 
-      const auto& RTInfo = attachment.RenderTargetPtr->Info;
+      const auto& RTInfo = attachment.m_renderTargetPtr_->m_info_;
       const bool  HasClear
-          = (attachment.LoadStoreOp == EAttachmentLoadStoreOp::CLEAR_STORE
-             || attachment.LoadStoreOp
+          = (attachment.m_loadStoreOp_ == EAttachmentLoadStoreOp::CLEAR_STORE
+             || attachment.m_loadStoreOp_
                     == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
       TextureDx12* TextureDX12
-          = (TextureDx12*)attachment.RenderTargetPtr->GetTexture();
+          = (TextureDx12*)attachment.m_renderTargetPtr_->GetTexture();
 
       if (attachment.IsDepthAttachment()) {
-        DSVFormat = GetDX12TextureFormat(RTInfo.Format);
-        DSVClear  = attachment.m_rtClearValue;
+        m_dsvFormat_ = GetDX12TextureFormat(RTInfo.m_format_);
+        m_dsvClear_  = attachment.m_rtClearValue;
 
-        DSVDepthClear   = HasClear;
-        DSVStencilClear = (attachment.StencilLoadStoreOp
+        m_dsvDepthClear_   = HasClear;
+        m_dsvStencilClear_ = (attachment.m_stencilLoadStoreOp_
                                == EAttachmentLoadStoreOp::CLEAR_STORE
-                           || attachment.StencilLoadStoreOp
+                           || attachment.m_stencilLoadStoreOp_
                                   == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
 
-        DSVCPUDHandle = TextureDX12->DSV.CPUHandle;
+        m_dsvCPUDHandle_ = TextureDX12->m_dsv_.m_cpuHandle_;
       } else {
         if (HasClear) {
-          RTVClears.push_back(attachment.m_rtClearValue);
+          m_rtvClears_.push_back(attachment.m_rtClearValue);
         } else {
-          RTVClears.push_back(RTClearValue::Invalid);
+          m_rtvClears_.push_back(RTClearValue::s_kInvalid);
         }
-        RTVCPUHandles.push_back(TextureDX12->RTV.CPUHandle);
-        RTVFormats.push_back(GetDX12TextureFormat(RTInfo.Format));
+        m_rtvCPUHandles_.push_back(TextureDX12->m_rtv_.m_cpuHandle_);
+        m_rtvFormats_.push_back(GetDX12TextureFormat(RTInfo.m_format_));
       }
     }
   }

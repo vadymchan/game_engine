@@ -69,7 +69,7 @@ class RhiVk : public RHI {
       const std::shared_ptr<IndexStreamData>& streamData) const override;
 
   virtual std::shared_ptr<Texture> CreateTextureFromData(
-      const ImageData* InImageData) const override;
+      const ImageData* imageData) const override;
 
   virtual bool CreateShaderInternal(
       Shader* OutShader, const ShaderInfo& shaderInfo) const override;
@@ -82,123 +82,123 @@ class RhiVk : public RHI {
 
   virtual SamplerStateInfo* CreateSamplerState(
       const SamplerStateInfo& initializer) const override {
-    return SamplerStatePool.GetOrCreate(initializer);
+    return s_samplerStatePool.GetOrCreate(initializer);
   }
 
   virtual RasterizationStateInfo* CreateRasterizationState(
       const RasterizationStateInfo& initializer) const override {
-    return RasterizationStatePool.GetOrCreate(initializer);
+    return s_rasterizationStatePool.GetOrCreate(initializer);
   }
 
   virtual StencilOpStateInfo* CreateStencilOpStateInfo(
       const StencilOpStateInfo& initializer) const override {
-    return StencilOpStatePool.GetOrCreate(initializer);
+    return s_stencilOpStatePool.GetOrCreate(initializer);
   }
 
   virtual DepthStencilStateInfo* CreateDepthStencilState(
       const DepthStencilStateInfo& initializer) const override {
-    return DepthStencilStatePool.GetOrCreate(initializer);
+    return s_depthStencilStatePool.GetOrCreate(initializer);
   }
 
   virtual BlendingStateInfo* CreateBlendingState(
       const BlendingStateInfo& initializer) const override {
-    return BlendingStatePool.GetOrCreate(initializer);
+    return s_blendingStatePool.GetOrCreate(initializer);
   }
 
   virtual ShaderBindingLayout* CreateShaderBindings(
-      const ShaderBindingArray& InShaderBindingArray) const override;
+      const ShaderBindingArray& shaderBindingArray) const override;
 
   virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
-      const ShaderBindingArray&      InShaderBindingArray,
-      const ShaderBindingInstanceType InType) const override;
+      const ShaderBindingArray&      shaderBindingArray,
+      const ShaderBindingInstanceType type) const override;
 
   virtual PipelineStateInfo* CreatePipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
       const GraphicsPipelineShader     shader,
-      const VertexBufferArray&         InVertexBufferArray,
+      const VertexBufferArray&         vertexBufferArray,
       const RenderPass*                renderPass,
-      const ShaderBindingLayoutArray& InShaderBindingArray,
-      const PushConstant*             InPushConstant,
-      std::int32_t                     InSubpassIndex) const override {
-    return PipelineStatePool.GetOrCreateMove(
+      const ShaderBindingLayoutArray& shaderBindingArray,
+      const PushConstant*             pushConstant,
+      std::int32_t                     subpassIndex) const override {
+    return s_pipelineStatePool.GetOrCreateMove(
         std::move(PipelineStateInfo(pipelineStateFixed,
                                      shader,
-                                     InVertexBufferArray,
+                                     vertexBufferArray,
                                      renderPass,
-                                     InShaderBindingArray,
-                                     InPushConstant,
-                                     InSubpassIndex)));
+                                     shaderBindingArray,
+                                     pushConstant,
+                                     subpassIndex)));
   }
 
   virtual PipelineStateInfo* CreateComputePipelineStateInfo(
       const Shader*                    shader,
-      const ShaderBindingLayoutArray& InShaderBindingArray,
+      const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const override {
-    return PipelineStatePool.GetOrCreateMove(std::move(
-        PipelineStateInfo(shader, InShaderBindingArray, pushConstant)));
+    return s_pipelineStatePool.GetOrCreateMove(std::move(
+        PipelineStateInfo(shader, shaderBindingArray, pushConstant)));
   }
 
   // Create m_buffers
   std::shared_ptr<Buffer> CreateBufferInternal(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0
-      /*, const wchar_t*    InResourceName = nullptr*/) const;
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0
+      /*, const wchar_t*    resourceName = nullptr*/) const;
 
   virtual std::shared_ptr<Buffer> CreateStructuredBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      std::uint64_t     InStride,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const override {
-    return CreateBufferInternal(InSize,
-                                InAlignment,
-                                InBufferCreateFlag,
-                                InInitialState,
-                                InData,
-                                InDataSize);
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      std::uint64_t     stride,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const override {
+    return CreateBufferInternal(size,
+                                alignment,
+                                bufferCreateFlag,
+                                initialState,
+                                data,
+                                dataSize);
   }
 
   virtual std::shared_ptr<Buffer> CreateRawBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const override {
-    return CreateBufferInternal(InSize,
-                                InAlignment,
-                                InBufferCreateFlag,
-                                InInitialState,
-                                InData,
-                                InDataSize);
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const override {
+    return CreateBufferInternal(size,
+                                alignment,
+                                bufferCreateFlag,
+                                initialState,
+                                data,
+                                dataSize);
   }
 
   virtual std::shared_ptr<Buffer> CreateFormattedBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      ETextureFormat    InFormat,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const override {
-    return CreateBufferInternal(InSize,
-                                InAlignment,
-                                InBufferCreateFlag,
-                                InInitialState,
-                                InData,
-                                InDataSize);
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      ETextureFormat    format,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const override {
+    return CreateBufferInternal(size,
+                                alignment,
+                                bufferCreateFlag,
+                                initialState,
+                                data,
+                                dataSize);
   }
 
   virtual std::shared_ptr<IUniformBufferBlock> CreateUniformBufferBlock(
-      Name         InName,
-      LifeTimeType InLifeTimeType,
-      size_t       InSize = 0) const override;
+      Name         name,
+      LifeTimeType lifeTimeType,
+      size_t       size = 0) const override;
 
   // Create Images
   VkImageUsageFlags GetImageUsageFlags(
@@ -208,37 +208,37 @@ class RhiVk : public RHI {
       ETextureCreateFlag InTextureCreateFlag) const;
 
   virtual std::shared_ptr<Texture> Create2DTexture(
-      uint32_t             InWidth,
-      uint32_t             InHeight,
+      uint32_t             witdh,
+      uint32_t             height,
       uint32_t             InArrayLayers,
       uint32_t             InMipLevels,
-      ETextureFormat       InFormat,
+      ETextureFormat       format,
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::Invalid,
-      const wchar_t*       InResourceName  = nullptr) const override;
+      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName  = nullptr) const override;
 
   virtual std::shared_ptr<Texture> CreateCubeTexture(
-      uint32_t             InWidth,
-      uint32_t             InHeight,
+      uint32_t             witdh,
+      uint32_t             height,
       uint32_t             InMipLevels,
-      ETextureFormat       InFormat,
+      ETextureFormat       format,
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::Invalid,
-      const wchar_t*       InResourceName  = nullptr) const override;
+      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName  = nullptr) const override;
 
-  void RemovePipelineStateInfo(size_t InHash) {
-    PipelineStatePool.Release(InHash);
+  void RemovePipelineStateInfo(size_t hash) {
+    s_pipelineStatePool.Release(hash);
   }
 
   virtual RenderPass* GetOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const math::Vector2Di&          offset,
       const math::Vector2Di&          extent) const override {
-    return RenderPassPool.GetOrCreate(
+    return s_renderPassPool.GetOrCreate(
         RenderPassVk(colorAttachments, offset, extent));
   }
 
@@ -247,7 +247,7 @@ class RhiVk : public RHI {
       const Attachment&              depthAttachment,
       const math::Vector2Di&          offset,
       const math::Vector2Di&          extent) const override {
-    return RenderPassPool.GetOrCreate(
+    return s_renderPassPool.GetOrCreate(
         RenderPassVk(colorAttachments, depthAttachment, offset, extent));
   }
 
@@ -257,7 +257,7 @@ class RhiVk : public RHI {
       const Attachment&              colorResolveAttachment,
       const math::Vector2Di&          offset,
       const math::Vector2Di&          extent) const override {
-    return RenderPassPool.GetOrCreate(RenderPassVk(colorAttachments,
+    return s_renderPassPool.GetOrCreate(RenderPassVk(colorAttachments,
                                                    depthAttachment,
                                                    colorResolveAttachment,
                                                    offset,
@@ -268,22 +268,22 @@ class RhiVk : public RHI {
       const RenderPassInfo& renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const override {
-    return RenderPassPool.GetOrCreate(
+    return s_renderPassPool.GetOrCreate(
         RenderPassVk(renderPassInfo, offset, extent));
   }
 
   virtual MemoryPoolVk* GetMemoryPool() const override { return m_memoryPool_; }
 
   DescriptorPoolVk* GetDescriptorPoolForSingleFrame() const {
-    return DescriptorPoolsSingleFrame[CurrentFrameIndex];
+    return m_descriptorPoolsSingleFrame_[m_currentFrameIndex_];
   }
 
   DescriptorPoolVk* GetDescriptorPoolMultiFrame() const {
-    return DescriptorPoolMultiFrame;
+    return m_descriptorPoolMultiFrame_;
   }
 
   RingBufferVk* GetOneFrameUniformRingBuffer() const {
-    return OneFrameUniformRingBuffers[CurrentFrameIndex];
+    return m_oneFrameUniformRingBuffers_[m_currentFrameIndex_];
   }
 
   virtual CommandBufferManagerVk* GetCommandBufferManager() const override {
@@ -301,22 +301,22 @@ class RhiVk : public RHI {
   }
 
   virtual uint32_t GetCurrentFrameIndex() const override {
-    return CurrentFrameIndex;
+    return m_currentFrameIndex_;
   }
 
   virtual EMSAASamples GetSelectedMSAASamples() const override {
-    return SelectedMSAASamples;
+    return m_selectedMSAASamples_;
   }
 
   virtual uint32_t GetCurrentFrameNumber() const override {
-    return CurrentFrameNumber;
+    return m_currentFrameNumber_;
   }
 
-  virtual bool OnHandleResized(uint32_t InWidth,
-                               uint32_t InHeight,
-                               bool     InIsMinimized) override {
-    assert(InWidth > 0);
-    assert(InHeight > 0);
+  virtual bool OnHandleResized(uint32_t witdh,
+                               uint32_t height,
+                               bool     isMinimized) override {
+    assert(witdh > 0);
+    assert(height > 0);
 
     Finish();
 
@@ -325,17 +325,17 @@ class RhiVk : public RHI {
     return true;
   }
 
-  virtual void IncrementFrameNumber() { ++CurrentFrameNumber; }
+  virtual void IncrementFrameNumber() { ++m_currentFrameNumber_; }
 
   void DrawArrays(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       int32_t                                    vertStartIndex,
       int32_t                                    vertCount) const override;
 
   void DrawArraysInstanced(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       int32_t                                    vertStartIndex,
@@ -343,7 +343,7 @@ class RhiVk : public RHI {
       int32_t                                    instanceCount) const override;
 
   void DrawElements(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       int32_t                                    elementSize,
@@ -351,7 +351,7 @@ class RhiVk : public RHI {
       int32_t                                    indexCount) const override;
 
   void DrawElementsInstanced(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       int32_t                                    elementSize,
@@ -360,7 +360,7 @@ class RhiVk : public RHI {
       int32_t                                    instanceCount) const override;
 
   void DrawElementsBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       int32_t                                    elementSize,
@@ -369,7 +369,7 @@ class RhiVk : public RHI {
       int32_t baseVertexIndex) const override;
 
   void DrawElementsInstancedBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       int32_t                                    elementSize,
@@ -379,7 +379,7 @@ class RhiVk : public RHI {
       int32_t                                    instanceCount) const override;
 
   void DrawIndirect(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       Buffer*                                     buffer,
@@ -387,7 +387,7 @@ class RhiVk : public RHI {
       int32_t                                     drawCount) const override;
 
   void DrawElementsIndirect(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
       Buffer*                                     buffer,
@@ -395,7 +395,7 @@ class RhiVk : public RHI {
       int32_t                                     drawCount) const override;
 
   void DispatchCompute(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       uint32_t                                    numGroupsX,
       uint32_t                                    numGroupsY,
       uint32_t                                    numGroupsZ) const override;
@@ -420,10 +420,10 @@ class RhiVk : public RHI {
   void EndSingleTimeCommands(CommandBuffer* commandBuffer) const override;
 
   virtual void BindGraphicsShaderBindingInstances(
-      const CommandBuffer*                 InCommandBuffer,
-      const PipelineStateInfo*            InPiplineState,
-      const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-      std::uint32_t                        InFirstSet) const override;
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*            piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const override;
 
   // TODO: add methods for VkBufferMemoryBarrier transition layout
 
@@ -440,17 +440,17 @@ class RhiVk : public RHI {
                                 EResourceLayout newLayout) const override;
 
   virtual void BindComputeShaderBindingInstances(
-      const CommandBuffer*                 InCommandBuffer,
-      const PipelineStateInfo*            InPiplineState,
-      const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-      std::uint32_t                        InFirstSet) const override;
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*            piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const override;
 
   // TODO: currently not used
   virtual void NextSubpass(const CommandBuffer* commandBuffer) const override;
 
   // TODO: uncomment
   // private:
-  const std::vector<const char*> DeviceExtensions
+  const std::vector<const char*> m_deviceExtensions_
       = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
   void populateDebugMessengerCreateInfo(
@@ -470,8 +470,8 @@ class RhiVk : public RHI {
   VkDevice m_device_;
 
   struct QueueVk {
-    uint32_t QueueIndex = 0;
-    VkQueue  Queue      = nullptr;
+    uint32_t m_queueIndex_ = 0;
+    VkQueue  m_queue_      = nullptr;
   };
 
   QueueVk m_graphicsQueue_;
@@ -490,223 +490,40 @@ class RhiVk : public RHI {
   FenceManagerVk*         m_fenceManager_         = nullptr;
   SemaphoreManagerVk      m_semaphoreManager_;
 
-  VkPipelineCache PipelineCache = nullptr;
+  VkPipelineCache m_pipelineCache_ = nullptr;
 
   MemoryPoolVk* m_memoryPool_ = nullptr;
 
   // FrameIndex is swapchain number that is currently used
-  uint32_t CurrentFrameIndex = 0;
+  uint32_t m_currentFrameIndex_ = 0;
   // FrameNumber is incremented frame by frame
-  uint32_t CurrentFrameNumber = 0;
+  uint32_t m_currentFrameNumber_ = 0;
 
-  std::vector<DescriptorPoolVk*> DescriptorPoolsSingleFrame;
-  DescriptorPoolVk*              DescriptorPoolMultiFrame = nullptr;
+  std::vector<DescriptorPoolVk*> m_descriptorPoolsSingleFrame_;
+  DescriptorPoolVk*              m_descriptorPoolMultiFrame_ = nullptr;
 
-  std::vector<RingBufferVk*> OneFrameUniformRingBuffers;
+  std::vector<RingBufferVk*> m_oneFrameUniformRingBuffers_;
 
-  mutable MutexRWLock ShaderBindingPoolLock;
+  mutable MutexRWLock m_shaderBindingPoolLock_;
 
-  static std::unordered_map<size_t, ShaderBindingLayoutVk*> ShaderBindingPool;
-  static TResourcePool<SamplerStateInfoVk, MutexRWLock>     SamplerStatePool;
+  static std::unordered_map<size_t, ShaderBindingLayoutVk*> s_shaderBindingPool;
+  static TResourcePool<SamplerStateInfoVk, MutexRWLock>     s_samplerStatePool;
   static TResourcePool<RasterizationStateInfoVk, MutexRWLock>
-      RasterizationStatePool;
-  static TResourcePool<StencilOpStateInfoVk, MutexRWLock> StencilOpStatePool;
+      s_rasterizationStatePool;
+  static TResourcePool<StencilOpStateInfoVk, MutexRWLock> s_stencilOpStatePool;
   static TResourcePool<DepthStencilStateInfoVk, MutexRWLock>
-                                                         DepthStencilStatePool;
-  static TResourcePool<BlendingStateInfoVk, MutexRWLock> BlendingStatePool;
-  static TResourcePool<PipelineStateInfoVk, MutexRWLock> PipelineStatePool;
-  static TResourcePool<RenderPassVk, MutexRWLock>        RenderPassPool;
+                                                         s_depthStencilStatePool;
+  static TResourcePool<BlendingStateInfoVk, MutexRWLock> s_blendingStatePool;
+  static TResourcePool<PipelineStateInfoVk, MutexRWLock> s_pipelineStatePool;
+  static TResourcePool<RenderPassVk, MutexRWLock>        s_renderPassPool;
 
-  bool FramebufferResized = false;
+  bool m_isFramebufferResized_ = false;
 
-  EMSAASamples SelectedMSAASamples = EMSAASamples::COUNT_1;
+  EMSAASamples m_selectedMSAASamples_ = EMSAASamples::COUNT_1;
 };
 
 extern RhiVk* g_rhi_vk;
 
-//// TODO: consider move pipeline state info templated files to another file
-//// (current problem - g_rhi_vk dependecty so not possible to move in
-//// pipeline_state_info_vk file)
-//
-///**
-// * \brief Constructs a SamplerStateInfoVk object with configurable parameters
-// * and a default border color.
-// *
-// * The \a BorderColor parameter is provided at runtime instead of as a
-// * compile-time template parameter due to the complex requirements for
-// non-type
-// * template parameters (math::Vector4Df does not
-// * satisfy the conditions required for a type to be used as a non-type
-// template
-// * parameter, such as being a literal type with all constexpr constructors).
-// *
-// */
-// template <ETextureFilter         TMinification  = ETextureFilter::NEAREST,
-//          ETextureFilter         TMagnification = ETextureFilter::NEAREST,
-//          ETextureAddressMode    TAddressU =
-//          ETextureAddressMode::CLAMP_TO_EDGE, ETextureAddressMode    TAddressV
-//          = ETextureAddressMode::CLAMP_TO_EDGE, ETextureAddressMode TAddressW
-//          = ETextureAddressMode::CLAMP_TO_EDGE, float TMipLODBias = 0.0f,
-//          float                  TMaxAnisotropy          = 1.0f,
-//          bool                   TIsEnableComparisonMode = false,
-//          ECompareOp             TComparisonFunc         = ECompareOp::LESS,
-//          float                  TMinLOD                 = -FLT_MAX,
-//          float                  TMaxLOD                 = FLT_MAX,
-//          ETextureComparisonMode TTextureComparisonMode
-//          = ETextureComparisonMode::NONE>
-// struct TSamplerStateInfoVk {
-//  static SamplerStateInfoVk* Create(math::Vector4Df BorderColor
-//                                    = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f))
-//                                    {
-//    static SamplerStateInfoVk* CachedInfo = nullptr;
-//    if (CachedInfo) {
-//      return CachedInfo;
-//    }
-//
-//    SamplerStateInfoVk initializer;
-//    initializer.Minification           = TMinification;
-//    initializer.Magnification          = TMagnification;
-//    initializer.AddressU               = TAddressU;
-//    initializer.AddressV               = TAddressV;
-//    initializer.AddressW               = TAddressW;
-//    initializer.MipLODBias             = TMipLODBias;
-//    initializer.MaxAnisotropy          = TMaxAnisotropy;
-//    initializer.IsEnableComparisonMode = TIsEnableComparisonMode;
-//    initializer.TextureComparisonMode  = TTextureComparisonMode;
-//    initializer.ComparisonFunc         = TComparisonFunc;
-//    initializer.BorderColor            = BorderColor;
-//    initializer.MinLOD                 = TMinLOD;
-//    initializer.MaxLOD                 = TMaxLOD;
-//    initializer.GetHash();
-//    CachedInfo = g_rhi_vk->CreateSamplerState(initializer);
-//    return CachedInfo;
-//  }
-//};
-//
-// template <EPolygonMode TPolygonMode             = EPolygonMode::FILL,
-//          ECullMode    TCullMode                = ECullMode::BACK,
-//          EFrontFace   TFrontFace               = EFrontFace::CCW,
-//          bool         TDepthBiasEnable         = false,
-//          float        TDepthBiasConstantFactor = 0.0f,
-//          float        TDepthBiasClamp          = 0.0f,
-//          float        TDepthBiasSlopeFactor    = 0.0f,
-//          float        TLineWidth               = 1.0f,
-//          bool         TDepthClampEnable        = false,
-//          bool         TRasterizerDiscardEnable = false,
-//          EMSAASamples TSampleCount             = EMSAASamples::COUNT_1,
-//          bool         TSampleShadingEnable     = true,
-//          float        TMinSampleShading        = 0.2f,
-//          bool         TAlphaToCoverageEnable   = false,
-//          bool         TAlphaToOneEnable        = false>
-// struct TRasterizationStateInfoVk {
-//  /**
-//   * @brief Creates a rasterization state object based on the template
-//   * parameters and/or runtime parameters.
-//   *
-//   * The template parameters provide default values, while the method
-//   parameters
-//   * can override them at runtime. If a specific sample count is required
-//   * dynamically, pass it as a parameter to the Create method. Otherwise, use
-//   * the template parameter TSampleCount for a default value.
-//   *
-//   * If using the template parameter for sample count, and a dynamic value is
-//   * not necessary, pass EMSAASamples::COUNT_1 or any other appropriate
-//   * default value as the template argument.
-//   */
-//  static RasterizationStateInfoVk* Create(
-//      std::optional<EMSAASamples> sampleCountOpt = std::nullopt) {
-//    static RasterizationStateInfoVk* CachedInfo = nullptr;
-//    if (CachedInfo) {
-//      return CachedInfo;
-//    }
-//
-//    RasterizationStateInfoVk initializer;
-//    initializer.PolygonMode             = TPolygonMode;
-//    initializer.CullMode                = TCullMode;
-//    initializer.FrontFace               = TFrontFace;
-//    initializer.DepthBiasEnable         = TDepthBiasEnable;
-//    initializer.DepthBiasConstantFactor = TDepthBiasConstantFactor;
-//    initializer.DepthBiasClamp          = TDepthBiasClamp;
-//    initializer.DepthBiasSlopeFactor    = TDepthBiasSlopeFactor;
-//    initializer.LineWidth               = TLineWidth;
-//    initializer.DepthClampEnable        = TDepthClampEnable;
-//    initializer.RasterizerDiscardEnable = TRasterizerDiscardEnable;
-//
-//    initializer.SampleCount           = sampleCountOpt.value_or(TSampleCount);
-//    initializer.SampleShadingEnable   = TSampleShadingEnable;
-//    initializer.MinSampleShading      = TMinSampleShading;
-//    initializer.AlphaToCoverageEnable = TAlphaToCoverageEnable;
-//    initializer.AlphaToOneEnable      = TAlphaToOneEnable;
-//
-//    initializer.GetHash();
-//    // TODO: problem (should be in cpp)
-//    CachedInfo = g_rhi_vk->CreateRasterizationState(initializer);
-//    return CachedInfo;
-//  }
-//};
-//
-// template <bool       TDepthTestEnable       = false,
-//          bool       TDepthWriteEnable      = false,
-//          ECompareOp TDepthCompareOp        = ECompareOp::LEQUAL,
-//          bool       TDepthBoundsTestEnable = false,
-//          bool       TStencilTestEnable     = false,
-//          float      TMinDepthBounds        = 0.0f,
-//          float      TMaxDepthBounds        = 1.0f>
-// struct TDepthStencilStateInfo {
-//  static DepthStencilStateInfoVk* Create(StencilOpStateInfoVk* Front =
-//  nullptr,
-//                                         StencilOpStateInfoVk* Back = nullptr)
-//                                         {
-//    static DepthStencilStateInfoVk* CachedInfo = nullptr;
-//    if (CachedInfo) {
-//      return CachedInfo;
-//    }
-//
-//    DepthStencilStateInfoVk initializer;
-//    initializer.DepthTestEnable       = TDepthTestEnable;
-//    initializer.DepthWriteEnable      = TDepthWriteEnable;
-//    initializer.DepthCompareOp        = TDepthCompareOp;
-//    initializer.DepthBoundsTestEnable = TDepthBoundsTestEnable;
-//    initializer.StencilTestEnable     = TStencilTestEnable;
-//    initializer.Front                 = Front;
-//    initializer.Back                  = Back;
-//    initializer.MinDepthBounds        = TMinDepthBounds;
-//    initializer.MaxDepthBounds        = TMaxDepthBounds;
-//    initializer.GetHash();
-//    CachedInfo = g_rhi_vk->CreateDepthStencilState(initializer);
-//    return CachedInfo;
-//  }
-//};
-//
-// template <bool         TBlendEnable    = false,
-//          EBlendFactor TSrc            = EBlendFactor::SRC_ALPHA,
-//          EBlendFactor TDest           = EBlendFactor::ONE_MINUS_SRC_ALPHA,
-//          EBlendOp     TBlendOp        = EBlendOp::ADD,
-//          EBlendFactor TSrcAlpha       = EBlendFactor::SRC_ALPHA,
-//          EBlendFactor TDestAlpha      = EBlendFactor::ONE_MINUS_SRC_ALPHA,
-//          EBlendOp     TAlphaBlendOp   = EBlendOp::ADD,
-//          EColorMask   TColorWriteMask = EColorMask::ALL>
-// struct TBlendingStateInfo {
-//  static BlendingStateInfoVk* Create() {
-//    static BlendingStateInfoVk* CachedInfo = nullptr;
-//    if (CachedInfo) {
-//      return CachedInfo;
-//    }
-//
-//    BlendingStateInfoVk initializer;
-//    initializer.BlendEnable    = TBlendEnable;
-//    initializer.Src            = TSrc;
-//    initializer.Dest           = TDest;
-//    initializer.BlendOp        = TBlendOp;
-//    initializer.SrcAlpha       = TSrcAlpha;
-//    initializer.DestAlpha      = TDestAlpha;
-//    initializer.AlphaBlendOp   = TAlphaBlendOp;
-//    initializer.ColorWriteMask = TColorWriteMask;
-//    initializer.GetHash();
-//    CachedInfo = g_rhi_vk->CreateBlendingState(initializer);
-//    return CachedInfo;
-//  }
-//};
 
 }  // namespace game_engine
 

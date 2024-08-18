@@ -6,43 +6,43 @@
 namespace game_engine {
 
 void BufferDx12::Release() {
-  CBV.Free();
-  SRV.Free();
-  UAV.Free();
+  m_cbv_.Free();
+  m_srv_.Free();
+  m_uav_.Free();
 }
 
 bool VertexBufferDx12::Initialize(
-    const std::shared_ptr<VertexStreamData>& InStreamData) {
-  if (!InStreamData) {
+    const std::shared_ptr<VertexStreamData>& streamData) {
+  if (!streamData) {
     return false;
   }
 
-  vertexStreamData = InStreamData;
-  m_bindInfos.Reset();
-  m_bindInfos.StartBindingIndex = InStreamData->bindingIndex;
+  m_vertexStreamData_ = streamData;
+  m_bindInfos_.Reset();
+  m_bindInfos_.m_startBindingIndex_ = streamData->m_bindingIndex_;
 
-  Streams.clear();
-  Streams.reserve(InStreamData->streams.size());
+  m_streams_.clear();
+  m_streams_.reserve(streamData->m_streams_.size());
 
-  VBView.clear();
-  VBView.reserve(InStreamData->streams.size());
+  m_VBView_.clear();
+  m_VBView_.reserve(streamData->m_streams_.size());
 
   std::list<uint32_t> buffers;
-  int32_t             locationIndex = InStreamData->startLocation;
-  int32_t             bindingIndex  = InStreamData->bindingIndex;
-  for (const auto& iter : InStreamData->streams) {
-    if (iter->Stride <= 0) {
+  int32_t             locationIndex = streamData->m_startLocation_;
+  int32_t             bindingIndex  = streamData->m_bindingIndex_;
+  for (const auto& iter : streamData->m_streams_) {
+    if (iter->m_stride_ <= 0) {
       continue;
     }
 
     VertexStreamDx12 stream;
-    stream.BufferType      = EBufferType::Static;
-    stream.name            = iter->name;
-    stream.Stride          = iter->Stride;
-    stream.Offset          = 0;
+    stream.m_bufferType_      = EBufferType::Static;
+    stream.m_name_            = iter->m_name_;
+    stream.m_stride_          = iter->m_stride_;
+    stream.m_offset_          = 0;
 
     // Create vertex buffer
-    stream.BufferPtr
+    stream.m_bufferPtr_
         = g_rhi->CreateRawBuffer<BufferDx12>(iter->GetBufferSize(),
                                                0,
                                                EBufferCreateFlag::NONE,
@@ -53,11 +53,11 @@ bool VertexBufferDx12::Initialize(
 
     BufferDx12* bufferDx12 = stream.GetBuffer<BufferDx12>();
 
-    for (IBufferAttribute::Attribute& element : iter->Attributes) {
+    for (IBufferAttribute::Attribute& element : iter->m_attributes_) {
       DXGI_FORMAT AttrFormat = DXGI_FORMAT_UNKNOWN;
-      switch (element.UnderlyingType) {
+      switch (element.m_underlyingType_) {
         case EBufferElementType::BYTE: {
-          const int32_t elementCount = element.stride / sizeof(char);
+          const int32_t elementCount = element.m_stride_ / sizeof(char);
           switch (elementCount) {
             case 1:
               AttrFormat = DXGI_FORMAT_R8_SINT;
@@ -80,7 +80,7 @@ bool VertexBufferDx12::Initialize(
           break;
         }
         case EBufferElementType::BYTE_UNORM: {
-          const int32_t elementCount = element.stride / sizeof(char);
+          const int32_t elementCount = element.m_stride_ / sizeof(char);
           switch (elementCount) {
             case 1:
               AttrFormat = DXGI_FORMAT_R8_UNORM;
@@ -102,7 +102,7 @@ bool VertexBufferDx12::Initialize(
           break;
         }
         case EBufferElementType::UINT16: {
-          const int32_t elementCount = element.stride / sizeof(uint16_t);
+          const int32_t elementCount = element.m_stride_ / sizeof(uint16_t);
           switch (elementCount) {
             case 1:
               AttrFormat = DXGI_FORMAT_R16_UINT;
@@ -124,7 +124,7 @@ bool VertexBufferDx12::Initialize(
           break;
         }
         case EBufferElementType::UINT32: {
-          const int32_t elementCount = element.stride / sizeof(uint32_t);
+          const int32_t elementCount = element.m_stride_ / sizeof(uint32_t);
           switch (elementCount) {
             case 1:
               AttrFormat = DXGI_FORMAT_R32_UINT;
@@ -145,7 +145,7 @@ bool VertexBufferDx12::Initialize(
           break;
         }
         case EBufferElementType::FLOAT: {
-          const int32_t elementCount = element.stride / sizeof(float);
+          const int32_t elementCount = element.m_stride_ / sizeof(float);
           switch (elementCount) {
             case 1:
               AttrFormat = DXGI_FORMAT_R32_FLOAT;
@@ -173,38 +173,38 @@ bool VertexBufferDx12::Initialize(
       assert(AttrFormat != VK_FORMAT_UNDEFINED);
 
       if (iter->GetBufferSize() > 0) {
-        m_bindInfos.m_buffers.push_back(bufferDx12->m_buffer->Get());
-        m_bindInfos.Offsets.push_back(stream.Offset + bufferDx12->Offset);
+        m_bindInfos_.m_buffers_.push_back(bufferDx12->m_buffer->Get());
+        m_bindInfos_.m_offsets_.push_back(stream.m_offset_ + bufferDx12->m_offset_);
       }
 
       D3D12_INPUT_ELEMENT_DESC elem;
       elem.SemanticName
-          = element.name.GetStringLength()
-              ? element.name.ToStr()
-              : iter->name.ToStr();  // TODO: remove iter-Name.ToStr();
+          = element.m_name_.GetStringLength()
+              ? element.m_name_.ToStr()
+              : iter->m_name_.ToStr();  // TODO: remove iter-Name.ToStr();
       elem.SemanticIndex     = 0;    // TODO
       elem.Format            = AttrFormat;
       elem.InputSlot         = bindingIndex;
-      elem.AlignedByteOffset = element.offset;
+      elem.AlignedByteOffset = element.m_offset_;
       elem.InputSlotClass
-          = GetDX12VertexInputRate(InStreamData->VertexInputRate);
+          = GetDX12VertexInputRate(streamData->m_vertexInputRate_);
       elem.InstanceDataStepRate
           = (elem.InputSlotClass
              == D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA)
               ? 1
               : 0;
-      m_bindInfos.InputElementDescs.emplace_back(elem);
+      m_bindInfos_.m_inputElementDescs_.emplace_back(elem);
 
       ++locationIndex;
     }
 
-    Streams.emplace_back(stream);
+    m_streams_.emplace_back(stream);
 
     D3D12_VERTEX_BUFFER_VIEW view;
     view.BufferLocation = bufferDx12->GetGPUAddress();
-    view.SizeInBytes    = (uint32_t)bufferDx12->Size;
-    view.StrideInBytes  = stream.Stride;
-    VBView.emplace_back(view);
+    view.SizeInBytes    = (uint32_t)bufferDx12->m_size_;
+    view.StrideInBytes  = stream.m_stride_;
+    m_VBView_.emplace_back(view);
 
     ++bindingIndex;
   }
@@ -215,54 +215,54 @@ bool VertexBufferDx12::Initialize(
 }
 
 void VertexBufferDx12::Bind(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
   assert(commandBufferDx12);
 
   Bind(commandBufferDx12);
 }
 
-void VertexBufferDx12::Bind(CommandBufferDx12* InCommandList) const {
-  assert(InCommandList->CommandList);
-  InCommandList->CommandList->IASetPrimitiveTopology(GetTopology());
-  InCommandList->CommandList->IASetVertexBuffers(
-      m_bindInfos.StartBindingIndex, (uint32_t)VBView.size(), &VBView[0]);
+void VertexBufferDx12::Bind(CommandBufferDx12* commandList) const {
+  assert(commandList->m_commandList_);
+  commandList->m_commandList_->IASetPrimitiveTopology(GetTopology());
+  commandList->m_commandList_->IASetVertexBuffers(
+      m_bindInfos_.m_startBindingIndex_, (uint32_t)m_VBView_.size(), &m_VBView_[0]);
 }
 
-Buffer* VertexBufferDx12::GetBuffer(int32_t InStreamIndex) const {
-  assert(Streams.size() > InStreamIndex);
-  return Streams[InStreamIndex].BufferPtr.get();
+Buffer* VertexBufferDx12::GetBuffer(int32_t streamIndex) const {
+  assert(m_streams_.size() > streamIndex);
+  return m_streams_[streamIndex].m_bufferPtr_.get();
 }
 
 void IndexBufferDx12::Bind(
-    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {
+    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)InRenderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
   assert(commandBufferDx12);
 
   Bind(commandBufferDx12);
 }
 
-void IndexBufferDx12::Bind(CommandBufferDx12* InCommandList) const {
-  assert(InCommandList->CommandList);
-  InCommandList->CommandList->IASetIndexBuffer(&IBView);
+void IndexBufferDx12::Bind(CommandBufferDx12* commandList) const {
+  assert(commandList->m_commandList_);
+  commandList->m_commandList_->IASetIndexBuffer(&m_IBView_);
 }
 
 bool IndexBufferDx12::Initialize(
-    const std::shared_ptr<IndexStreamData>& InStreamData) {
-  if (!InStreamData) {
+    const std::shared_ptr<IndexStreamData>& streamData) {
+  if (!streamData) {
     return false;
   }
 
-  assert(InStreamData);
-  assert(InStreamData->stream);
-  indexStreamData = InStreamData;
+  assert(streamData);
+  assert(streamData->m_stream_);
+  m_indexStreamData_ = streamData;
 
-  const size_t bufferSize = InStreamData->stream->GetBufferSize();
+  const size_t bufferSize = streamData->m_stream_->GetBufferSize();
 
   DXGI_FORMAT IndexType = DXGI_FORMAT_R16_UINT;
-  switch (indexStreamData->stream->Attributes[0].UnderlyingType) {
+  switch (m_indexStreamData_->m_stream_->m_attributes_[0].m_underlyingType_) {
     case EBufferElementType::BYTE:
       IndexType = DXGI_FORMAT_R8_UINT;
       break;
@@ -280,20 +280,20 @@ bool IndexBufferDx12::Initialize(
   }
 
   // Create index buffer
-  BufferPtr = g_rhi->CreateFormattedBuffer<BufferDx12>(
+  m_bufferPtr_ = g_rhi->CreateFormattedBuffer<BufferDx12>(
       bufferSize,
       0,
       GetDX12TextureFormat(IndexType),
       EBufferCreateFlag::NONE,
       EResourceLayout::GENERAL,
-      InStreamData->stream->GetBufferData(),
+      streamData->m_stream_->GetBufferData(),
       bufferSize
       /*,TEXT("IndexBuffer")*/);
 
   // Create Index buffer View
-  IBView.BufferLocation = BufferPtr->GetGPUAddress();
-  IBView.SizeInBytes    = (uint32_t)BufferPtr->GetAllocatedSize();
-  IBView.Format         = IndexType;
+  m_IBView_.BufferLocation = m_bufferPtr_->GetGPUAddress();
+  m_IBView_.SizeInBytes    = (uint32_t)m_bufferPtr_->GetAllocatedSize();
+  m_IBView_.Format         = IndexType;
 
   return true;
 }

@@ -31,20 +31,20 @@ class DxcUtil {
 
   HRESULT Initialize(const wchar_t* dllName = L"dxcompiler.dll",
                      const char*    fnName  = "DxcCreateInstance") {
-    if (dll_) {
+    if (m_dll_) {
       return S_OK;
     }
 
-    dll_ = LoadLibraryW(dllName);
-    if (!dll_) {
+    m_dll_ = LoadLibraryW(dllName);
+    if (!m_dll_) {
       return HRESULT_FROM_WIN32(GetLastError());
     }
 
-    createFn_ = (DxcCreateInstanceProc)GetProcAddress(dll_, fnName);
-    if (!createFn_) {
+    m_createFn_ = (DxcCreateInstanceProc)GetProcAddress(m_dll_, fnName);
+    if (!m_createFn_) {
       HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-      FreeLibrary(dll_);
-      dll_ = nullptr;
+      FreeLibrary(m_dll_);
+      m_dll_ = nullptr;
       return hr;
     }
 
@@ -52,10 +52,10 @@ class DxcUtil {
   }
 
   void Release() {
-    if (dll_) {
-      createFn_ = nullptr;
-      FreeLibrary(dll_);
-      dll_ = nullptr;
+    if (m_dll_) {
+      m_createFn_ = nullptr;
+      FreeLibrary(m_dll_);
+      m_dll_ = nullptr;
     }
   }
 
@@ -136,9 +136,6 @@ class DxcUtil {
   }
 
   private:
-  HMODULE               dll_      = nullptr;
-  DxcCreateInstanceProc createFn_ = nullptr;
-
   DxcUtil() = default;
 
   ~DxcUtil() { Release(); }
@@ -150,13 +147,13 @@ class DxcUtil {
     if (!result) {
       return E_POINTER;
     }
-    if (!dll_) {
+    if (!m_dll_) {
       return E_FAIL;
     }
-    if (!createFn_) {
+    if (!m_createFn_) {
       return E_FAIL;
     }
-    return createFn_(clsid, iid, result);
+    return m_createFn_(clsid, iid, result);
   }
 
   static std::string ReadShaderFile(const fs::path& shaderFilePath) {
@@ -172,6 +169,9 @@ class DxcUtil {
     shaderStream << shaderFile.rdbuf();
     return shaderStream.str();
   }
+
+  HMODULE               m_dll_      = nullptr;
+  DxcCreateInstanceProc m_createFn_ = nullptr;
 };
 
 }  // namespace game_engine

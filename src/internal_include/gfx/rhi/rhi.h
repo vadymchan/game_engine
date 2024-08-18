@@ -24,22 +24,24 @@
 
 namespace game_engine {
 // TODO: move in other place
-extern std::int32_t GMaxCheckCountForRealTimeShaderUpdate;
-extern std::int32_t GSleepMSForRealTimeShaderUpdate;
-extern bool         GUseRealTimeShaderUpdate;
+extern std::int32_t g_maxCheckCountForRealTimeShaderUpdate;
+extern std::int32_t g_sleepMSForRealTimeShaderUpdate;
+extern bool         g_useRealTimeShaderUpdate;
 
-extern std::shared_ptr<Texture>  GWhiteTexture;
-extern std::shared_ptr<Texture>  GBlackTexture;
-extern std::shared_ptr<Texture>  GWhiteCubeTexture;
-extern std::shared_ptr<Texture>  GNormalTexture;
-extern std::shared_ptr<Material> GDefaultMaterial;
+extern std::shared_ptr<Texture>  g_whiteTexture;
+extern std::shared_ptr<Texture>  g_blackTexture;
+extern std::shared_ptr<Texture>  g_whiteCubeTexture;
+extern std::shared_ptr<Texture>  g_normalTexture;
+extern std::shared_ptr<Material> g_defaultMaterial;
 
 struct Shader;
 struct ShaderInfo;
 
 // struct ImageData; // #include "file_loader/image_file_loader.h"
 
-// TODO: consider whether to name RHI or Rhi
+// TODO:
+// - consider whether to name RHI or Rhi
+// - consider implementing as singleton
 class RHI {
   public:
   RHI();
@@ -49,31 +51,31 @@ class RHI {
   // BEGIN: shader related functions and variables
   // =================================================================
 
-  static TResourcePool<Shader, MutexRWLock> ShaderPool;
+  static TResourcePool<Shader, MutexRWLock> s_shaderPool;
 
   template <typename T = Shader>
-  T* CreateShader(const ShaderInfo& InShaderInfo) const {
-    return (T*)ShaderPool.GetOrCreate<ShaderInfo, T>(InShaderInfo);
+  T* CreateShader(const ShaderInfo& shaderInfo) const {
+    return (T*)s_shaderPool.GetOrCreate<ShaderInfo, T>(shaderInfo);
   }
 
-  void AddShader(const ShaderInfo& InShaderInfo, Shader* InShader) {
-    return ShaderPool.Add(InShaderInfo, InShader);
+  void AddShader(const ShaderInfo& shaderInfo, Shader* shader) {
+    return s_shaderPool.Add(shaderInfo, shader);
   }
 
-  void ReleaseShader(const ShaderInfo& InShaderInfo) {
-    ShaderPool.Release(InShaderInfo);
+  void ReleaseShader(const ShaderInfo& shaderInfo) {
+    s_shaderPool.Release(shaderInfo);
   }
 
   std::vector<Shader*> GetAllShaders() {
     std::vector<Shader*> Out;
-    ShaderPool.GetAllResource(Out);
+    s_shaderPool.GetAllResource(Out);
     return Out;
   }
 
   // END: shader related functions and variables
   // =================================================================
 
-  virtual Name GetRHIName() { return Name::Invalid; }
+  virtual Name GetRHIName() { return Name::s_kInvalid; }
 
   virtual bool init(const std::shared_ptr<Window>& window);
   virtual void OnInitRHI();
@@ -88,7 +90,7 @@ class RHI {
 
   virtual void ReleaseSamplerState(SamplerStateInfo* samplerState) const {}
 
-  virtual void BindSamplerState(std::int32_t             index,
+  virtual void BindSamplerState(std::int32_t            index,
                                 const SamplerStateInfo* samplerState) const {}
 
   virtual void SetClear(ERenderBufferType typeBit) const {}
@@ -106,8 +108,8 @@ class RHI {
                               std::int32_t        bufferIndex) const {}
 
   virtual void SetFrameBuffer(const FrameBuffer* rt,
-                              std::int32_t        index = 0,
-                              bool                mrt   = false) const {}
+                              std::int32_t       index = 0,
+                              bool               mrt   = false) const {}
 
   virtual void SetDrawBuffers(
       const std::initializer_list<EDrawBufferType>& list) const {}
@@ -122,73 +124,73 @@ class RHI {
   virtual void SetTexture(std::int32_t index, const Texture* texture) const {}
 
   virtual void DrawArrays(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
-      std::int32_t                                vertStartIndex,
-      std::int32_t                                vertCount) const {}
+      std::int32_t                               vertStartIndex,
+      std::int32_t                               vertCount) const {}
 
   virtual void DrawArraysInstanced(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
-      std::int32_t                                vertStartIndex,
-      std::int32_t                                vertCount,
-      std::int32_t                                instanceCount) const {}
+      std::int32_t                               vertStartIndex,
+      std::int32_t                               vertCount,
+      std::int32_t                               instanceCount) const {}
 
   virtual void DrawElements(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
-      std::int32_t                                elementSize,
-      std::int32_t                                startIndex,
-      std::int32_t                                indexCount) const {}
+      std::int32_t                               elementSize,
+      std::int32_t                               startIndex,
+      std::int32_t                               indexCount) const {}
 
   virtual void DrawElementsInstanced(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
-      std::int32_t                                elementSize,
-      std::int32_t                                startIndex,
-      std::int32_t                                indexCount,
-      std::int32_t                                instanceCount) const {}
+      std::int32_t                               elementSize,
+      std::int32_t                               startIndex,
+      std::int32_t                               indexCount,
+      std::int32_t                               instanceCount) const {}
 
   virtual void DrawElementsBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
-      std::int32_t                                elementSize,
-      std::int32_t                                startIndex,
-      std::int32_t                                indexCount,
-      std::int32_t                                baseVertexIndex) const {}
+      std::int32_t                               elementSize,
+      std::int32_t                               startIndex,
+      std::int32_t                               indexCount,
+      std::int32_t                               baseVertexIndex) const {}
 
   virtual void DrawElementsInstancedBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
-      std::int32_t                                elementSize,
-      std::int32_t                                startIndex,
-      std::int32_t                                indexCount,
-      std::int32_t                                baseVertexIndex,
-      std::int32_t                                instanceCount) const {}
+      std::int32_t                               elementSize,
+      std::int32_t                               startIndex,
+      std::int32_t                               indexCount,
+      std::int32_t                               baseVertexIndex,
+      std::int32_t                               instanceCount) const {}
 
   virtual void DrawIndirect(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
       Buffer*                                    buffer,
-      std::int32_t                                startIndex,
-      std::int32_t                                drawCount) const {}
+      std::int32_t                               startIndex,
+      std::int32_t                               drawCount) const {}
 
   virtual void DrawElementsIndirect(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                              type,
       Buffer*                                    buffer,
-      std::int32_t                                startIndex,
-      std::int32_t                                drawCount) const {}
+      std::int32_t                               startIndex,
+      std::int32_t                               drawCount) const {}
 
   virtual void DispatchCompute(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
-      std::uint32_t                               numGroupsX,
-      std::uint32_t                               numGroupsY,
-      std::uint32_t                               numGroupsZ) const {}
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
+      std::uint32_t                              numGroupsX,
+      std::uint32_t                              numGroupsY,
+      std::uint32_t                              numGroupsZ) const {}
 
   // TODO: implement in future iterations
   // virtual void DispatchRay(
-  //    const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
+  //    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
   //    const RaytracingDispatchData&              InDispatchData) const {}
 
   virtual void EnableDepthBias(bool         enable,
@@ -222,68 +224,68 @@ class RHI {
                                        const Viewport* viewports) const {}
 
   virtual bool SetUniformbuffer(const Name&           name,
-                                const math::Matrix4d& InData,
-                                const Shader*         InShader) const {
+                                const math::Matrix4d& data,
+                                const Shader*         shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&   name,
-                                const int     InData,
-                                const Shader* InShader) const {
+                                const int     data,
+                                const Shader* shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&         name,
-                                const std::uint32_t InData,
-                                const Shader*       InShader) const {
+                                const std::uint32_t data,
+                                const Shader*       shader) const {
     return false;
   }
 
   inline virtual bool SetUniformbuffer(Name          name,
-                                       const bool    InData,
-                                       const Shader* InShader) const {
-    return SetUniformbuffer(name, (std::int32_t)InData, InShader);
+                                       const bool    data,
+                                       const Shader* shader) const {
+    return SetUniformbuffer(name, (std::int32_t)data, shader);
   }
 
   virtual bool SetUniformbuffer(const Name&   name,
-                                const float   InData,
-                                const Shader* InShader) const {
+                                const float   data,
+                                const Shader* shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&            name,
-                                const math::Vector2Df& InData,
-                                const Shader*          InShader) const {
+                                const math::Vector2Df& data,
+                                const Shader*          shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&              name,
-                                const math::VectorNf<1>& InData,
-                                const Shader*            InShader) const {
+                                const math::VectorNf<1>& data,
+                                const Shader*            shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&            name,
-                                const math::Vector4Df& InData,
-                                const Shader*          InShader) const {
+                                const math::Vector4Df& data,
+                                const Shader*          shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&            name,
-                                const math::Vector2Di& InData,
-                                const Shader*          InShader) const {
+                                const math::Vector2Di& data,
+                                const Shader*          shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&            name,
-                                const math::Vector3Di& InData,
-                                const Shader*          InShader) const {
+                                const math::Vector3Di& data,
+                                const Shader*          shader) const {
     return false;
   }
 
   virtual bool SetUniformbuffer(const Name&            name,
-                                const math::Vector4Di& InData,
-                                const Shader*          InShader) const {
+                                const math::Vector4Di& data,
+                                const Shader*          shader) const {
     return false;
   }
 
@@ -350,17 +352,17 @@ class RHI {
   virtual Texture* CreateNullTexture() const { return nullptr; }
 
   virtual std::shared_ptr<Texture> CreateTextureFromData(
-      const ImageData* InImageData) const {
+      const ImageData* imageData) const {
     return nullptr;
   }
 
   virtual Texture* CreateCubeTextureFromData(std::vector<void*> faces,
-                                              std::int32_t       width,
-                                              std::int32_t       height,
-                                              bool               sRGB,
-                                              ETextureFormat     textureFormat
-                                              = ETextureFormat::RGBA8,
-                                              bool createMipmap = false) const {
+                                             std::int32_t       width,
+                                             std::int32_t       height,
+                                             bool               m_sRGB_,
+                                             ETextureFormat     textureFormat
+                                             = ETextureFormat::RGBA8,
+                                             bool createMipmap = false) const {
     return nullptr;
   }
 
@@ -415,19 +417,19 @@ class RHI {
   virtual void EndDebugEvent() const {}
 
   // TODO: implement
-  //virtual void BeginDebugEvent(CommandBuffer*        InCommandBuffer,
-  //                             const char*            InName,
+  // virtual void BeginDebugEvent(CommandBuffer*        commandBuffer,
+  //                             const char*            name,
   //                             const math::Vector4Df& InColor
   //                             = math::ColorGreen) const {}
 
-  virtual void EndDebugEvent(CommandBuffer* InCommandBuffer) const {}
+  virtual void EndDebugEvent(CommandBuffer* commandBuffer) const {}
 
   virtual void GenerateMips(const Texture* texture) const {}
 
   virtual void EnableWireframe(bool enable) const {}
 
   virtual void SetImageTexture(std::int32_t            index,
-                               const Texture*         texture,
+                               const Texture*          texture,
                                EImageTextureAccessType type) const {}
 
   virtual void SetPolygonMode(EFace        face,
@@ -483,42 +485,42 @@ class RHI {
 
   virtual PipelineStateInfo* CreatePipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
-      const GraphicsPipelineShader     shader,
-      const VertexBufferArray&        InVertexBufferArray,
+      const GraphicsPipelineShader    shader,
+      const VertexBufferArray&        vertexBufferArray,
       const RenderPass*               renderPass,
-      const ShaderBindingLayoutArray& InShaderBindingArray,
-      const PushConstant*             InPushConstant,
-      std::int32_t                     InSubpassIndex) const {
+      const ShaderBindingLayoutArray& shaderBindingArray,
+      const PushConstant*             pushConstant,
+      std::int32_t                    subpassIndex) const {
     return nullptr;
   }
 
   virtual PipelineStateInfo* CreateComputePipelineStateInfo(
-      const Shader*                    shader,
-      const ShaderBindingLayoutArray& InShaderBindingArray,
+      const Shader*                   shader,
+      const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const {
     return nullptr;
   }
 
   // TODO: implement
   // virtual PipelineStateInfo* CreateRaytracingPipelineStateInfo(
-  //    const std::vector<RaytracingPipelineShader>& InShaders,
+  //    const std::vector<RaytracingPipelineShader>& shaders,
   //    const RaytracingPipelineData&                InRaytracingData,
-  //    const ShaderBindingLayoutArray&              InShaderBindingArray,
+  //    const ShaderBindingLayoutArray&              shaderBindingArray,
   //    const PushConstant*                          pushConstant) const {
   //  return nullptr;
   //}
 
-  virtual void RemovePipelineStateInfo(size_t InHash) {}
+  virtual void RemovePipelineStateInfo(size_t hash) {}
 
   virtual ShaderBindingLayout* CreateShaderBindings(
-      const ShaderBindingArray& InShaderBindingArray) const {
+      const ShaderBindingArray& shaderBindingArray) const {
     assert(0);
     return nullptr;
   }
 
   virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
-      const ShaderBindingArray&       InShaderBindingArray,
-      const ShaderBindingInstanceType InType) const {
+      const ShaderBindingArray&       shaderBindingArray,
+      const ShaderBindingInstanceType type) const {
     assert(0);
     return nullptr;
   }
@@ -526,8 +528,8 @@ class RHI {
   // TODO: consider use Dimension or Point instead of Vector2Di
   virtual RenderPass* GetOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const {
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const {
     return nullptr;
   }
 
@@ -535,8 +537,8 @@ class RHI {
   virtual RenderPass* GetOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const {
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const {
     return nullptr;
   }
 
@@ -545,14 +547,14 @@ class RHI {
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
       const Attachment&              colorResolveAttachment,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const {
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const {
     return nullptr;
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
   virtual RenderPass* GetOrCreateRenderPass(
-      const RenderPassInfo& renderPassInfo,
+      const RenderPassInfo&  renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const {
     return nullptr;
@@ -567,24 +569,24 @@ class RHI {
   }
 
   // ResourceBarrier
-  virtual bool TransitionLayout(CommandBuffer* commandBuffer,
-                                Texture*       texture,
+  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+                                Texture*        texture,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayoutImmediate(Texture*       texture,
+  virtual bool TransitionLayoutImmediate(Texture*        texture,
                                          EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayout(CommandBuffer* commandBuffer,
-                                Buffer*        buffer,
+  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+                                Buffer*         buffer,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayoutImmediate(Buffer*        buffer,
+  virtual bool TransitionLayoutImmediate(Buffer*         buffer,
                                          EResourceLayout newLayout) const {
     return true;
   }
@@ -594,8 +596,7 @@ class RHI {
 
   virtual void UAVBarrierImmediate(Texture* texture) const {}
 
-  virtual void UAVBarrier(CommandBuffer* commandBuffer,
-                          Buffer*        buffer) const {}
+  virtual void UAVBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {}
 
   virtual void UAVBarrierImmediate(Buffer* buffer) const {}
 
@@ -603,7 +604,7 @@ class RHI {
 
   virtual std::shared_ptr<Swapchain> GetSwapchain() const { return nullptr; }
 
-  virtual class SwapchainImage* GetSwapchainImage(std::int32_t InIndex) const {
+  virtual class SwapchainImage* GetSwapchainImage(std::int32_t index) const {
     return nullptr;
   }
 
@@ -619,22 +620,22 @@ class RHI {
   virtual void NextSubpass(const CommandBuffer* commandBuffer) const {}
 
   virtual void BindGraphicsShaderBindingInstances(
-      const CommandBuffer*                InCommandBuffer,
-      const PipelineStateInfo*            InPiplineState,
-      const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-      std::uint32_t                        InFirstSet) const {}
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*             piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const {}
 
   virtual void BindComputeShaderBindingInstances(
-      const CommandBuffer*                InCommandBuffer,
-      const PipelineStateInfo*            InPiplineState,
-      const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-      std::uint32_t                        InFirstSet) const {}
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*             piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const {}
 
   virtual void BindRaytracingShaderBindingInstances(
-      const CommandBuffer*                InCommandBuffer,
-      const PipelineStateInfo*            InPiplineState,
-      const ShaderBindingInstanceCombiner& InShaderBindingInstanceCombiner,
-      std::uint32_t                        InFirstSet) const {}
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*             piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const {}
 
   virtual FenceManager* GetFenceManager() { return nullptr; }
 
@@ -648,9 +649,9 @@ class RHI {
 
   virtual bool IsSupportVSync() const { return false; }
 
-  virtual bool OnHandleResized(std::uint32_t InWidth,
-                               std::uint32_t InHeight,
-                               bool          InIsMinimized) {
+  virtual bool OnHandleResized(std::uint32_t witdh,
+                               std::uint32_t height,
+                               bool          isMinimized) {
     return false;
   }
 
@@ -664,39 +665,39 @@ class RHI {
 
   // CreateBuffers
   virtual std::shared_ptr<Buffer> CreateStructuredBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      std::uint64_t     InStride,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const {
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      std::uint64_t     stride,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
     return nullptr;
   }
 
   virtual std::shared_ptr<Buffer> CreateRawBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const {
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
     return nullptr;
   }
 
   virtual std::shared_ptr<Buffer> CreateFormattedBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      ETextureFormat    InFormat,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const {
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      ETextureFormat    format,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
     return nullptr;
   }
 
   virtual std::shared_ptr<IUniformBufferBlock> CreateUniformBufferBlock(
-      Name InName, LifeTimeType InLifeTimeType, size_t InSize = 0) const {
+      Name name, LifeTimeType lifeTimeType, size_t size = 0) const {
     return nullptr;
   }
 
@@ -712,138 +713,133 @@ class RHI {
 
   template <typename T = Buffer>
   inline std::shared_ptr<T> CreateStructuredBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      std::uint64_t     InStride,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const {
-    return std::static_pointer_cast<T>(
-        CreateStructuredBuffer(InSize,
-                               InAlignment,
-                               InStride,
-                               InBufferCreateFlag,
-                               InInitialState,
-                               InData,
-                               InDataSize));
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      std::uint64_t     stride,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
+    return std::static_pointer_cast<T>(CreateStructuredBuffer(size,
+                                                              alignment,
+                                                              stride,
+                                                              bufferCreateFlag,
+                                                              initialState,
+                                                              data,
+                                                              dataSize));
   }
 
   template <typename T = Buffer>
-  inline std::shared_ptr<T> CreateRawBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const {
-    return std::static_pointer_cast<T>(CreateRawBuffer(InSize,
-                                                       InAlignment,
-                                                       InBufferCreateFlag,
-                                                       InInitialState,
-                                                       InData,
-                                                       InDataSize));
+  inline std::shared_ptr<T> CreateRawBuffer(std::uint64_t     size,
+                                            std::uint64_t     alignment,
+                                            EBufferCreateFlag bufferCreateFlag,
+                                            EResourceLayout   initialState,
+                                            const void*       data = nullptr,
+                                            std::uint64_t dataSize = 0) const {
+    return std::static_pointer_cast<T>(CreateRawBuffer(
+        size, alignment, bufferCreateFlag, initialState, data, dataSize));
   }
 
   template <typename T = Buffer>
   inline std::shared_ptr<T> CreateFormattedBuffer(
-      std::uint64_t     InSize,
-      std::uint64_t     InAlignment,
-      ETextureFormat    InFormat,
-      EBufferCreateFlag InBufferCreateFlag,
-      EResourceLayout   InInitialState,
-      const void*       InData     = nullptr,
-      std::uint64_t     InDataSize = 0) const {
-    return std::static_pointer_cast<T>(CreateFormattedBuffer(InSize,
-                                                             InAlignment,
-                                                             InFormat,
-                                                             InBufferCreateFlag,
-                                                             InInitialState,
-                                                             InData,
-                                                             InDataSize));
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      ETextureFormat    format,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
+    return std::static_pointer_cast<T>(CreateFormattedBuffer(size,
+                                                             alignment,
+                                                             format,
+                                                             bufferCreateFlag,
+                                                             initialState,
+                                                             data,
+                                                             dataSize));
   }
 
   template <typename T = IUniformBufferBlock>
-  inline std::shared_ptr<T> CreateUniformBufferBlock(
-      Name InName, LifeTimeType InLifeTimeType, size_t InSize = 0) const {
+  inline std::shared_ptr<T> CreateUniformBufferBlock(Name         name,
+                                                     LifeTimeType lifeTimeType,
+                                                     size_t size = 0) const {
     return std::static_pointer_cast<T>(
-        CreateUniformBufferBlock(InName, InLifeTimeType, InSize));
+        CreateUniformBufferBlock(name, lifeTimeType, size));
   }
 
   //////////////////////////////////////////////////////////////////////////
 
   // Create Images
   virtual std::shared_ptr<Texture> Create2DTexture(
-      std::uint32_t        InWidth,
-      std::uint32_t        InHeight,
+      std::uint32_t        witdh,
+      std::uint32_t        height,
       std::uint32_t        InArrayLayers,
       std::uint32_t        InMipLevels,
-      ETextureFormat       InFormat,
+      ETextureFormat       format,
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const RTClearValue& InClearValue    = RTClearValue::Invalid,
-      const wchar_t*       InResourceName  = nullptr) const {
+      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName    = nullptr) const {
     return nullptr;
   }
 
   virtual std::shared_ptr<Texture> CreateCubeTexture(
-      std::uint32_t        InWidth,
-      std::uint32_t        InHeight,
+      std::uint32_t        witdh,
+      std::uint32_t        height,
       std::uint32_t        InMipLevels,
-      ETextureFormat       InFormat,
+      ETextureFormat       format,
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageBulkData = {},
-      const RTClearValue& InClearValue    = RTClearValue::Invalid,
-      const wchar_t*       InResourceName  = nullptr) const {
+      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName    = nullptr) const {
     return nullptr;
   }
 
   template <typename T>
   std::shared_ptr<T> Create2DTexture(
-      std::uint32_t        InWidth,
-      std::uint32_t        InHeight,
+      std::uint32_t        witdh,
+      std::uint32_t        height,
       std::uint32_t        InArrayLayers,
       std::uint32_t        InMipLevels,
-      ETextureFormat       InFormat,
+      ETextureFormat       format,
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageCopyData = {},
-      const RTClearValue& InClearValue    = RTClearValue::Invalid,
-      const wchar_t*       InResourceName  = nullptr) const {
-    return std::static_pointer_cast<T>(Create2DTexture(InWidth,
-                                                       InHeight,
+      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName    = nullptr) const {
+    return std::static_pointer_cast<T>(Create2DTexture(witdh,
+                                                       height,
                                                        InArrayLayers,
                                                        InMipLevels,
-                                                       InFormat,
+                                                       format,
                                                        InTextureCreateFlag,
                                                        InImageLayout,
                                                        InImageCopyData,
                                                        InClearValue,
-                                                       InResourceName));
+                                                       resourceName));
   }
 
   template <typename T>
   std::shared_ptr<T> CreateCubeTexture(
-      std::uint32_t        InWidth,
-      std::uint32_t        InHeight,
+      std::uint32_t        witdh,
+      std::uint32_t        height,
       std::uint32_t        InMipLevels,
-      ETextureFormat       InFormat,
+      ETextureFormat       format,
       ETextureCreateFlag   InTextureCreateFlag,
       EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& InImageCopyData = {},
-      const RTClearValue& InClearValue    = RTClearValue::Invalid,
-      const wchar_t*       InResourceName  = nullptr) const {
-    return std::static_pointer_cast<T>(CreateCubeTexture(InWidth,
-                                                         InHeight,
+      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName    = nullptr) const {
+    return std::static_pointer_cast<T>(CreateCubeTexture(witdh,
+                                                         height,
                                                          InMipLevels,
-                                                         InFormat,
+                                                         format,
                                                          InTextureCreateFlag,
                                                          InImageLayout,
                                                          InImageCopyData,
                                                          InClearValue,
-                                                         InResourceName));
+                                                         resourceName));
   }
 
   //////////////////////////////////////////////////////////////////////////
@@ -851,9 +847,11 @@ class RHI {
 
 extern RHI* g_rhi;
 
-// TODO: consider move pipeline state info templated files to another file
+// TODO:
+// - consider move pipeline state info templated files to another file
 // (current problem - g_rhi dependecty so not possible to move in
 // pipeline_state_info file)
+// - consider naming convention for template parameters
 
 /**
  * \brief Constructs a m_samplerStateInfo object with configurable parameters
@@ -881,29 +879,29 @@ template <ETextureFilter         TMinification  = ETextureFilter::NEAREST,
           = ETextureComparisonMode::NONE>
 struct TSamplerStateInfo {
   static SamplerStateInfo* Create(math::Vector4Df BorderColor
-                                   = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f)) {
-    static SamplerStateInfo* CachedInfo = nullptr;
-    if (CachedInfo) {
-      return CachedInfo;
+                                  = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f)) {
+    static SamplerStateInfo* cachedInfo = nullptr;
+    if (cachedInfo) {
+      return cachedInfo;
     }
 
     SamplerStateInfo initializer;
-    initializer.Minification           = TMinification;
-    initializer.Magnification          = TMagnification;
-    initializer.AddressU               = TAddressU;
-    initializer.AddressV               = TAddressV;
-    initializer.AddressW               = TAddressW;
-    initializer.MipLODBias             = TMipLODBias;
-    initializer.MaxAnisotropy          = TMaxAnisotropy;
-    initializer.IsEnableComparisonMode = TIsEnableComparisonMode;
-    initializer.TextureComparisonMode  = TTextureComparisonMode;
-    initializer.ComparisonFunc         = TComparisonFunc;
-    initializer.BorderColor            = BorderColor;
-    initializer.MinLOD                 = TMinLOD;
-    initializer.MaxLOD                 = TMaxLOD;
+    initializer.m_minification_           = TMinification;
+    initializer.m_magnification_          = TMagnification;
+    initializer.m_addressU_               = TAddressU;
+    initializer.m_addressV_               = TAddressV;
+    initializer.m_addressW_               = TAddressW;
+    initializer.m_mipLODBias_             = TMipLODBias;
+    initializer.m_maxAnisotropy_          = TMaxAnisotropy;
+    initializer.m_isEnableComparisonMode_ = TIsEnableComparisonMode;
+    initializer.m_textureComparisonMode_  = TTextureComparisonMode;
+    initializer.m_comparisonFunc_         = TComparisonFunc;
+    initializer.m_borderColor_            = BorderColor;
+    initializer.m_minLOD_                 = TMinLOD;
+    initializer.m_maxLOD_                 = TMaxLOD;
     initializer.GetHash();
-    CachedInfo = g_rhi->CreateSamplerState(initializer);
-    return CachedInfo;
+    cachedInfo = g_rhi->CreateSamplerState(initializer);
+    return cachedInfo;
   }
 };
 
@@ -938,33 +936,33 @@ struct TRasterizationStateInfo {
    */
   static RasterizationStateInfo* Create(
       std::optional<EMSAASamples> sampleCountOpt = std::nullopt) {
-    static RasterizationStateInfo* CachedInfo = nullptr;
-    if (CachedInfo) {
-      return CachedInfo;
+    static RasterizationStateInfo* cachedInfo = nullptr;
+    if (cachedInfo) {
+      return cachedInfo;
     }
 
     RasterizationStateInfo initializer;
-    initializer.PolygonMode             = TPolygonMode;
-    initializer.CullMode                = TCullMode;
-    initializer.FrontFace               = TFrontFace;
-    initializer.DepthBiasEnable         = TDepthBiasEnable;
-    initializer.DepthBiasConstantFactor = TDepthBiasConstantFactor;
-    initializer.DepthBiasClamp          = TDepthBiasClamp;
-    initializer.DepthBiasSlopeFactor    = TDepthBiasSlopeFactor;
-    initializer.LineWidth               = TLineWidth;
-    initializer.DepthClampEnable        = TDepthClampEnable;
-    initializer.RasterizerDiscardEnable = TRasterizerDiscardEnable;
+    initializer.m_polygonMode_             = TPolygonMode;
+    initializer.m_cullMode_                = TCullMode;
+    initializer.m_frontFace_               = TFrontFace;
+    initializer.m_depthBiasEnable_         = TDepthBiasEnable;
+    initializer.m_depthBiasConstantFactor_ = TDepthBiasConstantFactor;
+    initializer.m_depthBiasClamp_          = TDepthBiasClamp;
+    initializer.m_depthBiasSlopeFactor_    = TDepthBiasSlopeFactor;
+    initializer.m_lineWidth_               = TLineWidth;
+    initializer.m_depthClampEnable_        = TDepthClampEnable;
+    initializer.m_rasterizerDiscardEnable_ = TRasterizerDiscardEnable;
 
-    initializer.SampleCount           = sampleCountOpt.value_or(TSampleCount);
-    initializer.SampleShadingEnable   = TSampleShadingEnable;
-    initializer.MinSampleShading      = TMinSampleShading;
-    initializer.AlphaToCoverageEnable = TAlphaToCoverageEnable;
-    initializer.AlphaToOneEnable      = TAlphaToOneEnable;
+    initializer.m_sampleCount_           = sampleCountOpt.value_or(TSampleCount);
+    initializer.m_sampleShadingEnable_   = TSampleShadingEnable;
+    initializer.m_minSampleShading_      = TMinSampleShading;
+    initializer.m_alphaToCoverageEnable_ = TAlphaToCoverageEnable;
+    initializer.m_alphaToOneEnable_      = TAlphaToOneEnable;
 
     initializer.GetHash();
     // TODO: problem (should be in cpp)
-    CachedInfo = g_rhi->CreateRasterizationState(initializer);
-    return CachedInfo;
+    cachedInfo = g_rhi->CreateRasterizationState(initializer);
+    return cachedInfo;
   }
 };
 
@@ -977,25 +975,25 @@ template <bool       TDepthTestEnable       = false,
           float      TMaxDepthBounds        = 1.0f>
 struct TDepthStencilStateInfo {
   static DepthStencilStateInfo* Create(StencilOpStateInfo* Front = nullptr,
-                                        StencilOpStateInfo* Back  = nullptr) {
-    static DepthStencilStateInfo* CachedInfo = nullptr;
-    if (CachedInfo) {
-      return CachedInfo;
+                                       StencilOpStateInfo* Back  = nullptr) {
+    static DepthStencilStateInfo* cachedInfo = nullptr;
+    if (cachedInfo) {
+      return cachedInfo;
     }
 
     DepthStencilStateInfo initializer;
-    initializer.DepthTestEnable       = TDepthTestEnable;
-    initializer.DepthWriteEnable      = TDepthWriteEnable;
-    initializer.DepthCompareOp        = TDepthCompareOp;
-    initializer.DepthBoundsTestEnable = TDepthBoundsTestEnable;
-    initializer.StencilTestEnable     = TStencilTestEnable;
-    initializer.Front                 = Front;
-    initializer.Back                  = Back;
-    initializer.MinDepthBounds        = TMinDepthBounds;
-    initializer.MaxDepthBounds        = TMaxDepthBounds;
+    initializer.m_depthTestEnable_       = TDepthTestEnable;
+    initializer.m_depthWriteEnable_      = TDepthWriteEnable;
+    initializer.m_depthCompareOp_        = TDepthCompareOp;
+    initializer.m_depthBoundsTestEnable_ = TDepthBoundsTestEnable;
+    initializer.m_stencilTestEnable_     = TStencilTestEnable;
+    initializer.m_front_                 = Front;
+    initializer.m_back_                  = Back;
+    initializer.m_minDepthBounds_        = TMinDepthBounds;
+    initializer.m_maxDepthBounds_        = TMaxDepthBounds;
     initializer.GetHash();
-    CachedInfo = g_rhi->CreateDepthStencilState(initializer);
-    return CachedInfo;
+    cachedInfo = g_rhi->CreateDepthStencilState(initializer);
+    return cachedInfo;
   }
 };
 
@@ -1009,23 +1007,23 @@ template <bool         TBlendEnable    = false,
           EColorMask   TColorWriteMask = EColorMask::ALL>
 struct TBlendingStateInfo {
   static BlendingStateInfo* Create() {
-    static BlendingStateInfo* CachedInfo = nullptr;
-    if (CachedInfo) {
-      return CachedInfo;
+    static BlendingStateInfo* cachedInfo = nullptr;
+    if (cachedInfo) {
+      return cachedInfo;
     }
 
     BlendingStateInfo initializer;
-    initializer.BlendEnable    = TBlendEnable;
-    initializer.Src            = TSrc;
-    initializer.Dest           = TDest;
-    initializer.BlendOp        = TBlendOp;
-    initializer.SrcAlpha       = TSrcAlpha;
-    initializer.DestAlpha      = TDestAlpha;
-    initializer.AlphaBlendOp   = TAlphaBlendOp;
-    initializer.ColorWriteMask = TColorWriteMask;
+    initializer.m_blendEnable_    = TBlendEnable;
+    initializer.m_src_            = TSrc;
+    initializer.m_dest_           = TDest;
+    initializer.m_blendOp_        = TBlendOp;
+    initializer.m_srcAlpha_       = TSrcAlpha;
+    initializer.m_destAlpha_      = TDestAlpha;
+    initializer.m_alphaBlendOp_   = TAlphaBlendOp;
+    initializer.m_colorWriteMask_ = TColorWriteMask;
     initializer.GetHash();
-    CachedInfo = g_rhi->CreateBlendingState(initializer);
-    return CachedInfo;
+    cachedInfo = g_rhi->CreateBlendingState(initializer);
+    return cachedInfo;
   }
 };
 

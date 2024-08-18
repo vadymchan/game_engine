@@ -33,7 +33,7 @@ class CommandBufferManagerVk : public CommandBufferManager {
 
   void ReleaseInternal();
 
-  const VkCommandPool& GetPool() const { return CommandPool; }
+  const VkCommandPool& GetPool() const { return m_commandPool_; }
 
   virtual CommandBuffer* GetOrCreateCommandBuffer() override;
 
@@ -41,11 +41,11 @@ class CommandBufferManagerVk : public CommandBufferManager {
 
   private:
   
-  VkCommandPool CommandPool;
-  MutexLock     CommandListLock;
+  VkCommandPool m_commandPool_;
+  MutexLock     m_commandListLock_;
 
-  std::vector<CommandBufferVk*> UsingCommandBuffers;
-  std::vector<CommandBufferVk*> AvailableCommandBuffers;
+  std::vector<CommandBufferVk*> m_usingCommandBuffers_;
+  std::vector<CommandBufferVk*> m_availableCommandBuffers_;
 };
 
 }  // namespace game_engine

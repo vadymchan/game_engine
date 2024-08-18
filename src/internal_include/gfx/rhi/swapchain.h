@@ -19,10 +19,10 @@ class SwapchainImage {
   virtual void Release() = 0;
 
   virtual void* GetHandle() const {
-    return TexturePtr ? TexturePtr->GetHandle() : nullptr;
+    return m_TexturePtr_ ? m_TexturePtr_->GetHandle() : nullptr;
   }
 
-  std::shared_ptr<Texture> TexturePtr;
+  std::shared_ptr<Texture> m_TexturePtr_;
 };
 
 class Swapchain {

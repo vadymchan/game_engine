@@ -18,34 +18,34 @@ using math::g_kPi;
 namespace game_engine {
 
 struct Triangle {
-  int32_t Index[3];
+  int32_t m_index[3];
 };
 
 void CalculateTangents(math::Vector4Df*       OutTangentArray,
-                       int32_t                InTriangleCount,
-                       const Triangle*        InTriangleArray,
-                       int32_t                InVertexCount,
-                       const math::Vector3Df* InVertexArray,
-                       const math::Vector3Df* InNormalArray,
-                       const math::Vector2Df* InTexCoordArray) {
-  math::Vector3Df* Tangent   = new math::Vector3Df[InVertexCount * 2];
-  math::Vector3Df* Bitangent = Tangent + InVertexCount;
-  for (int32_t i = 0; i < InVertexCount; ++i) {
+                       int32_t                triangleCount,
+                       const Triangle*        triangleArray,
+                       int32_t                vertexCount,
+                       const math::Vector3Df* vertexArray,
+                       const math::Vector3Df* normalArray,
+                       const math::Vector2Df* texCoordArray) {
+  math::Vector3Df* Tangent   = new math::Vector3Df[vertexCount * 2];
+  math::Vector3Df* Bitangent = Tangent + vertexCount;
+  for (int32_t i = 0; i < vertexCount; ++i) {
     Tangent[i]   = math::g_zeroVector<float, 3>();
     Bitangent[i] = math::g_zeroVector<float, 3>();
   }
 
-  for (int32_t k = 0; k < InTriangleCount; ++k) {
-    int32_t i0 = InTriangleArray[k].Index[0];
-    int32_t i1 = InTriangleArray[k].Index[1];
-    int32_t i2 = InTriangleArray[k].Index[2];
+  for (int32_t k = 0; k < triangleCount; ++k) {
+    int32_t i0 = triangleArray[k].m_index[0];
+    int32_t i1 = triangleArray[k].m_index[1];
+    int32_t i2 = triangleArray[k].m_index[2];
 
-    const math::Vector3Df& p0 = InVertexArray[i0];
-    const math::Vector3Df& p1 = InVertexArray[i1];
-    const math::Vector3Df& p2 = InVertexArray[i2];
-    const math::Vector2Df& w0 = InTexCoordArray[i0];
-    const math::Vector2Df& w1 = InTexCoordArray[i1];
-    const math::Vector2Df& w2 = InTexCoordArray[i2];
+    const math::Vector3Df& p0 = vertexArray[i0];
+    const math::Vector3Df& p1 = vertexArray[i1];
+    const math::Vector3Df& p2 = vertexArray[i2];
+    const math::Vector2Df& w0 = texCoordArray[i0];
+    const math::Vector2Df& w1 = texCoordArray[i1];
+    const math::Vector2Df& w2 = texCoordArray[i2];
 
     math::Vector3Df e1 = p1 - p0;
     math::Vector3Df e2 = p2 - p0;
@@ -66,10 +66,10 @@ void CalculateTangents(math::Vector4Df*       OutTangentArray,
     Bitangent[i2] += b;
   }
 
-  for (int32_t i = 0; i < InVertexCount; ++i) {
+  for (int32_t i = 0; i < vertexCount; ++i) {
     const math::Vector3Df& t = Tangent[i];
     const math::Vector3Df& b = Bitangent[i];
-    const math::Vector3Df& n = InNormalArray[i];
+    const math::Vector3Df& n = normalArray[i];
 
     // perform the rejection of the normal component from the tangent
     math::Vector3Df t_rejected = (t - n * t.dot(n)).normalized();
@@ -85,19 +85,19 @@ void CalculateTangents(math::Vector4Df*       OutTangentArray,
 }
 
 void QuadPrimitive::SetPlane(const math::Plane& plane) {
-  this->plane = plane;
-  RenderObjects[0]->SetRot(math::GetEulerAngleFrom(plane.n));
-  RenderObjects[0]->SetPos(plane.n * plane.d);
+  this->m_plane_ = plane;
+  m_renderObjects_[0]->SetRot(math::GetEulerAngleFrom(plane.n));
+  m_renderObjects_[0]->SetPos(plane.n * plane.d);
 }
 
 void BillboardQuadPrimitive::Update(float deltaTime) {
-  if (camera) {
+  if (m_camera_) {
     const math::Vector3Df normalizedCameraDir
-        = (camera->Pos - RenderObjects[0]->GetPos()).normalized();
+        = (m_camera_->m_position_ - m_renderObjects_[0]->GetPos()).normalized();
     const math::Vector3Df eularAngleOfCameraDir
         = math::GetEulerAngleFrom(normalizedCameraDir);
 
-    RenderObjects[0]->SetRot(eularAngleOfCameraDir);
+    m_renderObjects_[0]->SetRot(eularAngleOfCameraDir);
   } else {
     GlobalLogger::Log(LogLevel::Warning,
                       "BillboardQuad is updated without camera");
@@ -137,42 +137,42 @@ void BoundBoxObject::SetUniformBuffer(const Shader* shader) {
 }
 
 void BoundBoxObject::UpdateBoundBox(const BoundBox& boundBox) {
-  this->boundBox = boundBox;
+  this->m_boundBox_ = boundBox;
   UpdateBoundBox();
 }
 
 void BoundBoxObject::UpdateBoundBox() {
   float vertices[] = {
-    boundBox.Min.x(), boundBox.Min.y(), boundBox.Min.z(), boundBox.Max.x(),
-    boundBox.Min.y(), boundBox.Min.z(), boundBox.Max.x(), boundBox.Min.y(),
-    boundBox.Min.z(), boundBox.Max.x(), boundBox.Min.y(), boundBox.Max.z(),
-    boundBox.Max.x(), boundBox.Min.y(), boundBox.Max.z(), boundBox.Min.x(),
-    boundBox.Min.y(), boundBox.Max.z(), boundBox.Min.x(), boundBox.Min.y(),
-    boundBox.Max.z(), boundBox.Min.x(), boundBox.Min.y(), boundBox.Min.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(),
+    m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(),
+    m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(),
+    m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(),
+    m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
 
-    boundBox.Min.x(), boundBox.Max.y(), boundBox.Min.z(), boundBox.Max.x(),
-    boundBox.Max.y(), boundBox.Min.z(), boundBox.Max.x(), boundBox.Max.y(),
-    boundBox.Min.z(), boundBox.Max.x(), boundBox.Max.y(), boundBox.Max.z(),
-    boundBox.Max.x(), boundBox.Max.y(), boundBox.Max.z(), boundBox.Min.x(),
-    boundBox.Max.y(), boundBox.Max.z(), boundBox.Min.x(), boundBox.Max.y(),
-    boundBox.Max.z(), boundBox.Min.x(), boundBox.Max.y(), boundBox.Min.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(),
+    m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(),
+    m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(),
+    m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(),
+    m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
 
-    boundBox.Min.x(), boundBox.Min.y(), boundBox.Min.z(), boundBox.Min.x(),
-    boundBox.Max.y(), boundBox.Min.z(), boundBox.Max.x(), boundBox.Min.y(),
-    boundBox.Min.z(), boundBox.Max.x(), boundBox.Max.y(), boundBox.Min.z(),
-    boundBox.Max.x(), boundBox.Min.y(), boundBox.Max.z(), boundBox.Max.x(),
-    boundBox.Max.y(), boundBox.Max.z(), boundBox.Min.x(), boundBox.Max.y(),
-    boundBox.Max.z(), boundBox.Min.x(), boundBox.Min.y(), boundBox.Max.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_min_.x(),
+    m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(),
+    m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_max_.x(),
+    m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(),
+    m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
   };
 
   const int32_t elementCount = static_cast<int32_t>(std::size(vertices) / 3);
-  assert(RenderObjectGeometryDataPtr->VertexStreamPtr->elementCount
+  assert(m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_elementCount_
          == elementCount);
 
   BufferAttributeStream<float>* PositionParam
       = static_cast<BufferAttributeStream<float>*>(
-          RenderObjectGeometryDataPtr->VertexStreamPtr->streams[0].get());
-  memcpy(&PositionParam->Data[0], vertices, sizeof(vertices));
+          m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0].get());
+  memcpy(&PositionParam->m_data_[0], vertices, sizeof(vertices));
 }
 
 void BoundSphereObject::SetUniformBuffer(const Shader* shader) {
@@ -183,28 +183,28 @@ void BoundSphereObject::SetUniformBuffer(const Shader* shader) {
 void ArrowSegmentPrimitive::Update(float deltaTime) {
   Object::Update(deltaTime);
 
-  if (SegmentObject) {
-    SegmentObject->Update(deltaTime);
+  if (m_segmentObject_) {
+    m_segmentObject_->Update(deltaTime);
   }
-  if (ConeObject) {
-    ConeObject->Update(deltaTime);
+  if (m_coneObject_) {
+    m_coneObject_->Update(deltaTime);
   }
 }
 
 void ArrowSegmentPrimitive::SetPos(const math::Vector3Df& pos) {
-  SegmentObject->RenderObjects[0]->SetPos(pos);
+  m_segmentObject_->m_renderObjects_[0]->SetPos(pos);
 }
 
 void ArrowSegmentPrimitive::SetStart(const math::Vector3Df& start) {
-  SegmentObject->Start = start;
+  m_segmentObject_->m_start_ = start;
 }
 
 void ArrowSegmentPrimitive::SetEnd(const math::Vector3Df& end) {
-  SegmentObject->End = end;
+  m_segmentObject_->m_end_ = end;
 }
 
 void ArrowSegmentPrimitive::SetTime(float time) {
-  SegmentObject->Time = time;
+  m_segmentObject_->m_time_ = time;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -275,41 +275,41 @@ BoundSphere GenerateBoundSphere(const std::vector<float>& vertices) {
 
 void CreateBoundObjects(const std::vector<float>& vertices,
                         Object*                   ownerObject) {
-  ownerObject->boundBox    = GenerateBoundBox(vertices);
-  ownerObject->boundSphere = GenerateBoundSphere(vertices);
+  ownerObject->m_boundBox_    = GenerateBoundBox(vertices);
+  ownerObject->m_boundSphere_ = GenerateBoundSphere(vertices);
 
-  ownerObject->BoundBoxObject
-      = CreateBoundBox(ownerObject->boundBox, ownerObject);
-  ownerObject->BoundSphereObject
-      = CreateBoundSphere(ownerObject->boundSphere, ownerObject);
-  Object::AddBoundBoxObject(ownerObject->BoundBoxObject);
-  Object::AddBoundSphereObject(ownerObject->BoundSphereObject);
+  ownerObject->m_boundBoxObject_
+      = CreateBoundBox(ownerObject->m_boundBox_, ownerObject);
+  ownerObject->m_boundSphereObject_
+      = CreateBoundSphere(ownerObject->m_boundSphere_, ownerObject);
+  Object::AddBoundBoxObject(ownerObject->m_boundBoxObject_);
+  Object::AddBoundSphereObject(ownerObject->m_boundSphereObject_);
 }
 
 BoundBoxObject* CreateBoundBox(BoundBox               boundBox,
                                Object*                ownerObject,
                                const math::Vector4Df& color) {
   float vertices[] = {
-    boundBox.Min.x(), boundBox.Min.y(), boundBox.Min.z(), boundBox.Max.x(),
-    boundBox.Min.y(), boundBox.Min.z(), boundBox.Max.x(), boundBox.Min.y(),
-    boundBox.Min.z(), boundBox.Max.x(), boundBox.Min.y(), boundBox.Max.z(),
-    boundBox.Max.x(), boundBox.Min.y(), boundBox.Max.z(), boundBox.Min.x(),
-    boundBox.Min.y(), boundBox.Max.z(), boundBox.Min.x(), boundBox.Min.y(),
-    boundBox.Max.z(), boundBox.Min.x(), boundBox.Min.y(), boundBox.Min.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(),
+    boundBox.m_min_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_min_.y(),
+    boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(),
+    boundBox.m_min_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_min_.y(),
+    boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
 
-    boundBox.Min.x(), boundBox.Max.y(), boundBox.Min.z(), boundBox.Max.x(),
-    boundBox.Max.y(), boundBox.Min.z(), boundBox.Max.x(), boundBox.Max.y(),
-    boundBox.Min.z(), boundBox.Max.x(), boundBox.Max.y(), boundBox.Max.z(),
-    boundBox.Max.x(), boundBox.Max.y(), boundBox.Max.z(), boundBox.Min.x(),
-    boundBox.Max.y(), boundBox.Max.z(), boundBox.Min.x(), boundBox.Max.y(),
-    boundBox.Max.z(), boundBox.Min.x(), boundBox.Max.y(), boundBox.Min.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(),
+    boundBox.m_max_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_max_.y(),
+    boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(),
+    boundBox.m_max_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_max_.y(),
+    boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
 
-    boundBox.Min.x(), boundBox.Min.y(), boundBox.Min.z(), boundBox.Min.x(),
-    boundBox.Max.y(), boundBox.Min.z(), boundBox.Max.x(), boundBox.Min.y(),
-    boundBox.Min.z(), boundBox.Max.x(), boundBox.Max.y(), boundBox.Min.z(),
-    boundBox.Max.x(), boundBox.Min.y(), boundBox.Max.z(), boundBox.Max.x(),
-    boundBox.Max.y(), boundBox.Max.z(), boundBox.Min.x(), boundBox.Max.y(),
-    boundBox.Max.z(), boundBox.Min.x(), boundBox.Min.y(), boundBox.Max.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(), boundBox.m_min_.x(),
+    boundBox.m_max_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_min_.y(),
+    boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(), boundBox.m_max_.x(),
+    boundBox.m_max_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_max_.y(),
+    boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
   };
 
   const int32_t elementCount = static_cast<int32_t>(std::size(vertices) / 3);
@@ -325,41 +325,41 @@ BoundBoxObject* CreateBoundBox(BoundBox               boundBox,
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices, vertices + elementCount * 3));
 
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::LINES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::LINES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new BoundBoxObject();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
-  object->SkipShadowMapGen       = true;
-  object->SkipUpdateShadowVolume = true;
-  object->OwnerObject            = ownerObject;
-  object->Color                  = color;
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
+  object->m_skipShadowMapGen_       = true;
+  object->m_skipUpdateShadowVolume_ = true;
+  object->m_ownerObject_            = ownerObject;
+  object->m_color_                  = color;
 
-  if (object->OwnerObject) {
-    object->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+  if (object->m_ownerObject_) {
+    object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
       assert(thisObject);
       auto boundBoxObject = static_cast<BoundBoxObject*>(thisObject);
       if (!boundBoxObject) {
         return;
       }
 
-      assert(boundBoxObject->OwnerObject);
-      auto ownerObject = boundBoxObject->OwnerObject;
+      assert(boundBoxObject->m_ownerObject_);
+      auto ownerObject = boundBoxObject->m_ownerObject_;
 
-      boundBoxObject->RenderObjects[0]->SetPos(
-          ownerObject->RenderObjects[0]->GetPos());
-      boundBoxObject->RenderObjects[0]->SetRot(
-          ownerObject->RenderObjects[0]->GetRot());
-      boundBoxObject->RenderObjects[0]->SetScale(
-          ownerObject->RenderObjects[0]->GetScale());
-      boundBoxObject->Visible = ownerObject->Visible;
+      boundBoxObject->m_renderObjects_[0]->SetPos(
+          ownerObject->m_renderObjects_[0]->GetPos());
+      boundBoxObject->m_renderObjects_[0]->SetRot(
+          ownerObject->m_renderObjects_[0]->GetRot());
+      boundBoxObject->m_renderObjects_[0]->SetScale(
+          ownerObject->m_renderObjects_[0]->GetScale());
+      boundBoxObject->m_isVisible_ = ownerObject->m_isVisible_;
     };
   }
 
@@ -413,11 +413,11 @@ BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         vertices);
 
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::LINES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::LINES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   // IndexStream
   std::vector<uint32_t> faces;
@@ -449,7 +449,7 @@ BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
   }
 
   auto indexStreamData          = std::make_shared<IndexStreamData>();
-  indexStreamData->elementCount = static_cast<int32_t>(faces.size());
+  indexStreamData->m_elementCount_ = static_cast<int32_t>(faces.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
         Name("Index"),
@@ -460,38 +460,38 @@ BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
         faces
 
     );
-    indexStreamData->stream = streamParam;
+    indexStreamData->m_stream_ = streamParam;
   }
 
   auto object       = new BoundSphereObject();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData,
                                                    indexStreamData);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
-  object->SkipShadowMapGen       = true;
-  object->SkipUpdateShadowVolume = true;
-  object->OwnerObject            = ownerObject;
-  object->boundSphere            = boundSphere;
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
+  object->m_skipShadowMapGen_       = true;
+  object->m_skipUpdateShadowVolume_ = true;
+  object->m_ownerObject_            = ownerObject;
+  object->m_boundSphere_            = boundSphere;
 
-  object->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+  object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
     assert(thisObject);
     auto boundSphereObject = static_cast<BoundSphereObject*>(thisObject);
     if (!boundSphereObject) {
       return;
     }
 
-    assert(boundSphereObject->OwnerObject);
-    auto ownerObject = boundSphereObject->OwnerObject;
+    assert(boundSphereObject->m_ownerObject_);
+    auto ownerObject = boundSphereObject->m_ownerObject_;
 
-    boundSphereObject->RenderObjects[0]->SetPos(
-        ownerObject->RenderObjects[0]->GetPos());
-    boundSphereObject->RenderObjects[0]->SetRot(
-        ownerObject->RenderObjects[0]->GetRot());
-    boundSphereObject->RenderObjects[0]->SetScale(
-        ownerObject->RenderObjects[0]->GetScale());
-    boundSphereObject->Visible = ownerObject->Visible;
+    boundSphereObject->m_renderObjects_[0]->SetPos(
+        ownerObject->m_renderObjects_[0]->GetPos());
+    boundSphereObject->m_renderObjects_[0]->SetRot(
+        ownerObject->m_renderObjects_[0]->GetRot());
+    boundSphereObject->m_renderObjects_[0]->SetScale(
+        ownerObject->m_renderObjects_[0]->GetScale());
+    boundSphereObject->m_isVisible_ = ownerObject->m_isVisible_;
   };
 
   return object;
@@ -509,47 +509,47 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
 
   std::vector<BaseVertex> vertices(6);
   {
-    vertices[0].Pos = math::Vector3Df(
+    vertices[0].m_position_ = math::Vector3Df(
         offset.x() + (-halfSize.x()), 0.0f, offset.z() + (-halfSize.z()));
-    vertices[0].Normal    = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    vertices[0].Tangent   = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    vertices[0].Bitangent = math::Vector3Df(0.0f, 0.0f, 1.0f);
-    vertices[0].TexCoord  = math::Vector2Df(0.0f, 0.0f);
+    vertices[0].m_normal_    = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    vertices[0].m_tangent_   = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    vertices[0].m_bitangent_ = math::Vector3Df(0.0f, 0.0f, 1.0f);
+    vertices[0].m_texCoord_  = math::Vector2Df(0.0f, 0.0f);
 
-    vertices[1].Pos = math::Vector3Df(
+    vertices[1].m_position_ = math::Vector3Df(
         offset.x() + (halfSize.x()), 0.0f, offset.z() + (-halfSize.z()));
-    vertices[1].Normal    = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    vertices[1].Tangent   = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    vertices[1].Bitangent = math::Vector3Df(0.0f, 0.0f, 1.0f);
-    vertices[1].TexCoord  = math::Vector2Df(1.0f, 0.0f);
+    vertices[1].m_normal_    = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    vertices[1].m_tangent_   = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    vertices[1].m_bitangent_ = math::Vector3Df(0.0f, 0.0f, 1.0f);
+    vertices[1].m_texCoord_  = math::Vector2Df(1.0f, 0.0f);
 
-    vertices[2].Pos = math::Vector3Df(
+    vertices[2].m_position_ = math::Vector3Df(
         offset.x() + (halfSize.x()), 0.0f, offset.z() + (halfSize.z()));
-    vertices[2].Normal    = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    vertices[2].Tangent   = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    vertices[2].Bitangent = math::Vector3Df(0.0f, 0.0f, 1.0f);
-    vertices[2].TexCoord  = math::Vector2Df(1.0f, 1.0f);
+    vertices[2].m_normal_    = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    vertices[2].m_tangent_   = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    vertices[2].m_bitangent_ = math::Vector3Df(0.0f, 0.0f, 1.0f);
+    vertices[2].m_texCoord_  = math::Vector2Df(1.0f, 1.0f);
 
-    vertices[3].Pos = math::Vector3Df(
+    vertices[3].m_position_ = math::Vector3Df(
         offset.x() + (halfSize.x()), 0.0f, offset.z() + (halfSize.z()));
-    vertices[3].Normal    = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    vertices[3].Tangent   = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    vertices[3].Bitangent = math::Vector3Df(0.0f, 0.0f, 1.0f);
-    vertices[3].TexCoord  = math::Vector2Df(1.0f, 1.0f);
+    vertices[3].m_normal_    = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    vertices[3].m_tangent_   = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    vertices[3].m_bitangent_ = math::Vector3Df(0.0f, 0.0f, 1.0f);
+    vertices[3].m_texCoord_  = math::Vector2Df(1.0f, 1.0f);
 
-    vertices[4].Pos = math::Vector3Df(
+    vertices[4].m_position_ = math::Vector3Df(
         offset.x() + (-halfSize.x()), 0.0f, offset.z() + (halfSize.z()));
-    vertices[4].Normal    = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    vertices[4].Tangent   = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    vertices[4].Bitangent = math::Vector3Df(0.0f, 0.0f, 1.0f);
-    vertices[4].TexCoord  = math::Vector2Df(0.0f, 1.0f);
+    vertices[4].m_normal_    = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    vertices[4].m_tangent_   = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    vertices[4].m_bitangent_ = math::Vector3Df(0.0f, 0.0f, 1.0f);
+    vertices[4].m_texCoord_  = math::Vector2Df(0.0f, 1.0f);
 
-    vertices[5].Pos = math::Vector3Df(
+    vertices[5].m_position_ = math::Vector3Df(
         offset.x() + (-halfSize.x()), 0.0f, offset.z() + (-halfSize.z()));
-    vertices[5].Normal    = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    vertices[5].Tangent   = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    vertices[5].Bitangent = math::Vector3Df(0.0f, 0.0f, 1.0f);
-    vertices[5].TexCoord  = math::Vector2Df(0.0f, 0.0f);
+    vertices[5].m_normal_    = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    vertices[5].m_tangent_   = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    vertices[5].m_bitangent_ = math::Vector3Df(0.0f, 0.0f, 1.0f);
+    vertices[5].m_texCoord_  = math::Vector2Df(0.0f, 0.0f);
   }
 
   std::vector<uint32_t> indices;
@@ -561,7 +561,7 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
   // PositionOnly VertexStream
   std::vector<PositionOnlyVertex> verticesPositionOnly(vertices.size());
   for (int32_t i = 0; i < (int32_t)vertices.size(); ++i) {
-    verticesPositionOnly[i].Pos = vertices[i].Pos;
+    verticesPositionOnly[i].m_position_ = vertices[i].m_position_;
   }
 
   const int32_t NumOfVertices       = (int32_t)vertices.size();
@@ -579,8 +579,8 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
                                           sizeof(float) * 3)},
             verticesPositionOnly);
 
-    positionOnlyVertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-    positionOnlyVertexStreamData->elementCount  = NumOfVertices;
+    positionOnlyVertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+    positionOnlyVertexStreamData->m_elementCount_  = NumOfVertices;
   }
 
   // Base VertexStream
@@ -613,14 +613,14 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
                                       sizeof(float) * 2)},
         vertices);
 
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
 
-    vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-    vertexStreamData->elementCount  = NumOfVertices;
+    vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+    vertexStreamData->m_elementCount_  = NumOfVertices;
   }
 
   auto indexStreamData          = std::make_shared<IndexStreamData>();
-  indexStreamData->elementCount = static_cast<int32_t>(indices.size());
+  indexStreamData->m_elementCount_ = static_cast<int32_t>(indices.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
         Name("Index"),
@@ -629,7 +629,7 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
         {IBufferAttribute::Attribute(
             EBufferElementType::UINT32, 0, sizeof(int32_t) * 3)},
         indices);
-    indexStreamData->stream = streamParam;
+    indexStreamData->m_stream_ = streamParam;
   }
 
   auto renderObject                = new RenderObject();
@@ -638,7 +638,7 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
   renderObject->CreateRenderObject(RenderObjectGeometryDataPtr);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
-  renderObject->MaterialPtr = GDefaultMaterial;
+  renderObject->m_materialPtr_ = g_defaultMaterial;
   return renderObject;
 }
 
@@ -648,9 +648,9 @@ QuadPrimitive* CreateQuad(const math::Vector3Df& pos,
                           const math::Vector4Df& color) {
   auto object       = new QuadPrimitive();
   auto RenderObject = CreateQuad_Internal(pos, size, scale, color);
-  object->RenderObjectGeometryDataPtr = RenderObject->GeometryDataPtr;
-  object->RenderObjects.push_back(RenderObject);
-  RenderObject->IsTwoSided = true;
+  object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
+  object->m_renderObjects_.push_back(RenderObject);
+  RenderObject->m_isTwoSided_ = true;
   // object->CreateBoundBox();
   return object;
 }
@@ -715,7 +715,7 @@ Object* CreateGizmo(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices, vertices + elementCount * 3));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -726,7 +726,7 @@ Object* CreateGizmo(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         std::vector<float>(colors, colors + elementCount * 4));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -743,7 +743,7 @@ Object* CreateGizmo(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         normals);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -760,7 +760,7 @@ Object* CreateGizmo(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         tangents);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -772,18 +772,18 @@ Object* CreateGizmo(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         texcoords);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::LINES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::LINES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new QuadPrimitive();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
   // object->CreateBoundBox();
@@ -844,7 +844,7 @@ Object* CreateTriangle(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices, vertices + elementCount * 3));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -855,7 +855,7 @@ Object* CreateTriangle(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         GenerateColor(color, elementCount));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -872,7 +872,7 @@ Object* CreateTriangle(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         normals);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -889,7 +889,7 @@ Object* CreateTriangle(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         tangents);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -909,21 +909,21 @@ Object* CreateTriangle(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         std::move(texcoordsData));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new Object();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
-  renderObject->IsTwoSided = true;
+  renderObject->m_isTwoSided_ = true;
   // object->CreateBoundBox();
 
   return object;
@@ -1057,7 +1057,7 @@ Object* CreateCube(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices, vertices + elementCount * 3));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1068,7 +1068,7 @@ Object* CreateCube(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         GenerateColor(color, elementCount));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1079,7 +1079,7 @@ Object* CreateCube(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(normals, normals + elementCount * 3));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1116,7 +1116,7 @@ Object* CreateCube(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         tangentData);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1136,7 +1136,7 @@ Object* CreateCube(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         std::move(texcoordsData));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   auto                  indexStreamData = std::make_shared<IndexStreamData>();
@@ -1145,7 +1145,7 @@ Object* CreateCube(const math::Vector3Df& pos,
   for (int32_t i = 0; i < elementCount; ++i) {
     faces[i] = i;
   }
-  indexStreamData->elementCount = static_cast<int32_t>(faces.size());
+  indexStreamData->m_elementCount_ = static_cast<int32_t>(faces.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
         Name("Index"),
@@ -1154,19 +1154,19 @@ Object* CreateCube(const math::Vector3Df& pos,
         {IBufferAttribute::Attribute(
             EBufferElementType::UINT32, 0, sizeof(int32_t) * 3)},
         faces);
-    indexStreamData->stream = streamParam;
+    indexStreamData->m_stream_ = streamParam;
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new Object();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData,
                                                    indexStreamData);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
   // object->CreateBoundBox();
@@ -1244,7 +1244,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices.begin(), vertices.end()));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1255,7 +1255,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         GenerateColor(color, elementCount));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1266,7 +1266,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(normals.begin(), normals.end()));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   // Dummy
@@ -1278,7 +1278,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(normals.size(), 0.0f));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   // Dummy
@@ -1290,11 +1290,11 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         std::vector<float>(normals.size(), 0.0f));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   // IndexStream
 
@@ -1314,7 +1314,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
   }
 
   auto indexStreamData          = std::make_shared<IndexStreamData>();
-  indexStreamData->elementCount = static_cast<int32_t>(faces.size());
+  indexStreamData->m_elementCount_ = static_cast<int32_t>(faces.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
         Name("Index"),
@@ -1323,16 +1323,16 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         {IBufferAttribute::Attribute(
             EBufferElementType::UINT32, 0, sizeof(int32_t) * 3)},
         faces);
-    indexStreamData->stream = streamParam;
+    indexStreamData->m_stream_ = streamParam;
   }
 
   auto object       = new Object();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData,
                                                    indexStreamData);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
   // object->CreateBoundBox();
@@ -1426,7 +1426,7 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices.begin(), vertices.end()));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1437,7 +1437,7 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         GenerateColor(color, elementCount));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -1448,7 +1448,7 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(normals.begin(), normals.end()));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   // Dummy
@@ -1460,7 +1460,7 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(normals.size(), 0.0f));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   // Dummy
@@ -1472,24 +1472,24 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         std::vector<float>(normals.size(), 0.0f));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType
+  vertexStreamData->m_primitiveType_
       = isWireframe ? EPrimitiveType::LINES : EPrimitiveType::TRIANGLES;
-  vertexStreamData->elementCount = elementCount;
+  vertexStreamData->m_elementCount_ = elementCount;
 
   auto object       = new ConePrimitive();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
-  object->Height = height;
-  object->Radius = radius;
-  object->Color  = color;
+  object->m_height_ = height;
+  object->m_radius_ = radius;
+  object->m_color_  = color;
   // if (createBoundInfo)
   //	object->CreateBoundBox();
   return object;
@@ -1520,104 +1520,104 @@ Object* CreateCylinder(const math::Vector3Df& pos,
     BaseVertex* CurrentBaseVertex = (BaseVertex*)&vertices[i * 12];
 
     // Top
-    CurrentBaseVertex->Pos     = math::Vector3Df(topVert);
-    CurrentBaseVertex->Normal  = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->Tangent = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_position_     = math::Vector3Df(topVert);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(prevRad) * radius, topVert.y(), sinf(prevRad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->Tangent = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos
+    CurrentBaseVertex->m_position_
         = math::Vector3Df(cosf(rad) * radius, topVert.y(), sinf(rad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->Tangent = math::Vector3Df(1.0f, 0.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
     // Mid
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(prevRad) * radius, topVert.y(), sinf(prevRad) * radius);
-    CurrentBaseVertex->Normal
+    CurrentBaseVertex->m_normal_
         = math::Vector3Df(cosf(prevRad), 0.0f, sinf(prevRad));
-    CurrentBaseVertex->Tangent = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(prevRad) * radius, bottomVert.y(), sinf(prevRad) * radius);
-    CurrentBaseVertex->Normal
+    CurrentBaseVertex->m_normal_
         = math::Vector3Df(cosf(prevRad), 0.0f, sinf(prevRad));
-    CurrentBaseVertex->Tangent = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos
+    CurrentBaseVertex->m_position_
         = math::Vector3Df(cosf(rad) * radius, topVert.y(), sinf(rad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(cosf(rad), 0.0f, sinf(rad));
-    CurrentBaseVertex->Tangent = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(cosf(rad), 0.0f, sinf(rad));
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(prevRad) * radius, bottomVert.y(), sinf(prevRad) * radius);
-    CurrentBaseVertex->Normal
+    CurrentBaseVertex->m_normal_
         = math::Vector3Df(cosf(prevRad), 0.0f, sinf(prevRad));
-    CurrentBaseVertex->Tangent = math::Vector3Df(0.0f, -1.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(0.0f, -1.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(rad) * radius, bottomVert.y(), sinf(rad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(cosf(rad), 0.0f, sinf(rad));
-    CurrentBaseVertex->Tangent = math::Vector3Df(0.0f, -1.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(cosf(rad), 0.0f, sinf(rad));
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(0.0f, -1.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos
+    CurrentBaseVertex->m_position_
         = math::Vector3Df(cosf(rad) * radius, topVert.y(), sinf(rad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(cosf(rad), 0.0f, sinf(rad));
-    CurrentBaseVertex->Tangent = math::Vector3Df(0.0f, -1.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(cosf(rad), 0.0f, sinf(rad));
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(0.0f, -1.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
     // Bottom
-    CurrentBaseVertex->Pos
+    CurrentBaseVertex->m_position_
         = math::Vector3Df(bottomVert.x(), bottomVert.y(), bottomVert.z());
-    CurrentBaseVertex->Normal  = math::Vector3Df(0.0f, -1.0f, 0.0f);
-    CurrentBaseVertex->Tangent = math::Vector3Df(-1.0f, 0.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, -1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(-1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(rad) * radius, bottomVert.y(), sinf(rad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(0.0f, -1.0f, 0.0f);
-    CurrentBaseVertex->Tangent = math::Vector3Df(-1.0f, 0.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, -1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(-1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
 
-    CurrentBaseVertex->Pos = math::Vector3Df(
+    CurrentBaseVertex->m_position_ = math::Vector3Df(
         cosf(prevRad) * radius, bottomVert.y(), sinf(prevRad) * radius);
-    CurrentBaseVertex->Normal  = math::Vector3Df(0.0f, -1.0f, 0.0f);
-    CurrentBaseVertex->Tangent = math::Vector3Df(-1.0f, 0.0f, 0.0f);
-    CurrentBaseVertex->Bitangent
-        = CurrentBaseVertex->Normal.cross(CurrentBaseVertex->Tangent);
+    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, -1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_ = math::Vector3Df(-1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_bitangent_
+        = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
   }
 
@@ -1630,7 +1630,7 @@ Object* CreateCylinder(const math::Vector3Df& pos,
   // PositionOnly VertexStream
   std::vector<PositionOnlyVertex> verticesPositionOnly(vertices.size());
   for (int32_t i = 0; i < (int32_t)vertices.size(); ++i) {
-    verticesPositionOnly[i].Pos = vertices[i].Pos;
+    verticesPositionOnly[i].m_position_ = vertices[i].m_position_;
   }
 
   const int32_t NumOfVertices       = (int32_t)vertices.size();
@@ -1647,10 +1647,10 @@ Object* CreateCylinder(const math::Vector3Df& pos,
                                           0,
                                           sizeof(float) * 3)},
             verticesPositionOnly);
-    positionOnlyVertexStreamData->streams.push_back(streamParam);
+    positionOnlyVertexStreamData->m_streams_.push_back(streamParam);
 
-    positionOnlyVertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-    positionOnlyVertexStreamData->elementCount  = NumOfVertices;
+    positionOnlyVertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+    positionOnlyVertexStreamData->m_elementCount_  = NumOfVertices;
   }
 
   // Base VertexStream
@@ -1682,14 +1682,14 @@ Object* CreateCylinder(const math::Vector3Df& pos,
                                       sizeof(float) * 12,
                                       sizeof(float) * 2)},
         vertices);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
 
-    vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-    vertexStreamData->elementCount  = NumOfVertices;
+    vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+    vertexStreamData->m_elementCount_  = NumOfVertices;
   }
 
   auto indexStreamData          = std::make_shared<IndexStreamData>();
-  indexStreamData->elementCount = static_cast<int32_t>(indices.size());
+  indexStreamData->m_elementCount_ = static_cast<int32_t>(indices.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
         Name("Index"),
@@ -1698,19 +1698,19 @@ Object* CreateCylinder(const math::Vector3Df& pos,
         {IBufferAttribute::Attribute(
             EBufferElementType::UINT32, 0, sizeof(int32_t) * 3)},
         indices);
-    indexStreamData->stream = streamParam;
+    indexStreamData->m_stream_ = streamParam;
   }
 
   auto object       = new Object();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(
           vertexStreamData, positionOnlyVertexStreamData, indexStreamData);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
-  renderObject->MaterialPtr = GDefaultMaterial;
+  renderObject->m_materialPtr_ = g_defaultMaterial;
   return object;
 }
 
@@ -1798,7 +1798,7 @@ Object* CreateSphere(const math::Vector3Df& pos,
   // PositionOnly VertexStream
   std::vector<PositionOnlyVertex> verticesPositionOnly(vertices.size());
   for (int32_t i = 0; i < (int32_t)vertices.size(); ++i) {
-    verticesPositionOnly[i].Pos = vertices[i].Pos;
+    verticesPositionOnly[i].m_position_ = vertices[i].m_position_;
   }
 
   const int32_t NumOfVertices       = (int32_t)vertices.size();
@@ -1815,11 +1815,11 @@ Object* CreateSphere(const math::Vector3Df& pos,
                                           0,
                                           sizeof(float) * 3)},
             verticesPositionOnly);
-    positionOnlyVertexStreamData->streams.push_back(streamParam);
+    positionOnlyVertexStreamData->m_streams_.push_back(streamParam);
 
-    positionOnlyVertexStreamData->PrimitiveType
+    positionOnlyVertexStreamData->m_primitiveType_
         = isWireframe ? EPrimitiveType::LINES : EPrimitiveType::TRIANGLES;
-    positionOnlyVertexStreamData->elementCount = NumOfVertices;
+    positionOnlyVertexStreamData->m_elementCount_ = NumOfVertices;
   }
 
   // Base VertexStream
@@ -1851,15 +1851,15 @@ Object* CreateSphere(const math::Vector3Df& pos,
                                       sizeof(float) * 12,
                                       sizeof(float) * 2)},
         vertices);
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
 
-    vertexStreamData->PrimitiveType
+    vertexStreamData->m_primitiveType_
         = isWireframe ? EPrimitiveType::LINES : EPrimitiveType::TRIANGLES;
-    vertexStreamData->elementCount = NumOfVertices;
+    vertexStreamData->m_elementCount_ = NumOfVertices;
   }
 
   auto indexStreamData          = std::make_shared<IndexStreamData>();
-  indexStreamData->elementCount = static_cast<int32_t>(indices.size());
+  indexStreamData->m_elementCount_ = static_cast<int32_t>(indices.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
         Name("Index"),
@@ -1872,19 +1872,19 @@ Object* CreateSphere(const math::Vector3Df& pos,
     // memcpy(
     //     &streamParam->Data[0], &indices[0], indices.size() *
     //     sizeof(uint32_t));
-    indexStreamData->stream = streamParam;
+    indexStreamData->m_stream_ = streamParam;
   }
 
   auto object       = new Object();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(
           vertexStreamData, positionOnlyVertexStreamData, indexStreamData);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject->SetPos(pos);
   renderObject->SetScale(scale);
-  renderObject->MaterialPtr = GDefaultMaterial;
+  renderObject->m_materialPtr_ = g_defaultMaterial;
   return object;
 }
 
@@ -1895,10 +1895,10 @@ BillboardQuadPrimitive* CreateBillobardQuad(const math::Vector3Df& pos,
                                             Camera*                camera) {
   auto object       = new BillboardQuadPrimitive();
   auto RenderObject = CreateQuad_Internal(pos, size, scale, color);
-  object->RenderObjectGeometryDataPtr = RenderObject->GeometryDataPtr;
-  object->RenderObjects.push_back(RenderObject);
-  object->camera           = camera;
-  RenderObject->IsTwoSided = true;
+  object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
+  object->m_renderObjects_.push_back(RenderObject);
+  object->m_camera_           = camera;
+  RenderObject->m_isTwoSided_ = true;
   return object;
 }
 
@@ -1916,7 +1916,7 @@ UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
     0.0f,
   };
 
-  if (useVulkanNdcYFlip) {
+  if (kUseVulkanNdcYFlip) {
     int32_t SrcIdx = 1;
     int32_t DstIdx = 2;
     std::swap(vertices[SrcIdx * 2], vertices[DstIdx * 2]);
@@ -1936,20 +1936,20 @@ UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         std::vector<float>(vertices, vertices + std::size(vertices)));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLE_STRIP;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLE_STRIP;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new UIQuadPrimitive();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
-  object->Pos  = pos;
-  object->Size = size;
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
+  object->m_position_  = pos;
+  object->m_size_ = size;
 
   return object;
 }
@@ -1969,18 +1969,18 @@ FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture) {
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float))},
         std::vector<float>(std::begin(vertices), std::end(vertices)));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLE_STRIP;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLE_STRIP;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new FullscreenQuadPrimitive();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   return object;
 }
 
@@ -2018,7 +2018,7 @@ SegmentPrimitive* CreateSegment(const math::Vector3Df& start,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(vertices, vertices + std::size(vertices)));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -2030,28 +2030,28 @@ SegmentPrimitive* CreateSegment(const math::Vector3Df& start,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         std::move(colorData));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::LINES;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::LINES;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new SegmentPrimitive();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   renderObject = renderObject;
   renderObject->SetScale(math::Vector3Df(time));
-  object->Time           = time;
-  object->Start          = start;
-  object->End            = end;
-  object->Color          = color;
-  object->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+  object->m_time_           = time;
+  object->m_start_          = start;
+  object->m_end_            = end;
+  object->m_color_          = color;
+  object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
     auto thisSegmentObject = static_cast<SegmentPrimitive*>(thisObject);
-    thisObject->RenderObjects[0]->SetScale(
-        math::Vector3Df(thisSegmentObject->Time));
+    thisObject->m_renderObjects_[0]->SetScale(
+        math::Vector3Df(thisSegmentObject->m_time_));
   };
   // object->CreateBoundBox();
   return object;
@@ -2064,22 +2064,22 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
                                           float                  coneRadius,
                                           const math::Vector4Df& color) {
   auto object            = new ArrowSegmentPrimitive();
-  object->SegmentObject  = CreateSegment(start, end, time, color);
-  object->ConeObject     = CreateCone(math::g_zeroVector<float, 3>(),
+  object->m_segmentObject_  = CreateSegment(start, end, time, color);
+  object->m_coneObject_     = CreateCone(math::g_zeroVector<float, 3>(),
                                   coneHeight,
                                   coneRadius,
                                   10,
                                   math::g_oneVector<float, 3>(),
                                   color);
-  object->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+  object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
     auto thisArrowSegmentObject
         = static_cast<ArrowSegmentPrimitive*>(thisObject);
-    thisArrowSegmentObject->ConeObject->RenderObjects[0]->SetPos(
-        thisArrowSegmentObject->SegmentObject->RenderObjects[0]->GetPos()
-        + thisArrowSegmentObject->SegmentObject->GetCurrentEnd());
-    thisArrowSegmentObject->ConeObject->RenderObjects[0]->SetRot(
+    thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->SetPos(
+        thisArrowSegmentObject->m_segmentObject_->m_renderObjects_[0]->GetPos()
+        + thisArrowSegmentObject->m_segmentObject_->GetCurrentEnd());
+    thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->SetRot(
         math::GetEulerAngleFrom(
-            thisArrowSegmentObject->SegmentObject->GetDirectionNormalized()));
+            thisArrowSegmentObject->m_segmentObject_->GetDirectionNormalized()));
   };
 
   return object;
@@ -2107,14 +2107,14 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                              .LoadTextureFromFile(Name(textureFilename))
 //                              .lock()
 //                              .get();
-//     object->BillboardObject->RenderObjects[0]->MaterialPtr
+//     object->BillboardObject->m_renderObjects_[0]->MaterialPtr
 //         = std::make_shared<Material>();
-//     object->BillboardObject->RenderObjects[0]
+//     object->BillboardObject->m_renderObjects_[0]
 //         ->MaterialPtr
 //         ->TexData[static_cast<int32_t>(Material::EMaterialTextureType::Albedo)]
 //         .Texture
 //         = texture;
-//     object->BillboardObject->RenderObjects[0]->IsHiddenBoundBox = true;
+//     object->BillboardObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   }
 //   object->ArrowSegementObject
 //       = CreateArrowSegment(math::g_zeroVector<float, 3>(),
@@ -2123,25 +2123,25 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                            scale.x(),
 //                            scale.x() / 2,
 //                            math::Vector4Df(0.8f, 0.2f, 0.3f, 1.0f));
-//   object->ArrowSegementObject->ConeObject->RenderObjects[0]->IsHiddenBoundBox
+//   object->ArrowSegementObject->ConeObject->m_renderObjects_[0]->m_isHiddenBoundBox_
 //       = true;
-//   object->ArrowSegementObject->SegmentObject->RenderObjects[0]->IsHiddenBoundBox
+//   object->ArrowSegementObject->SegmentObject->m_renderObjects_[0]->m_isHiddenBoundBox_
 //       = true;
-//   object->Pos            = pos;
+//   object->m_position_            = pos;
 //   object->Light          = light;
-//   object->PostUpdateFunc = [length](Object* thisObject, float deltaTime) {
+//   object->m_postUpdateFunc_ = [length](Object* thisObject, float deltaTime) {
 //     auto thisDirectionalLightObject
 //         = static_cast<DirectionalLightPrimitive*>(thisObject);
-//     thisDirectionalLightObject->BillboardObject->RenderObjects[0]->SetPos(
-//         thisDirectionalLightObject->Pos);
+//     thisDirectionalLightObject->BillboardObject->m_renderObjects_[0]->SetPos(
+//         thisDirectionalLightObject->m_position_);
 //     thisDirectionalLightObject->ArrowSegementObject->SetPos(
-//         thisDirectionalLightObject->Pos);
+//         thisDirectionalLightObject->m_position_);
 //     thisDirectionalLightObject->ArrowSegementObject->SetEnd(
 //         thisDirectionalLightObject->Light->GetLightData().Direction *
 //         length);
 //   };
-//   object->SkipShadowMapGen       = true;
-//   object->SkipUpdateShadowVolume = true;
+//   object->m_skipShadowMapGen_       = true;
+//   object->m_skipUpdateShadowVolume_ = true;
 //   light->LightDebugObject        = object;
 //   return object;
 // }
@@ -2166,14 +2166,14 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                        .LoadTextureFromFile(Name(textureFilename))
 //                        .lock()
 //                        .get();
-//     object->BillboardObject->RenderObjects[0]->MaterialPtr
+//     object->BillboardObject->m_renderObjects_[0]->MaterialPtr
 //         = std::make_shared<Material>();
-//     object->BillboardObject->RenderObjects[0]
+//     object->BillboardObject->m_renderObjects_[0]
 //         ->MaterialPtr
 //         ->TexData[static_cast<int32_t>(Material::EMaterialTextureType::Albedo)]
 //         .Texture
 //         = texture;
-//     object->BillboardObject->RenderObjects[0]->IsHiddenBoundBox = true;
+//     object->BillboardObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   }
 //   object->SphereObject = CreateSphere(LightData.Position,
 //                                       LightData.MaxDistance,
@@ -2183,22 +2183,22 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                                       math::Vector4Df(LightData.Color, 1.0f),
 //                                       true,
 //                                       false);
-//   object->SphereObject->RenderObjects[0]->IsHiddenBoundBox = true;
+//   object->SphereObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   object->Light                                            = light;
-//   object->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+//   object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
 //     auto pointLightPrimitive =
 //     static_cast<PointLightPrimitive*>(thisObject); const
 //     PointLightUniformBufferData& LightData
 //         = pointLightPrimitive->Light->GetLightData();
-//     pointLightPrimitive->BillboardObject->RenderObjects[0]->SetPos(
+//     pointLightPrimitive->BillboardObject->m_renderObjects_[0]->SetPos(
 //         LightData.Position);
-//     pointLightPrimitive->SphereObject->RenderObjects[0]->SetPos(
+//     pointLightPrimitive->SphereObject->m_renderObjects_[0]->SetPos(
 //         LightData.Position);
-//     pointLightPrimitive->SphereObject->RenderObjects[0]->SetScale(
+//     pointLightPrimitive->SphereObject->m_renderObjects_[0]->SetScale(
 //         math::Vector3Df(LightData.MaxDistance));
 //   };
-//   object->SkipShadowMapGen       = true;
-//   object->SkipUpdateShadowVolume = true;
+//   object->m_skipShadowMapGen_       = true;
+//   object->m_skipUpdateShadowVolume_ = true;
 //   light->LightDebugObject        = object;
 //   return object;
 // }
@@ -2223,9 +2223,9 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //                        .LoadTextureFromFile(Name(textureFilename))
 //                        .lock()
 //                        .get();
-//     object->BillboardObject->RenderObjects[0]->MaterialPtr
+//     object->BillboardObject->m_renderObjects_[0]->MaterialPtr
 //         = std::make_shared<Material>();
-//     object->BillboardObject->RenderObjects[0]
+//     object->BillboardObject->m_renderObjects_[0]
 //         ->MaterialPtr
 //         ->TexData[static_cast<int32_t>(Material::EMaterialTextureType::Albedo)]
 //         .Texture
@@ -2242,7 +2242,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //           LightData.Color.z(), 1.0f),
 //       true,
 //       false);
-//   object->UmbraConeObject->RenderObjects[0]->IsHiddenBoundBox = true;
+//   object->UmbraConeObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   object->PenumbraConeObject                                  = CreateCone(
 //       LightData.Position,
 //       1.0,
@@ -2254,13 +2254,13 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //           0.5f),
 //       true,
 //       false);
-//   object->PenumbraConeObject->RenderObjects[0]->IsHiddenBoundBox = true;
+//   object->PenumbraConeObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   object->Light                                                  = light;
-//   object->PostUpdateFunc = [](Object* thisObject, float deltaTime) {
+//   object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
 //     auto spotLightObject = static_cast<SpotLightPrimitive*>(thisObject);
 //     const SpotLightUniformBufferData& LightData
 //         = spotLightObject->Light->GetLightData();
-//     spotLightObject->BillboardObject->RenderObjects[0]->SetPos(
+//     spotLightObject->BillboardObject->m_renderObjects_[0]->SetPos(
 //         LightData.Position);
 //
 //     const auto lightDir       = -LightData.Direction;
@@ -2268,29 +2268,29 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //     const auto spotLightPos
 //         = LightData.Position
 //         + lightDir
-//               * (-spotLightObject->UmbraConeObject->RenderObjects[0]
+//               * (-spotLightObject->UmbraConeObject->m_renderObjects_[0]
 //                       ->GetScale()
 //                       .y()
 //                  / 2.0f);
 //
 //     const auto umbraRadius
 //         = tanf(LightData.UmbraRadian) * LightData.MaxDistance;
-//     spotLightObject->UmbraConeObject->RenderObjects[0]->SetScale(
+//     spotLightObject->UmbraConeObject->m_renderObjects_[0]->SetScale(
 //         math::Vector3Df(umbraRadius, LightData.MaxDistance, umbraRadius));
-//     spotLightObject->UmbraConeObject->RenderObjects[0]->SetPos(spotLightPos);
-//     spotLightObject->UmbraConeObject->RenderObjects[0]->SetRot(directionToRot);
+//     spotLightObject->UmbraConeObject->m_renderObjects_[0]->SetPos(spotLightPos);
+//     spotLightObject->UmbraConeObject->m_renderObjects_[0]->SetRot(directionToRot);
 //
 //     const auto penumbraRadius
 //         = tanf(LightData.PenumbraRadian) * LightData.MaxDistance;
-//     spotLightObject->PenumbraConeObject->RenderObjects[0]->SetScale(
+//     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->SetScale(
 //         math::Vector3Df(penumbraRadius, LightData.MaxDistance,
 //         penumbraRadius));
-//     spotLightObject->PenumbraConeObject->RenderObjects[0]->SetPos(spotLightPos);
-//     spotLightObject->PenumbraConeObject->RenderObjects[0]->SetRot(
+//     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->SetPos(spotLightPos);
+//     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->SetRot(
 //         directionToRot);
 //   };
-//   object->SkipShadowMapGen       = true;
-//   object->SkipUpdateShadowVolume = true;
+//   object->m_skipShadowMapGen_       = true;
+//   object->m_skipUpdateShadowVolume_ = true;
 //   light->LightDebugObject        = object;
 //   return object;
 // }
@@ -2298,16 +2298,16 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 FrustumPrimitive* CreateFrustumDebug(const Camera* targetCamera) {
   FrustumPrimitive* frustumPrimitive = new FrustumPrimitive(targetCamera);
   for (int32_t i = 0; i < 16; ++i) {
-    frustumPrimitive->Segments[i]
+    frustumPrimitive->m_segments_[i]
         = CreateSegment(math::g_zeroVector<float, 3>(),
                         math::g_zeroVector<float, 3>(),
                         1.0f,
                         math::Vector4Df(1.0f));
-    frustumPrimitive->Segments[i]->IsPostUpdate = false;
+    frustumPrimitive->m_segments_[i]->m_isPostUpdate_ = false;
   }
 
   for (int32_t i = 0; i < 6; ++i) {
-    frustumPrimitive->Plane[i] = CreateQuad(math::g_zeroVector<float, 3>(),
+    frustumPrimitive->m_plane_[i] = CreateQuad(math::g_zeroVector<float, 3>(),
                                             math::g_oneVector<float, 3>(),
                                             math::g_oneVector<float, 3>(),
                                             math::Vector4Df(1.0f));
@@ -2339,7 +2339,7 @@ Graph2D* CreateGraph2D(const math::Vector2Df&              pos,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
         std::vector<math::Vector2Df>(point, point + std::size(point)));
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
   {
@@ -2352,18 +2352,18 @@ Graph2D* CreateGraph2D(const math::Vector2Df&              pos,
         std::vector<math::Matrix4f>()
         //, 1 // InstanceDivisor // TODO probably not needed, remove
     );
-    vertexStreamData->streams.push_back(streamParam);
+    vertexStreamData->m_streams_.push_back(streamParam);
   }
 
-  vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLE_STRIP;
-  vertexStreamData->elementCount  = elementCount;
+  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLE_STRIP;
+  vertexStreamData->m_elementCount_  = elementCount;
 
   auto object       = new Graph2D();
   auto renderObject = new RenderObject();
-  object->RenderObjectGeometryDataPtr
+  object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->RenderObjectGeometryDataPtr);
-  object->RenderObjects.push_back(renderObject);
+  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  object->m_renderObjects_.push_back(renderObject);
   object->SethPos(pos);
   object->SetGuardLineSize(size);
   object->SetPoints(points);
@@ -2396,19 +2396,19 @@ Graph2D* CreateGraph2D(const math::Vector2Df&              pos,
 // }
 
 void SegmentPrimitive::UpdateSegment() {
-  if (RenderObjectGeometryDataPtr->VertexStreamPtr->streams.size() < 2) {
+  if (m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_.size() < 2) {
     assert(0);
     return;
   }
 
-  RenderObjectGeometryDataPtr->VertexStreamPtr->streams[0].reset();
-  RenderObjectGeometryDataPtr->VertexStreamPtr->streams[1].reset();
+  m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0].reset();
+  m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[1].reset();
   const auto currentEnd = GetCurrentEnd();
 
   const float vertices[] = {
-    Start.x(),
-    Start.y(),
-    Start.z(),
+    m_start_.x(),
+    m_start_.y(),
+    m_start_.z(),
     currentEnd.x(),
     currentEnd.y(),
     currentEnd.z(),
@@ -2422,7 +2422,7 @@ void SegmentPrimitive::UpdateSegment() {
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(std::begin(vertices), std::end(vertices)));
-    RenderObjectGeometryDataPtr->VertexStreamPtr->streams[0] = streamParam;
+    m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0] = streamParam;
   }
 
   {
@@ -2432,8 +2432,8 @@ void SegmentPrimitive::UpdateSegment() {
         sizeof(float) * 4,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        GenerateColor(Color, 2));
-    RenderObjectGeometryDataPtr->VertexStreamPtr->streams[1] = streamParam;
+        GenerateColor(m_color_, 2));
+    m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[1] = streamParam;
   }
 }
 
@@ -2441,10 +2441,10 @@ void SegmentPrimitive::UpdateSegment(const math::Vector3Df& start,
                                      const math::Vector3Df& end,
                                      const math::Vector4Df& color,
                                      float                  time) {
-  Start = start;
-  End   = end;
-  Color = color;
-  Time  = time;
+  m_start_ = start;
+  m_end_   = end;
+  m_color_ = color;
+  m_time_  = time;
   UpdateSegment();
 }
 
@@ -2465,18 +2465,18 @@ void FrustumPrimitive::Update(float deltaTime) {
   math::Vector3Df near_lb;
   math::Vector3Df near_rb;
 
-  const auto  origin = TargetCamera->Pos;
-  const float n      = TargetCamera->Near;
-  const float f      = TargetCamera->Far;
+  const auto  origin = m_targetCamera_->m_position_;
+  const float n      = m_targetCamera_->m_Near_;
+  const float f      = m_targetCamera_->m_far_;
 
-  if (TargetCamera->IsPerspectiveProjection) {
+  if (m_targetCamera_->m_isPerspectiveProjection_) {
     const float InvAspect
-        = ((float)TargetCamera->Width / (float)TargetCamera->Height);
-    const float     length    = tanf(TargetCamera->FOVRad * 0.5f);
-    math::Vector3Df targetVec = TargetCamera->GetForwardVector().normalized();
+        = ((float)m_targetCamera_->m_width_ / (float)m_targetCamera_->m_height_);
+    const float     length    = tanf(m_targetCamera_->m_FOVRad_ * 0.5f);
+    math::Vector3Df targetVec = m_targetCamera_->GetForwardVector().normalized();
     math::Vector3Df rightVec
-        = TargetCamera->GetRightVector() * length * InvAspect;
-    math::Vector3Df upVec = TargetCamera->GetUpVector() * length;
+        = m_targetCamera_->GetRightVector() * length * InvAspect;
+    math::Vector3Df upVec = m_targetCamera_->GetUpVector() * length;
 
     math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
     math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
@@ -2493,8 +2493,8 @@ void FrustumPrimitive::Update(float deltaTime) {
     near_lb = origin + leftDown * n;
     near_rb = origin + rightDown * n;
 
-    if (PostPerspective) {
-      auto ProjView = TargetCamera->Projection * TargetCamera->view;
+    if (m_postPerspective_) {
+      auto ProjView = m_targetCamera_->m_projection_ * m_targetCamera_->m_view_;
 
       far_lt = math::g_transformPoint(far_rt, ProjView);
       far_rt = math::g_transformPoint(far_rt, ProjView);
@@ -2507,12 +2507,12 @@ void FrustumPrimitive::Update(float deltaTime) {
       near_rb = math::g_transformPoint(near_rb, ProjView);
     }
   } else {
-    const float w = (float)TargetCamera->Width;
-    const float h = (float)TargetCamera->Height;
+    const float w = (float)m_targetCamera_->m_width_;
+    const float h = (float)m_targetCamera_->m_height_;
 
-    math::Vector3Df targetVec = TargetCamera->GetForwardVector().normalized();
-    math::Vector3Df rightVec  = TargetCamera->GetRightVector().normalized();
-    math::Vector3Df upVec     = TargetCamera->GetUpVector().normalized();
+    math::Vector3Df targetVec = m_targetCamera_->GetForwardVector().normalized();
+    math::Vector3Df rightVec  = m_targetCamera_->GetRightVector().normalized();
+    math::Vector3Df upVec     = m_targetCamera_->GetUpVector().normalized();
 
     far_lt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
     far_rt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
@@ -2526,32 +2526,32 @@ void FrustumPrimitive::Update(float deltaTime) {
   }
 
   const math::Vector4Df baseColor
-      = (TargetCamera->IsPerspectiveProjection
+      = (m_targetCamera_->m_isPerspectiveProjection_
              ? math::Vector4Df(1.0f)
              : math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f));
-  Segments[0]->UpdateSegment(near_rt, far_rt, baseColor);
-  Segments[1]->UpdateSegment(near_lt, far_lt, baseColor);
-  Segments[2]->UpdateSegment(near_rb, far_rb, baseColor);
-  Segments[3]->UpdateSegment(near_lb, far_lb, baseColor);
+  m_segments_[0]->UpdateSegment(near_rt, far_rt, baseColor);
+  m_segments_[1]->UpdateSegment(near_lt, far_lt, baseColor);
+  m_segments_[2]->UpdateSegment(near_rb, far_rb, baseColor);
+  m_segments_[3]->UpdateSegment(near_lb, far_lb, baseColor);
 
   const math::Vector4Df green(0.0f, 1.0f, 0.0f, 1.0f);
-  Segments[4]->UpdateSegment(near_lt, near_rt, green);
-  Segments[5]->UpdateSegment(near_lb, near_rb, green);
-  Segments[6]->UpdateSegment(
+  m_segments_[4]->UpdateSegment(near_lt, near_rt, green);
+  m_segments_[5]->UpdateSegment(near_lb, near_rb, green);
+  m_segments_[6]->UpdateSegment(
       near_lt, near_lb, math::Vector4Df(1.0f, 1.0f, 0.0f, 1.0f));
-  Segments[7]->UpdateSegment(near_rt, near_rb, green);
+  m_segments_[7]->UpdateSegment(near_rt, near_rb, green);
 
   const math::Vector4Df red(1.0f, 0.0f, 0.0f, 1.0f);
-  Segments[8]->UpdateSegment(far_lt, far_rt, red);
-  Segments[9]->UpdateSegment(far_lb, far_rb, red);
-  Segments[10]->UpdateSegment(
+  m_segments_[8]->UpdateSegment(far_lt, far_rt, red);
+  m_segments_[9]->UpdateSegment(far_lb, far_rb, red);
+  m_segments_[10]->UpdateSegment(
       far_lt, far_lb, math::Vector4Df(0.0f, 1.0f, 1.0f, 1.0f));
-  Segments[11]->UpdateSegment(far_rt, far_rb, red);
+  m_segments_[11]->UpdateSegment(far_rt, far_rb, red);
 
-  Segments[12]->UpdateSegment(far_rt, near_rt, baseColor);
-  Segments[13]->UpdateSegment(far_rb, near_rb, baseColor);
-  Segments[14]->UpdateSegment(far_lb, near_lb, baseColor);
-  Segments[15]->UpdateSegment(far_rb, near_rb, baseColor);
+  m_segments_[12]->UpdateSegment(far_rt, near_rt, baseColor);
+  m_segments_[13]->UpdateSegment(far_rb, near_rb, baseColor);
+  m_segments_[14]->UpdateSegment(far_lb, near_lb, baseColor);
+  m_segments_[15]->UpdateSegment(far_rb, near_rb, baseColor);
 
   auto updateQuadFunc = [this](QuadPrimitive*         quad,
                                const math::Vector3Df& p1,
@@ -2601,7 +2601,7 @@ void FrustumPrimitive::Update(float deltaTime) {
           std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
               EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
           std::vector<float>(std::begin(vertices), std::end(vertices)));
-      vertexStreamData->streams.push_back(streamParam);
+      vertexStreamData->m_streams_.push_back(streamParam);
     }
 
     {
@@ -2614,7 +2614,7 @@ void FrustumPrimitive::Update(float deltaTime) {
           GenerateColor(color, elementCount)  // Assuming this function returns
                                               // std::vector<float>
       );
-      vertexStreamData->streams.push_back(streamParam);
+      vertexStreamData->m_streams_.push_back(streamParam);
     }
 
     {
@@ -2632,46 +2632,46 @@ void FrustumPrimitive::Update(float deltaTime) {
           std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
               EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
           normals);
-      vertexStreamData->streams.push_back(streamParam);
+      vertexStreamData->m_streams_.push_back(streamParam);
     }
 
-    vertexStreamData->PrimitiveType = EPrimitiveType::TRIANGLES;
-    vertexStreamData->elementCount  = elementCount;
+    vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
+    vertexStreamData->m_elementCount_  = elementCount;
 
-    quad->RenderObjectGeometryDataPtr->UpdateVertexStream(vertexStreamData);
+    quad->m_renderObjectGeometryDataPtr_->UpdateVertexStream(vertexStreamData);
   };
 
-  updateQuadFunc(Plane[0],
+  updateQuadFunc(m_plane_[0],
                  far_lt,
                  near_lt,
                  far_lb,
                  near_lb,
                  math::Vector4Df(0.0f, 1.0f, 0.0f, 0.3f));
-  updateQuadFunc(Plane[1],
+  updateQuadFunc(m_plane_[1],
                  near_rt,
                  far_rt,
                  near_rb,
                  far_rb,
                  math::Vector4Df(0.0f, 0.0f, 1.0f, 0.3f));
-  updateQuadFunc(Plane[2],
+  updateQuadFunc(m_plane_[2],
                  far_lt,
                  far_rt,
                  near_lt,
                  near_rt,
                  math::Vector4Df(1.0f, 1.0f, 0.0f, 0.3f));
-  updateQuadFunc(Plane[3],
+  updateQuadFunc(m_plane_[3],
                  near_lb,
                  near_rb,
                  far_lb,
                  far_rb,
                  math::Vector4Df(1.0f, 0.0f, 0.0f, 0.3f));
-  updateQuadFunc(Plane[4],
+  updateQuadFunc(m_plane_[4],
                  near_lt,
                  near_rt,
                  near_lb,
                  near_rb,
                  math::Vector4Df(1.0f, 1.0f, 1.0f, 0.3f));
-  updateQuadFunc(Plane[5],
+  updateQuadFunc(m_plane_[5],
                  far_lt,
                  far_rt,
                  far_lb,
@@ -2679,15 +2679,15 @@ void FrustumPrimitive::Update(float deltaTime) {
                  math::Vector4Df(1.0f, 1.0f, 1.0f, 0.3f));
 
   for (int32_t i = 0; i < 16; ++i) {
-    Segments[i]->RenderObjects[0]->SetPos(Offset);
-    Segments[i]->RenderObjects[0]->SetScale(Scale);
-    Segments[i]->Update(deltaTime);
+    m_segments_[i]->m_renderObjects_[0]->SetPos(m_offset_);
+    m_segments_[i]->m_renderObjects_[0]->SetScale(m_scale_);
+    m_segments_[i]->Update(deltaTime);
   }
 
   for (int32_t i = 0; i < 6; ++i) {
-    Plane[i]->RenderObjects[0]->SetPos(Offset);
-    Plane[i]->RenderObjects[0]->SetScale(Scale);
-    Plane[i]->Update(deltaTime);
+    m_plane_[i]->m_renderObjects_[0]->SetPos(m_offset_);
+    m_plane_[i]->m_renderObjects_[0]->SetScale(m_scale_);
+    m_plane_[i]->Update(deltaTime);
   }
 }
 
@@ -2696,51 +2696,51 @@ void Graph2D::Update(float deltaTime) {
 }
 
 void Graph2D::SethPos(const math::Vector2Df& pos) {
-  if (Pos != pos) {
-    DirtyFlag = true;
-    Pos       = pos;
+  if (m_position_ != pos) {
+    m_dirtyFlag_ = true;
+    m_position_       = pos;
   }
 }
 
 void Graph2D::SetPoints(const std::vector<math::Vector2Df>& points) {
-  Points    = points;
-  DirtyFlag = true;
+  m_points_    = points;
+  m_dirtyFlag_ = true;
 }
 
 void Graph2D::UpdateBuffer() {
-  if (DirtyFlag) {
-    DirtyFlag = false;
+  if (m_dirtyFlag_) {
+    m_dirtyFlag_ = false;
 
-    ResultPoints.resize(Points.size());
-    for (int32_t i = 0; i < ResultPoints.size(); ++i) {
-      ResultPoints[i] = math::Vector2Df(Points[i].x(), -Points[i].y())
-                      + math::Vector2Df(Pos.x(), Pos.y());
+    m_resultPoints_.resize(m_points_.size());
+    for (int32_t i = 0; i < m_resultPoints_.size(); ++i) {
+      m_resultPoints_[i] = math::Vector2Df(m_points_[i].x(), -m_points_[i].y())
+                      + math::Vector2Df(m_position_.x(), m_position_.y());
     }
 
-    if (ResultPoints.size() > 1) {
-      ResultMatrices.resize(ResultPoints.size() - 1 + 2);
+    if (m_resultPoints_.size() > 1) {
+      m_resultMatrices_.resize(m_resultPoints_.size() - 1 + 2);
 
       {
         auto hor = math::Matrix4f::Identity();
         hor.setBasisX(math::g_rightVector<float, 4>());
         hor.setBasisY(math::g_upVector<float, 4>());
         hor.setBasisZ(math::g_forwardVector<float, 4>());
-        math::g_setTranslate(hor, Pos.x(), Pos.y(), 0.0f);
-        hor = (hor * math::g_scale(GuardLineSize.x(), 1.0f, 1.0f));
-        ResultMatrices[0] = (hor);
+        math::g_setTranslate(hor, m_position_.x(), m_position_.y(), 0.0f);
+        hor = (hor * math::g_scale(m_guardLineSize_.x(), 1.0f, 1.0f));
+        m_resultMatrices_[0] = (hor);
 
         auto ver = math::Matrix4f::Identity();
         ver.setBasisX(math::g_rightVector<float, 4>());
         ver.setBasisY(math::g_upVector<float, 4>());
         ver.setBasisZ(math::g_forwardVector<float, 4>());
-        math::g_setTranslate(ver, Pos.x(), Pos.y(), 0.0f);
-        ver = (ver * math::g_scale(1.0f, -GuardLineSize.y(), 1.0f));
-        ResultMatrices[1] = (ver);
+        math::g_setTranslate(ver, m_position_.x(), m_position_.y(), 0.0f);
+        ver = (ver * math::g_scale(1.0f, -m_guardLineSize_.y(), 1.0f));
+        m_resultMatrices_[1] = (ver);
       }
 
-      for (int i = 2; i < ResultMatrices.size(); ++i) {
-        const auto& p2         = ResultPoints[i + 1];
-        const auto& p1         = ResultPoints[i];
+      for (int i = 2; i < m_resultMatrices_.size(); ++i) {
+        const auto& p2         = m_resultPoints_[i + 1];
+        const auto& p1         = m_resultPoints_[i];
         auto        right      = math::Vector3Df(p2 - p1, 0.0f);
         const float lineLength = right.magnitude();
         right = right.normalized();  // here in-place normalize method would be
@@ -2749,7 +2749,7 @@ void Graph2D::UpdateBuffer() {
 
         auto up = right.cross(math::g_forwardVector<float, 3>()).normalized();
 
-        math::Matrix4f& tr = ResultMatrices[i];
+        math::Matrix4f& tr = m_resultMatrices_[i];
         tr                 = math::Matrix4f::Identity();
         tr.setBasisX(math::Vector4Df(right, 0.0f));
         tr.setBasisY(math::Vector4Df(up, 0.0f));
@@ -2758,24 +2758,24 @@ void Graph2D::UpdateBuffer() {
         tr = (tr * math::g_scale(lineLength, 1.0f, 1.0f));
       }
 
-      if (RenderObjectGeometryDataPtr->VertexStreamPtr) {
+      if (m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_) {
         static Name TransformName("Transform");
         for (auto& iter :
-             RenderObjectGeometryDataPtr->VertexStreamPtr->streams) {
-          if (iter->name == TransformName) {
+             m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_) {
+          if (iter->m_name_ == TransformName) {
             auto matStreamParam
                 = static_cast<BufferAttributeStream<math::Matrix4f>*>(
                     iter.get());
-            matStreamParam->Data.resize(ResultMatrices.size());
-            memcpy(&matStreamParam->Data[0],
-                   &ResultMatrices[0],
-                   ResultMatrices.size() * math::Matrix4f::GetDataSize());
+            matStreamParam->m_data_.resize(m_resultMatrices_.size());
+            memcpy(&matStreamParam->m_data_[0],
+                   &m_resultMatrices_[0],
+                   m_resultMatrices_.size() * math::Matrix4f::GetDataSize());
             break;
           }
         }
       }
     } else {
-      ResultMatrices.clear();
+      m_resultMatrices_.clear();
     }
   }
 }

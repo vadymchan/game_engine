@@ -28,8 +28,8 @@ class SpirvUtil {
     static shaderc::Compiler       compiler;
     static shaderc::CompileOptions options = []() {
       shaderc::CompileOptions opts;
-      opts.SetTargetEnvironment(TargetEnvironment, TargetVersion);
-      opts.SetSourceLanguage(SourceLanguage);
+      opts.SetTargetEnvironment(s_kTargetEnvironment, s_kTargetVersion);
+      opts.SetSourceLanguage(s_kSourceLanguage);
       return opts;
     }();
 
@@ -56,15 +56,14 @@ class SpirvUtil {
     static shaderc::Compiler       compiler;
     static shaderc::CompileOptions options = []() {
       shaderc::CompileOptions opts;
-      opts.SetTargetEnvironment(TargetEnvironment, TargetVersion);
-      opts.SetSourceLanguage(SourceLanguage);
-      opts.SetGenerateDebugInfo(); 
+      opts.SetTargetEnvironment(s_kTargetEnvironment, s_kTargetVersion);
+      opts.SetSourceLanguage(s_kSourceLanguage);
+      opts.SetGenerateDebugInfo();
       return opts;
     }();
 
     shaderc::SpvCompilationResult compilationResult = compiler.CompileGlslToSpv(
         hlslCode, shaderKind, "shader.hlsl", entryPoint.c_str(), options);
-
 
     if (compilationResult.GetCompilationStatus()
         != shaderc_compilation_status_success) {
@@ -119,10 +118,10 @@ class SpirvUtil {
   }
 
   // TODO: make it configurable
-  static constexpr auto TargetEnvironment = shaderc_target_env_vulkan;
+  static constexpr auto s_kTargetEnvironment = shaderc_target_env_vulkan;
   // TODO: select depending on selected vulkan version in vkInstance
-  static constexpr auto TargetVersion  = shaderc_env_version_vulkan_1_3;
-  static constexpr auto SourceLanguage = shaderc_source_language_hlsl;
+  static constexpr auto s_kTargetVersion  = shaderc_env_version_vulkan_1_3;
+  static constexpr auto s_kSourceLanguage = shaderc_source_language_hlsl;
 };
 }  // namespace game_engine
 

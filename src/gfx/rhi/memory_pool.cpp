@@ -24,67 +24,67 @@ void Memory::Free() {
 
 void Memory::Reset() {
   m_buffer             = nullptr;
-  m_range.Offset       = 0;
-  m_range.DataSize     = 0;
+  m_range.m_offset_       = 0;
+  m_range.m_dataSize_     = 0;
   m_subMemoryAllocator = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // SubMemoryAllocator
 Memory SubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
-  ScopedLock s(&Lock);
+  ScopedLock s(&m_lock_);
 
   Memory        AllocMem;
   const uint64_t AlignedRequestedSize
-      = (Alignment > 0) ? Align(InRequstedSize, Alignment) : InRequstedSize;
+      = (m_alignment_ > 0) ? Align(InRequstedSize, m_alignment_) : InRequstedSize;
 
-  for (int32_t i = 0; i < (int32_t)FreeLists.size(); ++i) {
-    if (FreeLists[i].DataSize >= AlignedRequestedSize) {
+  for (int32_t i = 0; i < (int32_t)m_freeLists_.size(); ++i) {
+    if (m_freeLists_[i].m_dataSize_ >= AlignedRequestedSize) {
       AllocMem.m_buffer = GetBuffer();
       assert(AllocMem.m_buffer);
 
-      AllocMem.m_range.Offset       = FreeLists[i].Offset;
-      AllocMem.m_range.DataSize     = AlignedRequestedSize;
+      AllocMem.m_range.m_offset_       = m_freeLists_[i].m_offset_;
+      AllocMem.m_range.m_dataSize_     = AlignedRequestedSize;
       AllocMem.m_subMemoryAllocator = this;
-      FreeLists.erase(FreeLists.begin() + i);
+      m_freeLists_.erase(m_freeLists_.begin() + i);
       return AllocMem;
     }
   }
 
-  if ((SubMemoryRange.Offset + AlignedRequestedSize)
-      <= SubMemoryRange.DataSize) {
+  if ((m_subMemoryRange_.m_offset_ + AlignedRequestedSize)
+      <= m_subMemoryRange_.m_dataSize_) {
     AllocMem.m_buffer = GetBuffer();
     assert(AllocMem.m_buffer);
 
-    AllocMem.m_range.Offset       = (Alignment > 0)
-                                    ? Align(SubMemoryRange.Offset, Alignment)
-                                    : SubMemoryRange.Offset;
-    AllocMem.m_range.DataSize     = AlignedRequestedSize;
+    AllocMem.m_range.m_offset_       = (m_alignment_ > 0)
+                                    ? Align(m_subMemoryRange_.m_offset_, m_alignment_)
+                                    : m_subMemoryRange_.m_offset_;
+    AllocMem.m_range.m_dataSize_     = AlignedRequestedSize;
     AllocMem.m_subMemoryAllocator = this;
 
-    SubMemoryRange.Offset += AlignedRequestedSize;
-    AllAllocatedLists.push_back(AllocMem.m_range);
+    m_subMemoryRange_.m_offset_ += AlignedRequestedSize;
+    m_allAllocatedLists_.push_back(AllocMem.m_range);
 
-    assert(AllocMem.m_range.Offset + AllocMem.m_range.DataSize
-          <= SubMemoryRange.DataSize);
+    assert(AllocMem.m_range.m_offset_ + AllocMem.m_range.m_dataSize_
+          <= m_subMemoryRange_.m_dataSize_);
   }
   return AllocMem;
 }
 
 Memory MemoryPool::Alloc(EVulkanBufferBits InUsages,
                            EVulkanMemoryBits InProperties,
-                           uint64_t          InSize) {
-  ScopedLock         s(&Lock);
-  const EPoolSizeType PoolSizeType = GetPoolSizeType(InSize);
+                           uint64_t          size) {
+  ScopedLock         s(&m_lock_);
+  const EPoolSizeType PoolSizeType = GetPoolSizeType(size);
 
   std::vector<SubMemoryAllocator*>& SubMemoryAllocators
-      = MemoryPools[(int32_t)PoolSizeType];
+      = m_memoryPools_[(int32_t)PoolSizeType];
   for (auto& iter : SubMemoryAllocators) {
     if (!iter->IsMatchType(InUsages, InProperties)) {
       continue;
     }
 
-    const Memory& alloc = iter->Alloc(InSize);
+    const Memory& alloc = iter->Alloc(size);
     if (alloc.IsValid()) {
       return alloc;
     }
@@ -98,56 +98,56 @@ Memory MemoryPool::Alloc(EVulkanBufferBits InUsages,
   // size
   const uint64_t SubMemoryAllocatorSize
       = (PoolSizeType == EPoolSizeType::MAX)
-          ? InSize
-          : SubMemorySize[(uint64_t)PoolSizeType];
+          ? size
+          : s_kSubMemorySize[(uint64_t)PoolSizeType];
 
   NewSubMemoryAllocator->Initialize(
       InUsages, InProperties, SubMemoryAllocatorSize);
-  const Memory& alloc = NewSubMemoryAllocator->Alloc(InSize);
+  const Memory& alloc = NewSubMemoryAllocator->Alloc(size);
   assert(alloc.IsValid());
 
   return alloc;
 }
 
 void MemoryPool::Free(const Memory& InFreeMemory) {
-  ScopedLock s(&Lock);
+  ScopedLock s(&m_lock_);
 
   const int32_t CurrentFrameNumber = g_rhi->GetCurrentFrameNumber();
   const int32_t OldestFrameToKeep
-      = CurrentFrameNumber - NumOfFramesToWaitBeforeReleasing;
+      = CurrentFrameNumber - s_kNumOfFramesToWaitBeforeReleasing;
 
   // ProcessPendingMemoryFree
   {
     // Check it is too early
-    if (CurrentFrameNumber >= CanReleasePendingFreeMemoryFrameNumber) {
+    if (CurrentFrameNumber >= m_canReleasePendingFreeMemoryFrameNumber_) {
       // Release pending memory
       int32_t i = 0;
-      for (; i < PendingFree.size(); ++i) {
-        PendingFreeMemory& pendingFreeMemory = PendingFree[i];
-        if (pendingFreeMemory.FrameIndex < OldestFrameToKeep) {
-          assert(pendingFreeMemory.m_memory.m_subMemoryAllocator);
-          pendingFreeMemory.m_memory.m_subMemoryAllocator->Free(
-              pendingFreeMemory.m_memory);
+      for (; i < m_pendingFree_.size(); ++i) {
+        PendingFreeMemory& pendingFreeMemory = m_pendingFree_[i];
+        if (pendingFreeMemory.m_frameIndex_ < OldestFrameToKeep) {
+          assert(pendingFreeMemory.m_memory_.m_subMemoryAllocator);
+          pendingFreeMemory.m_memory_.m_subMemoryAllocator->Free(
+              pendingFreeMemory.m_memory_);
         } else {
-          CanReleasePendingFreeMemoryFrameNumber
-              = pendingFreeMemory.FrameIndex + NumOfFramesToWaitBeforeReleasing
+          m_canReleasePendingFreeMemoryFrameNumber_
+              = pendingFreeMemory.m_frameIndex_ + s_kNumOfFramesToWaitBeforeReleasing
               + 1;
           break;
         }
       }
       if (i > 0) {
-        const size_t RemainingSize = (PendingFree.size() - i);
+        const size_t RemainingSize = (m_pendingFree_.size() - i);
         if (RemainingSize > 0) {
-          memcpy(&PendingFree[0],
-                 &PendingFree[i],
+          memcpy(&m_pendingFree_[0],
+                 &m_pendingFree_[i],
                  sizeof(PendingFreeMemory) * RemainingSize);
         }
-        PendingFree.resize(RemainingSize);
+        m_pendingFree_.resize(RemainingSize);
       }
     }
   }
 
-  PendingFree.emplace_back(
+  m_pendingFree_.emplace_back(
       PendingFreeMemory(CurrentFrameNumber, InFreeMemory));
 }
 

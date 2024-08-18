@@ -147,13 +147,13 @@
 //  RenderTargetVk() = default;
 //
 //  RenderTargetVk(const std::shared_ptr<TextureVk>& InTexturePtr)
-//      : TexturePtr(InTexturePtr) {
+//      : m_TexturePtr_(InTexturePtr) {
 //    if (InTexturePtr) {
 //      Info.Type        = InTexturePtr->type;
 //      Info.Format      = InTexturePtr->format;
 //      Info.Extent      = InTexturePtr->extent;
 //      Info.LayerCount  = InTexturePtr->layerCount;
-//      Info.SampleCount = InTexturePtr->sampleCount;
+//      Info.SampleCount = InTexturePtr->m_sampleCount_;
 //    }
 //  }
 //
@@ -162,7 +162,7 @@
 //    return std::make_shared<RenderTargetVk>(texturePtr);
 //  }
 //
-//  TextureVk* GetTexture() const { return TexturePtr.get(); }
+//  TextureVk* GetTexture() const { return m_TexturePtr_.get(); }
 //
 //  const RenderTargetInfoVk& GetInfo() const { return Info; }
 //
@@ -182,7 +182,7 @@
 //
 //  mutable size_t             Hash = 0;
 //  RenderTargetInfoVk         Info;
-//  std::shared_ptr<TextureVk> TexturePtr;
+//  std::shared_ptr<TextureVk> m_TexturePtr_;
 //  bool CreatedFromRenderTargetPool;  // TODO: consider whether is needed
 //};
 //

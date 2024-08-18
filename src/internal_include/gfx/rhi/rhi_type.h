@@ -14,6 +14,10 @@
 #include <unordered_map>
 
 // TODO:
+// - rename functions that GENERATE_CONVERSION_FUNCTION creates to correct
+// naming convention
+// - consider whether there's better solution to generating convertion function
+// exists (to reduce compile time, etc.)
 
 namespace game_engine {
 
@@ -33,11 +37,11 @@ constexpr auto GenerateConversionTypeArray(T1... args) {
   using value_type = typename PacksType<T1...>::second_type;
 
   std::array<value_type, sizeof...(args)> newArray;
-  auto AddElementFunc = [&newArray](const auto& arg) {
+  auto addElementFunc = [&newArray](const auto& arg) {
     newArray[(int64_t)arg.first] = arg.second;
   };
 
-  int dummy[] = {0, (AddElementFunc(args), 0)...};
+  int dummy[] = {0, (addElementFunc(args), 0)...};
   return newArray;
 }
 
@@ -49,9 +53,9 @@ constexpr auto GenerateConversionTypeMap(T1... args) {
   using value_type = typename PacksType<T1...>::second_type;
 
   std::unordered_map<key_type, value_type> newMap;
-  auto AddElementFunc = [&newMap](const auto& arg) { newMap.insert(arg); };
+  auto addElementFunc = [&newMap](const auto& arg) { newMap.insert(arg); };
 
-  int dummy[] = {0, (AddElementFunc(args), 0)...};
+  int dummy[] = {0, (addElementFunc(args), 0)...};
   return newMap;
 }
 
@@ -63,10 +67,10 @@ constexpr auto GenerateInverseConversionTypeMap(T1... args) {
   using value_type = typename PacksType<T1...>::first_type;
 
   std::unordered_map<key_type, value_type> newMap;
-  auto                                     AddElementFunc
+  auto                                     addElementFunc
       = [&newMap](const auto& arg) { newMap[arg.second] = arg.first; };
 
-  int dummy[] = {0, (AddElementFunc(args), 0)...};
+  int dummy[] = {0, (addElementFunc(args), 0)...};
   return newMap;
 }
 
@@ -668,101 +672,105 @@ enum class ETextureCreateFlag : uint32_t {
 DECLARE_ENUM_BIT_OPERATORS(ETextureCreateFlag)
 
 struct DepthStencilClearType {
-  float    Depth;
-  uint32_t Stencil;
+  float    m_depth_;
+  uint32_t m_stencil_;
 };
 
 class RTClearValue {
   public:
-  static const RTClearValue Invalid;
+  static const RTClearValue s_kInvalid;
 
   union ClearValueType {
-    float                 Color[4];
-    DepthStencilClearType DepthStencil;
+    float                 m_color_[4];
+    DepthStencilClearType m_depthStencil_;
   };
 
   constexpr RTClearValue() = default;
 
   RTClearValue(const math::Vector4Df& InColor)
-      : Type(ERTClearType::Color) {
-    ClearValue.Color[0] = InColor.x();
-    ClearValue.Color[1] = InColor.y();
-    ClearValue.Color[2] = InColor.z();
-    ClearValue.Color[3] = InColor.w();
+      : m_type_(ERTClearType::Color) {
+    m_clearValue_.m_color_[0] = InColor.x();
+    m_clearValue_.m_color_[1] = InColor.y();
+    m_clearValue_.m_color_[2] = InColor.z();
+    m_clearValue_.m_color_[3] = InColor.w();
   }
 
   constexpr RTClearValue(float InR, float InG, float InB, float InA)
-      : Type(ERTClearType::Color) {
-    ClearValue.Color[0] = InR;
-    ClearValue.Color[1] = InG;
-    ClearValue.Color[2] = InB;
-    ClearValue.Color[3] = InA;
+      : m_type_(ERTClearType::Color) {
+    m_clearValue_.m_color_[0] = InR;
+    m_clearValue_.m_color_[1] = InG;
+    m_clearValue_.m_color_[2] = InB;
+    m_clearValue_.m_color_[3] = InA;
   }
 
   constexpr RTClearValue(float InDepth, uint32_t InStencil)
-      : Type(ERTClearType::DepthStencil) {
-    ClearValue.DepthStencil.Depth   = InDepth;
-    ClearValue.DepthStencil.Stencil = InStencil;
+      : m_type_(ERTClearType::DepthStencil) {
+    m_clearValue_.m_depthStencil_.m_depth_   = InDepth;
+    m_clearValue_.m_depthStencil_.m_stencil_ = InStencil;
   }
 
   void SetColor(const math::Vector4Df& InColor) {
-    Type                = ERTClearType::Color;
-    ClearValue.Color[0] = InColor.x();
-    ClearValue.Color[1] = InColor.y();
-    ClearValue.Color[2] = InColor.z();
-    ClearValue.Color[3] = InColor.w();
+    m_type_                   = ERTClearType::Color;
+    m_clearValue_.m_color_[0] = InColor.x();
+    m_clearValue_.m_color_[1] = InColor.y();
+    m_clearValue_.m_color_[2] = InColor.z();
+    m_clearValue_.m_color_[3] = InColor.w();
   }
 
   void SetDepthStencil(float InDepth, uint8_t InStencil) {
-    Type                            = ERTClearType::DepthStencil;
-    ClearValue.DepthStencil.Depth   = InDepth;
-    ClearValue.DepthStencil.Stencil = InStencil;
+    m_type_                                  = ERTClearType::DepthStencil;
+    m_clearValue_.m_depthStencil_.m_depth_   = InDepth;
+    m_clearValue_.m_depthStencil_.m_stencil_ = InStencil;
   }
 
-  const float* GetCleraColor() const { return &ClearValue.Color[0]; }
+  const float* GetCleraColor() const { return &m_clearValue_.m_color_[0]; }
 
   DepthStencilClearType GetCleraDepthStencil() const {
-    return ClearValue.DepthStencil;
+    return m_clearValue_.m_depthStencil_;
   }
 
-  float GetCleraDepth() const { return ClearValue.DepthStencil.Depth; }
+  float GetCleraDepth() const { return m_clearValue_.m_depthStencil_.m_depth_; }
 
-  uint32_t GetCleraStencil() const { return ClearValue.DepthStencil.Stencil; }
+  uint32_t GetCleraStencil() const {
+    return m_clearValue_.m_depthStencil_.m_stencil_;
+  }
 
-  ClearValueType GetClearValue() const { return ClearValue; }
+  ClearValueType GetClearValue() const { return m_clearValue_; }
 
-  void ResetToNoneType() { Type = ERTClearType::None; }
+  void ResetToNoneType() { m_type_ = ERTClearType::None; }
 
-  ERTClearType GetType() const { return Type; }
+  ERTClearType GetType() const { return m_type_; }
 
   size_t GetHash() const {
-    if (Type == ERTClearType::Color) {
-      return GETHASH_FROM_INSTANT_STRUCT(Type,
-                                         ClearValue.Color[0],
-                                         ClearValue.Color[1],
-                                         ClearValue.Color[2],
-                                         ClearValue.Color[3]);
+    if (m_type_ == ERTClearType::Color) {
+      return GETHASH_FROM_INSTANT_STRUCT(m_type_,
+                                         m_clearValue_.m_color_[0],
+                                         m_clearValue_.m_color_[1],
+                                         m_clearValue_.m_color_[2],
+                                         m_clearValue_.m_color_[3]);
     }
 
     return GETHASH_FROM_INSTANT_STRUCT(
-        Type, ClearValue.DepthStencil.Depth, ClearValue.DepthStencil.Stencil);
+        m_type_,
+        m_clearValue_.m_depthStencil_.m_depth_,
+        m_clearValue_.m_depthStencil_.m_stencil_);
   }
 
   private:
-  ERTClearType    Type = ERTClearType::None;
-  ClearValueType ClearValue;
+  ERTClearType   m_type_ = ERTClearType::None;
+  ClearValueType m_clearValue_;
 };
 
 struct BaseVertex {
-  math::Vector3Df Pos       = math::g_zeroVector<float, 3>();
-  math::Vector3Df Normal    = math::g_zeroVector<float, 3>();
-  math::Vector3Df Tangent   = math::g_zeroVector<float, 3>();
-  math::Vector3Df Bitangent = math::g_zeroVector<float, 3>();
-  math::Vector2Df TexCoord  = math::g_zeroVector<float, 2>();
+  math::Vector3Df m_position_  = math::g_zeroVector<float, 3>();
+  math::Vector3Df m_normal_    = math::g_zeroVector<float, 3>();
+  math::Vector3Df m_tangent_   = math::g_zeroVector<float, 3>();
+  math::Vector3Df m_bitangent_ = math::g_zeroVector<float, 3>();
+  math::Vector2Df m_texCoord_  = math::g_zeroVector<float, 2>();
 };
 
 struct PositionOnlyVertex {
-  math::Vector3Df Pos = math::g_zeroVector<float, 3>();
+  math::Vector3Df m_position_ = math::g_zeroVector<float, 3>();
 };
 
 }  // namespace game_engine

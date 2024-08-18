@@ -50,8 +50,8 @@ bool File::OpenFile(const std::string&  szFileName,
   }
 
   CloseFile();
-  m_fp = std::fopen(szFileName.c_str(), option.c_str());
-  return m_fp != nullptr;
+  m_fp_ = std::fopen(szFileName.c_str(), option.c_str());
+  return m_fp_ != nullptr;
 }
 
 size_t File::ReadFileToBuffer(bool   appendToEndofBuffer,
@@ -59,54 +59,54 @@ size_t File::ReadFileToBuffer(bool   appendToEndofBuffer,
                                size_t count) {
   size_t readSize = 0;
 
-  if (m_fp) {
+  if (m_fp_) {
     size_t writeStartIndex = 0;
 
     if (count > 0) {
       if (appendToEndofBuffer) {
-        writeStartIndex = m_buffer.size();
-        m_buffer.resize(m_buffer.size() + count);
+        writeStartIndex = m_buffer_.size();
+        m_buffer_.resize(m_buffer_.size() + count);
       } else {
-        m_buffer.resize(count);
+        m_buffer_.resize(count);
       }
     } else {
-      std::fseek(m_fp, 0, SEEK_END);
-      count = std::ftell(m_fp);
-      m_buffer.clear();
-      m_buffer.resize(count);
+      std::fseek(m_fp_, 0, SEEK_END);
+      count = std::ftell(m_fp_);
+      m_buffer_.clear();
+      m_buffer_.resize(count);
     }
 
-    std::fseek(m_fp, static_cast<long>(index), SEEK_SET);
+    std::fseek(m_fp_, static_cast<long>(index), SEEK_SET);
     readSize = std::fread(
-        &m_buffer[writeStartIndex], sizeof(ELEMENT_TYPE), count, m_fp);
-    m_buffer.resize(writeStartIndex + readSize);
+        &m_buffer_[writeStartIndex], sizeof(ELEMENT_TYPE), count, m_fp_);
+    m_buffer_.resize(writeStartIndex + readSize);
   }
 
   return readSize;
 }
 
 void File::CloseFile() {
-  if (m_fp) {
-    std::fclose(m_fp);
-    m_fp = nullptr;
+  if (m_fp_) {
+    std::fclose(m_fp_);
+    m_fp_ = nullptr;
   }
 }
 
 const char* File::GetBuffer(size_t index, size_t count) const {
-  if (m_buffer.empty()) {
+  if (m_buffer_.empty()) {
     return nullptr;
   }
-  return &m_buffer[0];
+  return &m_buffer_[0];
 }
 
 bool File::GetBuffer(FILE_BUFFER&       outBuffer,
                       const std::string& startToken,
                       const std::string& endToken) {
-  if (m_buffer.empty()) {
+  if (m_buffer_.empty()) {
     return false;
   }
 
-  const char* startPos = std::strstr(&m_buffer[0], startToken.c_str());
+  const char* startPos = std::strstr(&m_buffer_[0], startToken.c_str());
   if (startPos) {
     startPos           += startToken.length();
     const char* endPos  = std::strstr(startPos, endToken.c_str());
@@ -115,7 +115,7 @@ bool File::GetBuffer(FILE_BUFFER&       outBuffer,
     if (endPos) {
       count = endPos - startPos;
     } else {
-      count = &m_buffer[m_buffer.size()] - startPos;
+      count = &m_buffer_[m_buffer_.size()] - startPos;
     }
 
     if (count > 0) {

@@ -20,20 +20,20 @@ class FrameBufferPool {
   static void ReturnFrameBuffer(FrameBuffer* renderTarget);
 
   static void Release() {
-    FrameBufferResourceMap.clear();
-    FrameBufferHashVariableMap.clear();
+    s_frameBufferResourceMap.clear();
+    s_frameBufferHashVariableMap.clear();
   }
 
   struct FrameBufferPoolResource {
-    bool                          IsUsing = false;
-    std::shared_ptr<FrameBuffer> FrameBufferPtr;
+    bool                         m_isUsing_ = false;
+    std::shared_ptr<FrameBuffer> m_frameBufferPtr_;
   };
 
   static std::map<size_t, std::list<FrameBufferPoolResource> >
-                                         FrameBufferResourceMap;
-  static std::map<FrameBuffer*, size_t> FrameBufferHashVariableMap;
+                                        s_frameBufferResourceMap;
+  static std::map<FrameBuffer*, size_t> s_frameBufferHashVariableMap;
 
-  //static struct Texture* GetNullTexture(ETextureType type);
+  // static struct Texture* GetNullTexture(ETextureType type);
 };
 
 }  // namespace game_engine

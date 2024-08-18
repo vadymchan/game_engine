@@ -14,7 +14,7 @@ namespace game_engine {
 class CommandBufferManagerDx12 : public CommandBufferManager {
   public:
   CommandBufferManagerDx12()
-      : CommandListType(D3D12_COMMAND_LIST_TYPE_DIRECT)
+      : m_commandListType_(D3D12_COMMAND_LIST_TYPE_DIRECT)
   //, FenceValue(0)
   {}
 
@@ -26,14 +26,14 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
   virtual void ReturnCommandBuffer(CommandBuffer* commandBuffer) override;
 
   bool Initialize(ComPtr<ID3D12Device>    InDevice,
-                  D3D12_COMMAND_LIST_TYPE InType
+                  D3D12_COMMAND_LIST_TYPE type
                   = D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-  ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return CommandQueue; }
+  ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return m_commandQueue_; }
 
   // CommandList
-  void ExecuteCommandList(CommandBufferDx12* InCommandList,
-                          bool bWaitUntilExecuteComplete = false);
+  void ExecuteCommandList(CommandBufferDx12* commandList,
+                          bool               bWaitUntilExecuteComplete = false);
 
   // Not destroying because it is referenced by the Fence manager
   FenceDx12* m_fence = nullptr;
@@ -41,8 +41,8 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
   private:
   ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() const {
     ComPtr<ID3D12CommandAllocator> commandAllocator;
-    if (FAILED(Device->CreateCommandAllocator(
-            CommandListType, IID_PPV_ARGS(&commandAllocator)))) {
+    if (FAILED(m_device_->CreateCommandAllocator(
+            m_commandListType_, IID_PPV_ARGS(&commandAllocator)))) {
       return nullptr;
     }
 
@@ -51,13 +51,13 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
 
   CommandBufferDx12* CreateCommandList() const;
 
-  MutexLock                                 CommandListLock;
-  std::vector<CommandBufferDx12*>         AvailableCommandLists;
-  mutable std::vector<CommandBufferDx12*> UsingCommandBuffers;
+  MutexLock                               m_commandListLock_;
+  std::vector<CommandBufferDx12*>         m_availableCommandLists_;
+  mutable std::vector<CommandBufferDx12*> m_usingCommandBuffers_;
 
-  D3D12_COMMAND_LIST_TYPE    CommandListType = D3D12_COMMAND_LIST_TYPE_DIRECT;
-  ComPtr<ID3D12Device>       Device;
-  ComPtr<ID3D12CommandQueue> CommandQueue;
+  D3D12_COMMAND_LIST_TYPE m_commandListType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
+  ComPtr<ID3D12Device>    m_device_;
+  ComPtr<ID3D12CommandQueue> m_commandQueue_;
 };
 }  // namespace game_engine
 

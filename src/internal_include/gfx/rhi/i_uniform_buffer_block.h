@@ -18,14 +18,14 @@ enum class LifeTimeType : uint8_t {
 struct IUniformBufferBlock : public ShaderBindableResource {
   IUniformBufferBlock() = default;
 
-  IUniformBufferBlock(const Name& InName, LifeTimeType InLifeType)
-      : ShaderBindableResource(InName)
-      , LifeType(InLifeType) {}
+  IUniformBufferBlock(const Name& name, LifeTimeType InLifeType)
+      : ShaderBindableResource(name)
+      , m_LifeType_(InLifeType) {}
 
   virtual ~IUniformBufferBlock() {}
 
   virtual bool IsUseRingBuffer() const {
-    return LifeType == LifeTimeType::OneFrame;
+    return m_LifeType_ == LifeTimeType::OneFrame;
   }
 
   virtual size_t GetBufferSize() const { return 0; }
@@ -44,7 +44,7 @@ struct IUniformBufferBlock : public ShaderBindableResource {
 
   virtual void* GetLowLevelMemory() const { return nullptr; }  // Vulkan only
 
-  const LifeTimeType LifeType = LifeTimeType::MultiFrame;
+  const LifeTimeType m_LifeType_ = LifeTimeType::MultiFrame;
 };
 
 }  // namespace game_engine

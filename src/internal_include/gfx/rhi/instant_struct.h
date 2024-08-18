@@ -30,10 +30,10 @@ struct InstantStructInternal<T, Args...>
   //               "InstanceStruct members should be 'trivially copyable'");
   static_assert(!std::is_pointer<T>::value,
                 "InstanceStruct members should not be 'pointer'");
-  T Data{};
+  T m_data_{};
 
   InstantStructInternal<T, Args...>(T v, Args... args)
-      : Data(v)
+      : m_data_(v)
       , InstantStructInternal<Args...>(args...) {}
 };
 
@@ -54,6 +54,7 @@ struct InstantStruct : public InstantStructInternal<Args...> {
       : InstantStructInternal<Args...>(args...) {}
 };
 
+// TODO: check whether this is portable
 #pragma pack(pop)
 
 // Easy hash generation from InstantStruct, it is slow calling 'Hash Generation

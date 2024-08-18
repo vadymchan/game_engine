@@ -32,12 +32,12 @@ struct Viewport {
            int32_t height,
            float   minDepth = 0.0f,
            float   maxDepth = 1.0f)
-      : X(static_cast<float>(x))
-      , Y(static_cast<float>(y))
-      , Width(static_cast<float>(width))
-      , Height(static_cast<float>(height))
-      , MinDepth(minDepth)
-      , MaxDepth(maxDepth) {}
+      : m_x_(static_cast<float>(x))
+      , m_y_(static_cast<float>(y))
+      , m_width_(static_cast<float>(width))
+      , m_height_(static_cast<float>(height))
+      , m_minDepth_(minDepth)
+      , m_maxDepth_(maxDepth) {}
 
   Viewport(float x,
            float y,
@@ -45,29 +45,30 @@ struct Viewport {
            float height,
            float minDepth = 0.0f,
            float maxDepth = 1.0f)
-      : X(x)
-      , Y(y)
-      , Width(width)
-      , Height(height)
-      , MinDepth(minDepth)
-      , MaxDepth(maxDepth) {}
+      : m_x_(x)
+      , m_y_(y)
+      , m_width_(width)
+      , m_height_(height)
+      , m_minDepth_(minDepth)
+      , m_maxDepth_(maxDepth) {}
 
-  float X        = 0.0f;
-  float Y        = 0.0f;
-  float Width    = 0.0f;
-  float Height   = 0.0f;
-  float MinDepth = 0.0f;
-  float MaxDepth = 1.0f;
+  float m_x_        = 0.0f;
+  float m_y_        = 0.0f;
+  float m_width_    = 0.0f;
+  float m_height_   = 0.0f;
+  float m_minDepth_ = 0.0f;
+  float m_maxDepth_ = 1.0f;
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(X, Y, Width, Height, MinDepth, MaxDepth);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(
+        m_x_, m_y_, m_width_, m_height_, m_minDepth_, m_maxDepth_);
+    return m_hash_;
   }
 };
 
@@ -78,21 +79,21 @@ struct Scissor {
   Scissor() = default;
 
   Scissor(int32_t x, int32_t y, int32_t width, int32_t height)
-      : Offset(x, y)
-      , Extent(width, height) {}
+      : m_offset_(x, y)
+      , m_extent_(width, height) {}
 
-  math::Point2Di     Offset;
-  math::Dimension2Di Extent;
+  math::Point2Di     m_offset_;
+  math::Dimension2Di m_extent_;
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(Offset, Extent);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_offset_, m_extent_);
+    return m_hash_;
   }
 };
 
@@ -107,85 +108,86 @@ struct SamplerStateInfo : public ShaderBindableResource {
   virtual void* GetHandle() const { return nullptr; }
 
   virtual size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(Minification,
-                                       Magnification,
-                                       AddressU,
-                                       AddressV,
-                                       AddressW,
-                                       MipLODBias,
-                                       MaxAnisotropy,
-                                       TextureComparisonMode,
-                                       IsEnableComparisonMode,
-                                       ComparisonFunc,
-                                       BorderColor,
-                                       MinLOD,
-                                       MaxLOD);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_minification_,
+                                          m_magnification_,
+                                          m_addressU_,
+                                          m_addressV_,
+                                          m_addressW_,
+                                          m_mipLODBias_,
+                                          m_maxAnisotropy_,
+                                          m_textureComparisonMode_,
+                                          m_isEnableComparisonMode_,
+                                          m_comparisonFunc_,
+                                          m_borderColor_,
+                                          m_minLOD_,
+                                          m_maxLOD_);
+    return m_hash_;
   }
 
   std::string ToString() const {
     std::string Result;
-    Result += EnumToString(Minification);
+    Result += EnumToString(m_minification_);
     Result += ",";
-    Result += EnumToString(Magnification);
+    Result += EnumToString(m_magnification_);
     Result += ",";
-    Result += EnumToString(AddressU);
+    Result += EnumToString(m_addressU_);
     Result += ",";
-    Result += EnumToString(AddressV);
+    Result += EnumToString(m_addressV_);
     Result += ",";
-    Result += EnumToString(AddressW);
-    Result += std::to_string(MipLODBias);
+    Result += EnumToString(m_addressW_);
+    Result += std::to_string(m_mipLODBias_);
     Result += ",";
-    Result += std::to_string(MaxAnisotropy);
+    Result += std::to_string(m_maxAnisotropy_);
     Result += ",";
-    Result += EnumToString(TextureComparisonMode);
+    Result += EnumToString(m_textureComparisonMode_);
     Result += ",";
-    Result += std::to_string(IsEnableComparisonMode);
+    Result += std::to_string(m_isEnableComparisonMode_);
     Result += ",";
-    Result += EnumToString(ComparisonFunc);
+    Result += EnumToString(m_comparisonFunc_);
     Result += ",";
-    Result += std::to_string(MaxAnisotropy);
+    Result += std::to_string(m_maxAnisotropy_);
     Result += ",";
 
     Result += "(";
-    Result += std::to_string(BorderColor.x());
+    Result += std::to_string(m_borderColor_.x());
     Result += ",";
-    Result += std::to_string(BorderColor.y());
+    Result += std::to_string(m_borderColor_.y());
     Result += ",";
-    Result += std::to_string(BorderColor.z());
+    Result += std::to_string(m_borderColor_.z());
     Result += ",";
-    Result += std::to_string(BorderColor.w());
+    Result += std::to_string(m_borderColor_.w());
     Result += ")";
     Result += ",";
 
-    Result += std::to_string(MinLOD);
+    Result += std::to_string(m_minLOD_);
     Result += ",";
-    Result += std::to_string(MinLOD);
+    Result += std::to_string(m_minLOD_);
     Result += ",";
 
     return Result;
   }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  ETextureFilter      Minification  = ETextureFilter::NEAREST;
-  ETextureFilter      Magnification = ETextureFilter::NEAREST;
-  ETextureAddressMode AddressU      = ETextureAddressMode::CLAMP_TO_EDGE;
-  ETextureAddressMode AddressV      = ETextureAddressMode::CLAMP_TO_EDGE;
-  ETextureAddressMode AddressW      = ETextureAddressMode::CLAMP_TO_EDGE;
-  float               MipLODBias    = 0.0f;
-  float MaxAnisotropy = 1.0f;  // if you anisotropy filtering tuned on, set this
-                               // variable greater than 1.
-  ETextureComparisonMode TextureComparisonMode  = ETextureComparisonMode::NONE;
-  bool                   IsEnableComparisonMode = false;
-  ECompareOp             ComparisonFunc         = ECompareOp::LESS;
-  math::Vector4Df        BorderColor = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
-  float                  MinLOD      = -FLT_MAX;
-  float                  MaxLOD      = FLT_MAX;
+  ETextureFilter      m_minification_  = ETextureFilter::NEAREST;
+  ETextureFilter      m_magnification_ = ETextureFilter::NEAREST;
+  ETextureAddressMode m_addressU_      = ETextureAddressMode::CLAMP_TO_EDGE;
+  ETextureAddressMode m_addressV_      = ETextureAddressMode::CLAMP_TO_EDGE;
+  ETextureAddressMode m_addressW_      = ETextureAddressMode::CLAMP_TO_EDGE;
+  float               m_mipLODBias_    = 0.0f;
+  float m_maxAnisotropy_ = 1.0f;  // if you anisotropy filtering tuned on, set
+                                  // this variable greater than 1.
+  ETextureComparisonMode m_textureComparisonMode_
+      = ETextureComparisonMode::NONE;
+  bool            m_isEnableComparisonMode_ = false;
+  ECompareOp      m_comparisonFunc_         = ECompareOp::LESS;
+  math::Vector4Df m_borderColor_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+  float           m_minLOD_      = -FLT_MAX;
+  float           m_maxLOD_      = FLT_MAX;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -197,47 +199,47 @@ struct RasterizationStateInfo {
   virtual void Initialize() { GetHash(); }
 
   virtual size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(PolygonMode,
-                                       CullMode,
-                                       FrontFace,
-                                       DepthBiasEnable,
-                                       DepthBiasConstantFactor,
-                                       DepthBiasClamp,
-                                       DepthBiasSlopeFactor,
-                                       LineWidth,
-                                       DepthClampEnable,
-                                       RasterizerDiscardEnable,
-                                       SampleCount,
-                                       SampleShadingEnable,
-                                       MinSampleShading,
-                                       AlphaToCoverageEnable,
-                                       AlphaToOneEnable);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_polygonMode_,
+                                          m_cullMode_,
+                                          m_frontFace_,
+                                          m_depthBiasEnable_,
+                                          m_depthBiasConstantFactor_,
+                                          m_depthBiasClamp_,
+                                          m_depthBiasSlopeFactor_,
+                                          m_lineWidth_,
+                                          m_depthClampEnable_,
+                                          m_rasterizerDiscardEnable_,
+                                          m_sampleCount_,
+                                          m_sampleShadingEnable_,
+                                          m_minSampleShading_,
+                                          m_alphaToCoverageEnable_,
+                                          m_alphaToOneEnable_);
+    return m_hash_;
   }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  EPolygonMode PolygonMode             = EPolygonMode::FILL;
-  ECullMode    CullMode                = ECullMode::BACK;
-  EFrontFace   FrontFace               = EFrontFace::CCW;
-  bool         DepthBiasEnable         = false;
-  float        DepthBiasConstantFactor = 0.0f;
-  float        DepthBiasClamp          = 0.0f;
-  float        DepthBiasSlopeFactor    = 0.0f;
-  float        LineWidth               = 1.0f;
-  bool         DepthClampEnable        = false;
-  bool         RasterizerDiscardEnable = false;
+  EPolygonMode m_polygonMode_             = EPolygonMode::FILL;
+  ECullMode    m_cullMode_                = ECullMode::BACK;
+  EFrontFace   m_frontFace_               = EFrontFace::CCW;
+  bool         m_depthBiasEnable_         = false;
+  float        m_depthBiasConstantFactor_ = 0.0f;
+  float        m_depthBiasClamp_          = 0.0f;
+  float        m_depthBiasSlopeFactor_    = 0.0f;
+  float        m_lineWidth_               = 1.0f;
+  bool         m_depthClampEnable_        = false;
+  bool         m_rasterizerDiscardEnable_ = false;
 
-  EMSAASamples SampleCount  = EMSAASamples::COUNT_1;
-  bool  SampleShadingEnable = true;  // Turn on sample shading (also alleviates
-                                     // aliasing within textures)
-  float MinSampleShading      = 0.2f;
-  bool  AlphaToCoverageEnable = false;
-  bool  AlphaToOneEnable      = false;
+  EMSAASamples m_sampleCount_         = EMSAASamples::COUNT_1;
+  bool         m_sampleShadingEnable_ = true;  // Turn on sample shading (also
+                                       // alleviates aliasing within textures)
+  float        m_minSampleShading_      = 0.2f;
+  bool         m_alphaToCoverageEnable_ = false;
+  bool         m_alphaToOneEnable_      = false;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -249,29 +251,29 @@ struct StencilOpStateInfo {
   virtual void Initialize() { GetHash(); }
 
   virtual size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(FailOp,
-                                       PassOp,
-                                       DepthFailOp,
-                                       CompareOp,
-                                       CompareMask,
-                                       WriteMask,
-                                       Reference);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_failOp_,
+                                          m_passOp_,
+                                          m_depthFailOp_,
+                                          m_compareOp_,
+                                          m_compareMask_,
+                                          m_writeMask_,
+                                          m_reference_);
+    return m_hash_;
   }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  EStencilOp FailOp      = EStencilOp::KEEP;
-  EStencilOp PassOp      = EStencilOp::KEEP;
-  EStencilOp DepthFailOp = EStencilOp::KEEP;
-  ECompareOp CompareOp   = ECompareOp::NEVER;
-  uint32_t   CompareMask = 0;
-  uint32_t   WriteMask   = 0;
-  uint32_t   Reference   = 0;
+  EStencilOp m_failOp_      = EStencilOp::KEEP;
+  EStencilOp m_passOp_      = EStencilOp::KEEP;
+  EStencilOp m_depthFailOp_ = EStencilOp::KEEP;
+  ECompareOp m_compareOp_   = ECompareOp::NEVER;
+  uint32_t   m_compareMask_ = 0;
+  uint32_t   m_writeMask_   = 0;
+  uint32_t   m_reference_   = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -283,33 +285,33 @@ struct DepthStencilStateInfo {
   virtual void Initialize() { GetHash(); }
 
   virtual size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(DepthTestEnable,
-                                       DepthWriteEnable,
-                                       DepthCompareOp,
-                                       DepthBoundsTestEnable,
-                                       StencilTestEnable,
-                                       (Front ? Front->GetHash() : 0),
-                                       (Back ? Back->GetHash() : 0),
-                                       MinDepthBounds,
-                                       MaxDepthBounds);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_depthTestEnable_,
+                                          m_depthWriteEnable_,
+                                          m_depthCompareOp_,
+                                          m_depthBoundsTestEnable_,
+                                          m_stencilTestEnable_,
+                                          (m_front_ ? m_front_->GetHash() : 0),
+                                          (m_back_ ? m_back_->GetHash() : 0),
+                                          m_minDepthBounds_,
+                                          m_maxDepthBounds_);
+    return m_hash_;
   }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  bool                DepthTestEnable       = false;
-  bool                DepthWriteEnable      = false;
-  ECompareOp          DepthCompareOp        = ECompareOp::LEQUAL;
-  bool                DepthBoundsTestEnable = false;
-  bool                StencilTestEnable     = false;
-  StencilOpStateInfo* Front                 = nullptr;
-  StencilOpStateInfo* Back                  = nullptr;
-  float               MinDepthBounds        = 0.0f;
-  float               MaxDepthBounds        = 1.0f;
+  bool                m_depthTestEnable_       = false;
+  bool                m_depthWriteEnable_      = false;
+  ECompareOp          m_depthCompareOp_        = ECompareOp::LEQUAL;
+  bool                m_depthBoundsTestEnable_ = false;
+  bool                m_stencilTestEnable_     = false;
+  StencilOpStateInfo* m_front_                 = nullptr;
+  StencilOpStateInfo* m_back_                  = nullptr;
+  float               m_minDepthBounds_        = 0.0f;
+  float               m_maxDepthBounds_        = 1.0f;
 
   // VkPipelineDepthStencilStateCreateFlags    flags;
 };
@@ -323,31 +325,31 @@ struct BlendingStateInfo {
   virtual void Initialize() { GetHash(); }
 
   virtual size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = GETHASH_FROM_INSTANT_STRUCT(BlendEnable,
-                                       Src,
-                                       Dest,
-                                       BlendOp,
-                                       SrcAlpha,
-                                       DestAlpha,
-                                       AlphaBlendOp,
-                                       ColorWriteMask);
-    return Hash;
+    m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_blendEnable_,
+                                          m_src_,
+                                          m_dest_,
+                                          m_blendOp_,
+                                          m_srcAlpha_,
+                                          m_destAlpha_,
+                                          m_alphaBlendOp_,
+                                          m_colorWriteMask_);
+    return m_hash_;
   }
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  bool         BlendEnable    = false;
-  EBlendFactor Src            = EBlendFactor::SRC_COLOR;
-  EBlendFactor Dest           = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-  EBlendOp     BlendOp        = EBlendOp::ADD;
-  EBlendFactor SrcAlpha       = EBlendFactor::SRC_ALPHA;
-  EBlendFactor DestAlpha      = EBlendFactor::ONE_MINUS_SRC_ALPHA;
-  EBlendOp     AlphaBlendOp   = EBlendOp::ADD;
-  EColorMask   ColorWriteMask = EColorMask::NONE;
+  bool         m_blendEnable_    = false;
+  EBlendFactor m_src_            = EBlendFactor::SRC_COLOR;
+  EBlendFactor m_dest_           = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+  EBlendOp     m_blendOp_        = EBlendOp::ADD;
+  EBlendFactor m_srcAlpha_       = EBlendFactor::SRC_ALPHA;
+  EBlendFactor m_destAlpha_      = EBlendFactor::ONE_MINUS_SRC_ALPHA;
+  EBlendOp     m_alphaBlendOp_   = EBlendOp::ADD;
+  EColorMask   m_colorWriteMask_ = EColorMask::NONE;
 
   // VkPipelineColorBlendStateCreateFlags          flags;
   // VkBool32                                      logicOpEnable;
@@ -369,12 +371,12 @@ struct PipelineStateFixedInfo {
                          const std::vector<Viewport>& viewports,
                          const std::vector<Scissor>&  scissors,
                          bool                         isUseVRS)
-      : RasterizationState(rasterizationState)
-      , DepthStencilState(depthStencilState)
-      , BlendingState(blendingState)
-      , viewports(viewports)
-      , scissors(scissors)
-      , IsUseVRS(isUseVRS) {
+      : m_rasterizationState_(rasterizationState)
+      , m_depthStencilState_(depthStencilState)
+      , m_blendingState_(blendingState)
+      , m_viewports_(viewports)
+      , m_scissors_(scissors)
+      , m_isUseVRS_(isUseVRS) {
     CreateHash();
   }
 
@@ -384,12 +386,12 @@ struct PipelineStateFixedInfo {
                          const Viewport&         viewport,
                          const Scissor&          scissor,
                          bool                    isUseVRS)
-      : RasterizationState(rasterizationState)
-      , DepthStencilState(depthStencilState)
-      , BlendingState(blendingState)
-      , viewports({viewport})
-      , scissors({scissor})
-      , IsUseVRS(isUseVRS) {
+      : m_rasterizationState_(rasterizationState)
+      , m_depthStencilState_(depthStencilState)
+      , m_blendingState_(blendingState)
+      , m_viewports_({viewport})
+      , m_scissors_({scissor})
+      , m_isUseVRS_(isUseVRS) {
     CreateHash();
   }
 
@@ -399,53 +401,53 @@ struct PipelineStateFixedInfo {
       BlendingStateInfo*                        blendingState,
       const std::vector<EPipelineDynamicState>& InDynamicStates,
       bool                                      isUseVRS)
-      : RasterizationState(rasterizationState)
-      , DepthStencilState(depthStencilState)
-      , BlendingState(blendingState)
-      , DynamicStates(InDynamicStates)
-      , IsUseVRS(isUseVRS) {
+      : m_rasterizationState_(rasterizationState)
+      , m_depthStencilState_(depthStencilState)
+      , m_blendingState_(blendingState)
+      , m_dynamicStates_(InDynamicStates)
+      , m_isUseVRS_(isUseVRS) {
     CreateHash();
   }
 
   size_t CreateHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = 0;
-    for (int32_t i = 0; i < viewports.size(); ++i) {
-      Hash ^= (viewports[i].GetHash() ^ (i + 1));
+    m_hash_ = 0;
+    for (int32_t i = 0; i < m_viewports_.size(); ++i) {
+      m_hash_ ^= (m_viewports_[i].GetHash() ^ (i + 1));
     }
 
-    for (int32_t i = 0; i < scissors.size(); ++i) {
-      Hash ^= (scissors[i].GetHash() ^ (i + 1));
+    for (int32_t i = 0; i < m_scissors_.size(); ++i) {
+      m_hash_ ^= (m_scissors_[i].GetHash() ^ (i + 1));
     }
 
-    if (DynamicStates.size() > 0) {
-      Hash = ::XXH64(&DynamicStates[0],
-                     sizeof(EPipelineDynamicState) * DynamicStates.size(),
-                     Hash);
+    if (m_dynamicStates_.size() > 0) {
+      m_hash_ = ::XXH64(&m_dynamicStates_[0],
+                        sizeof(EPipelineDynamicState) * m_dynamicStates_.size(),
+                        m_hash_);
     }
 
     // TODO: The contents below should also be able to generate a hash
-    Hash ^= RasterizationState->GetHash();
-    Hash ^= DepthStencilState->GetHash();
-    Hash ^= BlendingState->GetHash();
-    Hash ^= (uint64_t)IsUseVRS;
+    m_hash_ ^= m_rasterizationState_->GetHash();
+    m_hash_ ^= m_depthStencilState_->GetHash();
+    m_hash_ ^= m_blendingState_->GetHash();
+    m_hash_ ^= (uint64_t)m_isUseVRS_;
 
-    return Hash;
+    return m_hash_;
   }
 
-  std::vector<Viewport>              viewports;
-  std::vector<Scissor>               scissors;
-  std::vector<EPipelineDynamicState> DynamicStates;
+  std::vector<Viewport>              m_viewports_;
+  std::vector<Scissor>               m_scissors_;
+  std::vector<EPipelineDynamicState> m_dynamicStates_;
 
-  RasterizationStateInfo* RasterizationState = nullptr;
-  DepthStencilStateInfo*  DepthStencilState  = nullptr;
-  BlendingStateInfo*      BlendingState      = nullptr;
-  bool                    IsUseVRS           = false;
+  RasterizationStateInfo* m_rasterizationState_ = nullptr;
+  DepthStencilStateInfo*  m_depthStencilState_  = nullptr;
+  BlendingStateInfo*      m_blendingState_      = nullptr;
+  bool                    m_isUseVRS_           = false;
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 };
 
 struct PushConstantRange {
@@ -454,146 +456,147 @@ struct PushConstantRange {
   PushConstantRange(EShaderAccessStageFlag accessStageFlag,
                     int32_t                offset,
                     int32_t                size)
-      : AccessStageFlag(accessStageFlag)
-      , Offset(offset)
-      , Size(size) {}
+      : m_accessStageFlag_(accessStageFlag)
+      , m_offset_(offset)
+      , m_size_(size) {}
 
-  EShaderAccessStageFlag AccessStageFlag = EShaderAccessStageFlag::ALL_GRAPHICS;
-  int32_t                Offset          = 0;
-  int32_t                Size            = 0;
+  EShaderAccessStageFlag m_accessStageFlag_
+      = EShaderAccessStageFlag::ALL_GRAPHICS;
+  int32_t m_offset_ = 0;
+  int32_t m_size_   = 0;
 };
 
 struct PushConstant {
   PushConstant() = default;
 
-  PushConstant(const PushConstant& InPushConstant) {
-    assert(InPushConstant.UsedSize < 256);
+  PushConstant(const PushConstant& pushConstant) {
+    assert(pushConstant.m_usedSize_ < 256);
 
-    UsedSize = InPushConstant.UsedSize;
-    memcpy(Data, InPushConstant.Data, InPushConstant.UsedSize);
-    PushConstantRanges = InPushConstant.PushConstantRanges;
-    Hash               = InPushConstant.Hash;
+    m_usedSize_ = pushConstant.m_usedSize_;
+    // TODO: consider use std::copy (not only there)
+    memcpy(m_data_, pushConstant.m_data_, pushConstant.m_usedSize_);
+    m_pushConstantRanges_ = pushConstant.m_pushConstantRanges_;
+    m_hash_               = pushConstant.m_hash_;
   }
 
-  PushConstant(const char*            InData,
-               int32_t                InSize,
-               EShaderAccessStageFlag InShaderAccessStageFlag) {
-    assert(InSize < 256);
+  PushConstant(const char*            data,
+               int32_t                size,
+               EShaderAccessStageFlag shaderAccessStageFlag) {
+    assert(size < 256);
 
-    UsedSize = InSize;
-    memcpy(Data, InData, InSize);
-    PushConstantRanges.Add(
-        PushConstantRange(InShaderAccessStageFlag, 0, InSize));
+    m_usedSize_ = size;
+    memcpy(m_data_, data, size);
+    m_pushConstantRanges_.Add(
+        PushConstantRange(shaderAccessStageFlag, 0, size));
     GetHash();
   }
 
-  PushConstant(const char*              InData,
-               int32_t                  InSize,
-               const PushConstantRange& InPushConstantRange) {
-    assert(InSize < 256);
+  PushConstant(const char*              data,
+               int32_t                  size,
+               const PushConstantRange& pushConstantRange) {
+    assert(size < 256);
 
-    UsedSize = InSize;
-    memcpy(Data, InData, InSize);
-    PushConstantRanges.Add(InPushConstantRange);
+    m_usedSize_ = size;
+    memcpy(m_data_, data, size);
+    m_pushConstantRanges_.Add(pushConstantRange);
     GetHash();
   }
 
-  PushConstant(const char*                                 InData,
-               int32_t                                     InSize,
-               const ResourceContainer<PushConstantRange>& InPushConstantRanges)
-      : PushConstantRanges(InPushConstantRanges) {
-    assert(InSize < 256);
+  PushConstant(const char*                                 data,
+               int32_t                                     size,
+               const ResourceContainer<PushConstantRange>& pushConstantRanges)
+      : m_pushConstantRanges_(pushConstantRanges) {
+    assert(size < 256);
 
-    UsedSize = InSize;
-    memcpy(Data, InData, InSize);
+    m_usedSize_ = size;
+    memcpy(m_data_, data, size);
     GetHash();
   }
 
   template <typename T>
-  PushConstant(const T&               InData,
-               EShaderAccessStageFlag InShaderAccessStageFlag) {
-    Set(InData, PushConstantRange(InShaderAccessStageFlag, 0, sizeof(T)));
+  PushConstant(const T& data, EShaderAccessStageFlag shaderAccessStageFlag) {
+    Set(data, PushConstantRange(shaderAccessStageFlag, 0, sizeof(T)));
   }
 
   template <typename T>
-  PushConstant(const T& InData, const PushConstantRange& InPushConstantRange) {
-    Set(InData, InPushConstantRange);
+  PushConstant(const T& data, const PushConstantRange& pushConstantRange) {
+    Set(data, pushConstantRange);
   }
 
   template <typename T>
-  PushConstant(
-      const T&                                    InData,
-      const ResourceContainer<PushConstantRange>& InPushConstantRanges) {
-    Set(InData, InPushConstantRanges);
+  PushConstant(const T&                                    data,
+               const ResourceContainer<PushConstantRange>& pushConstantRanges) {
+    Set(data, pushConstantRanges);
   }
 
   template <typename T>
-  void Set(const T& InData, const PushConstantRange& InPushConstantRange) {
+  void Set(const T& data, const PushConstantRange& pushConstantRange) {
     assert(sizeof(T) < 256);
 
-    UsedSize = sizeof(T);
-    memcpy(Data, &InData, sizeof(T));
-    PushConstantRanges.Add(InPushConstantRange);
+    m_usedSize_ = sizeof(T);
+    memcpy(m_data_, &data, sizeof(T));
+    m_pushConstantRanges_.Add(pushConstantRange);
     GetHash();
   }
 
   template <typename T>
-  void Set(const T&                                    InData,
-           const ResourceContainer<PushConstantRange>& InPushConstantRanges) {
+  void Set(const T&                                    data,
+           const ResourceContainer<PushConstantRange>& pushConstantRanges) {
     assert(sizeof(T) < 256);
 
-    UsedSize = sizeof(T);
-    memcpy(Data, &InData, sizeof(T));
-    PushConstantRanges = InPushConstantRanges;
+    m_usedSize_ = sizeof(T);
+    memcpy(m_data_, &data, sizeof(T));
+    m_pushConstantRanges_ = pushConstantRanges;
     GetHash();
   }
 
   template <typename T>
   T& Get() const {
-    return *(T*)&Data[0];
+    return *(T*)&m_data_[0];
   }
 
-  bool IsValid() const { return UsedSize > 0; }
+  bool IsValid() const { return m_usedSize_ > 0; }
 
-  PushConstant& operator=(const PushConstant& InPushConstant) {
-    assert(InPushConstant.UsedSize < 256);
+  PushConstant& operator=(const PushConstant& pushConstant) {
+    assert(pushConstant.m_usedSize_ < 256);
 
-    UsedSize = InPushConstant.UsedSize;
-    memcpy(Data, InPushConstant.Data, InPushConstant.UsedSize);
-    PushConstantRanges = InPushConstant.PushConstantRanges;
-    Hash               = InPushConstant.Hash;
+    m_usedSize_ = pushConstant.m_usedSize_;
+    memcpy(m_data_, pushConstant.m_data_, pushConstant.m_usedSize_);
+    m_pushConstantRanges_ = pushConstant.m_pushConstantRanges_;
+    m_hash_               = pushConstant.m_hash_;
     return *this;
   }
 
   size_t GetHash() const {
-    if (Hash) {
-      return Hash;
+    if (m_hash_) {
+      return m_hash_;
     }
 
-    Hash = 0;
-    if (PushConstantRanges.NumOfData > 0) {
+    m_hash_ = 0;
+    if (m_pushConstantRanges_.m_numOfData_ > 0) {
       // TODO: be careful with sizeof(PushConstantRange) when added
       // incapsulation
-      Hash = ::XXH64(&PushConstantRanges[0],
-                     sizeof(PushConstantRange) * PushConstantRanges.NumOfData,
-                     Hash);
+      m_hash_ = ::XXH64(
+          &m_pushConstantRanges_[0],
+          sizeof(PushConstantRange) * m_pushConstantRanges_.m_numOfData_,
+          m_hash_);
     }
 
-    return Hash;
+    return m_hash_;
   }
 
-  const void* GetConstantData() const { return (void*)&Data[0]; }
+  const void* GetConstantData() const { return (void*)&m_data_[0]; }
 
-  int32_t GetSize() const { return UsedSize; }
+  int32_t GetSize() const { return m_usedSize_; }
 
   const ResourceContainer<PushConstantRange>* GetPushConstantRanges() const {
-    return &PushConstantRanges;
+    return &m_pushConstantRanges_;
   }
 
-  mutable size_t                       Hash = 0;
-  ResourceContainer<PushConstantRange> PushConstantRanges;
-  uint8_t                              Data[256];
-  int32_t                              UsedSize = 0;
+  mutable size_t                       m_hash_ = 0;
+  ResourceContainer<PushConstantRange> m_pushConstantRanges_;
+  uint8_t                              m_data_[256];
+  int32_t                              m_usedSize_ = 0;
 };
 
 // struct Shader;
@@ -615,95 +618,95 @@ struct PipelineStateInfo {
 
   PipelineStateInfo() = default;
 
-  PipelineStateInfo(const PipelineStateFixedInfo*    InPipelineStateFixed,
-                    const GraphicsPipelineShader     InShader,
-                    const VertexBufferArray&         InVertexBufferArray,
-                    const RenderPass*                InRenderPass,
-                    const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
-                    const PushConstant*              InPushConstant = nullptr,
-                    int32_t                          InSubpassIndex = 0)
-      : PipelineStateFixed(InPipelineStateFixed)
-      , GraphicsShader(InShader)
-      , m_vertexBufferArray(InVertexBufferArray)
-      , m_renderPass(InRenderPass)
-      , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
-      , m_pushConstant(InPushConstant)
-      , SubpassIndex(InSubpassIndex) {
-    PipelineType = EPipelineType::Graphics;
+  PipelineStateInfo(const PipelineStateFixedInfo*   pipelineStateFixed,
+                    const GraphicsPipelineShader    shader,
+                    const VertexBufferArray&        vertexBufferArray,
+                    const RenderPass*               renderPass,
+                    const ShaderBindingLayoutArray& shaderBindingLayoutArray,
+                    const PushConstant*             pushConstant = nullptr,
+                    int32_t                         subpassIndex = 0)
+      : m_pipelineStateFixed_(pipelineStateFixed)
+      , m_graphicsShader_(shader)
+      , m_vertexBufferArray(vertexBufferArray)
+      , m_renderPass(renderPass)
+      , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
+      , m_pushConstant(pushConstant)
+      , m_subpassIndex_(subpassIndex) {
+    m_pipelineType_ = EPipelineType::Graphics;
   }
 
-  PipelineStateInfo(const Shader*                    InComputeShader,
-                    const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
-                    const PushConstant*              InPushConstant = nullptr,
-                    int32_t                          InSubpassIndex = 0)
-      : ComputeShader(InComputeShader)
-      , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
-      , m_pushConstant(InPushConstant)
-      , SubpassIndex(InSubpassIndex) {
-    PipelineType = EPipelineType::Compute;
+  PipelineStateInfo(const Shader*                   InComputeShader,
+                    const ShaderBindingLayoutArray& shaderBindingLayoutArray,
+                    const PushConstant*             pushConstant = nullptr,
+                    int32_t                         subpassIndex = 0)
+      : m_computeShader_(InComputeShader)
+      , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
+      , m_pushConstant(pushConstant)
+      , m_subpassIndex_(subpassIndex) {
+    m_pipelineType_ = EPipelineType::Compute;
   }
 
   // PipelineStateInfo(
-  //     const std::vector<RaytracingPipelineShader>& InShader,
+  //     const std::vector<RaytracingPipelineShader>& shader,
   //     const RaytracingPipelineData&                InRaytracingPipelineData,
-  //     const ShaderBindingLayoutArray& InShaderBindingLayoutArray, const
-  //     PushConstant*                          InPushConstant = nullptr,
-  //     int32_t                                       InSubpassIndex = 0)
-  //     : RaytracingShaders(InShader)
-  //     , RaytracingPipelineData(InRaytracingPipelineData)
-  //     , m_shaderBindingLayoutArray(InShaderBindingLayoutArray)
-  //     , m_pushConstant(InPushConstant)
-  //     , SubpassIndex(InSubpassIndex) {
+  //     const ShaderBindingLayoutArray& shaderBindingLayoutArray, const
+  //     PushConstant*                          pushConstant = nullptr,
+  //     int32_t                                       subpassIndex = 0)
+  //     : m_raytracingShaders_(shader)
+  //     , m_raytracingPipelineData_(InRaytracingPipelineData)
+  //     , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
+  //     , m_pushConstant(pushConstant)
+  //     , SubpassIndex(subpassIndex) {
   //   PipelineType = EPipelineType::RayTracing;
   // }
 
   PipelineStateInfo(const PipelineStateInfo& InPipelineState)
-      : PipelineStateFixed(InPipelineState.PipelineStateFixed)
-      , GraphicsShader(InPipelineState.GraphicsShader)
-      , ComputeShader(InPipelineState.ComputeShader)
-      //, RaytracingShaders(InPipelineState.RaytracingShaders)
-      , PipelineType(InPipelineState.PipelineType)
+      : m_pipelineStateFixed_(InPipelineState.m_pipelineStateFixed_)
+      , m_graphicsShader_(InPipelineState.m_graphicsShader_)
+      , m_computeShader_(InPipelineState.m_computeShader_)
+      //, m_raytracingShaders_(InPipelineState.m_raytracingShaders_)
+      , m_pipelineType_(InPipelineState.m_pipelineType_)
       , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
       , m_renderPass(InPipelineState.m_renderPass)
       , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
       , m_pushConstant(InPipelineState.m_pushConstant)
-      , Hash(InPipelineState.Hash)
-      , SubpassIndex(InPipelineState.SubpassIndex)
-  //, RaytracingPipelineData(InPipelineState.RaytracingPipelineData)
+      , m_hash_(InPipelineState.m_hash_)
+      , m_subpassIndex_(InPipelineState.m_subpassIndex_)
+  //, m_raytracingPipelineData_(InPipelineState.m_raytracingPipelineData_)
   {}
 
   PipelineStateInfo(PipelineStateInfo&& InPipelineState) noexcept
-      : PipelineStateFixed(InPipelineState.PipelineStateFixed)
-      , GraphicsShader(InPipelineState.GraphicsShader)
-      , ComputeShader(InPipelineState.ComputeShader)
-      //, RaytracingShaders(InPipelineState.RaytracingShaders)
-      , PipelineType(InPipelineState.PipelineType)
+      : m_pipelineStateFixed_(InPipelineState.m_pipelineStateFixed_)
+      , m_graphicsShader_(InPipelineState.m_graphicsShader_)
+      , m_computeShader_(InPipelineState.m_computeShader_)
+      //, m_raytracingShaders_(InPipelineState.m_raytracingShaders_)
+      , m_pipelineType_(InPipelineState.m_pipelineType_)
       , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
       , m_renderPass(InPipelineState.m_renderPass)
       , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
       , m_pushConstant(InPipelineState.m_pushConstant)
-      , Hash(InPipelineState.Hash)
-      , SubpassIndex(InPipelineState.SubpassIndex)
-  //, RaytracingPipelineData(InPipelineState.RaytracingPipelineData)
+      , m_hash_(InPipelineState.m_hash_)
+      , m_subpassIndex_(InPipelineState.m_subpassIndex_)
+  //, m_raytracingPipelineData_(InPipelineState.m_raytracingPipelineData_)
   {}
 
   virtual ~PipelineStateInfo() {}
 
   size_t GetHash() const;
 
-  mutable size_t Hash = 0;
+  mutable size_t m_hash_ = 0;
 
-  EPipelineType                 PipelineType = EPipelineType::Graphics;
-  const GraphicsPipelineShader  GraphicsShader;
-  const Shader*                 ComputeShader = nullptr;
-  // std::vector<jRaytracingPipelineShader> RaytracingShaders;
-  // jRaytracingPipelineData                RaytracingPipelineData;
+  EPipelineType                 m_pipelineType_ = EPipelineType::Graphics;
+  const GraphicsPipelineShader  m_graphicsShader_;
+  const Shader*                 m_computeShader_ = nullptr;
+  // std::vector<RaytracingPipelineShader> m_raytracingShaders_;
+  // RaytracingPipelineData                m_raytracingPipelineData_;
   const RenderPass*             m_renderPass = nullptr;
   VertexBufferArray             m_vertexBufferArray;
-  ShaderBindingLayoutArray     m_shaderBindingLayoutArray;
+  ShaderBindingLayoutArray      m_shaderBindingLayoutArray;
   const PushConstant*           m_pushConstant;
-  const PipelineStateFixedInfo* PipelineStateFixed = nullptr;
-  int32_t                       SubpassIndex       = 0;
+  const PipelineStateFixedInfo* m_pipelineStateFixed_ = nullptr;
+  int32_t                       m_subpassIndex_       = 0;
 
   virtual void Initialize() { GetHash(); }
 
@@ -718,7 +721,7 @@ struct PipelineStateInfo {
   virtual void* CreateRaytracingPipelineState() { return nullptr; }
 
   virtual void Bind(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext) const {}
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
 };
 
 }  // namespace game_engine

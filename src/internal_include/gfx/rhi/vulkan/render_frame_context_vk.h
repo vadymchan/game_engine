@@ -13,19 +13,19 @@ namespace game_engine {
 struct RenderFrameContextVk : public RenderFrameContext {
   RenderFrameContextVk() = default;
 
-  RenderFrameContextVk(CommandBuffer* InCommandBuffer)
-      : RenderFrameContext(InCommandBuffer) {}
+  RenderFrameContextVk(CommandBuffer* commandBuffer)
+      : RenderFrameContext(commandBuffer) {}
 
   virtual ~RenderFrameContextVk() {}
 
   virtual void SubmitCurrentActiveCommandBuffer(
-      ECurrentRenderPass InCurrentRenderPass) override;
+      ECurrentRenderPass currentRenderPass) override;
 
   virtual void QueueSubmitCurrentActiveCommandBuffer(
       Semaphore* InSignalSemaphore);
 
   public:
-  Semaphore* CurrentWaitSemaphore = nullptr;
+  Semaphore* m_currentWaitSemaphore_ = nullptr;
 
   protected:
   CommandBuffer* m_commandBuffer_ = nullptr;

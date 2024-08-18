@@ -14,28 +14,28 @@ template <typename T, int32_t NumOfInlineData = 10>
 struct ResourceContainer {
   ResourceContainer() = default;
 
-  ResourceContainer(const ResourceContainer& InData) {
+  ResourceContainer(const ResourceContainer& data) {
     // TODO: remove (replaced memcpy to std::copy_n
     // if constexpr (std::is_trivially_copyable<T>::value) {
-    //   memcpy(&Data[0], &InData.Data[0], sizeof(T) * InData.NumOfData);
+    //   memcpy(&Data[0], &data.Data[0], sizeof(T) * data.NumOfData);
     // } else {
-    //   for (int32_t i = 0; i < InData.NumOfData; ++i) {
-    //     Data[i] = InData[i];
+    //   for (int32_t i = 0; i < data.NumOfData; ++i) {
+    //     Data[i] = data[i];
     //   }
     // }
-    std::copy_n(InData.Data, InData.NumOfData, Data);
-    NumOfData = InData.NumOfData;
+    std::copy_n(data.m_data_, data.m_numOfData_, m_data_);
+    m_numOfData_ = data.m_numOfData_;
   }
 
   void Add(T InElement) {
-    assert(NumOfInlineData > NumOfData);
+    assert(NumOfInlineData > m_numOfData_);
 
-    Data[NumOfData] = InElement;
-    ++NumOfData;
+    m_data_[m_numOfData_] = InElement;
+    ++m_numOfData_;
   }
 
   void Add(void* InElementAddress, int32_t InCount) {
-    assert(NumOfInlineData > (NumOfData + InCount));
+    assert(NumOfInlineData > (m_numOfData_ + InCount));
     assert(InElementAddress);
     // TODO: remove (replaced memcpy to std::copy_n
     /*if constexpr (std::is_trivially_copyable<T>::value) {
@@ -46,70 +46,70 @@ struct ResourceContainer {
       }
     }*/
     std::copy_n(
-        static_cast<const T*>(InElementAddress), InCount, Data + NumOfData);
-    NumOfData += InCount;
+        static_cast<const T*>(InElementAddress), InCount, m_data_ + m_numOfData_);
+    m_numOfData_ += InCount;
   }
 
   void PopBack() {
-    if (NumOfData > 0) {
-      --NumOfData;
+    if (m_numOfData_ > 0) {
+      --m_numOfData_;
     }
   }
 
   const T& Back() {
-    if (NumOfData > 0) {
-      return Data[NumOfData - 1];
+    if (m_numOfData_ > 0) {
+      return m_data_[m_numOfData_ - 1];
     }
     static auto EmptyValue = T();
     return EmptyValue;
   }
 
   template <typename T2>
-  static void GetHash(size_t& InOutHash, int32_t index, const T2& InData) {
-    InOutHash ^= (InData->GetHash() << index);
+  static void GetHash(size_t& InOutHash, int32_t index, const T2& data) {
+    InOutHash ^= (data->GetHash() << index);
   }
 
   size_t GetHash() const {
     size_t Hash = 0;
-    for (int32_t i = 0; i < NumOfData; ++i) {
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
       // Hash ^= (Data[i]->GetHash() << i);
-      GetHash(Hash, i, Data[i]);
+      GetHash(Hash, i, m_data_[i]);
     }
     return Hash;
   }
 
-  void Reset() { NumOfData = 0; }
+  void Reset() { m_numOfData_ = 0; }
 
   ResourceContainer<T, NumOfInlineData>& operator=(
-      const ResourceContainer<T, NumOfInlineData>& InData) {
+      const ResourceContainer<T, NumOfInlineData>& data) {
     // TODO: remove (replaced memcpy to std::copy_n
     // if constexpr (std::is_trivially_copyable<T>::value) {
-    //  memcpy(&Data[0], &InData.Data[0], sizeof(T) * InData.NumOfData);
+    //  memcpy(&Data[0], &data.Data[0], sizeof(T) * data.NumOfData);
     //} else {
-    //  for (int32_t i = 0; i < InData.NumOfData; ++i) {
-    //    Data[i] = InData[i];
+    //  for (int32_t i = 0; i < data.NumOfData; ++i) {
+    //    Data[i] = data[i];
     //  }
     //}
-    // NumOfData = InData.NumOfData;
-    if (this != &InData) {
-      std::copy_n(InData.Data, InData.NumOfData, Data);
-      NumOfData = InData.NumOfData;
+    // NumOfData = data.NumOfData;
+    if (this != &data) {
+      std::copy_n(data.m_data_, data.m_numOfData_, m_data_);
+      m_numOfData_ = data.m_numOfData_;
     }
     return *this;
   }
 
-  T& operator[](int32_t InIndex) {
-    assert(InIndex < NumOfData);
-    return Data[InIndex];
+  T& operator[](int32_t index) {
+    assert(index < m_numOfData_);
+    return m_data_[index];
   }
 
-  const T& operator[](int32_t InIndex) const {
-    assert(InIndex < NumOfData);
-    return Data[InIndex];
+  const T& operator[](int32_t index) const {
+    assert(index < m_numOfData_);
+    return m_data_[index];
   }
 
-  T       Data[NumOfInlineData];
-  int32_t NumOfData = 0;
+  T       m_data_[NumOfInlineData];
+  int32_t m_numOfData_ = 0;
 };
 
 }  // namespace game_engine

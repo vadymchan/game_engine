@@ -20,10 +20,10 @@ struct SamplerStateInfoDx12 : public SamplerStateInfo {
   virtual void Initialize() override;
   void         Release();
 
-  virtual void* GetHandle() const { return (void*)&SamplerDesc; }
+  virtual void* GetHandle() const { return (void*)&m_samplerDesc_; }
 
-  D3D12_SAMPLER_DESC SamplerDesc;
-  DescriptorDx12   SamplerSRV;
+  D3D12_SAMPLER_DESC m_samplerDesc_;
+  DescriptorDx12     m_samplerSRV_;
 };
 
 struct RasterizationStateInfoDx12 : public RasterizationStateInfo {
@@ -36,8 +36,8 @@ struct RasterizationStateInfoDx12 : public RasterizationStateInfo {
 
   virtual void Initialize() override;
 
-  D3D12_RASTERIZER_DESC RasterizeDesc   = {};
-  DXGI_SAMPLE_DESC      MultiSampleDesc = {};
+  D3D12_RASTERIZER_DESC m_rasterizeDesc_   = {};
+  DXGI_SAMPLE_DESC      m_multiSampleDesc_ = {};
 };
 
 struct StencilOpStateInfoDx12 : public StencilOpStateInfo {
@@ -50,7 +50,7 @@ struct StencilOpStateInfoDx12 : public StencilOpStateInfo {
 
   virtual void Initialize() override;
 
-  D3D12_DEPTH_STENCILOP_DESC StencilOpStateDesc = {};
+  D3D12_DEPTH_STENCILOP_DESC m_stencilOpStateDesc_ = {};
 };
 
 struct DepthStencilStateInfoDx12 : public DepthStencilStateInfo {
@@ -63,7 +63,7 @@ struct DepthStencilStateInfoDx12 : public DepthStencilStateInfo {
 
   virtual void Initialize() override;
 
-  D3D12_DEPTH_STENCIL_DESC DepthStencilStateDesc = {};
+  D3D12_DEPTH_STENCIL_DESC m_depthStencilStateDesc_ = {};
 };
 
 struct BlendingStateInfoDx12 : public BlendingStateInfo {
@@ -76,7 +76,7 @@ struct BlendingStateInfoDx12 : public BlendingStateInfo {
 
   virtual void Initialize() override;
 
-  D3D12_RENDER_TARGET_BLEND_DESC BlendDesc = {};
+  D3D12_RENDER_TARGET_BLEND_DESC m_blendDesc_ = {};
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -87,17 +87,17 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
 
   PipelineStateInfoDx12(
       const PipelineStateFixedInfo*   pipelineStateFixed,
-      const GraphicsPipelineShader     shader,
-      const VertexBufferArray&        InVertexBufferArray,
+      const GraphicsPipelineShader    shader,
+      const VertexBufferArray&        vertexBufferArray,
       const RenderPass*               renderPass,
-      const ShaderBindingLayoutArray& InShaderBindingLayoutArray,
+      const ShaderBindingLayoutArray& shaderBindingLayoutArray,
       const PushConstant*             pushConstant)
       : PipelineStateInfo(pipelineStateFixed,
-                           shader,
-                           InVertexBufferArray,
-                           renderPass,
-                           InShaderBindingLayoutArray,
-                           pushConstant) {}
+                          shader,
+                          vertexBufferArray,
+                          renderPass,
+                          shaderBindingLayoutArray,
+                          pushConstant) {}
 
   PipelineStateInfoDx12(const PipelineStateInfo& pipelineState)
       : PipelineStateInfo(pipelineState) {}
@@ -119,15 +119,15 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
   virtual void* CreateComputePipelineState() override;
   // virtual void* CreateRaytracingPipelineState() override;
   virtual void  Bind(const std::shared_ptr<RenderFrameContext>&
-                         InRenderFrameContext) const override;
-  void          Bind(CommandBufferDx12* InCommandList) const;
+                         renderFrameContext) const override;
+  void          Bind(CommandBufferDx12* commandList) const;
 
-  ComPtr<ID3D12PipelineState> PipelineState;
-  std::vector<D3D12_VIEWPORT> Viewports;
-  std::vector<D3D12_RECT>     Scissors;
+  ComPtr<ID3D12PipelineState> m_pipelineState_;
+  std::vector<D3D12_VIEWPORT> m_viewports_;
+  std::vector<D3D12_RECT>     m_scissors_;
 
   // RaytracingStateObject
-  ComPtr<ID3D12StateObject> RaytracingStateObject;
+  ComPtr<ID3D12StateObject> m_raytracingStateObject_;
 };
 
 }  // namespace game_engine

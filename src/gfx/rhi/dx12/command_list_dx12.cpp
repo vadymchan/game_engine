@@ -11,22 +11,22 @@ namespace game_engine {
 bool CommandBufferDx12::Begin() const {
   Reset();
 
-  assert(OnlineDescriptorHeap && OnlineSamplerDescriptorHeap
-         || (!OnlineDescriptorHeap && !OnlineSamplerDescriptorHeap));
-  if (OnlineDescriptorHeap && OnlineSamplerDescriptorHeap) {
-    ID3D12DescriptorHeap* ppHeaps[] = {OnlineDescriptorHeap->GetHeap(),
-                                       OnlineSamplerDescriptorHeap->GetHeap()};
-    CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+  assert(m_onlineDescriptorHeap_ && m_onlineSamplerDescriptorHeap_
+         || (!m_onlineDescriptorHeap_ && !m_onlineSamplerDescriptorHeap_));
+  if (m_onlineDescriptorHeap_ && m_onlineSamplerDescriptorHeap_) {
+    ID3D12DescriptorHeap* ppHeaps[] = {m_onlineDescriptorHeap_->GetHeap(),
+                                       m_onlineSamplerDescriptorHeap_->GetHeap()};
+    m_commandList_->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
   }
 
   return true;
 }
 
 void CommandBufferDx12::Reset() const {
-  if (IsClosed) {
+  if (m_isClosed_) {
     HRESULT hr;
 
-    hr = CommandAllocator->Reset();
+    hr = m_commandAllocator_->Reset();
     if (FAILED(hr)) {
       GlobalLogger::Log(
           LogLevel::Error,
@@ -34,49 +34,49 @@ void CommandBufferDx12::Reset() const {
       return;
     }
 
-    hr = CommandList->Reset(CommandAllocator.Get(), nullptr);
+    hr = m_commandList_->Reset(m_commandAllocator_.Get(), nullptr);
     if (FAILED(hr)) {
       GlobalLogger::Log(LogLevel::Error,
                         "Failed to reset command list: " + std::to_string(hr));
       return;
     }
 
-    if (OnlineDescriptorHeap) {
-      OnlineDescriptorHeap->Reset();
+    if (m_onlineDescriptorHeap_) {
+      m_onlineDescriptorHeap_->Reset();
     }
-    if (OnlineSamplerDescriptorHeap) {
-      OnlineSamplerDescriptorHeap->Reset();
+    if (m_onlineSamplerDescriptorHeap_) {
+      m_onlineSamplerDescriptorHeap_->Reset();
     }
-    IsClosed = false;
+    m_isClosed_ = false;
 
     GlobalLogger::Log(LogLevel::Info, "Command buffer reset successfully.");
   }
 }
 
 void* CommandBufferDx12::GetFenceHandle() const {
-  return Owner->m_fence ? Owner->m_fence->GetHandle() : nullptr;
+  return m_owner_->m_fence ? m_owner_->m_fence->GetHandle() : nullptr;
 }
 
-void CommandBufferDx12::SetFence(void* InFence) {
-  // m_fence = (FenceDx12*)InFence;
+void CommandBufferDx12::SetFence(void* fence) {
+  // m_fence = (FenceDx12*)fence;
   assert(0);
 }
 
 Fence* CommandBufferDx12::GetFence() const {
-  return Owner->m_fence;
+  return m_owner_->m_fence;
 }
 
 bool CommandBufferDx12::IsCompleteForWaitFence() {
-  return Owner->m_fence->IsComplete(FenceValue);
+  return m_owner_->m_fence->IsComplete(m_fenceValue_);
 }
 
 bool CommandBufferDx12::End() const {
-  if (IsClosed) {
+  if (m_isClosed_) {
     return true;
   }
 
-  IsClosed   = true;
-  HRESULT hr = CommandList->Close();
+  m_isClosed_   = true;
+  HRESULT hr = m_commandList_->Close();
   assert(SUCCEEDED(hr));
 
   if (FAILED(hr)) {

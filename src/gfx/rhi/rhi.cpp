@@ -4,19 +4,20 @@ namespace game_engine {
 
 RHI* g_rhi = nullptr;
 
-const RTClearValue RTClearValue::Invalid = RTClearValue();
 
-int32_t GMaxCheckCountForRealTimeShaderUpdate = 10;
-int32_t GSleepMSForRealTimeShaderUpdate       = 100;
-bool    GUseRealTimeShaderUpdate              = true;
+int32_t g_maxCheckCountForRealTimeShaderUpdate = 10;
+int32_t g_sleepMSForRealTimeShaderUpdate       = 100;
+bool    g_useRealTimeShaderUpdate              = true;
 
-std::shared_ptr<Texture>  GWhiteTexture;
-std::shared_ptr<Texture>  GBlackTexture;
-std::shared_ptr<Texture>  GWhiteCubeTexture;
-std::shared_ptr<Texture>  GNormalTexture;
-std::shared_ptr<Material> GDefaultMaterial = nullptr;
+std::shared_ptr<Texture>  g_whiteTexture;
+std::shared_ptr<Texture>  g_blackTexture;
+std::shared_ptr<Texture>  g_whiteCubeTexture;
+std::shared_ptr<Texture>  g_normalTexture;
+std::shared_ptr<Material> g_defaultMaterial = nullptr;
 
-TResourcePool<Shader, MutexRWLock> RHI::ShaderPool;
+TResourcePool<Shader, MutexRWLock> RHI::s_shaderPool;
+
+const RTClearValue RTClearValue::s_kInvalid = RTClearValue();
 
 bool RHI::init(const std::shared_ptr<Window>& window) {
   return false;
@@ -24,45 +25,45 @@ bool RHI::init(const std::shared_ptr<Window>& window) {
 
 void RHI::OnInitRHI() {
   ImageData image;
-  image.imageBulkData.ImageData = {255, 255, 255, 255};
-  image.Width                   = 1;
-  image.Height                  = 1;
-  image.Format                  = ETextureFormat::RGBA8;
-  image.FormatType              = EFormatType::UNSIGNED_BYTE;
-  image.sRGB                    = false;
+  image.m_imageBulkData_.m_imageData_ = {255, 255, 255, 255};
+  image.m_width_                   = 1;
+  image.m_height_                  = 1;
+  image.m_format_                  = ETextureFormat::RGBA8;
+  image.m_formatType_              = EFormatType::UNSIGNED_BYTE;
+  image.m_sRGB_                    = false;
 
-  image.imageBulkData.ImageData = {255, 255, 255, 255};
-  GWhiteTexture                 = CreateTextureFromData(&image);
+  image.m_imageBulkData_.m_imageData_ = {255, 255, 255, 255};
+  g_whiteTexture                 = CreateTextureFromData(&image);
 
-  image.imageBulkData.ImageData = {0, 0, 0, 255};
-  GBlackTexture                 = CreateTextureFromData(&image);
+  image.m_imageBulkData_.m_imageData_ = {0, 0, 0, 255};
+  g_blackTexture                 = CreateTextureFromData(&image);
 
-  image.imageBulkData.ImageData = {255 / 2, 255 / 2, 255, 0};
-  GNormalTexture                = CreateTextureFromData(&image);
+  image.m_imageBulkData_.m_imageData_ = {255 / 2, 255 / 2, 255, 0};
+  g_normalTexture                = CreateTextureFromData(&image);
 
-  image.TextureType             = ETextureType::TEXTURE_CUBE;
-  image.LayerCount              = 6;
-  image.imageBulkData.ImageData = {255, 255, 255, 200, 255, 255};
-  GWhiteCubeTexture             = CreateTextureFromData(&image);
+  image.m_textureType_             = ETextureType::TEXTURE_CUBE;
+  image.m_layerCount_              = 6;
+  image.m_imageBulkData_.m_imageData_ = {255, 255, 255, 200, 255, 255};
+  g_whiteCubeTexture             = CreateTextureFromData(&image);
 
-  GDefaultMaterial = std::make_shared<Material>();
-  GDefaultMaterial->TexData[(int32_t)Material::EMaterialTextureType::Albedo]
-      .m_texture
-      = GWhiteTexture.get();
-  GDefaultMaterial->TexData[(int32_t)Material::EMaterialTextureType::Normal]
-      .m_texture
-      = GNormalTexture.get();
+  g_defaultMaterial = std::make_shared<Material>();
+  g_defaultMaterial->m_texData_[(int32_t)Material::EMaterialTextureType::Albedo]
+      .m_texture_
+      = g_whiteTexture.get();
+  g_defaultMaterial->m_texData_[(int32_t)Material::EMaterialTextureType::Normal]
+      .m_texture_
+      = g_normalTexture.get();
 }
 
 void RHI::release() {
-  GWhiteTexture.reset();
-  GBlackTexture.reset();
-  GWhiteCubeTexture.reset();
-  GNormalTexture.reset();
-  GDefaultMaterial.reset();
+  g_whiteTexture.reset();
+  g_blackTexture.reset();
+  g_whiteCubeTexture.reset();
+  g_normalTexture.reset();
+  g_defaultMaterial.reset();
 
   Shader::ReleaseCheckUpdateShaderThread();
-  ShaderPool.Release();
+  s_shaderPool.Release();
 }
 
 RHI::RHI() {

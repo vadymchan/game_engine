@@ -9,16 +9,16 @@ void TextureVk::ReleaseInternal() {
   // If the image is created from a swapchain, the memory is nullptr, so there's
   // no need to destroy the image and memory. However, since the view is
   // directly created, it needs to be destroyed.
-  if (deviceMemory) {
-    if (image) {
-      vkDestroyImage(g_rhi_vk->m_device_, image, nullptr);
+  if (m_deviceMemory_) {
+    if (m_image_) {
+      vkDestroyImage(g_rhi_vk->m_device_, m_image_, nullptr);
     }
 
-    vkFreeMemory(g_rhi_vk->m_device_, deviceMemory, nullptr);
+    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory_, nullptr);
   }
 
-  if (imageView) {
-    vkDestroyImageView(g_rhi_vk->m_device_, imageView, nullptr);
+  if (m_imageView_) {
+    vkDestroyImageView(g_rhi_vk->m_device_, m_imageView_, nullptr);
   }
 }
 

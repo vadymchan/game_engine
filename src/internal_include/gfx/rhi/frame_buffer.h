@@ -16,21 +16,21 @@ namespace game_engine {
 struct FrameBufferInfo {
 
   size_t GetHash() const {
-    return GETHASH_FROM_INSTANT_STRUCT(TextureType,
-                                       Format,
-                                       Extent.width(),
-                                       Extent.height(),
-                                       LayerCount,
-                                       IsGenerateMipmap,
-                                       SampleCount);
+    return GETHASH_FROM_INSTANT_STRUCT(m_textureType_,
+                                       m_format_,
+                                       m_extent_.width(),
+                                       m_extent_.height(),
+                                       m_layerCount_,
+                                       m_isGenerateMipmap,
+                                       m_sampleCount_);
   }
 
-  ETextureType       TextureType      = ETextureType::TEXTURE_2D;
-  ETextureFormat     Format           = ETextureFormat::RGB8;
-  math::Dimension2Di Extent           = math::Dimension2Di(0);
-  int32_t            LayerCount       = 1;
-  bool               IsGenerateMipmap = false;
-  int32_t            SampleCount      = 1;
+  ETextureType       m_textureType_      = ETextureType::TEXTURE_2D;
+  ETextureFormat     m_format_           = ETextureFormat::RGB8;
+  math::Dimension2Di m_extent_           = math::Dimension2Di(0);
+  int32_t            m_layerCount_       = 1;
+  bool               m_isGenerateMipmap = false;
+  int32_t            m_sampleCount_      = 1;
 };
 
 struct FrameBuffer : public std::enable_shared_from_this<FrameBuffer> {
@@ -58,9 +58,9 @@ struct FrameBuffer : public std::enable_shared_from_this<FrameBuffer> {
 
   //virtual void End() const {}
 
-  FrameBufferInfo                        Info;
-  std::vector<std::shared_ptr<Texture> > Textures;
-  std::shared_ptr<Texture>               TextureDepth;
+  FrameBufferInfo                        m_info_;
+  std::vector<std::shared_ptr<Texture> > m_textures_;
+  std::shared_ptr<Texture>               m_textureDepth_;
 };
 }  // namespace game_engine
 

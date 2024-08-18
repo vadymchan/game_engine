@@ -20,11 +20,11 @@ namespace game_engine {
 
 class MutexLock {
   public:
-  void Lock() { lock.lock(); }
+  void Lock() { m_lock_.lock(); }
 
-  void Unlock() { lock.unlock(); }
+  void Unlock() { m_lock_.unlock(); }
 
-  std::mutex lock;
+  std::mutex m_lock_;
 };
 
 // class RWLock {
@@ -42,54 +42,54 @@ class MutexLock {
 
 class MutexRWLock {
   public:
-  void LockRead() { lock.lock_shared(); }
+  void LockRead() { m_lock_.lock_shared(); }
 
-  void UnlockRead() { lock.unlock_shared(); }
+  void UnlockRead() { m_lock_.unlock_shared(); }
 
-  void LockWrite() { lock.lock(); }
+  void LockWrite() { m_lock_.lock(); }
 
-  void UnlockWrite() { lock.unlock(); }
+  void UnlockWrite() { m_lock_.unlock(); }
 
-  std::shared_mutex lock;
+  std::shared_mutex m_lock_;
 };
 
 template <typename T>
 class ScopedLock {
   public:
   ScopedLock(T* InLock)
-      : scopedLock(InLock) {
-    scopedLock->Lock();
+      : m_scopedLock_(InLock) {
+    m_scopedLock_->Lock();
   }
 
-  ~ScopedLock() { scopedLock->Unlock(); }
+  ~ScopedLock() { m_scopedLock_->Unlock(); }
 
-  T* scopedLock;
+  T* m_scopedLock_;
 };
 
 template <typename T>
 class ScopeReadLock {
   public:
   ScopeReadLock(T* InLock)
-      : scopedLock(InLock) {
-    scopedLock->LockRead();
+      : m_scopedLock_(InLock) {
+    m_scopedLock_->LockRead();
   }
 
-  ~ScopeReadLock() { scopedLock->UnlockRead(); }
+  ~ScopeReadLock() { m_scopedLock_->UnlockRead(); }
 
-  T* scopedLock;
+  T* m_scopedLock_;
 };
 
 template <typename T>
 class ScopeWriteLock {
   public:
   ScopeWriteLock(T* InLock)
-      : scopedLock(InLock) {
-    scopedLock->LockWrite();
+      : m_scopedLock_(InLock) {
+    m_scopedLock_->LockWrite();
   }
 
-  ~ScopeWriteLock() { scopedLock->UnlockWrite(); }
+  ~ScopeWriteLock() { m_scopedLock_->UnlockWrite(); }
 
-  T* scopedLock;
+  T* m_scopedLock_;
 };
 
 }  // namespace game_engine

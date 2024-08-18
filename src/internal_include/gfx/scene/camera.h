@@ -6,9 +6,9 @@
 #ifndef GAME_ENGINE_CAMERA_H
 #define GAME_ENGINE_CAMERA_H
 
+#include "gfx/rhi/feature_switch.h"
 #include "utils/math/math_util.h"
 #include "utils/math/plane.h"
-#include "gfx/rhi/feature_switch.h"
 
 #include <math_library/graphics.h>
 #include <math_library/matrix.h>
@@ -21,7 +21,7 @@ namespace game_engine {
 
 struct FrustumPlane {
   bool IsInFrustum(const math::Vector3Df& pos, float radius) const {
-    for (const auto& plane : Planes) {
+    for (const auto& plane : m_planes_) {
       const float r = pos.dot(plane.n) - plane.d + radius;
       if (r < 0.0f) {
         return false;
@@ -33,7 +33,7 @@ struct FrustumPlane {
   bool IsInFrustumWithDirection(const math::Vector3Df& pos,
                                 const math::Vector3Df& direction,
                                 float                  radius) const {
-    for (const auto& plane : Planes) {
+    for (const auto& plane : m_planes_) {
       const float r = pos.dot(plane.n) - plane.d + radius;
       if (r < 0.0f) {
         if (direction.dot(plane.n) <= 0.0) {
@@ -44,237 +44,8 @@ struct FrustumPlane {
     return true;
   }
 
-  std::array<math::Plane, 6> Planes;
+  std::array<math::Plane, 6> m_planes_;
 };
-
-//namespace CameraUtil {
-// math::g_lookAtLh(pos, target, up); - default but support
-// math::g_lookAtRh(pos, target, up);
-//math::Matrix4f CreateViewMatrix(const math::Vector3Df& pos,
-//                                const math::Vector3Df& target,
-//                                const math::Vector3Df& up) {
-//  const auto zAxis = (target - pos).normalized();
-//  auto       yAxis = (up - pos).normalized();
-//  const auto xAxis = yAxis.cross(zAxis).normalized();
-//  yAxis            = zAxis.cross(xAxis).normalized();
-//
-//  math::Matrix4f InvRot{IdentityType};
-//  InvRot.m[0][0] = xAxis.x();
-//  InvRot.m[1][0] = xAxis.y();
-//  InvRot.m[2][0] = xAxis.z();
-//  InvRot.m[0][1] = yAxis.x();
-//  InvRot.m[1][1] = yAxis.y();
-//  InvRot.m[2][1] = yAxis.z();
-//#if RIGHT_HANDED
-//  InvRot.m[0][2] = -zAxis.x();
-//  InvRot.m[1][2] = -zAxis.y();
-//  InvRot.m[2][2] = -zAxis.z();
-//#else
-//  InvRot.m[0][2] = zAxis.x();
-//  InvRot.m[1][2] = zAxis.y();
-//  InvRot.m[2][2] = zAxis.z();
-//#endif
-//
-//  // auto InvPos = Matrix::MakeTranslate(-pos.x(), -pos.y(), -pos.z());
-//  // return InvRot * InvPos;
-//
-//  auto InvPos    = math::Vector4Df(-pos.x(), -pos.y(), -pos.z(), 1.0f);
-//  InvRot.m[3][0] = InvRot.getColumn<0>().dot(InvPos);
-//  InvRot.m[3][1] = InvRot.getColumn<1>().dot(InvPos);
-//  InvRot.m[3][2] = InvRot.getColumn<2>().dot(InvPos);
-//
-//  return InvRot;
-//}
-
-// math::g_perspectiveLhZo(fov, width, height, nearDist, farDist) but support
-// math::g_perspectiveRhZo(fov, width, height, nearDist, farDist)
-//math::Matrix4f CreatePerspectiveMatrix(
-//    float width, float height, float fov, float nearDist, float farDist) {
-//  const float F          = 1.0f / tanf(fov / 2.0f);
-//  const float farSubNear = (farDist - nearDist);
-//
-//  math::Matrix4f projMat;
-//#if RIGHT_HANDED
-//  projMat.m[0][0] = F * (height / width);
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = 0.0f;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = F;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = 0.0f;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = -(farDist + nearDist) / farSubNear;
-//  projMat.m[3][2] = -(2.0f * nearDist * farDist) / farSubNear;
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = -1.0f;
-//  projMat.m[3][3] = 0.0f;
-//#else
-//  projMat.m[0][0] = F * (height / width);
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = 0.0f;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = F;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = 0.0f;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = farDist / farSubNear;
-//  projMat.m[3][2] = -nearDist * farDist / farSubNear;
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = 1.0f;
-//  projMat.m[3][3] = 0.0f;
-//#endif
-//  return projMat;
-//}
-
-//math::Matrix4f CreatePerspectiveMatrixFarAtInfinity(float width,
-//                                                    float height,
-//                                                    float fov,
-//                                                    float nearDist) {
-//  const float     F        = 1.0f / tanf(fov / 2.0f);
-//  constexpr float epsilone = FLT_EPSILON * 2.0f;
-//
-//  math::Matrix4f projMat;
-//#if RIGHT_HANDED
-//  projMat.m[0][0] = F * (height / width);
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = 0.0f;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = F;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = 0.0f;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = epsilone - 1.0f;
-//  projMat.m[3][2] = ((epsilone - 2.0f) * nearDist);
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = -1.0f;
-//  projMat.m[3][3] = 0.0f;
-//#else
-//  projMat.m[0][0] = F * (height / width);
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = 0.0f;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = F;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = 0.0f;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = 1.0f - epsilone;
-//  projMat.m[3][2] = ((-1.0f - epsilone) * nearDist);
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = 1.0f;
-//  projMat.m[3][3] = 0.0f;
-//#endif
-//  return projMat;
-//}
-
-//math::Matrix4f CreateOrthogonalMatrix(float width,
-//                                      float height,
-//                                      float nearDist,
-//                                      float farDist) {
-//  const float    fsn        = (farDist - nearDist);
-//  const float    halfWidth  = width * 0.5f;
-//  const float    halfHeight = height * 0.5f;
-//  math::Matrix4f projMat;
-//#if RIGHT_HANDED
-//  projMat.m[0][0] = 1.0f / halfWidth;
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = 0.0f;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = 1.0f / halfHeight;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = 0.0f;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = -2.0f / fsn;
-//  projMat.m[3][2] = -(farDist + nearDist) / fsn;
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = 0.0f;
-//  projMat.m[3][3] = 1.0f;
-//#else
-//  projMat.m[0][0] = 1.0f / halfWidth;
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = 0.0f;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = 1.0f / halfHeight;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = 0.0f;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = 1.0f / fsn;
-//  projMat.m[3][2] = -(nearDist) / fsn;
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = 0.0f;
-//  projMat.m[3][3] = 1.0f;
-//#endif
-//  return projMat;
-//}
-
-// math::g_orthoLhZo(fov, width, height, nearDist, farDist) but support
-// math::g_orthoRhZo(fov, width, height, nearDist, farDist)
-//math::Matrix4f CreateOrthogonalMatrix(float left,
-//                                      float right,
-//                                      float top,
-//                                      float bottom,
-//                                      float nearDist,
-//                                      float farDist) {
-//  const float fsn = (farDist - nearDist);
-//  const float rsl = (right - left);
-//  const float tsb = (top - bottom);
-//
-//  math::Matrix4f projMat;
-//#if RIGHT_HANDED
-//  projMat.m[0][0] = 2.0f / rsl;
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = -(right + left) / rsl;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = 2.0f / tsb;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = -(top + bottom) / tsb;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = -2.0f / fsn;
-//  projMat.m[3][2] = -(farDist + nearDist) / fsn;
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = 0.0f;
-//  projMat.m[3][3] = 1.0f;
-//#else
-//  projMat.m[0][0] = 2.0f / rsl;
-//  projMat.m[1][0] = 0.0f;
-//  projMat.m[2][0] = 0.0f;
-//  projMat.m[3][0] = -(right + left) / rsl;
-//  projMat.m[0][1] = 0.0f;
-//  projMat.m[1][1] = 2.0f / tsb;
-//  projMat.m[2][1] = 0.0f;
-//  projMat.m[3][1] = -(top + bottom) / tsb;
-//  projMat.m[0][2] = 0.0f;
-//  projMat.m[1][2] = 0.0f;
-//  projMat.m[2][2] = 1.0f / fsn;
-//  projMat.m[3][2] = -(nearDist) / fsn;
-//  projMat.m[0][3] = 0.0f;
-//  projMat.m[1][3] = 0.0f;
-//  projMat.m[2][3] = 0.0f;
-//  projMat.m[3][3] = 1.0f;
-//#endif
-//  return projMat;
-//}
-//}  // namespace CameraUtil
 
 class Camera {
   public:
@@ -285,34 +56,34 @@ class Camera {
   };
 
   Camera()
-      : Type(ECameraType::NORMAL) {}
+      : m_type_(ECameraType::NORMAL) {}
 
   virtual ~Camera() {}
 
-  static std::map<int32_t, Camera*> CameraMap;
+  static std::map<int32_t, Camera*> s_cameraMap;
 
   static void AddCamera(int32_t id, Camera* camera) {
-    CameraMap.insert(std::make_pair(id, camera));
+    s_cameraMap.insert(std::make_pair(id, camera));
   }
 
   static Camera* GetCamera(int32_t id) {
-    auto it_find = CameraMap.find(id);
-    return (CameraMap.end() != it_find) ? it_find->second : nullptr;
+    auto it_find = s_cameraMap.find(id);
+    return (s_cameraMap.end() != it_find) ? it_find->second : nullptr;
   }
 
-  static void RemoveCamera(int32_t id) { CameraMap.erase(id); }
+  static void RemoveCamera(int32_t id) { s_cameraMap.erase(id); }
 
   static Camera* GetMainCamera() { return GetCamera(0); }
 
   static Camera* CreateCamera(const math::Vector3Df& pos,
-                               const math::Vector3Df& target,
-                               const math::Vector3Df& up,
-                               float                  fovRad,
-                               float                  nearDist,
-                               float                  farDist,
-                               float                  width,
-                               float                  height,
-                               bool                   isPerspectiveProjection) {
+                              const math::Vector3Df& target,
+                              const math::Vector3Df& up,
+                              float                  fovRad,
+                              float                  nearDist,
+                              float                  farDist,
+                              float                  width,
+                              float                  height,
+                              bool                   isPerspectiveProjection) {
     Camera* camera = new Camera();
     SetCamera(camera,
               pos,
@@ -352,7 +123,7 @@ class Camera {
     OutUp = OutForward.cross(OutRight).normalized();
   }
 
-  static void SetCamera(Camera*               OutCamera,
+  static void SetCamera(Camera*                OutCamera,
                         const math::Vector3Df& pos,
                         const math::Vector3Df& target,
                         const math::Vector3Df& up,
@@ -363,97 +134,99 @@ class Camera {
                         float                  height,
                         bool                   isPerspectiveProjection,
                         float                  distance = 300.0f) {
-    const auto toTarget = (target - pos);
-    OutCamera->Pos      = pos;
-    OutCamera->Target   = target;
-    OutCamera->Up       = up;
-    OutCamera->Distance = distance;
+    const auto toTarget    = (target - pos);
+    OutCamera->m_position_ = pos;
+    OutCamera->m_target_   = target;
+    OutCamera->m_up_       = up;
+    OutCamera->m_distance_ = distance;
     OutCamera->SetEulerAngle(math::GetEulerAngleFrom(toTarget));
 
-    OutCamera->FOVRad                  = fovRad;
-    OutCamera->Near                    = nearDist;
-    OutCamera->Far                     = farDist;
-    OutCamera->Width                   = static_cast<int32_t>(width);
-    OutCamera->Height                  = static_cast<int32_t>(height);
-    OutCamera->IsPerspectiveProjection = isPerspectiveProjection;
+    OutCamera->m_FOVRad_                  = fovRad;
+    OutCamera->m_Near_                    = nearDist;
+    OutCamera->m_far_                     = farDist;
+    OutCamera->m_width_                   = static_cast<int32_t>(width);
+    OutCamera->m_height_                  = static_cast<int32_t>(height);
+    OutCamera->m_isPerspectiveProjection_ = isPerspectiveProjection;
   }
 
   virtual math::Matrix4f CreateView() const {
     // TODO: consider adding RH / LH selection logic
-    return math::g_lookAtLh(Pos, Target, Up);
+    return math::g_lookAtLh(m_position_, m_target_, m_up_);
   }
 
   virtual math::Matrix4f CreateProjection() const {
-    const auto ratio = static_cast<float>(Width) / static_cast<float>(Height);
-    if (IsPerspectiveProjection) {
-      if (IsInfinityFar) {
-        return math::g_perspectiveLhZoInf(FOVRad, ratio, Near);
+    const auto ratio
+        = static_cast<float>(m_width_) / static_cast<float>(m_height_);
+    if (m_isPerspectiveProjection_) {
+      if (m_isInfinityFar_) {
+        return math::g_perspectiveLhZoInf(m_FOVRad_, ratio, m_Near_);
       }
-      return math::g_perspectiveLhZo(FOVRad, ratio, Near, Far);
+      return math::g_perspectiveLhZo(m_FOVRad_, ratio, m_Near_, m_far_);
     }
-    return math::g_orthoLhZo((float)Width, (float)Height, Near, Far);
+    return math::g_orthoLhZo(
+        (float)m_width_, (float)m_height_, m_Near_, m_far_);
   }
 
   // TODO: remove (currently not used)
-  //virtual void BindCamera(const Shader* shader) const {
+  // virtual void BindCamera(const Shader* shader) const {
   //  auto VP = Projection * view;
   //  auto P  = Projection;
   //  SET_UNIFORM_BUFFER_STATIC("P", P, shader);
   //  SET_UNIFORM_BUFFER_STATIC("VP", VP, shader);
-  //  SET_UNIFORM_BUFFER_STATIC("Eye", Pos, shader);
+  //  SET_UNIFORM_BUFFER_STATIC("Eye", m_position_, shader);
 
-  // 
+  //
   //}
 
   void UpdateCameraFrustum() {
-    auto       toTarget = (Target - Pos).normalized();
-    const auto length   = tanf(FOVRad) * Far;
+    auto       toTarget = (m_target_ - m_position_).normalized();
+    const auto length   = tanf(m_FOVRad_) * m_far_;
     auto       toRight  = GetRightVector() * length;
     auto       toUp     = GetUpVector() * length;
 
-    auto rightUp   = (toTarget * Far + toRight + toUp).normalized();
-    auto leftUp    = (toTarget * Far - toRight + toUp).normalized();
-    auto rightDown = (toTarget * Far + toRight - toUp).normalized();
-    auto leftDown  = (toTarget * Far - toRight - toUp).normalized();
+    auto rightUp   = (toTarget * m_far_ + toRight + toUp).normalized();
+    auto leftUp    = (toTarget * m_far_ - toRight + toUp).normalized();
+    auto rightDown = (toTarget * m_far_ + toRight - toUp).normalized();
+    auto leftDown  = (toTarget * m_far_ - toRight - toUp).normalized();
 
-    auto far_lt = Pos + leftUp * Far;
-    auto far_rt = Pos + rightUp * Far;
-    auto far_lb = Pos + leftDown * Far;
-    auto far_rb = Pos + rightDown * Far;
+    auto far_lt = m_position_ + leftUp * m_far_;
+    auto far_rt = m_position_ + rightUp * m_far_;
+    auto far_lb = m_position_ + leftDown * m_far_;
+    auto far_rb = m_position_ + rightDown * m_far_;
 
-    auto near_lt = Pos + leftUp * Near;
-    auto near_rt = Pos + rightUp * Near;
-    auto near_lb = Pos + leftDown * Near;
-    auto near_rb = Pos + rightDown * Near;
+    auto near_lt = m_position_ + leftUp * m_Near_;
+    auto near_rt = m_position_ + rightUp * m_Near_;
+    auto near_lb = m_position_ + leftDown * m_Near_;
+    auto near_rb = m_position_ + rightDown * m_Near_;
 
-    Frustum.Planes[0] = math::Plane::CreateFrustumFromThreePoints(
+    m_frustum_.m_planes_[0] = math::Plane::CreateFrustumFromThreePoints(
         near_lb, far_lb, near_lt);   // left
-    Frustum.Planes[1] = math::Plane::CreateFrustumFromThreePoints(
+    m_frustum_.m_planes_[1] = math::Plane::CreateFrustumFromThreePoints(
         near_rt, far_rt, near_rb);   // right
-    Frustum.Planes[2] = math::Plane::CreateFrustumFromThreePoints(
+    m_frustum_.m_planes_[2] = math::Plane::CreateFrustumFromThreePoints(
         near_lt, far_lt, near_rt);   // top
-    Frustum.Planes[3] = math::Plane::CreateFrustumFromThreePoints(
+    m_frustum_.m_planes_[3] = math::Plane::CreateFrustumFromThreePoints(
         near_rb, far_rb, near_lb);   // bottom
-    Frustum.Planes[4] = math::Plane::CreateFrustumFromThreePoints(
+    m_frustum_.m_planes_[4] = math::Plane::CreateFrustumFromThreePoints(
         near_lb, near_lt, near_rb);  // near
-    Frustum.Planes[5] = math::Plane::CreateFrustumFromThreePoints(
+    m_frustum_.m_planes_[5] = math::Plane::CreateFrustumFromThreePoints(
         far_rb, far_rt, far_lb);     // far
 
     // debug object update
   }
 
   void UpdateCamera() {
-    PrevViewProjection = Projection * view;
+    m_prevViewProjection_ = m_projection_ * m_view_;
 
-    view              = CreateView();
-    Projection        = CreateProjection();
-    ViewProjection    = Projection * view;
-    InvViewProjection = ViewProjection.inverse();
-    if (IsPerspectiveProjection) {
+    m_view_                 = CreateView();
+    m_projection_        = CreateProjection();
+    m_viewProjection_    = m_projection_ * m_view_;
+    m_invViewProjection_ = m_viewProjection_.inverse();
+    if (m_isPerspectiveProjection_) {
 #if USE_REVERSEZ_PERSPECTIVE_SHADOW
         // TODO: add implementation
 #else
-      ReverseZProjection = Projection;
+      m_reverseZProjection_ = Projection;
 #endif
     }
   }
@@ -462,51 +235,51 @@ class Camera {
     math::Vector3Df ForwardDir;
     math::Vector3Df RightDir;
     math::Vector3Df UpDir;
-    GetForwardRightUpFromEulerAngle(ForwardDir, RightDir, UpDir, EulerAngle);
-    Target = Pos + ForwardDir * Distance;
-    Up     = Pos + UpDir;
+    GetForwardRightUpFromEulerAngle(ForwardDir, RightDir, UpDir, m_eulerAngle_);
+    m_target_ = m_position_ + ForwardDir * m_distance_;
+    m_up_     = m_position_ + UpDir;
   }
 
   void SetEulerAngle(const math::Vector3Df& InEulerAngle) {
-    if (EulerAngle != InEulerAngle) {
-      EulerAngle = InEulerAngle;
+    if (m_eulerAngle_ != InEulerAngle) {
+      m_eulerAngle_ = InEulerAngle;
       UpdateCameraParameters();
     }
   }
 
   math::Vector3Df GetForwardVector() const {
-    return view.getColumn<2>().resizedCopy<3>();
+    return m_view_.getColumn<2>().resizedCopy<3>();
   }
 
   math::Vector3Df GetUpVector() const {
-    return view.getColumn<1>().resizedCopy<3>();
+    return m_view_.getColumn<1>().resizedCopy<3>();
   }
 
   math::Vector3Df GetRightVector() const {
-    return view.getColumn<0>().resizedCopy<3>();
+    return m_view_.getColumn<0>().resizedCopy<3>();
   }
 
   void MoveShift(float dist) {
     auto toRight  = GetRightVector() * dist;
-    Pos          += toRight;
-    Target       += toRight;
-    Up           += toRight;
+    m_position_  += toRight;
+    m_target_    += toRight;
+    m_up_        += toRight;
   }
 
   void MoveForward(float dist) {
     auto toForward  = GetForwardVector() * dist;
-    Pos            += toForward;
-    Target         += toForward;
-    Up             += toForward;
+    m_position_    += toForward;
+    m_target_      += toForward;
+    m_up_          += toForward;
   }
 
   void RotateCameraAxis(const math::Vector3Df& axis, float radian) {
-    const auto transformMatrix = math::g_translate(Pos)
+    const auto transformMatrix = math::g_translate(m_position_)
                                * math::g_rotateLh(axis, radian)
-                               * math::g_translate(-Pos);
-    Pos    = math::g_transformPoint(Pos, transformMatrix);
-    Target = math::g_transformPoint(Target, transformMatrix);
-    Up     = math::g_transformPoint(Up, transformMatrix);
+                               * math::g_translate(-m_position_);
+    m_position_ = math::g_transformPoint(m_position_, transformMatrix);
+    m_target_   = math::g_transformPoint(m_target_, transformMatrix);
+    m_up_       = math::g_transformPoint(m_up_, transformMatrix);
   }
 
   void RotateForwardAxis(float radian) {
@@ -531,14 +304,14 @@ class Camera {
     RotateCameraAxis(math::Vector3Df(0.0f, 0.0f, 1.0f), radian);
   }
 
-  math::Matrix4f GetViewProjectionMatrix() const { return ViewProjection; }
+  math::Matrix4f GetViewProjectionMatrix() const { return m_viewProjection_; }
 
   math::Matrix4f GetInverseViewProjectionMatrix() const {
-    return InvViewProjection;
+    return m_invViewProjection_;
   }
 
   bool IsInFrustum(const math::Vector3Df& pos, float radius) {
-    for (auto& iter : Frustum.Planes) {
+    for (auto& iter : m_frustum_.m_planes_) {
       const float d = pos.dot(iter.n) - iter.d + radius;
       if (d < 0.0f) {
         return false;
@@ -550,7 +323,7 @@ class Camera {
   bool IsInFrustumWithDirection(const math::Vector3Df& pos,
                                 const math::Vector3Df& dir,
                                 float                  radius) const {
-    for (auto& iter : Frustum.Planes) {
+    for (auto& iter : m_frustum_.m_planes_) {
       const float d = pos.dot(iter.n) - iter.d + radius;
       if (d < 0.0f) {
         if (dir.dot(iter.n) <= 0) {
@@ -561,7 +334,7 @@ class Camera {
     return true;
   }
 
-  math::Vector3Df GetEulerAngle() const { return EulerAngle; }
+  math::Vector3Df GetEulerAngle() const { return m_eulerAngle_; }
 
   void GetRectInNDCSpace(math::Vector3Df&      OutPosMin,
                          math::Vector3Df&      OutPosMax,
@@ -576,13 +349,13 @@ class Camera {
     math::Vector3Df near_lb;
     math::Vector3Df near_rb;
 
-    const auto  origin = Pos;
-    const float n      = Near;
-    const float f      = Far;
+    const auto  origin = m_position_;
+    const float n      = m_Near_;
+    const float f      = m_far_;
 
-    if (IsPerspectiveProjection) {
-      const float     InvAspect = ((float)Width / (float)Height);
-      const float     length    = tanf(FOVRad * 0.5f);
+    if (m_isPerspectiveProjection_) {
+      const float     InvAspect = ((float)m_width_ / (float)m_height_);
+      const float     length    = tanf(m_FOVRad_ * 0.5f);
       math::Vector3Df targetVec = GetForwardVector().normalized();
       math::Vector3Df rightVec
           = GetRightVector().normalized() * length * InvAspect;
@@ -603,8 +376,8 @@ class Camera {
       near_lb = origin + leftDown * n;
       near_rb = origin + rightDown * n;
     } else {
-      const float w = (float)Width;
-      const float h = (float)Height;
+      const float w = (float)m_width_;
+      const float h = (float)m_height_;
 
       math::Vector3Df targetVec = GetForwardVector().normalized();
       math::Vector3Df rightVec  = GetRightVector().normalized();
@@ -684,13 +457,13 @@ class Camera {
     math::Vector3Df near_lb;
     math::Vector3Df near_rb;
 
-    const auto  origin = Pos;
-    const float n      = Near;
-    const float f      = Far;
+    const auto  origin = m_position_;
+    const float n      = m_Near_;
+    const float f      = m_far_;
 
-    if (IsPerspectiveProjection) {
-      const float     InvAspect = ((float)Width / (float)Height);
-      const float     length    = tanf(FOVRad * 0.5f);
+    if (m_isPerspectiveProjection_) {
+      const float     InvAspect = ((float)m_width_ / (float)m_height_);
+      const float     length    = tanf(m_FOVRad_ * 0.5f);
       math::Vector3Df targetVec = GetForwardVector().normalized();
       math::Vector3Df rightVec
           = GetRightVector().normalized() * length * InvAspect;
@@ -711,8 +484,8 @@ class Camera {
       near_lb = origin + leftDown * n;
       near_rb = origin + rightDown * n;
     } else {
-      const float w = (float)Width;
-      const float h = (float)Height;
+      const float w = (float)m_width_;
+      const float h = (float)m_height_;
 
       math::Vector3Df targetVec = GetForwardVector().normalized();
       math::Vector3Df rightVec  = GetRightVector().normalized();
@@ -781,60 +554,62 @@ class Camera {
   //}
   //////////////////////////////////////////////////////////////////////////
 
-  ECameraType Type;
+  ECameraType m_type_;
 
-  math::Vector3Df Pos;
-  math::Vector3Df Target;
-  math::Vector3Df Up;
+  math::Vector3Df m_position_;
+  math::Vector3Df m_target_;
+  math::Vector3Df m_up_;
 
-  math::Vector3Df EulerAngle = math::g_zeroVector<float, 3>();
-  float           Distance   = 300.0f;
-  math::Matrix4f  view;
-  math::Matrix4f  Projection;
-  math::Matrix4f  ViewProjection;
-  math::Matrix4f  InvViewProjection;
-  math::Matrix4f  PrevViewProjection;
-  math::Matrix4f  ReverseZProjection;
-  bool            IsPerspectiveProjection = true;
-  bool            IsInfinityFar           = false;
+  math::Vector3Df m_eulerAngle_ = math::g_zeroVector<float, 3>();
+  float           m_distance_   = 300.0f;
+  math::Matrix4f  m_view_;
+  math::Matrix4f  m_projection_;
+  math::Matrix4f  m_viewProjection_;
+  math::Matrix4f  m_invViewProjection_;
+  math::Matrix4f  m_prevViewProjection_;
+  math::Matrix4f  m_reverseZProjection_;
+  bool            m_isPerspectiveProjection_ = true;
+  bool            m_isInfinityFar_           = false;
 
   // debug object
 
-  float FOVRad = 0.0f;  // Radian
-  float Near   = 0.0f;
-  float Far    = 0.0f;
+  // TODO: consider renaming
+  float m_FOVRad_ = 0.0f;  // Radian
+  float m_Near_   = 0.0f;
+  float m_far_    = 0.0f;
 
   // std::vector<Light*> LightList;
   // AmbientLight* Ambient = nullptr;
-  bool          UseAmbient = false;
-  FrustumPlane Frustum;
-  int32_t       Width  = 0;
-  int32_t       Height = 0;
+  // TODO: consider remove (not used
+  bool         m_useAmbient_ = false;
+  FrustumPlane m_frustum_;
+  int32_t      m_width_  = 0;
+  int32_t      m_height_ = 0;
 
-  // todo
-  bool  IsEnableCullMode         = false;
-  float PCF_SIZE_DIRECTIONAL     = 2.0f;
-  float PCF_SIZE_OMNIDIRECTIONAL = 8.0f;
+  // TODO: currently not implemented
+  //bool  m_isEnableCullMode_       = false;
+  //float m_pcfSizeDirectional_   = 2.0f;
+  //float m_pcfSizeOmnidirectional_ = 8.0f;
 };
 
 class OrthographicCamera : public Camera {
   public:
   static OrthographicCamera* CreateCamera(const math::Vector3Df& pos,
-                                           const math::Vector3Df& target,
-                                           const math::Vector3Df& up,
-                                           float                  minX,
-                                           float                  minY,
-                                           float                  maxX,
-                                           float                  maxY,
-                                           float                  nearDist,
-                                           float                  farDist) {
+                                          const math::Vector3Df& target,
+                                          const math::Vector3Df& up,
+                                          float                  minX,
+                                          float                  minY,
+                                          float                  maxX,
+                                          float                  maxY,
+                                          float                  nearDist,
+                                          float                  farDist) {
     OrthographicCamera* camera = new OrthographicCamera();
     SetCamera(
         camera, pos, target, up, minX, minY, maxX, maxY, nearDist, farDist);
     return camera;
   }
 
-  static void SetCamera(OrthographicCamera*   OutCamera,
+  static void SetCamera(OrthographicCamera*    OutCamera,
                         const math::Vector3Df& pos,
                         const math::Vector3Df& target,
                         const math::Vector3Df& up,
@@ -845,51 +620,51 @@ class OrthographicCamera : public Camera {
                         float                  nearDist,
                         float                  farDist,
                         float                  distance = 300.0f) {
-    const auto toTarget = (target - pos);
-    OutCamera->Pos      = pos;
-    OutCamera->Target   = target;
-    OutCamera->Up       = up;
-    OutCamera->Distance = distance;
+    const auto toTarget    = (target - pos);
+    OutCamera->m_position_ = pos;
+    OutCamera->m_target_   = target;
+    OutCamera->m_up_       = up;
+    OutCamera->m_distance_ = distance;
     OutCamera->SetEulerAngle(math::GetEulerAngleFrom(toTarget));
 
-    OutCamera->Near                    = nearDist;
-    OutCamera->Far                     = farDist;
-    OutCamera->IsPerspectiveProjection = false;
+    OutCamera->m_Near_                    = nearDist;
+    OutCamera->m_far_                     = farDist;
+    OutCamera->m_isPerspectiveProjection_ = false;
 
-    OutCamera->MinX = minX;
-    OutCamera->MinY = minY;
-    OutCamera->MaxX = maxX;
-    OutCamera->MaxY = maxY;
+    OutCamera->m_minX_ = minX;
+    OutCamera->m_minY_ = minY;
+    OutCamera->m_maxX_ = maxX;
+    OutCamera->m_maxY_ = maxY;
   }
 
-  OrthographicCamera() { Type = ECameraType::ORTHO; }
+  OrthographicCamera() { m_type_ = ECameraType::ORTHO; }
 
   virtual math::Matrix4f CreateProjection() const {
-    return math::g_orthoLhZo(MinX, MaxX, MaxY, MinY, Near, Far);
+    return math::g_orthoLhZo(m_minX_, m_maxX_, m_maxY_, m_minY_, m_Near_, m_far_);
   }
 
-  float GetMinX() const { return MinX; }
+  float GetMinX() const { return m_minX_; }
 
-  float GetMinY() const { return MinY; }
+  float GetMinY() const { return m_minY_; }
 
-  float GetMaxX() const { return MaxX; }
+  float GetMaxX() const { return m_maxX_; }
 
-  float GetMaxY() const { return MaxY; }
+  float GetMaxY() const { return m_maxY_; }
 
-  void SetMinX(float minX) { MinX = minX; }
+  void SetMinX(float minX) { m_minX_ = minX; }
 
-  void SetMinY(float minY) { MinY = minY; }
+  void SetMinY(float minY) { m_minY_ = minY; }
 
-  void SetMaxX(float maxX) { MaxX = maxX; }
+  void SetMaxX(float maxX) { m_maxX_ = maxX; }
 
-  void SetMaxY(float maxY) { MaxY = maxY; }
+  void SetMaxY(float maxY) { m_maxY_ = maxY; }
 
   private:
-  float MinX = 0.0f;
-  float MinY = 0.0f;
+  float m_minX_ = 0.0f;
+  float m_minY_ = 0.0f;
 
-  float MaxX = 0.0f;
-  float MaxY = 0.0f;
+  float m_maxX_ = 0.0f;
+  float m_maxY_ = 0.0f;
 };
 
 }  // namespace game_engine

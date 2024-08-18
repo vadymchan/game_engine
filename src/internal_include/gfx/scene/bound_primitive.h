@@ -48,12 +48,12 @@ struct BoundBox {
     *this = BoundBox::GenerateBoundBox(vertices);
   }
 
-  math::Vector3Df GetExtent() const { return Max - Min; }
+  math::Vector3Df GetExtent() const { return m_max_ - m_min_; }
 
   math::Vector3Df GetHalfExtent() const { return GetExtent() / 0.5f; }
 
-  math::Vector3Df Min;
-  math::Vector3Df Max;
+  math::Vector3Df m_min_;
+  math::Vector3Df m_max_;
 };
 
 struct BoundSphere {

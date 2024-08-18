@@ -31,11 +31,11 @@ class TextureVk : public Texture {
 
   void ReleaseInternal();
 
-  virtual void* GetHandle() const override { return image; }
+  virtual void* GetHandle() const override { return m_image_; }
 
-  virtual void* GetSamplerStateHandle() const override { return sampler; }
+  virtual void* GetSamplerStateHandle() const override { return m_sampler_; }
 
-  virtual EResourceLayout GetLayout() const override { return imageLayout; }
+  virtual EResourceLayout GetLayout() const override { return m_imageLayout_; }
 
   // TODO: clear resources
 
@@ -43,12 +43,12 @@ class TextureVk : public Texture {
   static void      DestroyDefaultSamplerState();
 
   // private:
-  VkImage     image = VK_NULL_HANDLE;  // TODO: consider using pool
-  VkImageView imageView
+  VkImage     m_image_ = VK_NULL_HANDLE;  // TODO: consider using pool
+  VkImageView m_imageView_
       = VK_NULL_HANDLE;  // TODO: consider several image views per VkImage
-  VkSampler       sampler      = VK_NULL_HANDLE;
-  EResourceLayout imageLayout  = EResourceLayout::UNDEFINED;
-  VkDeviceMemory  deviceMemory = VK_NULL_HANDLE;
+  VkSampler       m_sampler_      = VK_NULL_HANDLE;
+  EResourceLayout m_imageLayout_  = EResourceLayout::UNDEFINED;
+  VkDeviceMemory  m_deviceMemory_ = VK_NULL_HANDLE;
 
   // TODO:
   // - UAV image view

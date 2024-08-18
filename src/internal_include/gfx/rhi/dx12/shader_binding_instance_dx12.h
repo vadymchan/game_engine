@@ -16,9 +16,9 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
   virtual ~ShaderBindingInstanceDx12() {}
 
   virtual void Initialize(
-      const ShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& shaderBindingArray) override;
   virtual void UpdateShaderBindings(
-      const ShaderBindingArray& InShaderBindingArray) override;
+      const ShaderBindingArray& shaderBindingArray) override;
   virtual void* GetHandle() const override;
 
   virtual const std::vector<uint32_t>* GetDynamicOffsets() const override {
@@ -27,12 +27,11 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
 
   virtual void Free() override;
 
-  void BindGraphics(CommandBufferDx12* InCommandList,
-                    std::int32_t&        InOutStartIndex) const;
-  void BindCompute(CommandBufferDx12* InCommandList,
-                   std::int32_t&        InOutStartIndex);
-  void CopyToOnlineDescriptorHeap(CommandBufferDx12* InCommandList);
-
+  void BindGraphics(CommandBufferDx12* commandList,
+                    std::int32_t&      InOutStartIndex) const;
+  void BindCompute(CommandBufferDx12* commandList,
+                   std::int32_t&      InOutStartIndex);
+  void CopyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
 
   // TODO: consider using only enum class
   struct InlineRootParamType {
@@ -45,29 +44,31 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
   };
 
   struct InlineRootParamData {
-    InlineRootParamType::Enum Type = InlineRootParamType::NumOfType;
-    D3D12_GPU_VIRTUAL_ADDRESS  GPUVirtualAddress = {};
+    InlineRootParamType::Enum m_type_ = InlineRootParamType::NumOfType;
+    D3D12_GPU_VIRTUAL_ADDRESS m_gpuVirtualAddress_ = {};
 
-    // TODO: This is debug information, so it would be good to exclude it at
+    // TODO:
+    // - Seems like not used 
+    // - This is debug information, so it would be good to exclude it at
     // runtime.
-    Name                          ResourceName;
-    const ShaderBindableResource* Resource = nullptr;
+    Name                          m_resourceName_;
+    const ShaderBindableResource* m_resource_ = nullptr;
   };
 
   struct DescriptorData {
-    inline bool IsValid() const { return Descriptor.IsValid(); }
+    inline bool IsValid() const { return m_descriptor_.IsValid(); }
 
-    DescriptorDx12 Descriptor;
+    DescriptorDx12 m_descriptor_;
 
     // TODO: This is debug information, so it would be good to exclude it at
     // runtime.
-    Name                          ResourceName;
-    const ShaderBindableResource* Resource = nullptr;
+    Name                          m_resourceName_;
+    const ShaderBindableResource* m_resource_ = nullptr;
   };
 
-  std::vector<InlineRootParamData> RootParameterInlines;
-  std::vector<DescriptorData>      Descriptors;
-  std::vector<DescriptorData>      SamplerDescriptors;
+  std::vector<InlineRootParamData> m_rootParameterInlines_;
+  std::vector<DescriptorData>      m_descriptors_;
+  std::vector<DescriptorData>      m_samplerDescriptors_;
 };
 
 }  // namespace game_engine

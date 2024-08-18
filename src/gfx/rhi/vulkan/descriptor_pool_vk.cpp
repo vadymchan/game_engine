@@ -6,29 +6,29 @@
 namespace game_engine {
 
 DescriptorPoolVk::~DescriptorPoolVk() {
-  if (DescriptorPool) {
-    vkDestroyDescriptorPool(g_rhi_vk->m_device_, DescriptorPool, nullptr);
-    DescriptorPool = nullptr;
+  if (m_descriptorPool_) {
+    vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
+    m_descriptorPool_ = nullptr;
   }
-  DeallocateMultiframeShaderBindingInstance.FreeDelegate = nullptr;
+  m_deallocateMultiframeShaderBindingInstance_.m_freeDelegate_ = nullptr;
 }
 
 void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
-  if (DescriptorPool) {
-    vkDestroyDescriptorPool(g_rhi_vk->m_device_, DescriptorPool, nullptr);
-    DescriptorPool = nullptr;
+  if (m_descriptorPool_) {
+    vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
+    m_descriptorPool_ = nullptr;
 
 #if !USE_RESET_DESCRIPTOR_POOL
-    ScopedLock s(&DescriptorPoolLock);
+    ScopedLock s(&m_descriptorPoolLock_);
 
-    PendingDescriptorSets.clear();
-    assert(AllocatedDescriptorSets.size() <= 0);
+    m_pendingDescriptorSets_.clear();
+    assert(m_allocatedDescriptorSets_.size() <= 0);
 #endif
   }
 
-  assert(!DescriptorPool);
+  assert(!m_descriptorPool_);
 
-  MaxDescriptorSets = InMaxDescriptorSets;
+  m_maxDescriptorSets_ = InMaxDescriptorSets;
   
   // TODO: remove (old version)
   // constexpr int32_t    NumOfPoolSize = std::size(DefaultPoolSizes);
@@ -74,9 +74,9 @@ void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
 
   assert(VK_SUCCESS
          == vkCreateDescriptorPool(
-             g_rhi_vk->m_device_, &PoolInfo, nullptr, &DescriptorPool));
+             g_rhi_vk->m_device_, &PoolInfo, nullptr, &m_descriptorPool_));
 
-  DeallocateMultiframeShaderBindingInstance.FreeDelegate = std::bind(
+  m_deallocateMultiframeShaderBindingInstance_.m_freeDelegate_ = std::bind(
       &DescriptorPoolVk::FreedFromPendingDelegate, this, std::placeholders::_1);
 
 }
@@ -87,18 +87,18 @@ void DescriptorPoolVk::Reset() {
     verify(VK_SUCCESS
            == vkResetDescriptorPool(g_rhi_vk->m_device_, DescriptorPool, 0));
 #else
-    ScopedLock s(&DescriptorPoolLock);
-    PendingDescriptorSets = AllocatedDescriptorSets;
+    ScopedLock s(&m_descriptorPoolLock_);
+    m_pendingDescriptorSets_ = m_allocatedDescriptorSets_;
 #endif
   }
 }
 
 std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
     VkDescriptorSetLayout InLayout) {
-  ScopedLock s(&DescriptorPoolLock);
+  ScopedLock s(&m_descriptorPoolLock_);
 #if !USE_RESET_DESCRIPTOR_POOL
-  const auto it_find = PendingDescriptorSets.find(InLayout);
-  if (it_find != PendingDescriptorSets.end()) {
+  const auto it_find = m_pendingDescriptorSets_.find(InLayout);
+  if (it_find != m_pendingDescriptorSets_.end()) {
     ShaderBindingInstancePtrArray& pendingPools = it_find->second;
     if (pendingPools.size()) {
       std::shared_ptr<ShaderBindingInstance> descriptorSet
@@ -113,7 +113,7 @@ std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
   VkDescriptorSetAllocateInfo DescriptorSetAllocateInfo{};
   DescriptorSetAllocateInfo.sType
       = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  DescriptorSetAllocateInfo.descriptorPool     = DescriptorPool;
+  DescriptorSetAllocateInfo.descriptorPool     = m_descriptorPool_;
   DescriptorSetAllocateInfo.descriptorSetCount = 1;
   DescriptorSetAllocateInfo.pSetLayouts        = &InLayout;
 
@@ -127,23 +127,23 @@ std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
   }
 
   auto NewShaderBindingInstanceVk           = new ShaderBindingInstanceVk();
-  NewShaderBindingInstanceVk->DescriptorSet = NewDescriptorSet;
+  NewShaderBindingInstanceVk->m_descriptorSet_ = NewDescriptorSet;
   std::shared_ptr<ShaderBindingInstanceVk> NewCachedDescriptorSet
       = std::shared_ptr<ShaderBindingInstanceVk>(NewShaderBindingInstanceVk);
 
 #if !USE_RESET_DESCRIPTOR_POOL
-  AllocatedDescriptorSets[InLayout].push_back(NewCachedDescriptorSet);
+  m_allocatedDescriptorSets_[InLayout].push_back(NewCachedDescriptorSet);
 #endif
 
   return NewCachedDescriptorSet;
 }
 
 void DescriptorPoolVk::Free(
-    std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance) {
-  assert(InShaderBindingInstance);
-  ScopedLock s(&DescriptorPoolLock);
+    std::shared_ptr<ShaderBindingInstance> shaderBindingInstance) {
+  assert(shaderBindingInstance);
+  ScopedLock s(&m_descriptorPoolLock_);
 
-  DeallocateMultiframeShaderBindingInstance.Free(InShaderBindingInstance);
+  m_deallocateMultiframeShaderBindingInstance_.Free(shaderBindingInstance);
 
   // const int32_t CurrentFrameNumber = g_rhi_vk->GetCurrentFrameNumber();
   // const int32_t OldestFrameToKeep = CurrentFrameNumber -
@@ -167,7 +167,7 @@ void DescriptorPoolVk::Free(
   //                // Return to pending descriptor set
   //                assert(PendingFreeShaderBindingInstance.m_shaderBindingInstance);
   //                const VkDescriptorSetLayout DescriptorSetLayout =
-  //                (VkDescriptorSetLayout)PendingFreeShaderBindingInstance.m_shaderBindingInstance->ShaderBindingsLayouts->GetHandle();
+  //                (VkDescriptorSetLayout)PendingFreeShaderBindingInstance.m_shaderBindingInstance->m_shaderBindingsLayouts_->GetHandle();
   //                PendingDescriptorSets[DescriptorSetLayout].push_back(PendingFreeShaderBindingInstance.m_shaderBindingInstance);
   //            }
   //            else
@@ -194,17 +194,17 @@ void DescriptorPoolVk::Free(
   //}
 
   // PendingFree.emplace_back(PendingFreeShaderBindingInstance(CurrentFrameNumber,
-  // InShaderBindingInstance));
+  // shaderBindingInstance));
 }
 
 void DescriptorPoolVk::Release() {
-  if (DescriptorPool) {
-    vkDestroyDescriptorPool(g_rhi_vk->m_device_, DescriptorPool, nullptr);
-    DescriptorPool = nullptr;
+  if (m_descriptorPool_) {
+    vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
+    m_descriptorPool_ = nullptr;
   }
 
   {
-    ScopedLock s(&DescriptorPoolLock);
+    ScopedLock s(&m_descriptorPoolLock_);
 
     // for (auto& iter : AllocatedDescriptorSets)
     //{
@@ -214,21 +214,21 @@ void DescriptorPoolVk::Release() {
     //         delete instances[i];
     //     }
     // }
-    AllocatedDescriptorSets.clear();
+    m_allocatedDescriptorSets_.clear();
   }
 }
 
 // This will be called from 'm_deallocatorMultiFrameShaderBindingInstance'
 void DescriptorPoolVk::FreedFromPendingDelegate(
-    std::shared_ptr<ShaderBindingInstance> InShaderBindingInstance) {
+    std::shared_ptr<ShaderBindingInstance> shaderBindingInstance) {
   ShaderBindingInstanceVk* shaderBindingInstanceVk
-      = (ShaderBindingInstanceVk*)InShaderBindingInstance.get();
+      = (ShaderBindingInstanceVk*)shaderBindingInstance.get();
   assert(shaderBindingInstanceVk);
 
   const VkDescriptorSetLayout DescriptorSetLayout
       = (VkDescriptorSetLayout)
             shaderBindingInstanceVk->ShaderBindingsLayouts->GetHandle();
-  PendingDescriptorSets[DescriptorSetLayout].push_back(InShaderBindingInstance);
+  m_pendingDescriptorSets_[DescriptorSetLayout].push_back(shaderBindingInstance);
 }
 
 }  // namespace game_engine

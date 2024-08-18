@@ -21,41 +21,41 @@ class Material {
   };
 
   struct TextureData {
-    Name                name;
-    Name                FilePath;
-    Texture*            m_texture           = nullptr;
-    ETextureAddressMode TextureAddressModeU = ETextureAddressMode::REPEAT;
-    ETextureAddressMode TextureAddressModeV = ETextureAddressMode::REPEAT;
+    const Texture* GetTexture() const { return m_texture_; }
 
-    const Texture* GetTexture() const { return m_texture; }
+    Name                m_name_;
+    Name                m_filePath_;
+    Texture*            m_texture_           = nullptr;
+    ETextureAddressMode m_textureAddressModeU_ = ETextureAddressMode::REPEAT;
+    ETextureAddressMode m_textureAddressModeV_ = ETextureAddressMode::REPEAT;
   };
 
   bool HasAlbedoTexture() const {
-    return TexData[(int32_t)EMaterialTextureType::Albedo].m_texture;
+    return m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_;
   }
 
-  bool IsUseSphericalMap() const { return bUseSphericalMap; }
+  bool IsUseSphericalMap() const { return m_useSphericalMap_; }
 
   bool IsUseSRGBAlbedoTexture() const {
-    return TexData[(int32_t)EMaterialTextureType::Albedo].m_texture
-             ? TexData[(int32_t)EMaterialTextureType::Albedo].m_texture->sRGB
+    return m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_
+             ? m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_->m_sRGB_
              : false;
   }
 
-  Texture* GetTexture(EMaterialTextureType InType) const;
+  Texture* GetTexture(EMaterialTextureType type) const;
 
   template <typename T>
-  T* GetTexture(EMaterialTextureType InType) const {
-    return (T*)(GetTexture(InType));
+  T* GetTexture(EMaterialTextureType type) const {
+    return (T*)(GetTexture(type));
   }
 
-  TextureData TexData[static_cast<int32_t>(EMaterialTextureType::Max)];
-  bool        bUseSphericalMap = false;
+  TextureData m_texData_[static_cast<int32_t>(EMaterialTextureType::Max)];
+  bool        m_useSphericalMap_ = false;
 
   const std::shared_ptr<ShaderBindingInstance>& CreateShaderBindingInstance();
 
-  std::shared_ptr<ShaderBindingInstance> m_shaderBindingInstance = nullptr;
-  mutable bool NeedToUpdateShaderBindingInstance                  = true;
+  std::shared_ptr<ShaderBindingInstance> m_shaderBindingInstance_ = nullptr;
+  mutable bool m_needToUpdateShaderBindingInstance_                 = true;
 };
 
 }  // namespace game_engine

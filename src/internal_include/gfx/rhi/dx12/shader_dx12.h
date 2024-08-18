@@ -12,7 +12,7 @@ namespace game_engine {
 struct CompiledShaderDx12 : public CompiledShader {
   virtual ~CompiledShaderDx12();
 
-  ComPtr<IDxcBlob> ShaderBlob;
+  ComPtr<IDxcBlob> m_shaderBlob_;
 };
 
 }  // namespace game_engine

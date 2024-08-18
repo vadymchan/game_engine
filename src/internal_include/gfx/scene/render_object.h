@@ -38,19 +38,19 @@ class RenderObjectGeometryData {
   }
 
   ~RenderObjectGeometryData() {
-    VertexStreamPtr.reset();
-    VertexStream_PositionOnlyPtr.reset();
+    m_vertexStreamPtr_.reset();
+    m_vertexStreamPositionOnlyPtr_.reset();
   }
 
   void Create(const std::shared_ptr<VertexStreamData>& InVertexStream,
-              const std::shared_ptr<IndexStreamData>&  InIndexStream,
+              const std::shared_ptr<IndexStreamData>&  indexStream,
               bool                                     InHasVertexColor = true,
               bool InHasVertexBiTangent = false);
 
   void CreateNew_ForRaytracing(
       const std::shared_ptr<VertexStreamData>& InVertexStream,
       const std::shared_ptr<VertexStreamData>& InVertexStream_PositionOnly,
-      const std::shared_ptr<IndexStreamData>&  InIndexStream,
+      const std::shared_ptr<IndexStreamData>&  indexStream,
       bool                                     InHasVertexColor     = false,
       bool                                     InHasVertexBiTangent = true);
 
@@ -59,33 +59,33 @@ class RenderObjectGeometryData {
       const std::shared_ptr<VertexStreamData>& vertexStream);
 
   EPrimitiveType GetPrimitiveType() const {
-    return VertexStreamPtr ? VertexStreamPtr->PrimitiveType
-                           : EPrimitiveType::MAX;
+    return m_vertexStreamPtr_ ? m_vertexStreamPtr_->m_primitiveType_
+                              : EPrimitiveType::MAX;
   }
 
-  bool HasInstancing() const { return !!VertexBuffer_InstanceDataPtr; }
+  bool HasInstancing() const { return !!m_vertexBufferInstanceDataPtr_; }
 
-  bool HasVertexColor() const { return bHasVertexColor; }
+  bool HasVertexColor() const { return m_hasVertexColor_; }
 
-  bool HasVertexBiTangent() const { return bHasVertexBiTangent; }
+  bool HasVertexBiTangent() const { return m_hasVertexBiTangent_; }
 
-  std::shared_ptr<VertexStreamData> VertexStreamPtr;
-  std::shared_ptr<VertexStreamData> VertexStream_InstanceDataPtr;
-  std::shared_ptr<VertexStreamData> VertexStream_PositionOnlyPtr;
+  std::shared_ptr<VertexStreamData> m_vertexStreamPtr_;
+  std::shared_ptr<VertexStreamData> m_vertexStreamInstanceDataPtr_;
+  std::shared_ptr<VertexStreamData> m_vertexStreamPositionOnlyPtr_;
 
   // Index buffer
-  std::shared_ptr<IndexStreamData> IndexStreamPtr;
+  std::shared_ptr<IndexStreamData> m_indexStreamPtr_;
 
-  std::shared_ptr<VertexBuffer> VertexBufferPtr;
-  std::shared_ptr<VertexBuffer> VertexBuffer_PositionOnlyPtr;
-  std::shared_ptr<VertexBuffer> VertexBuffer_InstanceDataPtr;
-  std::shared_ptr<IndexBuffer>  IndexBufferPtr;
+  std::shared_ptr<VertexBuffer> m_vertexBufferPtr_;
+  std::shared_ptr<VertexBuffer> m_vertexBufferPositionOnlyPtr_;
+  std::shared_ptr<VertexBuffer> m_vertexBufferInstanceDataPtr_;
+  std::shared_ptr<IndexBuffer>  m_indexBufferPtr_;
 
   // IndirectCommand buffer
-  std::shared_ptr<Buffer> IndirectCommandBufferPtr;
+  std::shared_ptr<Buffer> m_indirectCommandBufferPtr_;
 
-  bool bHasVertexColor     = true;
-  bool bHasVertexBiTangent = false;
+  bool m_hasVertexColor_     = true;
+  bool m_hasVertexBiTangent_ = false;
 };
 
 class RenderObject {
@@ -97,104 +97,106 @@ class RenderObject {
   virtual void CreateRenderObject(
       const std::shared_ptr<RenderObjectGeometryData>&
           InRenderObjectGeometryData) {
-    GeometryDataPtr = InRenderObjectGeometryData;
+    m_geometryDataPtr_ = InRenderObjectGeometryData;
     UpdateWorldMatrix();
   }
 
   virtual void Draw(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
-      int32_t                                      startIndex,
-      int32_t                                      indexCount,
-      int32_t                                      startVertex,
-      int32_t                                      vertexCount,
-      int32_t                                      instanceCount);
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
+      int32_t                                    startIndex,
+      int32_t                                    indexCount,
+      int32_t                                    startVertex,
+      int32_t                                    vertexCount,
+      int32_t                                    instanceCount);
 
   virtual void Draw(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
-      int32_t                                      instanceCount = 1) {
-    Draw(InRenderFrameContext, 0, -1, 0, -1, instanceCount);
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
+      int32_t                                    instanceCount = 1) {
+    Draw(renderFrameContext, 0, -1, 0, -1, instanceCount);
   }
 
   EPrimitiveType GetPrimitiveType() const {
-    return GeometryDataPtr->GetPrimitiveType();
+    return m_geometryDataPtr_->GetPrimitiveType();
   }
 
   virtual void BindBuffers(
-      const std::shared_ptr<RenderFrameContext>& InRenderFrameContext,
-      bool                                         InPositionOnly,
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
+      bool                                       InPositionOnly,
       const VertexBuffer* InOverrideInstanceData = nullptr) const;
 
   const std::vector<float>& GetVertices() const;
 
-  bool HasInstancing() const { return GeometryDataPtr->HasInstancing(); }
+  bool HasInstancing() const { return m_geometryDataPtr_->HasInstancing(); }
 
   // TODO: currently not needed, uncomment or delete
   /*virtual bool IsSupportRaytracing() const {
-    if (!GeometryDataPtr) {
+    if (!m_geometryDataPtr_) {
       return false;
     }
 
-    if (!GeometryDataPtr->VertexBuffer_PositionOnlyPtr) {
+    if (!m_geometryDataPtr_->m_vertexBufferPositionOnlyPtr_) {
       return false;
     }
 
-    return GeometryDataPtr->VertexBuffer_PositionOnlyPtr->IsSupportRaytracing();
+    return
+  m_geometryDataPtr_->m_vertexBufferPositionOnlyPtr_->IsSupportRaytracing();
   }*/
 
   void UpdateWorldMatrix();
 
-  math::Matrix4f World;
+  math::Matrix4f m_world_;
 
-  std::shared_ptr<RenderObjectGeometryData> GeometryDataPtr;
+  std::shared_ptr<RenderObjectGeometryData> m_geometryDataPtr_;
 
-  std::shared_ptr<Buffer> BottomLevelASBuffer;
-  std::shared_ptr<Buffer> ScratchASBuffer;
-  std::shared_ptr<Buffer> VertexAndIndexOffsetBuffer;
+  // TODO: seems it not used, consider removing
+  std::shared_ptr<Buffer> m_bottomLevelASBuffer_;
+  std::shared_ptr<Buffer> m_scratchASBuffer_;
+  std::shared_ptr<Buffer> m_vertexAndIndexOffsetBuffer_;
 
   template <typename T>
   T* GetBottomLevelASBuffer() const {
-    return (T*)BottomLevelASBuffer.get();
+    return (T*)m_bottomLevelASBuffer_.get();
   }
 
   template <typename T>
   T* GetScratchASBuffer() const {
-    return (T*)ScratchASBuffer.get();
+    return (T*)m_scratchASBuffer_.get();
   }
 
   template <typename T>
   T* GetVertexAndIndexOffsetBuffer() const {
-    return (T*)VertexAndIndexOffsetBuffer.get();
+    return (T*)m_vertexAndIndexOffsetBuffer_.get();
   }
 
   void SetPos(const math::Vector3Df& InPos) {
-    Pos = InPos;
+    m_position_ = InPos;
     SetDirtyFlags(EDirty::POS);
   }
 
   void SetRot(const math::Vector3Df& InRot) {
-    Rot = InRot;
+    m_rotation_ = InRot;
     SetDirtyFlags(EDirty::ROT);
   }
 
   void SetScale(const math::Vector3Df& InScale) {
-    Scale = InScale;
+    m_scale_ = InScale;
     SetDirtyFlags(EDirty::SCALE);
   }
 
-  const math::Vector3Df& GetPos() const { return Pos; }
+  const math::Vector3Df& GetPos() const { return m_position_; }
 
-  const math::Vector3Df& GetRot() const { return Rot; }
+  const math::Vector3Df& GetRot() const { return m_rotation_; }
 
-  const math::Vector3Df& GetScale() const { return Scale; }
+  const math::Vector3Df& GetScale() const { return m_scale_; }
 
-  bool IsTwoSided       = false;
-  bool IsHiddenBoundBox = false;
+  bool m_isTwoSided_       = false;
+  bool m_isHiddenBoundBox_ = false;
 
   //////////////////////////////////////////////////////////////////////////
 
   struct RenderObjectUniformBuffer {
-    math::Matrix4f M;
-    math::Matrix4f InvM;
+    math::Matrix4f m_matrix;
+    math::Matrix4f m_invMatrix;
   };
 
   //////////////////////////////////////////////////////////////////////////
@@ -204,8 +206,9 @@ class RenderObject {
 
   //////////////////////////////////////////////////////////////////////////
 
-  std::shared_ptr<Material> MaterialPtr;
-  std::shared_ptr<Buffer>  TestUniformBuffer;
+  std::shared_ptr<Material> m_materialPtr_;
+  // TODO: consider removing
+  std::shared_ptr<Buffer>   m_testUniformBuffer_;
 
   private:
   enum EDirty : int8_t {
@@ -216,33 +219,34 @@ class RenderObject {
     POS_ROT_SCALE = POS | ROT | SCALE,
   };
 
-  EDirty DirtyFlags = EDirty::POS_ROT_SCALE;
+  EDirty m_dirtyFlags_ = EDirty::POS_ROT_SCALE;
 
   void SetDirtyFlags(EDirty InEnum) {
-    using T    = std::underlying_type<EDirty>::type;
-    DirtyFlags = static_cast<EDirty>(static_cast<T>(InEnum)
-                                     | static_cast<T>(DirtyFlags));
+    using T       = std::underlying_type<EDirty>::type;
+    m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(InEnum)
+                                        | static_cast<T>(m_dirtyFlags_));
   }
 
   void ClearDirtyFlags(EDirty InEnum) {
-    using T    = std::underlying_type<EDirty>::type;
-    DirtyFlags = static_cast<EDirty>(static_cast<T>(InEnum)
-                                     & (!static_cast<T>(DirtyFlags)));
+    using T       = std::underlying_type<EDirty>::type;
+    m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(InEnum)
+                                        & (!static_cast<T>(m_dirtyFlags_)));
   }
 
-  void ClearDirtyFlags() { DirtyFlags = EDirty::NONE; }
+  void ClearDirtyFlags() { m_dirtyFlags_ = EDirty::NONE; }
 
-  math::Vector3Df Pos   = math::Vector3Df(0);
-  math::Vector3Df Rot   = math::Vector3Df(0);
-  math::Vector3Df Scale = math::Vector3Df(1);
+  math::Vector3Df m_position_ = math::Vector3Df(0);
+  math::Vector3Df m_rotation_ = math::Vector3Df(0);
+  math::Vector3Df m_scale_    = math::Vector3Df(1);
 
-  bool NeedToUpdateRenderObjectUniformParameters = false;
-  std::shared_ptr<IUniformBufferBlock>     RenderObjectUniformParametersPtr;
-  std::shared_ptr<ShaderBindingInstance> RenderObjectShaderBindingInstance;
+  // TODO: consider renaming field
+  bool m_needToUpdateRenderObjectUniformParameters_ = false;
+  std::shared_ptr<IUniformBufferBlock>   m_renderObjectUniformParametersPtr_;
+  std::shared_ptr<ShaderBindingInstance> m_renderObjectShaderBindingInstance_;
 
-  // Special code for PBR test
-  float LastMetallic  = 0.0f;
-  float LastRoughness = 0.0f;
+  // TODO: Special code for PBR test (currently not used)
+  //float m_lastMetallic_  = 0.0f;
+  //float m_lastRoughness_ = 0.0f;
 };
 
 }  // namespace game_engine

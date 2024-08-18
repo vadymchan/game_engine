@@ -11,30 +11,30 @@ namespace game_engine {
 
 class FenceDx12 : public Fence {
   public:
-  static constexpr uint64_t InitialFenceValue = uint64_t(0);
+  static constexpr uint64_t s_kInitialFenceValue = uint64_t(0);
 
   virtual ~FenceDx12() override;
 
-  virtual void* GetHandle() const override { return m_fence.Get(); }
+  virtual void* GetHandle() const override { return m_fence_.Get(); }
 
-  virtual bool IsValid() const override { return m_fence && FenceEvent; }
+  virtual bool IsValid() const override { return m_fence_ && m_fenceEvent_; }
 
   virtual bool IsComplete() const override;
-  bool         IsComplete(uint64_t InFenceValue) const override;
+  bool         IsComplete(uint64_t fenceValue) const override;
 
-  virtual void WaitForFence(uint64_t InTimeoutNanoSec = UINT64_MAX) override;
+  virtual void WaitForFence(uint64_t timeoutNanoSec = UINT64_MAX) override;
 
-  void         WaitForFenceValue(uint64_t InFenceValue,
-                                 uint64_t InTimeoutNanoSec = UINT64_MAX);
+  void WaitForFenceValue(uint64_t fenceValue,
+                         uint64_t timeoutNanoSec = UINT64_MAX);
 
-  uint64_t SignalWithNextFenceValue(ID3D12CommandQueue* InCommandQueue,
+  uint64_t SignalWithNextFenceValue(ID3D12CommandQueue* commandQueue,
                                     bool bWaitUntilExecuteComplete = false);
 
-  ComPtr<ID3D12Fence> m_fence;
-  HANDLE              FenceEvent = nullptr;
+  ComPtr<ID3D12Fence> m_fence_;
+  HANDLE              m_fenceEvent_ = nullptr;
 
-  MutexLock FenceValueLock;
-  uint64_t   FenceValue = InitialFenceValue;
+  MutexLock m_fenceValueLock_;
+  uint64_t  m_fenceValue_ = s_kInitialFenceValue;
 };
 
 class FenceManagerDx12 : public FenceManager {

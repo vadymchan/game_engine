@@ -6,131 +6,130 @@
 
 namespace game_engine {
 
-void DrawCommand::PrepareToDraw(bool InIsPositionOnly) {
-  if (!Test) {
+void DrawCommand::PrepareToDraw(bool isPositionOnly) {
+  if (!m_test_) {
     // GetShaderBindings
-    if (view) {
-      view->GetShaderBindingInstance(m_shaderBindingInstanceArray,
-                                     RenderFrameContextPtr->UseForwardRenderer);
+    if (m_view_) {
+      m_view_->GetShaderBindingInstance(m_shaderBindingInstanceArray_,
+                                     m_renderFrameContextPtr_->m_useForwardRenderer_);
     }
 
     // GetShaderBindings
-    OneRenderObjectUniformBuffer = RenderObject->CreateShaderBindingInstance();
-    m_shaderBindingInstanceArray.Add(OneRenderObjectUniformBuffer.get());
+    m_oneRenderObjectUniformBuffer_ = m_renderObject_->CreateShaderBindingInstance();
+    m_shaderBindingInstanceArray_.Add(m_oneRenderObjectUniformBuffer_.get());
 
-    if (m_material) {
-      m_shaderBindingInstanceArray.Add(
-          m_material->CreateShaderBindingInstance().get());
+    if (m_material_) {
+      m_shaderBindingInstanceArray_.Add(
+          m_material_->CreateShaderBindingInstance().get());
     }
   }
 
   // Gather ShaderBindings
   ShaderBindingLayoutArray shaderBindingLayoutArray;
-  for (int32_t i = 0; i < m_shaderBindingInstanceArray.NumOfData; ++i) {
+  for (int32_t i = 0; i < m_shaderBindingInstanceArray_.m_numOfData_; ++i) {
     // Add DescriptorSetLayout data
     shaderBindingLayoutArray.Add(
-        m_shaderBindingInstanceArray[i]->ShaderBindingsLayouts);
+        m_shaderBindingInstanceArray_[i]->m_shaderBindingsLayouts_);
 
     // Add shaderBindingInstanceCombiner data : DescriptorSets, DynamicOffsets
-    shaderBindingInstanceCombiner.DescriptorSetHandles.Add(
-        m_shaderBindingInstanceArray[i]->GetHandle());
+    m_shaderBindingInstanceCombiner_.m_descriptorSetHandles_.Add(
+        m_shaderBindingInstanceArray_[i]->GetHandle());
     const std::vector<uint32_t>* pDynamicOffsetTest
-        = m_shaderBindingInstanceArray[i]->GetDynamicOffsets();
+        = m_shaderBindingInstanceArray_[i]->GetDynamicOffsets();
     if (pDynamicOffsetTest && pDynamicOffsetTest->size()) {
-      shaderBindingInstanceCombiner.DynamicOffsets.Add(
+      m_shaderBindingInstanceCombiner_.m_dynamicOffsets_.Add(
           (void*)pDynamicOffsetTest->data(),
           (int32_t)pDynamicOffsetTest->size());
     }
   }
-  shaderBindingInstanceCombiner.m_shaderBindingInstanceArray
-      = &m_shaderBindingInstanceArray;
+  m_shaderBindingInstanceCombiner_.m_shaderBindingInstanceArray
+      = &m_shaderBindingInstanceArray_;
 
-  const auto& RenderObjectGeoDataPtr = RenderObject->GeometryDataPtr;
+  const auto& RenderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
 
   VertexBufferArray vertexBufferArray;
   vertexBufferArray.Add(
-      InIsPositionOnly
-          ? RenderObjectGeoDataPtr->VertexBuffer_PositionOnlyPtr.get()
-          : RenderObjectGeoDataPtr->VertexBufferPtr.get());
-  if (OverrideInstanceData) {
-    vertexBufferArray.Add(OverrideInstanceData);
-  } else if (RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr) {
+      isPositionOnly
+          ? RenderObjectGeoDataPtr->m_vertexBufferPositionOnlyPtr_.get()
+          : RenderObjectGeoDataPtr->m_vertexBufferPtr_.get());
+  if (m_overrideInstanceData_) {
+    vertexBufferArray.Add(m_overrideInstanceData_);
+  } else if (RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_) {
     vertexBufferArray.Add(
-        RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr.get());
+        RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get());
   }
 
   // Create Pipeline
-  CurrentPipelineStateInfo
+  m_currentPipelineStateInfo_
       = (PipelineStateInfo*)g_rhi->CreatePipelineStateInfo(
-          PipelineStateFixed,
-          Shader,
+          m_pipelineStateFixed_,
+          m_shader_,
           vertexBufferArray,
-          m_renderPass,
+          m_renderPass_,
           shaderBindingLayoutArray,
-          m_pushConstant,
-          SubpassIndex);
+          m_pushConstant_,
+          m_subpassIndex_);
 
-  IsPositionOnly = InIsPositionOnly;
+  m_isPositionOnly_ = isPositionOnly;
 }
 
 void DrawCommand::Draw() const {
-  assert(RenderFrameContextPtr);
+  assert(m_renderFrameContextPtr_);
 
   g_rhi->BindGraphicsShaderBindingInstances(
-      RenderFrameContextPtr->GetActiveCommandBuffer(),
-      CurrentPipelineStateInfo,
-      shaderBindingInstanceCombiner,
+      m_renderFrameContextPtr_->GetActiveCommandBuffer(),
+      m_currentPipelineStateInfo_,
+      m_shaderBindingInstanceCombiner_,
       0);
 
   // Bind the image that contains the shading rate patterns
 #if USE_VARIABLE_SHADING_RATE_TIER2
   if (gOptions.UseVRS) {
-    // TODO: change g_rhi1_vk
-    g_rhi1_vk->BindShadingRateImage(
+    g_rhi_vk->BindShadingRateImage(
         RenderFrameContextPtr->GetActiveCommandBuffer(),
-        g_rhi1_vk->GetSampleVRSTexture());
+        g_rhi_vk->GetSampleVRSTexture());
   }
 #endif
 
   // Bind Pipeline
-  CurrentPipelineStateInfo->Bind(RenderFrameContextPtr);
+  m_currentPipelineStateInfo_->Bind(m_renderFrameContextPtr_);
 
   // this is only for Vulkan for now
   // TODO: add check to Vulkan
   bool isUseVulkan = false;
   if (isUseVulkan) {
-    if (m_pushConstant && m_pushConstant->IsValid()) {
+    if (m_pushConstant_ && m_pushConstant_->IsValid()) {
       const ResourceContainer<PushConstantRange>* pushConstantRanges
-          = m_pushConstant->GetPushConstantRanges();
+          = m_pushConstant_->GetPushConstantRanges();
       assert(pushConstantRanges);
       if (pushConstantRanges) {
-        for (int32_t i = 0; i < pushConstantRanges->NumOfData; ++i) {
+        for (int32_t i = 0; i < pushConstantRanges->m_numOfData_; ++i) {
           const PushConstantRange& range = (*pushConstantRanges)[i];
           vkCmdPushConstants(
-              (VkCommandBuffer)RenderFrameContextPtr->GetActiveCommandBuffer()
+              (VkCommandBuffer)m_renderFrameContextPtr_->GetActiveCommandBuffer()
                   ->GetNativeHandle(),
-              ((PipelineStateInfoVk*)CurrentPipelineStateInfo)
-                  ->vkPipelineLayout,
-              GetVulkanShaderAccessFlags(range.AccessStageFlag),
-              range.Offset,
-              range.Size,
-              m_pushConstant->GetConstantData());
+              ((PipelineStateInfoVk*)m_currentPipelineStateInfo_)
+                  ->m_pipelineLayout_,
+              GetVulkanShaderAccessFlags(range.m_accessStageFlag_),
+              range.m_offset_,
+              range.m_size_,
+              m_pushConstant_->GetConstantData());
         }
       }
     }
   }
-  RenderObject->BindBuffers(
-      RenderFrameContextPtr, IsPositionOnly, OverrideInstanceData);
+  m_renderObject_->BindBuffers(
+      m_renderFrameContextPtr_, m_isPositionOnly_, m_overrideInstanceData_);
 
   // Draw
-  const auto&          RenderObjectGeoDataPtr = RenderObject->GeometryDataPtr;
+  const auto&          RenderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
   const VertexBuffer* InstanceData
-      = OverrideInstanceData
-          ? OverrideInstanceData
-          : RenderObjectGeoDataPtr->VertexBuffer_InstanceDataPtr.get();
+      = m_overrideInstanceData_
+          ? m_overrideInstanceData_
+          : RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get();
   const int32_t InstanceCount
       = InstanceData ? InstanceData->GetElementCount() : 1;
-  RenderObject->Draw(RenderFrameContextPtr, InstanceCount);
+  m_renderObject_->Draw(m_renderFrameContextPtr_, InstanceCount);
 }
 
 }  // namespace game_engine

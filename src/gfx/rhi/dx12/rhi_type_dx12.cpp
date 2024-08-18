@@ -5,16 +5,16 @@
 
 namespace game_engine {
 void CreatedResource::Free() {
-  if (Resource) {
-    if (ResourceType == CreatedResource::EType::Standalone) {
+  if (m_resource_) {
+    if (m_resourceType_ == CreatedResource::EType::Standalone) {
       if (g_rhi_dx12) {
-        g_rhi_dx12->DeallocatorMultiFrameStandaloneResource.Free(Resource);
+        g_rhi_dx12->m_deallocatorMultiFrameStandaloneResource_.Free(m_resource_);
       }
-    } else if (ResourceType == CreatedResource::EType::ResourcePool) {
+    } else if (m_resourceType_ == CreatedResource::EType::ResourcePool) {
       if (g_rhi_dx12) {
-        g_rhi_dx12->DeallocatorMultiFramePlacedResource.Free(Resource);
+        g_rhi_dx12->m_deallocatorMultiFramePlacedResource_.Free(m_resource_);
       }
-    } else if (ResourceType == CreatedResource::EType::Swapchain) {
+    } else if (m_resourceType_ == CreatedResource::EType::Swapchain) {
       // Nothing to do
     } else {
       assert(0);
