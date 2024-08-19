@@ -699,7 +699,7 @@ std::shared_ptr<Texture> RhiVk::CreateTextureFromData(
   return TexturePtr;
 }
 
-bool RhiVk::CreateShaderInternal(Shader*           OutShader,
+bool RhiVk::CreateShaderInternal(Shader*           shader,
                                  const ShaderInfo& shaderInfo) const {
   auto CreateShaderModule
       = [m_device_ = this->m_device_](
@@ -746,7 +746,7 @@ bool RhiVk::CreateShaderInternal(Shader*           OutShader,
   };
 
   std::vector<Name> IncludeFilePaths;
-  Shader*           shader_vk = OutShader;
+  Shader*           shader_vk = shader;
   assert(shader_vk->GetPermutationCount());
   {
     assert(!shader_vk->m_compiledShader);
@@ -1458,41 +1458,41 @@ std::shared_ptr<IUniformBufferBlock> RhiVk::CreateUniformBufferBlock(
 
 // Create Images
 VkImageUsageFlags RhiVk::GetImageUsageFlags(
-    ETextureCreateFlag InTextureCreateFlag) const {
+    ETextureCreateFlag textureCreateFlag) const {
   // TODO: remove this method (currently not needed)
 
   VkImageUsageFlags UsageFlag = VK_IMAGE_USAGE_SAMPLED_BIT;
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::RTV)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
     UsageFlag |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   }
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::DSV)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::DSV)) {
     UsageFlag |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
   }
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::UAV)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::UAV)) {
     UsageFlag |= VK_IMAGE_USAGE_STORAGE_BIT;
   }
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::TransferSrc)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::TransferSrc)) {
     UsageFlag |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
   }
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::TransferDst)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::TransferDst)) {
     UsageFlag |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   }
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::ShadingRate)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::ShadingRate)) {
     UsageFlag |= VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
   }
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::SubpassInput)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::SubpassInput)) {
     UsageFlag |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
   }
 
   // This should be placed last, because Memoryless has only Color, Depth,
   // Input attachment usages.
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::Memoryless)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::Memoryless)) {
     UsageFlag &= ~(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
                    | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
                    | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT);
@@ -1502,11 +1502,11 @@ VkImageUsageFlags RhiVk::GetImageUsageFlags(
 }
 
 VkMemoryPropertyFlagBits RhiVk::GetMemoryPropertyFlagBits(
-    ETextureCreateFlag InTextureCreateFlag) const {
+    ETextureCreateFlag textureCreateFlag) const {
   // TODO: remove this method (currently not needed)
 
   VkMemoryPropertyFlagBits PropertyFlagBits{};
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::CPUAccess)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::CPUAccess)) {
     PropertyFlagBits
         = (VkMemoryPropertyFlagBits)(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
                                      | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -1517,25 +1517,25 @@ VkMemoryPropertyFlagBits RhiVk::GetMemoryPropertyFlagBits(
 std::shared_ptr<Texture> RhiVk::Create2DTexture(
     uint32_t             witdh,
     uint32_t             height,
-    uint32_t             InArrayLayers,
-    uint32_t             InMipLevels,
+    uint32_t             arrayLayers,
+    uint32_t             mipLevels,
     ETextureFormat       format,
-    ETextureCreateFlag   InTextureCreateFlag,
-    EResourceLayout      InImageLayout,
-    const ImageBulkData& InImageBulkData,
-    const RTClearValue&  InClearValue,
+    ETextureCreateFlag   textureCreateFlag,
+    EResourceLayout      imageLayout,
+    const ImageBulkData& imageBulkData,
+    const RTClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   VkImageCreateFlagBits          ImageCreateFlags{};
   const VkMemoryPropertyFlagBits PropertyFlagBits
-      = GetMemoryPropertyFlagBits(InTextureCreateFlag);
-  const VkImageUsageFlags UsageFlag = GetImageUsageFlags(InTextureCreateFlag);
+      = GetMemoryPropertyFlagBits(textureCreateFlag);
+  const VkImageUsageFlags UsageFlag = GetImageUsageFlags(textureCreateFlag);
   assert(!IsDepthFormat(format)
          || (IsDepthFormat(format)
              && (UsageFlag & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
 
   auto TexturePtr = game_engine::Create2DTexture(witdh,
                                                  height,
-                                                 InMipLevels,
+                                                 mipLevels,
                                                  VK_SAMPLE_COUNT_1_BIT,
                                                  GetVulkanTextureFormat(format),
                                                  VK_IMAGE_TILING_OPTIMAL,
@@ -1544,27 +1544,27 @@ std::shared_ptr<Texture> RhiVk::Create2DTexture(
                                                  ImageCreateFlags,
                                                  VK_IMAGE_LAYOUT_UNDEFINED);
 
-  if (InImageBulkData.m_imageData_.size() > 0) {
+  if (imageBulkData.m_imageData_.size() > 0) {
     // todo : recycle temp buffer
     auto stagingBufferPtr = CreateBuffer(
         EVulkanBufferBits::TRANSFER_SRC,
         EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-        InImageBulkData.m_imageData_.size(),
+        imageBulkData.m_imageData_.size(),
         EResourceLayout::TRANSFER_SRC);
 
-    stagingBufferPtr->UpdateBuffer(&InImageBulkData.m_imageData_[0],
-                                   InImageBulkData.m_imageData_.size());
+    stagingBufferPtr->UpdateBuffer(&imageBulkData.m_imageData_[0],
+                                   imageBulkData.m_imageData_.size());
 
     auto commandBuffer = BeginSingleTimeCommands();
     assert(TransitionLayout(
         commandBuffer, TexturePtr.get(), EResourceLayout::TRANSFER_DST));
 
-    if (InImageBulkData.m_subresourceFootprints_.size() > 0) {
+    if (imageBulkData.m_subresourceFootprints_.size() > 0) {
       for (int32_t i = 0;
-           i < (int32_t)InImageBulkData.m_subresourceFootprints_.size();
+           i < (int32_t)imageBulkData.m_subresourceFootprints_.size();
            ++i) {
         const ImageSubResourceData SubResourceData
-            = InImageBulkData.m_subresourceFootprints_[i];
+            = imageBulkData.m_subresourceFootprints_[i];
 
         CopyBufferToTexture(
             commandBuffer->GetRef(),
@@ -1585,7 +1585,7 @@ std::shared_ptr<Texture> RhiVk::Create2DTexture(
                           height);
     }
 
-    assert(TransitionLayout(commandBuffer, TexturePtr.get(), InImageLayout));
+    assert(TransitionLayout(commandBuffer, TexturePtr.get(), imageLayout));
 
     EndSingleTimeCommands(commandBuffer);
   }
@@ -1596,17 +1596,17 @@ std::shared_ptr<Texture> RhiVk::Create2DTexture(
 std::shared_ptr<Texture> RhiVk::CreateCubeTexture(
     uint32_t             witdh,
     uint32_t             height,
-    uint32_t             InMipLevels,
+    uint32_t             mipLevels,
     ETextureFormat       format,
-    ETextureCreateFlag   InTextureCreateFlag,
-    EResourceLayout      InImageLayout,
-    const ImageBulkData& InImageBulkData,
-    const RTClearValue&  InClearValue,
+    ETextureCreateFlag   textureCreateFlag,
+    EResourceLayout      imageLayout,
+    const ImageBulkData& imageBulkData,
+    const RTClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   VkImageCreateFlagBits ImageCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
   const VkMemoryPropertyFlagBits PropertyFlagBits
-      = GetMemoryPropertyFlagBits(InTextureCreateFlag);
-  const VkImageUsageFlags UsageFlag = GetImageUsageFlags(InTextureCreateFlag);
+      = GetMemoryPropertyFlagBits(textureCreateFlag);
+  const VkImageUsageFlags UsageFlag = GetImageUsageFlags(textureCreateFlag);
   assert(!IsDepthFormat(format)
          || (IsDepthFormat(format)
              && (UsageFlag & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
@@ -1614,7 +1614,7 @@ std::shared_ptr<Texture> RhiVk::CreateCubeTexture(
   auto TexturePtr
       = game_engine::CreateCubeTexture(witdh,
                                        height,
-                                       InMipLevels,
+                                       mipLevels,
                                        VK_SAMPLE_COUNT_1_BIT,
                                        GetVulkanTextureFormat(format),
                                        VK_IMAGE_TILING_OPTIMAL,
@@ -1623,27 +1623,27 @@ std::shared_ptr<Texture> RhiVk::CreateCubeTexture(
                                        ImageCreateFlags,
                                        VK_IMAGE_LAYOUT_UNDEFINED);
 
-  if (InImageBulkData.m_imageData_.size() > 0) {
+  if (imageBulkData.m_imageData_.size() > 0) {
     // todo : recycle temp buffer
     auto stagingBufferPtr = game_engine::CreateBuffer(
         EVulkanBufferBits::TRANSFER_SRC,
         EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-        InImageBulkData.m_imageData_.size(),
+        imageBulkData.m_imageData_.size(),
         EResourceLayout::TRANSFER_SRC);
 
-    stagingBufferPtr->UpdateBuffer(&InImageBulkData.m_imageData_[0],
-                                   InImageBulkData.m_imageData_.size());
+    stagingBufferPtr->UpdateBuffer(&imageBulkData.m_imageData_[0],
+                                   imageBulkData.m_imageData_.size());
 
     auto commandBuffer = BeginSingleTimeCommands();
     assert(TransitionLayout(
         commandBuffer, TexturePtr.get(), EResourceLayout::TRANSFER_DST));
 
-    if (InImageBulkData.m_subresourceFootprints_.size() > 0) {
+    if (imageBulkData.m_subresourceFootprints_.size() > 0) {
       for (int32_t i = 0;
-           i < (int32_t)InImageBulkData.m_subresourceFootprints_.size();
+           i < (int32_t)imageBulkData.m_subresourceFootprints_.size();
            ++i) {
         const ImageSubResourceData SubResourceData
-            = InImageBulkData.m_subresourceFootprints_[i];
+            = imageBulkData.m_subresourceFootprints_[i];
 
         CopyBufferToTexture(
             commandBuffer->GetRef(),
@@ -1664,7 +1664,7 @@ std::shared_ptr<Texture> RhiVk::CreateCubeTexture(
                           height);
     }
 
-    assert(TransitionLayout(commandBuffer, TexturePtr.get(), InImageLayout));
+    assert(TransitionLayout(commandBuffer, TexturePtr.get(), imageLayout));
 
     EndSingleTimeCommands(commandBuffer);
   }
@@ -1983,7 +1983,7 @@ void RhiVk::EndRenderFrame(
 
 void RhiVk::QueueSubmit(
     const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-    Semaphore*                                 InSignalSemaphore) {
+    Semaphore*                                 signalSemaphore) {
   auto renderFrameContext = (RenderFrameContextVk*)renderFrameContextPtr.get();
   assert(renderFrameContext);
 
@@ -2011,10 +2011,10 @@ void RhiVk::QueueSubmit(
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers    = &vkCommandBuffer;
 
-  renderFrameContext->m_currentWaitSemaphore_ = InSignalSemaphore;
+  renderFrameContext->m_currentWaitSemaphore_ = signalSemaphore;
 
   VkSemaphore signalSemaphores[]
-      = {(VkSemaphore)InSignalSemaphore->GetHandle()};
+      = {(VkSemaphore)signalSemaphore->GetHandle()};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores    = signalSemaphores;
 

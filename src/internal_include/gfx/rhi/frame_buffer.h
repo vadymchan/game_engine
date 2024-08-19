@@ -47,12 +47,12 @@ struct FrameBuffer : public std::enable_shared_from_this<FrameBuffer> {
 
   //virtual ETextureType GetTextureType() const { return Info.TextureType; }
 
-  //virtual bool SetDepthAttachment(const std::shared_ptr<Texture>& InDepth) {
-  //  TextureDepth = InDepth;
+  //virtual bool SetDepthAttachment(const std::shared_ptr<Texture>& depth) {
+  //  TextureDepth = depth;
   //  return true;
   //}
 
-  //virtual void SetDepthMipLevel(int32_t InLevel) {}
+  //virtual void SetDepthMipLevel(int32_t level) {}
 
   //virtual bool FBOBegin(int index = 0, bool mrt = false) const { return true; }
 

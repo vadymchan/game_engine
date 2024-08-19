@@ -27,12 +27,12 @@ void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
 }
 
 void RenderFrameContextVk::QueueSubmitCurrentActiveCommandBuffer(
-    Semaphore* InSignalSemaphore) {
+    Semaphore* signalSemaphore) {
   if (m_commandBuffer_) {
     // TODO: temoporary removed
     // m_commandBuffer->End();
 
-    g_rhi_vk->QueueSubmit(shared_from_this(), InSignalSemaphore);
+    g_rhi_vk->QueueSubmit(shared_from_this(), signalSemaphore);
     g_rhi_vk->GetCommandBufferManager()->ReturnCommandBuffer(m_commandBuffer_);
 
     // get new command buffer

@@ -52,12 +52,12 @@ struct DescriptorPoolVk {
 
   virtual ~DescriptorPoolVk();
 
-  virtual void Create(uint32_t InMaxDescriptorSets = 128);
+  virtual void Create(uint32_t maxDescriptorSets = 128);
 
   virtual void Reset();
 
   virtual std::shared_ptr<ShaderBindingInstance> AllocateDescriptorSet(
-      VkDescriptorSetLayout InLayout);
+      VkDescriptorSetLayout layout);
 
   virtual void Free(
       std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);

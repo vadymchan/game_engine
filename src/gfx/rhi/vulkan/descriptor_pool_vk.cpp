@@ -13,7 +13,7 @@ DescriptorPoolVk::~DescriptorPoolVk() {
   m_deallocateMultiframeShaderBindingInstance_.m_freeDelegate_ = nullptr;
 }
 
-void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
+void DescriptorPoolVk::Create(uint32_t maxDescriptorSets) {
   if (m_descriptorPool_) {
     vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
     m_descriptorPool_ = nullptr;
@@ -28,7 +28,7 @@ void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
 
   assert(!m_descriptorPool_);
 
-  m_maxDescriptorSets_ = InMaxDescriptorSets;
+  m_maxDescriptorSets_ = maxDescriptorSets;
   
   // TODO: remove (old version)
   // constexpr int32_t    NumOfPoolSize = std::size(DefaultPoolSizes);
@@ -41,7 +41,7 @@ void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
   //      = static_cast<EShaderBindingType>(VK_DESCRIPTOR_TYPE_SAMPLER + i);
 
   //  PoolSizes[i] = static_cast<uint32_t>(
-  //      std::max(DefaultPoolSizes[i] * InMaxDescriptorSets, 4.0f));
+  //      std::max(DefaultPoolSizes[i] * maxDescriptorSets, 4.0f));
 
   //  Types[i].type            = GetVulkanShaderBindingType(DescriptorType);
   //  Types[i].descriptorCount = PoolSizes[i];
@@ -51,7 +51,7 @@ void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
 
   for (uint32_t i = 0; const auto& descriptorTypePair : DefaultPoolSizes) {
     uint32_t poolSize = static_cast<uint32_t>(
-        std::max(descriptorTypePair.second * InMaxDescriptorSets, 4.0f));
+        std::max(descriptorTypePair.second * maxDescriptorSets, 4.0f));
 
     if (descriptorTypePair.first
         == VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT) {
@@ -67,7 +67,7 @@ void DescriptorPoolVk::Create(uint32_t InMaxDescriptorSets) {
   PoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   PoolInfo.poolSizeCount = Types.size();
   PoolInfo.pPoolSizes    = Types.data();
-  PoolInfo.maxSets       = InMaxDescriptorSets;
+  PoolInfo.maxSets       = maxDescriptorSets;
   PoolInfo.flags
       = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;  // for bindless
                                                           // resources
@@ -94,10 +94,10 @@ void DescriptorPoolVk::Reset() {
 }
 
 std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
-    VkDescriptorSetLayout InLayout) {
+    VkDescriptorSetLayout layout) {
   ScopedLock s(&m_descriptorPoolLock_);
 #if !USE_RESET_DESCRIPTOR_POOL
-  const auto it_find = m_pendingDescriptorSets_.find(InLayout);
+  const auto it_find = m_pendingDescriptorSets_.find(layout);
   if (it_find != m_pendingDescriptorSets_.end()) {
     ShaderBindingInstancePtrArray& pendingPools = it_find->second;
     if (pendingPools.size()) {
@@ -115,7 +115,7 @@ std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
       = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   DescriptorSetAllocateInfo.descriptorPool     = m_descriptorPool_;
   DescriptorSetAllocateInfo.descriptorSetCount = 1;
-  DescriptorSetAllocateInfo.pSetLayouts        = &InLayout;
+  DescriptorSetAllocateInfo.pSetLayouts        = &layout;
 
   VkDescriptorSet NewDescriptorSet = nullptr;
 
@@ -132,7 +132,7 @@ std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::AllocateDescriptorSet(
       = std::shared_ptr<ShaderBindingInstanceVk>(NewShaderBindingInstanceVk);
 
 #if !USE_RESET_DESCRIPTOR_POOL
-  m_allocatedDescriptorSets_[InLayout].push_back(NewCachedDescriptorSet);
+  m_allocatedDescriptorSets_[layout].push_back(NewCachedDescriptorSet);
 #endif
 
   return NewCachedDescriptorSet;

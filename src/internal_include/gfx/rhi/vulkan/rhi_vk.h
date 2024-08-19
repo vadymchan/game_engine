@@ -72,7 +72,7 @@ class RhiVk : public RHI {
       const ImageData* imageData) const override;
 
   virtual bool CreateShaderInternal(
-      Shader* OutShader, const ShaderInfo& shaderInfo) const override;
+      Shader* shader, const ShaderInfo& shaderInfo) const override;
 
   virtual FrameBuffer* CreateFrameBuffer(
       const FrameBufferInfo& info) const override;
@@ -202,32 +202,32 @@ class RhiVk : public RHI {
 
   // Create Images
   VkImageUsageFlags GetImageUsageFlags(
-      ETextureCreateFlag InTextureCreateFlag) const;
+      ETextureCreateFlag textureCreateFlag) const;
 
   VkMemoryPropertyFlagBits GetMemoryPropertyFlagBits(
-      ETextureCreateFlag InTextureCreateFlag) const;
+      ETextureCreateFlag textureCreateFlag) const;
 
   virtual std::shared_ptr<Texture> Create2DTexture(
       uint32_t             witdh,
       uint32_t             height,
-      uint32_t             InArrayLayers,
-      uint32_t             InMipLevels,
+      uint32_t             arrayLayers,
+      uint32_t             mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const override;
 
   virtual std::shared_ptr<Texture> CreateCubeTexture(
       uint32_t             witdh,
       uint32_t             height,
-      uint32_t             InMipLevels,
+      uint32_t             mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const override;
 
   void RemovePipelineStateInfo(size_t hash) {
@@ -413,7 +413,7 @@ class RhiVk : public RHI {
 
   void QueueSubmit(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      Semaphore*                                  InSignalSemaphore) override;
+      Semaphore*                                  signalSemaphore) override;
 
   virtual CommandBufferVk* BeginSingleTimeCommands() const override;
 

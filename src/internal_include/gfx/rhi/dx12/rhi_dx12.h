@@ -78,13 +78,13 @@ struct PlacedResourcePool {
   void Init();
   void Release();
 
-  const PlacedResource Alloc(size_t InRequestedSize, bool InIsUploadResource) {
+  const PlacedResource Alloc(size_t requestedSize, bool isUploadResource) {
     ScopedLock s(&m_lock_);
 
     auto& PendingList
-        = GetPendingPlacedResources(InIsUploadResource, InRequestedSize);
+        = GetPendingPlacedResources(isUploadResource, requestedSize);
     for (int32_t i = 0; i < (int32_t)PendingList.size(); ++i) {
-      if (PendingList[i].m_size_ >= InRequestedSize) {
+      if (PendingList[i].m_size_ >= requestedSize) {
         PlacedResource resource = PendingList[i];
         PendingList.erase(PendingList.begin() + i);
         m_usingPlacedResources_.insert(
@@ -98,12 +98,12 @@ struct PlacedResourcePool {
 
   void Free(const ComPtr<ID3D12Resource>& data);
 
-  void AddUsingPlacedResource(const PlacedResource InPlacedResource) {
-    assert(InPlacedResource.IsValid());
+  void AddUsingPlacedResource(const PlacedResource placedResource) {
+    assert(placedResource.IsValid());
     {
       ScopedLock s(&m_lock_);
       m_usingPlacedResources_.insert(std::make_pair(
-          InPlacedResource.m_placedSubResource_.Get(), InPlacedResource));
+          placedResource.m_placedSubResource_.Get(), placedResource));
     }
   }
 
@@ -116,11 +116,11 @@ struct PlacedResourcePool {
   }
 
   std::vector<PlacedResource>& GetPendingPlacedResources(
-      bool InIsUploadPlacedResource, size_t size) {
+      bool isUploadPlacedResource, size_t size) {
     const int32_t Index = (int32_t)GetPoolSizeType(size);
     assert(Index != (int32_t)EPoolSizeType::MAX);
-    return InIsUploadPlacedResource ? m_pendingUploadPlacedResources_[Index]
-                                    : m_pendingPlacedResources_[Index];
+    return isUploadPlacedResource ? m_pendingUploadPlacedResources_[Index]
+                                  : m_pendingPlacedResources_[Index];
   }
 
   // PoolSize
@@ -153,14 +153,14 @@ class RhiDx12 : public RHI {
 
   template <typename T>
   std::shared_ptr<CreatedResource> CreateResource(
-      T&&                   InDesc,
-      D3D12_RESOURCE_STATES InResourceState,
-      D3D12_CLEAR_VALUE*    InClearValue = nullptr) {
+      T&&                   desc,
+      D3D12_RESOURCE_STATES resourceState,
+      D3D12_CLEAR_VALUE*    clearValue = nullptr) {
     assert(m_device_);
 
     if (s_kIsUsePlacedResource) {
       const D3D12_RESOURCE_ALLOCATION_INFO info
-          = m_device_->GetResourceAllocationInfo(0, 1, InDesc);
+          = m_device_->GetResourceAllocationInfo(0, 1, desc);
 
       PlacedResource ReusePlacedResource
           = m_placedResourcePool_.Alloc(info.SizeInBytes, false);
@@ -179,13 +179,13 @@ class RhiDx12 : public RHI {
           assert(m_placedResourceDefaultHeap_);
 
           ComPtr<ID3D12Resource> NewResource;
-          HRESULT                hr
-              = m_device_->CreatePlacedResource(m_placedResourceDefaultHeap_.Get(),
-                                             m_placedResourceDefaultHeapOffset_,
-                                             std::forward<T>(InDesc),
-                                             InResourceState,
-                                             InClearValue,
-                                             IID_PPV_ARGS(&NewResource));
+          HRESULT                hr = m_device_->CreatePlacedResource(
+              m_placedResourceDefaultHeap_.Get(),
+              m_placedResourceDefaultHeapOffset_,
+              std::forward<T>(desc),
+              resourceState,
+              clearValue,
+              IID_PPV_ARGS(&NewResource));
           assert(SUCCEEDED(hr));
 
           m_placedResourceDefaultHeapOffset_ += info.SizeInBytes;
@@ -205,26 +205,26 @@ class RhiDx12 : public RHI {
     const CD3DX12_HEAP_PROPERTIES& HeapProperties
         = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     ComPtr<ID3D12Resource> NewResource;
-    HRESULT                hr = m_device_->CreateCommittedResource(&HeapProperties,
-                                                 D3D12_HEAP_FLAG_NONE,
-                                                 std::forward<T>(InDesc),
-                                                 InResourceState,
-                                                 InClearValue,
-                                                 IID_PPV_ARGS(&NewResource));
+    HRESULT hr = m_device_->CreateCommittedResource(&HeapProperties,
+                                                    D3D12_HEAP_FLAG_NONE,
+                                                    std::forward<T>(desc),
+                                                    resourceState,
+                                                    clearValue,
+                                                    IID_PPV_ARGS(&NewResource));
     assert(SUCCEEDED(hr));
     return CreatedResource::CreatedFromStandalone(NewResource);
   }
 
   template <typename T>
   std::shared_ptr<CreatedResource> CreateUploadResource(
-      T&&                   InDesc,
-      D3D12_RESOURCE_STATES InResourceState,
-      D3D12_CLEAR_VALUE*    InClearValue = nullptr) {
+      T&&                   desc,
+      D3D12_RESOURCE_STATES resourceState,
+      D3D12_CLEAR_VALUE*    clearValue = nullptr) {
     assert(m_device_);
 
     if (s_kIsUsePlacedResource) {
       const D3D12_RESOURCE_ALLOCATION_INFO info
-          = m_device_->GetResourceAllocationInfo(0, 1, InDesc);
+          = m_device_->GetResourceAllocationInfo(0, 1, desc);
 
       PlacedResource ReusePlacedUploadResource
           = m_placedResourcePool_.Alloc(info.SizeInBytes, true);
@@ -243,13 +243,13 @@ class RhiDx12 : public RHI {
           assert(m_placedResourceUploadHeap_);
 
           ComPtr<ID3D12Resource> NewResource;
-          HRESULT                hr
-              = m_device_->CreatePlacedResource(m_placedResourceUploadHeap_.Get(),
-                                             m_placedResourceDefaultUploadOffset_,
-                                             std::forward<T>(InDesc),
-                                             InResourceState,
-                                             InClearValue,
-                                             IID_PPV_ARGS(&NewResource));
+          HRESULT                hr = m_device_->CreatePlacedResource(
+              m_placedResourceUploadHeap_.Get(),
+              m_placedResourceDefaultUploadOffset_,
+              std::forward<T>(desc),
+              resourceState,
+              clearValue,
+              IID_PPV_ARGS(&NewResource));
           assert(SUCCEEDED(hr));
 
           m_placedResourceDefaultUploadOffset_ += info.SizeInBytes;
@@ -268,12 +268,12 @@ class RhiDx12 : public RHI {
     const CD3DX12_HEAP_PROPERTIES& HeapProperties
         = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
     ComPtr<ID3D12Resource> NewResource;
-    HRESULT                hr = m_device_->CreateCommittedResource(&HeapProperties,
-                                                 D3D12_HEAP_FLAG_NONE,
-                                                 std::forward<T>(InDesc),
-                                                 InResourceState,
-                                                 InClearValue,
-                                                 IID_PPV_ARGS(&NewResource));
+    HRESULT hr = m_device_->CreateCommittedResource(&HeapProperties,
+                                                    D3D12_HEAP_FLAG_NONE,
+                                                    std::forward<T>(desc),
+                                                    resourceState,
+                                                    clearValue,
+                                                    IID_PPV_ARGS(&NewResource));
 
     assert(SUCCEEDED(hr));
     return CreatedResource::CreatedFromStandalone(NewResource);
@@ -324,7 +324,7 @@ class RhiDx12 : public RHI {
   virtual uint32_t GetCurrentFrameIndex() const { return m_currentFrameIndex_; }
 
   virtual bool CreateShaderInternal(
-      Shader* OutShader, const ShaderInfo& shaderInfo) const override;
+      Shader* shader, const ShaderInfo& shaderInfo) const override;
 
   virtual RenderPass* GetOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
@@ -395,38 +395,38 @@ class RhiDx12 : public RHI {
 
   virtual void DrawArrays(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       int32_t                                    vertStartIndex,
       int32_t                                    vertCount) const override;
   virtual void DrawArraysInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       int32_t                                    vertStartIndex,
       int32_t                                    vertCount,
       int32_t                                    instanceCount) const override;
   virtual void DrawElements(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount) const override;
   virtual void DrawElementsInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount,
       int32_t                                    instanceCount) const override;
   virtual void DrawElementsBaseVertex(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount,
       int32_t baseVertexIndex) const override;
   virtual void DrawElementsInstancedBaseVertex(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount,
@@ -434,13 +434,13 @@ class RhiDx12 : public RHI {
       int32_t                                    instanceCount) const override;
   virtual void DrawIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       Buffer*                                    buffer,
       int32_t                                    startIndex,
       int32_t                                    drawCount) const override;
   virtual void DrawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       Buffer*                                    buffer,
       int32_t                                    startIndex,
       int32_t                                    drawCount) const override;
@@ -491,7 +491,7 @@ class RhiDx12 : public RHI {
   // TODO: implement
   // virtual void BeginDebugEvent(CommandBuffer*        commandBuffer,
   //                             const char*            name,
-  //                             const math::Vector4Df& InColor
+  //                             const math::Vector4Df& color
   //                             = math::ColorGreen) const override;
 
   // virtual void EndDebugEvent(CommandBuffer* commandBuffer) const override;
@@ -541,25 +541,25 @@ class RhiDx12 : public RHI {
   virtual std::shared_ptr<Texture> Create2DTexture(
       uint32_t             witdh,
       uint32_t             height,
-      uint32_t             InArrayLayers,
-      uint32_t             InMipLevels,
+      uint32_t             arrayLayers,
+      uint32_t             mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName    = nullptr) const override;
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName  = nullptr) const override;
 
   virtual std::shared_ptr<Texture> CreateCubeTexture(
       uint32_t             witdh,
       uint32_t             height,
-      uint32_t             InMipLevels,
+      uint32_t             mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName    = nullptr) const override;
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
+      const wchar_t*       resourceName  = nullptr) const override;
   //////////////////////////////////////////////////////////////////////////
 
   virtual bool IsSupportVSync() const override;
@@ -576,7 +576,7 @@ class RhiDx12 : public RHI {
 
   //////////////////////////////////////////////////////////////////////////
   // 2. Command
-  CommandBufferManagerDx12* m_commandBufferManager_   = nullptr;
+  CommandBufferManagerDx12* m_commandBufferManager_     = nullptr;
   CommandBufferManagerDx12* m_copyCommandBufferManager_ = nullptr;
 
   //////////////////////////////////////////////////////////////////////////
@@ -602,8 +602,8 @@ class RhiDx12 : public RHI {
   HWND m_hWnd = 0;
 
   // TODO: seems not used
-  //float m_focalDistance_ = 10.0f;
-  //float m_lensRadius_    = 0.2f;
+  // float m_focalDistance_ = 10.0f;
+  // float m_lensRadius_    = 0.2f;
 
   //////////////////////////////////////////////////////////////////////////
 
@@ -635,12 +635,13 @@ class RhiDx12 : public RHI {
       = 0;  // FrameNumber is just Incremented frame by frame.
 
   static std::unordered_map<size_t, ShaderBindingLayout*> s_shaderBindingPool;
-  mutable MutexRWLock                                     m_shaderBindingPoolLock_;
+  mutable MutexRWLock m_shaderBindingPoolLock_;
 
   static TResourcePool<SamplerStateInfoDx12, MutexRWLock> s_samplerStatePool;
   static TResourcePool<RasterizationStateInfoDx12, MutexRWLock>
       s_rasterizationStatePool;
-  static TResourcePool<StencilOpStateInfoDx12, MutexRWLock> s_stencilOpStatePool;
+  static TResourcePool<StencilOpStateInfoDx12, MutexRWLock>
+      s_stencilOpStatePool;
   static TResourcePool<DepthStencilStateInfoDx12, MutexRWLock>
       s_depthStencilStatePool;
   static TResourcePool<BlendingStateInfoDx12, MutexRWLock> s_blendingStatePool;
@@ -651,7 +652,8 @@ class RhiDx12 : public RHI {
   DeallocatorMultiFrameShaderBindingInstance
       m_deallocatorMultiFrameShaderBindingInstance_;
   DeallocatorMultiFrameCreatedResource m_deallocatorMultiFramePlacedResource_;
-  DeallocatorMultiFrameCreatedResource m_deallocatorMultiFrameStandaloneResource_;
+  DeallocatorMultiFrameCreatedResource
+      m_deallocatorMultiFrameStandaloneResource_;
 
   private:
   // TODO: consider whether need in this place

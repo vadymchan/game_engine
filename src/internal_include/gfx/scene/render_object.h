@@ -42,17 +42,17 @@ class RenderObjectGeometryData {
     m_vertexStreamPositionOnlyPtr_.reset();
   }
 
-  void Create(const std::shared_ptr<VertexStreamData>& InVertexStream,
+  void Create(const std::shared_ptr<VertexStreamData>& vertexStream,
               const std::shared_ptr<IndexStreamData>&  indexStream,
-              bool                                     InHasVertexColor = true,
-              bool InHasVertexBiTangent = false);
+              bool                                     hasVertexColor = true,
+              bool hasVertexBiTangent = false);
 
   void CreateNew_ForRaytracing(
-      const std::shared_ptr<VertexStreamData>& InVertexStream,
-      const std::shared_ptr<VertexStreamData>& InVertexStream_PositionOnly,
+      const std::shared_ptr<VertexStreamData>& vertexStream,
+      const std::shared_ptr<VertexStreamData>& vertexStream_PositionOnly,
       const std::shared_ptr<IndexStreamData>&  indexStream,
-      bool                                     InHasVertexColor     = false,
-      bool                                     InHasVertexBiTangent = true);
+      bool                                     hasVertexColor     = false,
+      bool                                     hasVertexBiTangent = true);
 
   // Vertex buffers
   void UpdateVertexStream(
@@ -96,8 +96,8 @@ class RenderObject {
 
   virtual void CreateRenderObject(
       const std::shared_ptr<RenderObjectGeometryData>&
-          InRenderObjectGeometryData) {
-    m_geometryDataPtr_ = InRenderObjectGeometryData;
+          renderObjectGeometryData) {
+    m_geometryDataPtr_ = renderObjectGeometryData;
     UpdateWorldMatrix();
   }
 
@@ -121,8 +121,8 @@ class RenderObject {
 
   virtual void BindBuffers(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      bool                                       InPositionOnly,
-      const VertexBuffer* InOverrideInstanceData = nullptr) const;
+      bool                                       positionOnly,
+      const VertexBuffer* overrideInstanceData = nullptr) const;
 
   const std::vector<float>& GetVertices() const;
 
@@ -168,18 +168,18 @@ class RenderObject {
     return (T*)m_vertexAndIndexOffsetBuffer_.get();
   }
 
-  void SetPos(const math::Vector3Df& InPos) {
-    m_position_ = InPos;
+  void SetPos(const math::Vector3Df& position) {
+    m_position_ = position;
     SetDirtyFlags(EDirty::POS);
   }
 
-  void SetRot(const math::Vector3Df& InRot) {
-    m_rotation_ = InRot;
+  void SetRot(const math::Vector3Df& rotation) {
+    m_rotation_ = rotation;
     SetDirtyFlags(EDirty::ROT);
   }
 
-  void SetScale(const math::Vector3Df& InScale) {
-    m_scale_ = InScale;
+  void SetScale(const math::Vector3Df& scale) {
+    m_scale_ = scale;
     SetDirtyFlags(EDirty::SCALE);
   }
 
@@ -221,15 +221,16 @@ class RenderObject {
 
   EDirty m_dirtyFlags_ = EDirty::POS_ROT_SCALE;
 
-  void SetDirtyFlags(EDirty InEnum) {
+  // TODO: conside renaming 
+  void SetDirtyFlags(EDirty inEnum) {
     using T       = std::underlying_type<EDirty>::type;
-    m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(InEnum)
+    m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(inEnum)
                                         | static_cast<T>(m_dirtyFlags_));
   }
 
-  void ClearDirtyFlags(EDirty InEnum) {
+  void ClearDirtyFlags(EDirty inEnum) {
     using T       = std::underlying_type<EDirty>::type;
-    m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(InEnum)
+    m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(inEnum)
                                         & (!static_cast<T>(m_dirtyFlags_)));
   }
 

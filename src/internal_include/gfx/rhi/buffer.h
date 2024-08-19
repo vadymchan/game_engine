@@ -168,13 +168,13 @@ struct VertexBuffer {
   }
 
   virtual bool Initialize(
-      const std::shared_ptr<VertexStreamData>& InStreamData) {
+      const std::shared_ptr<VertexStreamData>& streamData) {
     return false;
   }
 
   //virtual bool IsSupportRaytracing() const { return false; }
 
-  virtual Buffer* GetBuffer(int32_t InStreamIndex) const { return nullptr; }
+  virtual Buffer* GetBuffer(int32_t streamIndex) const { return nullptr; }
 
   std::shared_ptr<VertexStreamData> m_vertexStreamData_;
 };
@@ -203,7 +203,7 @@ struct IndexBuffer {
   }
 
   virtual bool Initialize(
-      const std::shared_ptr<IndexStreamData>& InStreamData) {
+      const std::shared_ptr<IndexStreamData>& streamData) {
     return false;
   }
 

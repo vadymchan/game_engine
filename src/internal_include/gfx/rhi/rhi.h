@@ -191,7 +191,7 @@ class RHI {
   // TODO: implement in future iterations
   // virtual void DispatchRay(
   //    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-  //    const RaytracingDispatchData&              InDispatchData) const {}
+  //    const RaytracingDispatchData&              dispatchData) const {}
 
   virtual void EnableDepthBias(bool         enable,
                                EPolygonMode polygonMode
@@ -199,7 +199,7 @@ class RHI {
 
   virtual void SetDepthBias(float constant, float slope) const {}
 
-  virtual bool CreateShaderInternal(Shader*           OutShader,
+  virtual bool CreateShaderInternal(Shader*           shader,
                                     const ShaderInfo& shaderInfo) const {
     return false;
   }
@@ -359,7 +359,7 @@ class RHI {
   virtual Texture* CreateCubeTextureFromData(std::vector<void*> faces,
                                              std::int32_t       width,
                                              std::int32_t       height,
-                                             bool               m_sRGB_,
+                                             bool               sRGB,
                                              ETextureFormat     textureFormat
                                              = ETextureFormat::RGBA8,
                                              bool createMipmap = false) const {
@@ -419,7 +419,7 @@ class RHI {
   // TODO: implement
   // virtual void BeginDebugEvent(CommandBuffer*        commandBuffer,
   //                             const char*            name,
-  //                             const math::Vector4Df& InColor
+  //                             const math::Vector4Df& color
   //                             = math::ColorGreen) const {}
 
   virtual void EndDebugEvent(CommandBuffer* commandBuffer) const {}
@@ -461,7 +461,7 @@ class RHI {
 
   virtual void QueueSubmit(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      class Semaphore*                           InSignalSemaphore) {}
+      class Semaphore*                           signalSemaphore) {}
 
   virtual RasterizationStateInfo* CreateRasterizationState(
       const RasterizationStateInfo& initializer) const {
@@ -504,7 +504,7 @@ class RHI {
   // TODO: implement
   // virtual PipelineStateInfo* CreateRaytracingPipelineStateInfo(
   //    const std::vector<RaytracingPipelineShader>& shaders,
-  //    const RaytracingPipelineData&                InRaytracingData,
+  //    const RaytracingPipelineData&                raytracingData,
   //    const ShaderBindingLayoutArray&              shaderBindingArray,
   //    const PushConstant*                          pushConstant) const {
   //  return nullptr;
@@ -772,13 +772,13 @@ class RHI {
   virtual std::shared_ptr<Texture> Create2DTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
-      std::uint32_t        InArrayLayers,
-      std::uint32_t        InMipLevels,
+      std::uint32_t        arrayLayers,
+      std::uint32_t        mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName    = nullptr) const {
     return nullptr;
   }
@@ -786,12 +786,12 @@ class RHI {
   virtual std::shared_ptr<Texture> CreateCubeTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
-      std::uint32_t        InMipLevels,
+      std::uint32_t        mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageBulkData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName    = nullptr) const {
     return nullptr;
   }
@@ -800,23 +800,23 @@ class RHI {
   std::shared_ptr<T> Create2DTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
-      std::uint32_t        InArrayLayers,
-      std::uint32_t        InMipLevels,
+      std::uint32_t        arrayLayers,
+      std::uint32_t        mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageCopyData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageCopyData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName    = nullptr) const {
     return std::static_pointer_cast<T>(Create2DTexture(witdh,
                                                        height,
-                                                       InArrayLayers,
-                                                       InMipLevels,
+                                                       arrayLayers,
+                                                       mipLevels,
                                                        format,
-                                                       InTextureCreateFlag,
-                                                       InImageLayout,
-                                                       InImageCopyData,
-                                                       InClearValue,
+                                                       textureCreateFlag,
+                                                       imageLayout,
+                                                       imageCopyData,
+                                                       clearValue,
                                                        resourceName));
   }
 
@@ -824,21 +824,21 @@ class RHI {
   std::shared_ptr<T> CreateCubeTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
-      std::uint32_t        InMipLevels,
+      std::uint32_t        mipLevels,
       ETextureFormat       format,
-      ETextureCreateFlag   InTextureCreateFlag,
-      EResourceLayout      InImageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& InImageCopyData = {},
-      const RTClearValue&  InClearValue    = RTClearValue::s_kInvalid,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageCopyData = {},
+      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName    = nullptr) const {
     return std::static_pointer_cast<T>(CreateCubeTexture(witdh,
                                                          height,
-                                                         InMipLevels,
+                                                         mipLevels,
                                                          format,
-                                                         InTextureCreateFlag,
-                                                         InImageLayout,
-                                                         InImageCopyData,
-                                                         InClearValue,
+                                                         textureCreateFlag,
+                                                         imageLayout,
+                                                         imageCopyData,
+                                                         clearValue,
                                                          resourceName));
   }
 

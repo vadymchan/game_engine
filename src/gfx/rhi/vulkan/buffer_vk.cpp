@@ -21,15 +21,15 @@ BufferVk::BufferVk(VkDeviceSize      size,
   CreateBuffer(usage, properties, size, imageLayout);
 }
 
-void BufferVk::InitializeWithMemory(const Memory& InMemory) {
-  assert(InMemory.IsValid());
+void BufferVk::InitializeWithMemory(const Memory& memory) {
+  assert(memory.IsValid());
   m_hasBufferOwnership_ = false;
-  m_buffer_             = (VkBuffer)InMemory.GetBuffer();
-  m_mappedPointer_      = InMemory.GetMappedPointer();
-  m_deviceMemory_       = (VkDeviceMemory)InMemory.GetMemory();
-  m_offset_             = InMemory.m_range.m_offset_;
-  m_allocatedSize_      = InMemory.m_range.m_dataSize_;
-  m_memory_             = InMemory;
+  m_buffer_             = (VkBuffer)memory.GetBuffer();
+  m_mappedPointer_      = memory.GetMappedPointer();
+  m_deviceMemory_       = (VkDeviceMemory)memory.GetMemory();
+  m_offset_             = memory.m_range.m_offset_;
+  m_allocatedSize_      = memory.m_range.m_dataSize_;
+  m_memory_             = memory;
 }
 
 void BufferVk::Release() {
@@ -163,19 +163,19 @@ void VertexBufferVk::Bind(
 }
 
 bool VertexBufferVk::Initialize(
-    const std::shared_ptr<VertexStreamData>& InStreamData) {
-  if (!InStreamData) {
+    const std::shared_ptr<VertexStreamData>& streamData) {
+  if (!streamData) {
     return false;
   }
 
-  m_vertexStreamData_ = InStreamData;
+  m_vertexStreamData_ = streamData;
   m_bindInfos_.Reset();
-  m_bindInfos_.m_startBindingIndex_ = InStreamData->m_bindingIndex_;
+  m_bindInfos_.m_startBindingIndex_ = streamData->m_bindingIndex_;
 
   std::list<uint32_t> buffers;
-  int32_t             locationIndex = InStreamData->m_startLocation_;
-  int32_t             bindingIndex  = InStreamData->m_bindingIndex_;
-  for (const auto& iter : InStreamData->m_streams_) {
+  int32_t             locationIndex = streamData->m_startLocation_;
+  int32_t             bindingIndex  = streamData->m_bindingIndex_;
+  for (const auto& iter : streamData->m_streams_) {
     if (iter->m_stride_ <= 0) {
       continue;
     }
@@ -249,7 +249,8 @@ bool VertexBufferVk::Initialize(
           bufferSize);
 
       m_bindInfos_.m_buffers_.push_back(stream.m_bufferPtr_->m_buffer_);
-      m_bindInfos_.m_offsets_.push_back(stream.m_offset_ + stream.m_bufferPtr_->m_offset_);
+      m_bindInfos_.m_offsets_.push_back(stream.m_offset_
+                                        + stream.m_bufferPtr_->m_offset_);
     }
 
     /////////////////////////////////////////////////////////////
@@ -261,7 +262,7 @@ bool VertexBufferVk::Initialize(
     // VK_VERTEX_INPUT_RATE_VERTEX : go to next data for each vertex
     // VK_VERTEX_INPUT_RATE_INSTANCE : go to next data for each instance
     bindingDescription.inputRate
-        = GetVulkanVertexInputRate(InStreamData->m_vertexInputRate_);
+        = GetVulkanVertexInputRate(streamData->m_vertexInputRate_);
     m_bindInfos_.m_inputBindingDescriptions_.push_back(bindingDescription);
     /////////////////////////////////////////////////////////////
 
@@ -550,13 +551,13 @@ uint32_t IndexBufferVk::GetVulkanIndexStride(EBufferElementType type) const {
 }
 
 bool IndexBufferVk::Initialize(
-    const std::shared_ptr<IndexStreamData>& InStreamData) {
-  if (!InStreamData) {
+    const std::shared_ptr<IndexStreamData>& streamData) {
+  if (!streamData) {
     return false;
   }
 
-  m_indexStreamData_      = InStreamData;
-  VkDeviceSize bufferSize = InStreamData->m_stream_->GetBufferSize();
+  m_indexStreamData_      = streamData;
+  VkDeviceSize bufferSize = streamData->m_stream_->GetBufferSize();
 
   // TODO: remove (old code)
   // BufferVk stagingBuffer;
@@ -566,7 +567,7 @@ bool IndexBufferVk::Initialize(
   //               bufferSize,
   //               stagingBuffer);
 
-  // stagingBuffer.UpdateBuffer(InStreamData->stream->GetBufferData(),
+  // stagingBuffer.UpdateBuffer(streamData->stream->GetBufferData(),
   // bufferSize);
 
   // BufferPtr = std::make_shared<BufferVk>();
@@ -589,7 +590,7 @@ bool IndexBufferVk::Initialize(
           m_indexStreamData_->m_stream_->m_attributes_[0].m_underlyingType_),
       BufferCreateFlag,
       EResourceLayout::TRANSFER_DST,
-      InStreamData->m_stream_->GetBufferData(),
+      streamData->m_stream_->GetBufferData(),
       bufferSize
       /*, TEXT("IndexBuffer")*/);
 

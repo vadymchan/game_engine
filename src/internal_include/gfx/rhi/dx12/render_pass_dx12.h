@@ -27,7 +27,7 @@ class RenderPassDx12 : public RenderPass {
   // Remove this. After organizing the relationship between CommandBufferDx12
   // and CommandBuffer.
   bool BeginRenderPass(const CommandBufferDx12*    commandBuffer,
-                       D3D12_CPU_DESCRIPTOR_HANDLE InTempRTV) {
+                       D3D12_CPU_DESCRIPTOR_HANDLE tempRTV) {
     assert(commandBuffer);
     if (!commandBuffer) {
       return false;
@@ -36,10 +36,10 @@ class RenderPassDx12 : public RenderPass {
     // If updating the RenderPass every frame, remove this code and use the code
     // below.
     // commandBuffer->CommandList->OMSetRenderTargets(
-    //    1, &InTempRTV, false, nullptr);
+    //    1, &tempRTV, false, nullptr);
     // const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
     // commandBuffer->CommandList->ClearRenderTargetView(
-    //    InTempRTV, clearColor, 0, nullptr);
+    //    tempRTV, clearColor, 0, nullptr);
     // return true;
 
     commandBuffer->m_commandList_->OMSetRenderTargets(

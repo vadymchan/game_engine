@@ -14,11 +14,11 @@ namespace game_engine {
 // ====================================================
 
 void RenderObjectGeometryData::Create(
-    const std::shared_ptr<VertexStreamData>& InVertexStream,
+    const std::shared_ptr<VertexStreamData>& vertexStream,
     const std::shared_ptr<IndexStreamData>&  indexStream,
-    bool                                     InHasVertexColor,
-    bool                                     InHasVertexBiTangent) {
-  m_vertexStreamPtr_ = InVertexStream;
+    bool                                     hasVertexColor,
+    bool                                     hasVertexBiTangent) {
+  m_vertexStreamPtr_ = vertexStream;
   m_indexStreamPtr_  = indexStream;
 
   assert(m_vertexStreamPtr_->m_streams_.size());
@@ -37,18 +37,18 @@ void RenderObjectGeometryData::Create(
       = g_rhi->CreateVertexBuffer(m_vertexStreamPositionOnlyPtr_);
   m_indexBufferPtr_ = g_rhi->CreateIndexBuffer(m_indexStreamPtr_);
 
-  m_hasVertexColor_     = InHasVertexColor;
-  m_hasVertexBiTangent_ = InHasVertexBiTangent;
+  m_hasVertexColor_     = hasVertexColor;
+  m_hasVertexBiTangent_ = hasVertexBiTangent;
 }
 
 void RenderObjectGeometryData::CreateNew_ForRaytracing(
-    const std::shared_ptr<VertexStreamData>& InVertexStream,
-    const std::shared_ptr<VertexStreamData>& InVertexStream_PositionOnly,
+    const std::shared_ptr<VertexStreamData>& vertexStream,
+    const std::shared_ptr<VertexStreamData>& vertexStream_PositionOnly,
     const std::shared_ptr<IndexStreamData>&  indexStream,
-    bool                                     InHasVertexColor,
-    bool                                     InHasVertexBiTangent) {
-  m_vertexStreamPtr_             = InVertexStream;
-  m_vertexStreamPositionOnlyPtr_ = InVertexStream_PositionOnly;
+    bool                                     hasVertexColor,
+    bool                                     hasVertexBiTangent) {
+  m_vertexStreamPtr_             = vertexStream;
+  m_vertexStreamPositionOnlyPtr_ = vertexStream_PositionOnly;
   m_indexStreamPtr_              = indexStream;
 
   m_vertexBufferPtr_ = g_rhi->CreateVertexBuffer(m_vertexStreamPtr_);
@@ -56,8 +56,8 @@ void RenderObjectGeometryData::CreateNew_ForRaytracing(
       = g_rhi->CreateVertexBuffer(m_vertexStreamPositionOnlyPtr_);
   m_indexBufferPtr_ = g_rhi->CreateIndexBuffer(m_indexStreamPtr_);
 
-  m_hasVertexColor_     = InHasVertexColor;
-  m_hasVertexBiTangent_ = InHasVertexBiTangent;
+  m_hasVertexColor_     = hasVertexColor;
+  m_hasVertexBiTangent_ = hasVertexBiTangent;
 }
 
 // Vertex buffers
@@ -153,9 +153,9 @@ void RenderObject::Draw(
 
 void RenderObject::BindBuffers(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    bool                                       InPositionOnly,
-    const VertexBuffer*                        InOverrideInstanceData) const {
-  if (InPositionOnly) {
+    bool                                       positionOnly,
+    const VertexBuffer*                        overrideInstanceData) const {
+  if (positionOnly) {
     if (m_geometryDataPtr_->m_vertexBufferPositionOnlyPtr_) {
       m_geometryDataPtr_->m_vertexBufferPositionOnlyPtr_->Bind(
           renderFrameContext);
@@ -166,8 +166,8 @@ void RenderObject::BindBuffers(
     }
   }
 
-  if (InOverrideInstanceData) {
-    InOverrideInstanceData->Bind(renderFrameContext);
+  if (overrideInstanceData) {
+    overrideInstanceData->Bind(renderFrameContext);
   } else if (m_geometryDataPtr_->m_vertexBufferInstanceDataPtr_) {
     m_geometryDataPtr_->m_vertexBufferInstanceDataPtr_->Bind(
         renderFrameContext);

@@ -134,13 +134,13 @@ struct ShaderInfo {
 
   ShaderInfo(Name                   name,
              Name                   shaderFilepath,
-             Name                   InPreProcessors,
-             Name                   InEntryPoint,
+             Name                   preProcessors,
+             Name                   entryPoint,
              EShaderAccessStageFlag shaderType)
       : m_name_(name)
       , m_shaderFilepath_(shaderFilepath)
-      , m_preProcessors_(InPreProcessors)
-      , m_entryPoint_(InEntryPoint)
+      , m_preProcessors_(preProcessors)
+      , m_entryPoint_(entryPoint)
       , m_shaderType_(shaderType) {}
 
   void Initialize() {}
@@ -187,13 +187,13 @@ struct ShaderInfo {
     Hash           = 0;
   }
 
-  void SetPreProcessors(const Name& InPreProcessors) {
-    m_preProcessors_ = InPreProcessors;
+  void SetPreProcessors(const Name& preProcessors) {
+    m_preProcessors_ = preProcessors;
     Hash          = 0;
   }
 
-  void SetEntryPoint(const Name& InEntryPoint) {
-    m_entryPoint_ = InEntryPoint;
+  void SetEntryPoint(const Name& entryPoint) {
+    m_entryPoint_ = entryPoint;
     Hash       = 0;
   }
 
@@ -202,8 +202,8 @@ struct ShaderInfo {
     Hash       = 0;
   }
 
-  void SetPermutationId(const uint32_t InPermutationId) {
-    m_permutationId_ = InPermutationId;
+  void SetPermutationId(const uint32_t permutationId) {
+    m_permutationId_ = permutationId;
     Hash          = 0;
   }
 
@@ -251,7 +251,7 @@ struct Shader {
 
   CompiledShader* GetCompiledShader() const { return m_compiledShader; }
 
-  virtual void SetPermutationId(int32_t InPermutaitonId) {}
+  virtual void SetPermutationId(int32_t permutaitonId) {}
 
   virtual int32_t GetPermutationId() const { return 0; }
 
@@ -268,10 +268,10 @@ struct Shader {
   public:                                                                 \
   static ShaderInfo   GShaderInfo;                                        \
   static ShaderClass* CreateShader(                                       \
-      const ShaderClass::ShaderPermutation& InPermutation);               \
+      const ShaderClass::ShaderPermutation& permutation);               \
   using Shader::Shader;                                                   \
-  virtual void SetPermutationId(int32_t InPermutaitonId) override {       \
-    PermutationVariable.SetFromPermutationId(InPermutaitonId);            \
+  virtual void SetPermutationId(int32_t permutaitonId) override {       \
+    PermutationVariable.SetFromPermutationId(permutaitonId);            \
   }                                                                       \
   virtual int32_t GetPermutationId() const override {                     \
     return PermutationVariable.GetPermutationId();                        \

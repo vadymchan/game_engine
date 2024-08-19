@@ -687,40 +687,40 @@ class RTClearValue {
 
   constexpr RTClearValue() = default;
 
-  RTClearValue(const math::Vector4Df& InColor)
+  RTClearValue(const math::Vector4Df& color)
       : m_type_(ERTClearType::Color) {
-    m_clearValue_.m_color_[0] = InColor.x();
-    m_clearValue_.m_color_[1] = InColor.y();
-    m_clearValue_.m_color_[2] = InColor.z();
-    m_clearValue_.m_color_[3] = InColor.w();
+    m_clearValue_.m_color_[0] = color.x();
+    m_clearValue_.m_color_[1] = color.y();
+    m_clearValue_.m_color_[2] = color.z();
+    m_clearValue_.m_color_[3] = color.w();
   }
 
-  constexpr RTClearValue(float InR, float InG, float InB, float InA)
+  constexpr RTClearValue(float r, float g, float b, float a)
       : m_type_(ERTClearType::Color) {
-    m_clearValue_.m_color_[0] = InR;
-    m_clearValue_.m_color_[1] = InG;
-    m_clearValue_.m_color_[2] = InB;
-    m_clearValue_.m_color_[3] = InA;
+    m_clearValue_.m_color_[0] = r;
+    m_clearValue_.m_color_[1] = g;
+    m_clearValue_.m_color_[2] = b;
+    m_clearValue_.m_color_[3] = a;
   }
 
-  constexpr RTClearValue(float InDepth, uint32_t InStencil)
+  constexpr RTClearValue(float depth, uint32_t stencil)
       : m_type_(ERTClearType::DepthStencil) {
-    m_clearValue_.m_depthStencil_.m_depth_   = InDepth;
-    m_clearValue_.m_depthStencil_.m_stencil_ = InStencil;
+    m_clearValue_.m_depthStencil_.m_depth_   = depth;
+    m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
   }
 
-  void SetColor(const math::Vector4Df& InColor) {
+  void SetColor(const math::Vector4Df& color) {
     m_type_                   = ERTClearType::Color;
-    m_clearValue_.m_color_[0] = InColor.x();
-    m_clearValue_.m_color_[1] = InColor.y();
-    m_clearValue_.m_color_[2] = InColor.z();
-    m_clearValue_.m_color_[3] = InColor.w();
+    m_clearValue_.m_color_[0] = color.x();
+    m_clearValue_.m_color_[1] = color.y();
+    m_clearValue_.m_color_[2] = color.z();
+    m_clearValue_.m_color_[3] = color.w();
   }
 
-  void SetDepthStencil(float InDepth, uint8_t InStencil) {
+  void SetDepthStencil(float depth, uint8_t stencil) {
     m_type_                                  = ERTClearType::DepthStencil;
-    m_clearValue_.m_depthStencil_.m_depth_   = InDepth;
-    m_clearValue_.m_depthStencil_.m_stencil_ = InStencil;
+    m_clearValue_.m_depthStencil_.m_depth_   = depth;
+    m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
   }
 
   const float* GetCleraColor() const { return &m_clearValue_.m_color_[0]; }

@@ -50,18 +50,18 @@ void View::PrepareViewUniformBufferShaderBindingInstance() {
 }
 
 void View::GetShaderBindingInstance(
-    ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
-    bool                        InIsForwardRenderer) const {
-  OutShaderBindingInstanceArray.Add(
+    ShaderBindingInstanceArray& shaderBindingInstanceArray,
+    bool                        isForwardRenderer) const {
+  shaderBindingInstanceArray.Add(
       m_viewUniformBufferShaderBindingInstance_.get());
 
   // Get light uniform buffers
-  // if (InIsForwardRenderer) {
+  // if (isForwardRenderer) {
   //  for (int32_t i = 0; i < lights.size(); ++i) {
   //    const ViewLight& viewLight = lights[i];
   //    if (viewLight.Light) {
   //      assert(viewLight.m_shaderBindingInstance);
-  //      OutShaderBindingInstanceArray.Add(
+  //      shaderBindingInstanceArray.Add(
   //          viewLight.m_shaderBindingInstance.get());
   //    }
   //  }
@@ -70,18 +70,18 @@ void View::GetShaderBindingInstance(
 
 // TODO: currently not used
 void View::GetShaderBindingLayout(
-    ShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
-    bool                      InIsForwardRenderer) const {
-  OutShaderBindingsLayoutArray.Add(
+    ShaderBindingLayoutArray& shaderBindingsLayoutArray,
+    bool                      isForwardRenderer) const {
+  shaderBindingsLayoutArray.Add(
       m_viewUniformBufferShaderBindingInstance_->m_shaderBindingsLayouts_);
 
   // Get light uniform buffers
-  // if (InIsForwardRenderer) {
+  // if (isForwardRenderer) {
   //  for (int32_t i = 0; i < lights.size(); ++i) {
   //    const ViewLight& viewLight = lights[i];
   //    if (viewLight.Light) {
   //      assert(viewLight.m_shaderBindingInstance);
-  //      OutShaderBindingsLayoutArray.Add(
+  //      shaderBindingsLayoutArray.Add(
   //          viewLight.m_shaderBindingInstance->m_shaderBindingsLayouts_);
   //    }
   //  }

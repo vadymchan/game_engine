@@ -56,8 +56,8 @@ class MutexRWLock {
 template <typename T>
 class ScopedLock {
   public:
-  ScopedLock(T* InLock)
-      : m_scopedLock_(InLock) {
+  ScopedLock(T* lock)
+      : m_scopedLock_(lock) {
     m_scopedLock_->Lock();
   }
 
@@ -69,8 +69,8 @@ class ScopedLock {
 template <typename T>
 class ScopeReadLock {
   public:
-  ScopeReadLock(T* InLock)
-      : m_scopedLock_(InLock) {
+  ScopeReadLock(T* lock)
+      : m_scopedLock_(lock) {
     m_scopedLock_->LockRead();
   }
 
@@ -82,8 +82,8 @@ class ScopeReadLock {
 template <typename T>
 class ScopeWriteLock {
   public:
-  ScopeWriteLock(T* InLock)
-      : m_scopedLock_(InLock) {
+  ScopeWriteLock(T* lock)
+      : m_scopedLock_(lock) {
     m_scopedLock_->LockWrite();
   }
 

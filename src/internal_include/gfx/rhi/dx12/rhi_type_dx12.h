@@ -119,14 +119,14 @@ inline auto GetDX12TexturePixelSize(ETextureFormat type) {
 // clang-format on
 
 inline ETextureType GetDX12TextureDemension(D3D12_RESOURCE_DIMENSION type,
-                                            bool InIsArray) {
+                                            bool isArray) {
   switch (type) {
     case D3D12_RESOURCE_DIMENSION_TEXTURE2D: {
-      return InIsArray ? ETextureType::TEXTURE_2D_ARRAY
+      return isArray ? ETextureType::TEXTURE_2D_ARRAY
                        : ETextureType::TEXTURE_2D;
     }
     case D3D12_RESOURCE_DIMENSION_TEXTURE3D: {
-      return InIsArray ? ETextureType::TEXTURE_3D_ARRAY
+      return isArray ? ETextureType::TEXTURE_3D_ARRAY
                        : ETextureType::TEXTURE_3D;
     }
     case D3D12_RESOURCE_DIMENSION_UNKNOWN:
@@ -300,80 +300,80 @@ inline uint8_t GetDX12ColorMask(EColorMask type) {
   return result;
 }
 
-inline D3D12_FILTER GetDX12TextureFilter(ETextureFilter InMinification,
-                                         ETextureFilter InMagnification,
-                                         bool InIsComparison = false) {
+inline D3D12_FILTER GetDX12TextureFilter(ETextureFilter minification,
+                                         ETextureFilter magnification,
+                                         bool isComparison = false) {
   // Comparison is used for ShadowMap
-  if (InIsComparison) {
+  if (isComparison) {
     D3D12_FILTER Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-    switch (InMinification) {
+    switch (minification) {
       case ETextureFilter::NEAREST:
       case ETextureFilter::NEAREST_MIPMAP_NEAREST:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
         }
         break;
       case ETextureFilter::LINEAR:
       case ETextureFilter::LINEAR_MIPMAP_NEAREST:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
         }
         break;
       case ETextureFilter::NEAREST_MIPMAP_LINEAR:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
         }
         break;
       case ETextureFilter::LINEAR_MIPMAP_LINEAR:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
         }
         break;
@@ -383,74 +383,74 @@ inline D3D12_FILTER GetDX12TextureFilter(ETextureFilter InMinification,
     return Filter;
   } else {
     D3D12_FILTER Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    switch (InMinification) {
+    switch (minification) {
       case ETextureFilter::NEAREST:
       case ETextureFilter::NEAREST_MIPMAP_NEAREST:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
         }
         break;
       case ETextureFilter::LINEAR:
       case ETextureFilter::LINEAR_MIPMAP_NEAREST:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
         }
         break;
       case ETextureFilter::NEAREST_MIPMAP_LINEAR:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
         }
         break;
       case ETextureFilter::LINEAR_MIPMAP_LINEAR:
-        if (InMagnification == ETextureFilter::NEAREST) {
+        if (magnification == ETextureFilter::NEAREST) {
           Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR) {
           Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_NEAREST) {
           // If mipmaps overlap, upload them as linear and process them. Needs
           // organization.
           Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::NEAREST_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-        } else if (InMagnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
+        } else if (magnification == ETextureFilter::LINEAR_MIPMAP_LINEAR) {
           Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
         }
         break;
@@ -461,25 +461,25 @@ inline D3D12_FILTER GetDX12TextureFilter(ETextureFilter InMinification,
   }
 }
 
-inline void GetDepthFormatForSRV(DXGI_FORMAT& OutTexFormat,
-                                 DXGI_FORMAT& OutSrvFormat,
-                                 DXGI_FORMAT  InOriginalTexFormat) {
-  switch (InOriginalTexFormat) {
+inline void GetDepthFormatForSRV(DXGI_FORMAT& texFormat,
+                                 DXGI_FORMAT& srvFormat,
+                                 DXGI_FORMAT  originalTexFormat) {
+  switch (originalTexFormat) {
     case DXGI_FORMAT_D16_UNORM:
-      OutTexFormat = DXGI_FORMAT_R16_TYPELESS;
-      OutSrvFormat = DXGI_FORMAT_R16_UNORM;
+      texFormat = DXGI_FORMAT_R16_TYPELESS;
+      srvFormat = DXGI_FORMAT_R16_UNORM;
       break;
     case DXGI_FORMAT_D24_UNORM_S8_UINT:
-      OutTexFormat = DXGI_FORMAT_R24G8_TYPELESS;
-      OutSrvFormat = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+      texFormat = DXGI_FORMAT_R24G8_TYPELESS;
+      srvFormat = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
       break;
     case DXGI_FORMAT_D32_FLOAT:
-      OutTexFormat = DXGI_FORMAT_R32_TYPELESS;
-      OutSrvFormat = DXGI_FORMAT_R32_FLOAT;
+      texFormat = DXGI_FORMAT_R32_TYPELESS;
+      srvFormat = DXGI_FORMAT_R32_FLOAT;
       break;
     case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
-      OutTexFormat = DXGI_FORMAT_R32G8X24_TYPELESS;
-      OutSrvFormat = DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+      texFormat = DXGI_FORMAT_R32G8X24_TYPELESS;
+      srvFormat = DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
       break;
     default:
       assert(0);
@@ -532,21 +532,21 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
   };
 
   static std::shared_ptr<CreatedResource> CreatedFromStandalone(
-      const ComPtr<ID3D12Resource>& InResource) {
+      const ComPtr<ID3D12Resource>& resource) {
     return std::shared_ptr<CreatedResource>(
-        new CreatedResource(EType::Standalone, InResource));
+        new CreatedResource(EType::Standalone, resource));
   }
 
   static std::shared_ptr<CreatedResource> CreatedFromResourcePool(
-      const ComPtr<ID3D12Resource>& InResource) {
+      const ComPtr<ID3D12Resource>& resource) {
     return std::shared_ptr<CreatedResource>(
-        new CreatedResource(EType::ResourcePool, InResource));
+        new CreatedResource(EType::ResourcePool, resource));
   }
 
   static std::shared_ptr<CreatedResource> CreatedFromSwapchain(
-      const ComPtr<ID3D12Resource>& InResource) {
+      const ComPtr<ID3D12Resource>& resource) {
     return std::shared_ptr<CreatedResource>(
-        new CreatedResource(EType::Swapchain, InResource));
+        new CreatedResource(EType::Swapchain, resource));
   }
 
   bool IsValid() const { return m_resource_ && (*m_resource_).Get(); }
@@ -568,9 +568,9 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
   private:
   CreatedResource() {}
 
-  CreatedResource(EType type, const ComPtr<ID3D12Resource>& InResource)
+  CreatedResource(EType type, const ComPtr<ID3D12Resource>& resource)
       : m_resourceType_(type)
-      , m_resource_(std::make_shared<ComPtr<ID3D12Resource>>(InResource)) {}
+      , m_resource_(std::make_shared<ComPtr<ID3D12Resource>>(resource)) {}
 
   // prevent copying
   CreatedResource(const CreatedResource&)            = delete;

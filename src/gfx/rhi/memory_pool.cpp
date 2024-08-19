@@ -24,27 +24,27 @@ void Memory::Free() {
 
 void Memory::Reset() {
   m_buffer             = nullptr;
-  m_range.m_offset_       = 0;
-  m_range.m_dataSize_     = 0;
+  m_range.m_offset_    = 0;
+  m_range.m_dataSize_  = 0;
   m_subMemoryAllocator = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // SubMemoryAllocator
-Memory SubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
+Memory SubMemoryAllocator::Alloc(uint64_t requstedSize) {
   ScopedLock s(&m_lock_);
 
-  Memory        AllocMem;
+  Memory         AllocMem;
   const uint64_t AlignedRequestedSize
-      = (m_alignment_ > 0) ? Align(InRequstedSize, m_alignment_) : InRequstedSize;
+      = (m_alignment_ > 0) ? Align(requstedSize, m_alignment_) : requstedSize;
 
   for (int32_t i = 0; i < (int32_t)m_freeLists_.size(); ++i) {
     if (m_freeLists_[i].m_dataSize_ >= AlignedRequestedSize) {
       AllocMem.m_buffer = GetBuffer();
       assert(AllocMem.m_buffer);
 
-      AllocMem.m_range.m_offset_       = m_freeLists_[i].m_offset_;
-      AllocMem.m_range.m_dataSize_     = AlignedRequestedSize;
+      AllocMem.m_range.m_offset_    = m_freeLists_[i].m_offset_;
+      AllocMem.m_range.m_dataSize_  = AlignedRequestedSize;
       AllocMem.m_subMemoryAllocator = this;
       m_freeLists_.erase(m_freeLists_.begin() + i);
       return AllocMem;
@@ -56,31 +56,31 @@ Memory SubMemoryAllocator::Alloc(uint64_t InRequstedSize) {
     AllocMem.m_buffer = GetBuffer();
     assert(AllocMem.m_buffer);
 
-    AllocMem.m_range.m_offset_       = (m_alignment_ > 0)
-                                    ? Align(m_subMemoryRange_.m_offset_, m_alignment_)
-                                    : m_subMemoryRange_.m_offset_;
-    AllocMem.m_range.m_dataSize_     = AlignedRequestedSize;
+    AllocMem.m_range.m_offset_
+        = (m_alignment_ > 0) ? Align(m_subMemoryRange_.m_offset_, m_alignment_)
+                             : m_subMemoryRange_.m_offset_;
+    AllocMem.m_range.m_dataSize_  = AlignedRequestedSize;
     AllocMem.m_subMemoryAllocator = this;
 
     m_subMemoryRange_.m_offset_ += AlignedRequestedSize;
     m_allAllocatedLists_.push_back(AllocMem.m_range);
 
     assert(AllocMem.m_range.m_offset_ + AllocMem.m_range.m_dataSize_
-          <= m_subMemoryRange_.m_dataSize_);
+           <= m_subMemoryRange_.m_dataSize_);
   }
   return AllocMem;
 }
 
-Memory MemoryPool::Alloc(EVulkanBufferBits InUsages,
-                           EVulkanMemoryBits InProperties,
-                           uint64_t          size) {
-  ScopedLock         s(&m_lock_);
+Memory MemoryPool::Alloc(EVulkanBufferBits usages,
+                         EVulkanMemoryBits properties,
+                         uint64_t          size) {
+  ScopedLock          s(&m_lock_);
   const EPoolSizeType PoolSizeType = GetPoolSizeType(size);
 
   std::vector<SubMemoryAllocator*>& SubMemoryAllocators
       = m_memoryPools_[(int32_t)PoolSizeType];
   for (auto& iter : SubMemoryAllocators) {
-    if (!iter->IsMatchType(InUsages, InProperties)) {
+    if (!iter->IsMatchType(usages, properties)) {
       continue;
     }
 
@@ -102,14 +102,14 @@ Memory MemoryPool::Alloc(EVulkanBufferBits InUsages,
           : s_kSubMemorySize[(uint64_t)PoolSizeType];
 
   NewSubMemoryAllocator->Initialize(
-      InUsages, InProperties, SubMemoryAllocatorSize);
+      usages, properties, SubMemoryAllocatorSize);
   const Memory& alloc = NewSubMemoryAllocator->Alloc(size);
   assert(alloc.IsValid());
 
   return alloc;
 }
 
-void MemoryPool::Free(const Memory& InFreeMemory) {
+void MemoryPool::Free(const Memory& freeMemory) {
   ScopedLock s(&m_lock_);
 
   const int32_t CurrentFrameNumber = g_rhi->GetCurrentFrameNumber();
@@ -130,8 +130,8 @@ void MemoryPool::Free(const Memory& InFreeMemory) {
               pendingFreeMemory.m_memory_);
         } else {
           m_canReleasePendingFreeMemoryFrameNumber_
-              = pendingFreeMemory.m_frameIndex_ + s_kNumOfFramesToWaitBeforeReleasing
-              + 1;
+              = pendingFreeMemory.m_frameIndex_
+              + s_kNumOfFramesToWaitBeforeReleasing + 1;
           break;
         }
       }
@@ -148,7 +148,7 @@ void MemoryPool::Free(const Memory& InFreeMemory) {
   }
 
   m_pendingFree_.emplace_back(
-      PendingFreeMemory(CurrentFrameNumber, InFreeMemory));
+      PendingFreeMemory(CurrentFrameNumber, freeMemory));
 }
 
 }  // namespace game_engine

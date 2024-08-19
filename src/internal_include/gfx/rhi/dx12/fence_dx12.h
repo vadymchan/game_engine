@@ -28,7 +28,7 @@ class FenceDx12 : public Fence {
                          uint64_t timeoutNanoSec = UINT64_MAX);
 
   uint64_t SignalWithNextFenceValue(ID3D12CommandQueue* commandQueue,
-                                    bool bWaitUntilExecuteComplete = false);
+                                    bool waitUntilExecuteComplete = false);
 
   ComPtr<ID3D12Fence> m_fence_;
   HANDLE              m_fenceEvent_ = nullptr;

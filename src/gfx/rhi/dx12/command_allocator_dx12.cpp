@@ -87,7 +87,7 @@ bool CommandBufferManagerDx12::Initialize(ComPtr<ID3D12Device>    device,
 }
 
 void CommandBufferManagerDx12::ExecuteCommandList(
-    CommandBufferDx12* commandList, bool bWaitUntilExecuteComplete) {
+    CommandBufferDx12* commandList, bool waitUntilExecuteComplete) {
   if (!commandList->End()) {
     return;
   }
@@ -100,7 +100,7 @@ void CommandBufferManagerDx12::ExecuteCommandList(
 
   if (fence) {
     commandList->m_fenceValue_ = fence->SignalWithNextFenceValue(
-        commandList->m_owner_->m_commandQueue_.Get(), bWaitUntilExecuteComplete);
+        commandList->m_owner_->m_commandQueue_.Get(), waitUntilExecuteComplete);
   }
 }
 

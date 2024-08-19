@@ -654,10 +654,10 @@ BlendingStateInfo* RhiDx12::CreateBlendingState(
 }
 
 // TODO: consider rewriting this method for DX12 shader creation
-bool RhiDx12::CreateShaderInternal(Shader*           OutShader,
+bool RhiDx12::CreateShaderInternal(Shader*           shader,
                                    const ShaderInfo& shaderInfo) const {
   std::vector<Name> IncludeFilePaths;
-  Shader*           shader_dx12 = OutShader;
+  Shader*           shader_dx12 = shader;
   assert(shader_dx12->GetPermutationCount());
   {
     assert(!shader_dx12->m_compiledShader);
@@ -1162,10 +1162,10 @@ std::shared_ptr<Texture> RhiDx12::Create2DTexture(
     uint32_t             arrayLayers,
     uint32_t             mipLevels,
     ETextureFormat       format,
-    ETextureCreateFlag   InTextureCreateFlag,
-    EResourceLayout      InImageLayout,
-    const ImageBulkData& InImageBulkData,
-    const RTClearValue&  InClearValue,
+    ETextureCreateFlag   textureCreateFlag,
+    EResourceLayout      imageLayout,
+    const ImageBulkData& imageBulkData,
+    const RTClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   auto TexturePtr = CreateTexture(witdh,
                                   height,
@@ -1174,26 +1174,26 @@ std::shared_ptr<Texture> RhiDx12::Create2DTexture(
                                   1,
                                   ETextureType::TEXTURE_2D,
                                   format,
-                                  InTextureCreateFlag,
-                                  InImageLayout,
-                                  InClearValue,
+                                  textureCreateFlag,
+                                  imageLayout,
+                                  clearValue,
                                   resourceName);
-  if (InImageBulkData.m_imageData_.size() > 0) {
+  if (imageBulkData.m_imageData_.size() > 0) {
     // TODO: recycle temp buffer
-    auto BufferPtr = CreateBuffer(InImageBulkData.m_imageData_.size(),
+    auto BufferPtr = CreateBuffer(imageBulkData.m_imageData_.size(),
                                   0,
                                   EBufferCreateFlag::CPUAccess,
                                   EResourceLayout::READ_ONLY,
-                                  &InImageBulkData.m_imageData_[0],
-                                  InImageBulkData.m_imageData_.size());
+                                  &imageBulkData.m_imageData_[0],
+                                  imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
     CommandBufferDx12* commandList = BeginSingleTimeCopyCommands();
-    if (InImageBulkData.m_subresourceFootprints_.size() > 0) {
+    if (imageBulkData.m_subresourceFootprints_.size() > 0) {
       CopyBufferToTexture(commandList->Get(),
                           BufferPtr->m_buffer->Get(),
                           TexturePtr->m_texture->Get(),
-                          InImageBulkData.m_subresourceFootprints_);
+                          imageBulkData.m_subresourceFootprints_);
     } else {
       CopyBufferToTexture(commandList->Get(),
                           BufferPtr->m_buffer->Get(),
@@ -1209,40 +1209,40 @@ std::shared_ptr<Texture> RhiDx12::Create2DTexture(
 std::shared_ptr<Texture> RhiDx12::CreateCubeTexture(
     uint32_t             witdh,
     uint32_t             height,
-    uint32_t             InMipLevels,
+    uint32_t             mipLevels,
     ETextureFormat       format,
-    ETextureCreateFlag   InTextureCreateFlag,
-    EResourceLayout      InImageLayout,
-    const ImageBulkData& InImageBulkData,
-    const RTClearValue&  InClearValue,
+    ETextureCreateFlag   textureCreateFlag,
+    EResourceLayout      imageLayout,
+    const ImageBulkData& imageBulkData,
+    const RTClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   auto TexturePtr = CreateTexture(witdh,
                                   height,
                                   6,
-                                  InMipLevels,
+                                  mipLevels,
                                   1,
                                   ETextureType::TEXTURE_CUBE,
                                   format,
-                                  InTextureCreateFlag,
-                                  InImageLayout,
-                                  InClearValue,
+                                  textureCreateFlag,
+                                  imageLayout,
+                                  clearValue,
                                   resourceName);
-  if (InImageBulkData.m_imageData_.size() > 0) {
+  if (imageBulkData.m_imageData_.size() > 0) {
     // TODO: recycle temp buffer
-    auto BufferPtr = CreateBuffer(InImageBulkData.m_imageData_.size(),
+    auto BufferPtr = CreateBuffer(imageBulkData.m_imageData_.size(),
                                   0,
                                   EBufferCreateFlag::CPUAccess,
                                   EResourceLayout::READ_ONLY,
-                                  &InImageBulkData.m_imageData_[0],
-                                  InImageBulkData.m_imageData_.size());
+                                  &imageBulkData.m_imageData_[0],
+                                  imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
     CommandBufferDx12* commandList = BeginSingleTimeCopyCommands();
-    if (InImageBulkData.m_subresourceFootprints_.size() > 0) {
+    if (imageBulkData.m_subresourceFootprints_.size() > 0) {
       CopyBufferToTexture(commandList->Get(),
                           BufferPtr->m_buffer->Get(),
                           TexturePtr->m_texture->Get(),
-                          InImageBulkData.m_subresourceFootprints_);
+                          imageBulkData.m_subresourceFootprints_);
     } else {
       CopyBufferToTexture(commandList->Get(),
                           BufferPtr->m_buffer->Get(),
@@ -1589,15 +1589,15 @@ bool RhiDx12::TransitionLayoutImmediate(Buffer*         buffer,
 // void RhiDx12::BeginDebugEvent(
 //     CommandBuffer* commandBuffer,
 //     const char*     name,
-//     const Vector4&  InColor /*= Vector4::ColorGreen*/) const {
+//     const Vector4&  color /*= Vector4::ColorGreen*/) const {
 //   CommandBufferDx12* CommandList = (CommandBufferDx12*)commandBuffer;
 //   assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
 //   PIXBeginEvent(CommandList->Get(),
-//                 PIX_COLOR((BYTE)(255 * InColor.x),
-//                           (BYTE)(255 * InColor.y),
-//                           (BYTE)(255 * InColor.z)),
+//                 PIX_COLOR((BYTE)(255 * color.x),
+//                           (BYTE)(255 * color.y),
+//                           (BYTE)(255 * color.z)),
 //                 name);
 // }
 //

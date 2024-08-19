@@ -172,25 +172,25 @@ struct NameHashFunc {
 struct PriorityName : public Name {
   PriorityName() = default;
 
-  explicit PriorityName(uint32_t nameHash, uint32_t InPriority)
+  explicit PriorityName(uint32_t nameHash, uint32_t priority)
       : Name(nameHash)
-      , m_priority_(InPriority) {}
+      , m_priority_(priority) {}
 
-  explicit PriorityName(const char* pName, uint32_t InPriority)
+  explicit PriorityName(const char* pName, uint32_t priority)
       : Name(pName)
-      , m_priority_(InPriority) {}
+      , m_priority_(priority) {}
 
-  explicit PriorityName(const char* pName, size_t size, uint32_t InPriority)
+  explicit PriorityName(const char* pName, size_t size, uint32_t priority)
       : Name(pName, size)
-      , m_priority_(InPriority) {}
+      , m_priority_(priority) {}
 
-  explicit PriorityName(const std::string& name, uint32_t InPriority)
+  explicit PriorityName(const std::string& name, uint32_t priority)
       : Name(name)
-      , m_priority_(InPriority) {}
+      , m_priority_(priority) {}
 
-  explicit PriorityName(const Name& name, uint32_t InPriority)
+  explicit PriorityName(const Name& name, uint32_t priority)
       : Name(name)
-      , m_priority_(InPriority) {}
+      , m_priority_(priority) {}
 
   uint32_t m_priority_ = 0;
 };

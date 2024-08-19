@@ -223,11 +223,11 @@ struct VertexBufferDx12 : public VertexBuffer {
   }
 
   virtual bool Initialize(
-      const std::shared_ptr<VertexStreamData>& InStreamData) override;
+      const std::shared_ptr<VertexStreamData>& streamData) override;
   virtual void    Bind(const std::shared_ptr<RenderFrameContext>&
                            renderFrameContext) const override;
   virtual void    Bind(CommandBufferDx12* commandList) const;
-  virtual Buffer* GetBuffer(int32_t InStreamIndex) const override;
+  virtual Buffer* GetBuffer(int32_t streamIndex) const override;
 
   BindInfo                              m_bindInfos_;
   std::vector<VertexStreamDx12>         m_streams_;
@@ -241,7 +241,7 @@ struct IndexBufferDx12 : public IndexBuffer {
                         renderFrameContext) const override;
   virtual void Bind(CommandBufferDx12* commandList) const;
   virtual bool Initialize(
-      const std::shared_ptr<IndexStreamData>& InStreamData) override;
+      const std::shared_ptr<IndexStreamData>& streamData) override;
 
   inline uint32_t GetIndexCount() const {
     return m_indexStreamData_->m_elementCount_;

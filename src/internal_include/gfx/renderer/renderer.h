@@ -41,10 +41,10 @@ class Renderer {
   Renderer() = default;
 
   Renderer(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-           const View&                                InView,
+           const View&                                view,
            std::shared_ptr<Window>                    window)
       : m_renderFrameContextPtr_(renderFrameContextPtr)
-      , m_view_(InView)
+      , m_view_(view)
       , m_window_(std::move(window)) {}
 
   virtual ~Renderer() {}
@@ -343,11 +343,11 @@ class Renderer {
 
     auto GetOrCreateShaderFunc = [UseForwardRenderer
                                   = this->m_useForwardRenderer_](
-                                     const RenderObject* InRenderObject) {
+                                     const RenderObject* renderObject) {
       GraphicsPipelineShader Shaders;
       ShaderInfo             shaderInfo;
 
-      if (InRenderObject->HasInstancing()) {
+      if (renderObject->HasInstancing()) {
         assert(UseForwardRenderer);
 
         ShaderInfo shaderInfo;
@@ -383,20 +383,20 @@ class Renderer {
             = ShaderForwardPixelShader::CreateShader(ShaderPermutation);
       } else {
         const bool IsUseSphericalMap
-            = InRenderObject->m_materialPtr_
-           && InRenderObject->m_materialPtr_->IsUseSphericalMap();
+            = renderObject->m_materialPtr_
+           && renderObject->m_materialPtr_->IsUseSphericalMap();
         const bool HasAlbedoTexture
-            = InRenderObject->m_materialPtr_
-           && InRenderObject->m_materialPtr_->HasAlbedoTexture();
+            = renderObject->m_materialPtr_
+           && renderObject->m_materialPtr_->HasAlbedoTexture();
         const bool IsUseSRGBAlbedoTexture
-            = InRenderObject->m_materialPtr_
-           && InRenderObject->m_materialPtr_->IsUseSRGBAlbedoTexture();
+            = renderObject->m_materialPtr_
+           && renderObject->m_materialPtr_->IsUseSRGBAlbedoTexture();
         const bool HasVertexColor
-            = InRenderObject->m_geometryDataPtr_
-           && InRenderObject->m_geometryDataPtr_->HasVertexColor();
+            = renderObject->m_geometryDataPtr_
+           && renderObject->m_geometryDataPtr_->HasVertexColor();
         const bool HasVertexBiTangent
-            = InRenderObject->m_geometryDataPtr_
-           && InRenderObject->m_geometryDataPtr_->HasVertexBiTangent();
+            = renderObject->m_geometryDataPtr_
+           && renderObject->m_geometryDataPtr_->HasVertexBiTangent();
 
         ShaderGBufferVertexShader::ShaderPermutation ShaderPermutationVS;
         ShaderPermutationVS
@@ -471,10 +471,10 @@ class Renderer {
     ParallelFor::ParallelForWithTaskPerThread(
         MaxPassSetupTaskPerThreadCount,
         Object::GetStaticRenderObject(),
-        [&](size_t index, RenderObject* InRenderObject) {
+        [&](size_t index, RenderObject* renderObject) {
           Material* material = nullptr;
-          if (InRenderObject->MaterialPtr) {
-            material = InRenderObject->MaterialPtr.get();
+          if (renderObject->MaterialPtr) {
+            material = renderObject->MaterialPtr.get();
           } else {
             if (GDefaultMaterial) {
               material = GDefaultMaterial.get();
@@ -484,9 +484,9 @@ class Renderer {
           new (&BasePasses[index])
               DrawCommand(RenderFrameContextPtr,
                           &view,
-                          InRenderObject,
+                          renderObject,
                           BaseRenderPass,
-                          GetOrCreateShaderFunc(InRenderObject),
+                          GetOrCreateShaderFunc(renderObject),
                           &BasePassPipelineStateFixed,
                           material,
                           {},

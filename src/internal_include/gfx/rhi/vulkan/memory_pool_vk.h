@@ -21,8 +21,8 @@ class SubMemoryAllocatorVk : public SubMemoryAllocator {
 
   virtual ~SubMemoryAllocatorVk() {}
 
-  virtual void Initialize(EVulkanBufferBits InUsage,
-                          EVulkanMemoryBits InProperties,
+  virtual void Initialize(EVulkanBufferBits usage,
+                          EVulkanMemoryBits properties,
                           uint64_t          size) override;
 
   virtual void* GetBuffer() const { return m_buffer_; }

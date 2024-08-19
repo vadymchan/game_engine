@@ -181,11 +181,11 @@ size_t GraphicsPipelineShader::GetHash() const {
                                       NameStatic(EntryName),                 \
                                       ShaderAccesssStageFlag);               \
   ShaderClass* ShaderClass::CreateShader(                                      \
-      const ShaderClass::ShaderPermutation& InPermutation) {                   \
+      const ShaderClass::ShaderPermutation& permutation) {                   \
     ShaderInfo TempShaderInfo = GShaderInfo;                                   \
-    TempShaderInfo.SetPermutationId(InPermutation.GetPermutationId());         \
+    TempShaderInfo.SetPermutationId(permutation.GetPermutationId());         \
     ShaderClass* shader    = g_rhi->CreateShader<ShaderClass>(TempShaderInfo); \
-    shader->m_permutation_ = InPermutation;                                    \
+    shader->m_permutation_ = permutation;                                    \
     return shader;                                                             \
   }
 

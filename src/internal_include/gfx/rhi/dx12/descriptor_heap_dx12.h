@@ -124,9 +124,9 @@ class OnlineDescriptorHeapBlocksDx12 {
   };
 
   struct FreeDataLessReleasedFrameFirstComp {
-    bool operator()(const FreeData& InA, const FreeData& InB) const {
-      return ((uint64_t)InA.m_releasedFrame_ << 32 | (uint64_t)InA.m_index_)
-           < ((uint64_t)InB.m_releasedFrame_ << 32 | (uint64_t)InB.m_index_);
+    bool operator()(const FreeData& a, const FreeData& b) const {
+      return ((uint64_t)a.m_releasedFrame_ << 32 | (uint64_t)a.m_index_)
+           < ((uint64_t)b.m_releasedFrame_ << 32 | (uint64_t)b.m_index_);
     }
   };
 
@@ -158,8 +158,8 @@ class OnlineDescriptorHeapBlocksDx12 {
 // competing for allocations from the OnlineDescriptor.
 class OnlineDescriptorHeapDx12 {
   public:
-  void Initialize(DescriptorBlockDx12* InDescriptorBlocks) {
-    m_descriptorBlocks_ = InDescriptorBlocks;
+  void Initialize(DescriptorBlockDx12* descriptorBlocks) {
+    m_descriptorBlocks_ = descriptorBlocks;
     if (m_descriptorBlocks_) {
       m_cpuHandle_ = m_descriptorBlocks_->m_descriptors_[0].m_cpuHandle_;
       m_gpuHandle_ = m_descriptorBlocks_->m_descriptors_[0].m_gpuHandle_;
@@ -269,9 +269,9 @@ class OnlineDescriptorManager {
     // first
     std::sort(DescriptorHeapBlocks.begin(),
               DescriptorHeapBlocks.end(),
-              [](OnlineDescriptorHeapBlocksDx12* InA,
-                 OnlineDescriptorHeapBlocksDx12* InB) {
-                return InA->m_freeLists_.size() > InB->m_freeLists_.size();
+              [](OnlineDescriptorHeapBlocksDx12* a,
+                 OnlineDescriptorHeapBlocksDx12* b) {
+                return a->m_freeLists_.size() > b->m_freeLists_.size();
               });
 
     OnlineDescriptorHeapDx12* AllocatedBlocks = SelectedHeapBlocks->Alloc();
@@ -279,9 +279,9 @@ class OnlineDescriptorManager {
     return AllocatedBlocks;
   }
 
-  void Free(OnlineDescriptorHeapDx12* InDescriptorHeap) {
-    assert(InDescriptorHeap);
-    InDescriptorHeap->Release();
+  void Free(OnlineDescriptorHeapDx12* descriptorHeap) {
+    assert(descriptorHeap);
+    descriptorHeap->Release();
   }
 
   void Release() {
@@ -325,9 +325,9 @@ class OfflineDescriptorHeapDx12 {
         // the front
         std::sort(m_heap_.begin(),
                   m_heap_.end(),
-                  [](const std::shared_ptr<DescriptorHeapDx12>& InA,
-                     const std::shared_ptr<DescriptorHeapDx12>& InB) {
-                    return InA->m_pools_.size() > InB->m_pools_.size();
+                  [](const std::shared_ptr<DescriptorHeapDx12>& a,
+                     const std::shared_ptr<DescriptorHeapDx12>& b) {
+                    return a->m_pools_.size() > b->m_pools_.size();
                   });
 
         if (m_heap_[0]->m_pools_.size() > 0) {
@@ -349,9 +349,9 @@ class OfflineDescriptorHeapDx12 {
     return NewDescriptor;
   }
 
-  void Free(const DescriptorDx12& InDescriptor) {
-    if (!InDescriptor.m_descriptorHeap_.expired()) {
-      InDescriptor.m_descriptorHeap_.lock()->Free(InDescriptor.m_index_);
+  void Free(const DescriptorDx12& descriptor) {
+    if (!descriptor.m_descriptorHeap_.expired()) {
+      descriptor.m_descriptorHeap_.lock()->Free(descriptor.m_index_);
     }
   }
 

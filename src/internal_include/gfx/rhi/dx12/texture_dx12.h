@@ -16,23 +16,23 @@ struct TextureDx12 : public Texture {
   TextureDx12(ETextureType                            type,
               ETextureFormat                          format,
               const math::Dimension2Di&               extent,
-              int32_t                                 InLayerCount,
-              EMSAASamples                            InSampleCount,
-              bool                                    InSRGB,
-              const RTClearValue&                     InClearValue,
-              const std::shared_ptr<CreatedResource>& InImage,
-              DescriptorDx12                          InRTV = {},
-              DescriptorDx12                          InDSV = {},
-              DescriptorDx12                          InSRV = {},
-              DescriptorDx12                          InUAV = {},
-              EResourceLayout InImageLayout = EResourceLayout::UNDEFINED)
-      : Texture(type, format, extent, InLayerCount, InSampleCount, InSRGB)
-      , m_texture(InImage)
-      , m_rtv_(InRTV)
-      , m_dsv_(InDSV)
-      , m_srv_(InSRV)
-      , m_uav_(InUAV)
-      , m_layout_(InImageLayout) {}
+              int32_t                                 layerCount,
+              EMSAASamples                            sampleCount,
+              bool                                    sRGB,
+              const RTClearValue&                     clearValue,
+              const std::shared_ptr<CreatedResource>& image,
+              DescriptorDx12                          rtv = {},
+              DescriptorDx12                          dsv = {},
+              DescriptorDx12                          srv = {},
+              DescriptorDx12                          uav = {},
+              EResourceLayout imageLayout = EResourceLayout::UNDEFINED)
+      : Texture(type, format, extent, layerCount, sampleCount, sRGB)
+      , m_texture(image)
+      , m_rtv_(rtv)
+      , m_dsv_(dsv)
+      , m_srv_(srv)
+      , m_uav_(uav)
+      , m_layout_(imageLayout) {}
 
   virtual ~TextureDx12();
 

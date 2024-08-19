@@ -28,9 +28,8 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
   virtual void Free() override;
 
   void BindGraphics(CommandBufferDx12* commandList,
-                    std::int32_t&      InOutStartIndex) const;
-  void BindCompute(CommandBufferDx12* commandList,
-                   std::int32_t&      InOutStartIndex);
+                    std::int32_t&      startIndex) const;
+  void BindCompute(CommandBufferDx12* commandList, std::int32_t& startIndex);
   void CopyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
 
   // TODO: consider using only enum class
@@ -48,7 +47,7 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
     D3D12_GPU_VIRTUAL_ADDRESS m_gpuVirtualAddress_ = {};
 
     // TODO:
-    // - Seems like not used 
+    // - Seems like not used
     // - This is debug information, so it would be good to exclude it at
     // runtime.
     Name                          m_resourceName_;

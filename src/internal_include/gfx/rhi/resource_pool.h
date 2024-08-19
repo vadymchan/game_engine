@@ -66,13 +66,13 @@ class TResourcePool {
   }
 
   template <typename TInitializer, typename T1 = T>
-  void Add(TInitializer&& initializer, T1* InResource) {
+  void Add(TInitializer&& initializer, T1* resource) {
     ScopeReadLock sr(&m_lock_);
     const size_t  hash = initializer.GetHash();
     assert(hash);
-    assert(InResource);
-    if (InResource) {
-      m_pool_[hash] = InResource;
+    assert(resource);
+    if (resource) {
+      m_pool_[hash] = resource;
     }
   }
 

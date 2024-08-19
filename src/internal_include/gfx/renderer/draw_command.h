@@ -22,26 +22,26 @@ class DrawCommand {
   DrawCommand() = default;
 
   DrawCommand(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-              const View*                                InView,
-              RenderObject*                              InRenderObject,
+              const View*                                view,
+              RenderObject*                              renderObject,
               RenderPass*                                renderPass,
               GraphicsPipelineShader                     shader,
               PipelineStateFixedInfo*                    pipelineStateFixed,
-              Material*                                  InMaterial,
+              Material*                                  material,
               const ShaderBindingInstanceArray& shaderBindingInstanceArray,
               const PushConstant*               pushConstant,
-              const VertexBuffer* InOverrideInstanceData = nullptr,
-              int32_t             subpassIndex           = 0)
+              const VertexBuffer*               overrideInstanceData = nullptr,
+              int32_t                           subpassIndex         = 0)
       : m_renderFrameContextPtr_(renderFrameContextPtr)
-      , m_view_(InView)
-      , m_renderObject_(InRenderObject)
+      , m_view_(view)
+      , m_renderObject_(renderObject)
       , m_renderPass_(renderPass)
       , m_shader_(shader)
       , m_pipelineStateFixed_(pipelineStateFixed)
-      , m_material_(InMaterial)
+      , m_material_(material)
       , m_pushConstant_(pushConstant)
       , m_shaderBindingInstanceArray_(shaderBindingInstanceArray)
-      , m_overrideInstanceData_(InOverrideInstanceData)
+      , m_overrideInstanceData_(overrideInstanceData)
       , m_subpassIndex_(subpassIndex) {
     assert(m_renderObject_);
   }
@@ -49,49 +49,49 @@ class DrawCommand {
   // TODO: no need (used for light / shadows)
   /*DrawCommand(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      const ViewLight*                            InViewLight,
-      RenderObject*                                InRenderObject,
+      const ViewLight*                            viewLight,
+      RenderObject*                                renderObject,
       RenderPass*                                renderPass,
       GraphicsPipelineShader                       shader,
       PipelineStateFixedInfo*                    pipelineStateFixed,
-      Material*                                    InMaterial,
+      Material*                                    material,
       const ShaderBindingInstanceArray& shaderBindingInstanceArray, const
   PushConstant*                        pushConstant, const VertexBuffer*
-  InOverrideInstanceData, int32_t subpassIndex) :
-  RenderFrameContextPtr(renderFrameContextPtr) , viewLight(InViewLight) ,
-  RenderObject(InRenderObject) , m_renderPass(renderPass) , Shader(shader) ,
-  PipelineStateFixed(pipelineStateFixed) , Material(InMaterial) ,
+  overrideInstanceData, int32_t subpassIndex) :
+  RenderFrameContextPtr(renderFrameContextPtr) , viewLight(viewLight) ,
+  RenderObject(renderObject) , m_renderPass(renderPass) , Shader(shader) ,
+  PipelineStateFixed(pipelineStateFixed) , Material(material) ,
   m_pushConstant(pushConstant) ,
   m_shaderBindingInstanceArray(shaderBindingInstanceArray) ,
-  OverrideInstanceData(InOverrideInstanceData) , SubpassIndex(subpassIndex) {
+  OverrideInstanceData(overrideInstanceData) , SubpassIndex(subpassIndex) {
     assert(RenderObject);
     IsViewLight = true;
   }*/
 
   DrawCommand(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-              RenderObject*                              InRenderObject,
+              RenderObject*                              renderObject,
               RenderPass*                                renderPass,
               GraphicsPipelineShader                     shader,
               PipelineStateFixedInfo*                    pipelineStateFixed,
-              Material*                                  InMaterial,
+              Material*                                  material,
               const ShaderBindingInstanceArray& shaderBindingInstanceArray,
               const PushConstant*               pushConstant,
-              const VertexBuffer* InOverrideInstanceData = nullptr,
-              int32_t             subpassIndex           = 0)
+              const VertexBuffer*               overrideInstanceData = nullptr,
+              int32_t                           subpassIndex         = 0)
       : m_renderFrameContextPtr_(renderFrameContextPtr)
-      , m_renderObject_(InRenderObject)
+      , m_renderObject_(renderObject)
       , m_renderPass_(renderPass)
       , m_shader_(shader)
       , m_pipelineStateFixed_(pipelineStateFixed)
-      , m_material_(InMaterial)
+      , m_material_(material)
       , m_pushConstant_(pushConstant)
       , m_shaderBindingInstanceArray_(shaderBindingInstanceArray)
-      , m_overrideInstanceData_(InOverrideInstanceData)
+      , m_overrideInstanceData_(overrideInstanceData)
       , m_subpassIndex_(subpassIndex) {
     assert(m_renderObject_);
   }
 
-  void PrepareToDraw(bool InIsPositionOnly);
+  void PrepareToDraw(bool isPositionOnly);
 
   void Draw() const;
 
@@ -105,8 +105,8 @@ class DrawCommand {
   RenderObject*                       m_renderObject_             = nullptr;
   PipelineStateFixedInfo*             m_pipelineStateFixed_       = nullptr;
   PipelineStateInfo*                  m_currentPipelineStateInfo_ = nullptr;
-  Material*                           m_material_               = nullptr;
-  const PushConstant*                 m_pushConstant_           = nullptr;
+  Material*                           m_material_                 = nullptr;
+  const PushConstant*                 m_pushConstant_             = nullptr;
   const VertexBuffer*                 m_overrideInstanceData_     = nullptr;
   std::shared_ptr<RenderFrameContext> m_renderFrameContextPtr_;
   bool                                m_isPositionOnly_ = false;
@@ -121,12 +121,12 @@ class DrawCommand {
 //  public:
 //  virtual ~DrawCommandGenerator() {}
 //
-//  virtual void Initialize(int32_t InRTWidth, int32_t InRTHeight) = 0;
+//  virtual void Initialize(int32_t rtWidth, int32_t rtHeight) = 0;
 //  virtual void GenerateDrawCommand(
-//      DrawCommand*                                 OutDestDrawCommand,
+//      DrawCommand*                                 destDrawCommand,
 //      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-//      const View*                                 InView,
-//      const ViewLight&                            InLightView,
+//      const View*                                 view,
+//      const ViewLight&                            lightView,
 //      RenderPass*                                renderPass,
 //      int32_t                                      subpassIndex)
 //      = 0;

@@ -375,7 +375,7 @@ void ShaderBindingInstanceDx12::Free() {
 }
 
 void ShaderBindingInstanceDx12::BindGraphics(CommandBufferDx12* commandList,
-                                             int32_t& InOutStartIndex) const {
+                                             int32_t& outStartIndex) const {
   assert(commandList);
 
   auto CommandList = commandList->Get();
@@ -383,21 +383,21 @@ void ShaderBindingInstanceDx12::BindGraphics(CommandBufferDx12* commandList,
 
   int32_t index = 0;
   for (index = 0; index < m_rootParameterInlines_.size();
-       ++index, ++InOutStartIndex) {
+       ++index, ++outStartIndex) {
     switch (m_rootParameterInlines_[index].m_type_) {
       case InlineRootParamType::CBV:
         CommandList->SetGraphicsRootConstantBufferView(
-            InOutStartIndex,
+            outStartIndex,
             m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::SRV:
         CommandList->SetGraphicsRootShaderResourceView(
-            InOutStartIndex,
+            outStartIndex,
             m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::UAV:
         CommandList->SetGraphicsRootUnorderedAccessView(
-            InOutStartIndex,
+            outStartIndex,
             m_rootParameterInlines_[index].m_gpuVirtualAddress_);
       default:
         break;
@@ -406,7 +406,7 @@ void ShaderBindingInstanceDx12::BindGraphics(CommandBufferDx12* commandList,
 }
 
 void ShaderBindingInstanceDx12::BindCompute(CommandBufferDx12* commandList,
-                                            int32_t& InOutStartIndex) {
+                                            int32_t& outStartIndex) {
   assert(commandList);
 
   auto CommandList = commandList->Get();
@@ -414,21 +414,21 @@ void ShaderBindingInstanceDx12::BindCompute(CommandBufferDx12* commandList,
 
   int32_t index = 0;
   for (index = 0; index < m_rootParameterInlines_.size();
-       ++index, ++InOutStartIndex) {
+       ++index, ++outStartIndex) {
     switch (m_rootParameterInlines_[index].m_type_) {
       case InlineRootParamType::CBV:
         CommandList->SetComputeRootConstantBufferView(
-            InOutStartIndex,
+            outStartIndex,
             m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::SRV:
         CommandList->SetComputeRootShaderResourceView(
-            InOutStartIndex,
+            outStartIndex,
             m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::UAV:
         CommandList->SetComputeRootUnorderedAccessView(
-            InOutStartIndex,
+            outStartIndex,
             m_rootParameterInlines_[index].m_gpuVirtualAddress_);
       default:
         break;

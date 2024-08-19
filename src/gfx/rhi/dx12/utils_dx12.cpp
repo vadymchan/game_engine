@@ -225,8 +225,6 @@ ComPtr<ID3D12Resource> CreateStagingBuffer(const void* initData,
   return UploadResourceRHI;
 }
 
-
-
 void UploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
                                 const void*             initData,
                                 uint64_t                size,
@@ -238,8 +236,7 @@ void UploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
 
   ComPtr<ID3D12Resource> StagingBuffer
       = CreateStagingBuffer(initData, size, alignment);
-  CommandBufferDx12* commandBuffer
-      = g_rhi_dx12->BeginSingleTimeCopyCommands();
+  CommandBufferDx12* commandBuffer = g_rhi_dx12->BeginSingleTimeCopyCommands();
   assert(commandBuffer->IsValid());
   commandBuffer->Get()->CopyBufferRegion(
       DestBuffer.Get(), 0, StagingBuffer.Get(), 0, AlignedSize);
@@ -258,20 +255,19 @@ D3D12_RESOURCE_DESC GetDefaultResourceDesc(uint64_t alignedSize,
     .Format           = DXGI_FORMAT_UNKNOWN,
     .SampleDesc       = {.Count = 1, .Quality = 0},
     .Layout           = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-    .Flags = isAllowUAV ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-                          : D3D12_RESOURCE_FLAG_NONE,
+    .Flags            = isAllowUAV ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+                                   : D3D12_RESOURCE_FLAG_NONE,
   };
 
   return Desc;
 }
 
-ComPtr<ID3D12Resource> CreateDefaultResource(
-    uint64_t              alignedSize,
-    D3D12_RESOURCE_STATES initialState,
-    bool                  isAllowUAV,
-    bool                  isCPUAccessible,
-    const wchar_t*        name) {
-  const D3D12_RESOURCE_DESC Desc = GetDefaultResourceDesc(alignedSize, false);
+ComPtr<ID3D12Resource> CreateDefaultResource(uint64_t              alignedSize,
+                                             D3D12_RESOURCE_STATES initialState,
+                                             bool                  isAllowUAV,
+                                             bool           isCPUAccessible,
+                                             const wchar_t* name) {
+  const D3D12_RESOURCE_DESC   Desc = GetDefaultResourceDesc(alignedSize, false);
   const D3D12_HEAP_PROPERTIES HeapProperties
       = isCPUAccessible ? GetUploadHeap() : GetDefaultHeap();
 
@@ -350,10 +346,10 @@ std::shared_ptr<CreatedResource> CreateBufferInternal(
   resourceDesc.DepthOrArraySize    = 1;
   resourceDesc.MipLevels           = 1;
   resourceDesc.Format              = DXGI_FORMAT_UNKNOWN;
-  resourceDesc.Flags = !!(bufferCreateFlag & EBufferCreateFlag::UAV)
-                         ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-                         : D3D12_RESOURCE_FLAG_NONE;
-  resourceDesc.SampleDesc.Count   = 1;
+  resourceDesc.Flags            = !!(bufferCreateFlag & EBufferCreateFlag::UAV)
+                                    ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+                                    : D3D12_RESOURCE_FLAG_NONE;
+  resourceDesc.SampleDesc.Count = 1;
   resourceDesc.SampleDesc.Quality = 0;
   resourceDesc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   resourceDesc.Alignment          = 0;
@@ -384,8 +380,8 @@ std::shared_ptr<CreatedResource> CreateBufferInternal(
     assert(EBufferCreateFlag::NONE
            == (bufferCreateFlag
                & EBufferCreateFlag::UAV));  // Not allowed Readback with UAV
-    createdResource = g_rhi_dx12->CreateUploadResource(&resourceDesc,
-                                                       initialResourceState);
+    createdResource
+        = g_rhi_dx12->CreateUploadResource(&resourceDesc, initialResourceState);
   } else {
     createdResource
         = g_rhi_dx12->CreateResource(&resourceDesc, initialResourceState);
@@ -401,19 +397,19 @@ std::shared_ptr<CreatedResource> CreateBufferInternal(
 }
 
 std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
-                                           uint64_t          alignment,
-                                           EBufferCreateFlag bufferCreateFlag,
-                                           EResourceLayout   layout,
-                                           const void*       data,
-                                           uint64_t          dataSize,
-                                           const wchar_t*    resourceName) {
+                                         uint64_t          alignment,
+                                         EBufferCreateFlag bufferCreateFlag,
+                                         EResourceLayout   layout,
+                                         const void*       data,
+                                         uint64_t          dataSize,
+                                         const wchar_t*    resourceName) {
   // If the resource needed to be created with
   // EBufferCreateFlag::AccelerationStructure, you must initialize the buffer
   // resource state as ACCELERATION_STRUCTURE state.
-  assert(layout != EResourceLayout::ACCELERATION_STRUCTURE
-         || (layout == EResourceLayout::ACCELERATION_STRUCTURE
-             && !!(bufferCreateFlag
-                   & EBufferCreateFlag::AccelerationStructure)));
+  assert(
+      layout != EResourceLayout::ACCELERATION_STRUCTURE
+      || (layout == EResourceLayout::ACCELERATION_STRUCTURE
+          && !!(bufferCreateFlag & EBufferCreateFlag::AccelerationStructure)));
 
   EResourceLayout       InitialLayout = EResourceLayout::UNDEFINED;
   D3D12_RESOURCE_STATES initialLayoutDx12
@@ -421,21 +417,17 @@ std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
   if (!!(bufferCreateFlag & EBufferCreateFlag::AccelerationStructure)) {
     assert(layout == EResourceLayout::ACCELERATION_STRUCTURE);
     initialLayoutDx12 = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-    InitialLayout      = EResourceLayout::ACCELERATION_STRUCTURE;
+    InitialLayout     = EResourceLayout::ACCELERATION_STRUCTURE;
   } else if (!!(bufferCreateFlag & EBufferCreateFlag::Readback)) {
     initialLayoutDx12 = D3D12_RESOURCE_STATE_COPY_DEST;
-    InitialLayout      = EResourceLayout::TRANSFER_DST;
+    InitialLayout     = EResourceLayout::TRANSFER_DST;
   } else if (!!(bufferCreateFlag & EBufferCreateFlag::CPUAccess)) {
     initialLayoutDx12 = D3D12_RESOURCE_STATE_GENERIC_READ;
-    InitialLayout      = EResourceLayout::READ_ONLY;
+    InitialLayout     = EResourceLayout::READ_ONLY;
   }
 
-  std::shared_ptr<CreatedResource> BufferInternal
-      = CreateBufferInternal(size,
-                             alignment,
-                             bufferCreateFlag,
-                             initialLayoutDx12,
-                             resourceName);
+  std::shared_ptr<CreatedResource> BufferInternal = CreateBufferInternal(
+      size, alignment, bufferCreateFlag, initialLayoutDx12, resourceName);
   if (!BufferInternal->m_resource_) {
     return nullptr;
   }
@@ -468,7 +460,7 @@ std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
           EBufferCreateFlag::CPUAccess,
           D3D12_RESOURCE_STATE_GENERIC_READ,
           resourceName);  // CPU Access should be created with
-                            // 'D3D12_RESOURCE_STATE_GENERIC_READ'.
+                          // 'D3D12_RESOURCE_STATE_GENERIC_READ'.
       assert(StagingBuffer->IsValid());
 
       void*       MappedPointer = nullptr;
@@ -507,20 +499,20 @@ std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
 std::shared_ptr<CreatedResource> CreateTexturenternal(
     uint32_t                 witdh,
     uint32_t                 height,
-    uint32_t                 InArrayLayers,
-    uint32_t                 InMipLevels,
-    uint32_t                 InNumOfSample,
+    uint32_t                 arrayLayers,
+    uint32_t                 mipLevels,
+    uint32_t                 numOfSamples,
     D3D12_RESOURCE_DIMENSION type,
     DXGI_FORMAT              format,
-    ETextureCreateFlag       InTextureCreateFlag,
-    EResourceLayout          InImageLayout,
-    D3D12_CLEAR_VALUE*       InClearValue,
+    ETextureCreateFlag       textureCreateFlag,
+    EResourceLayout          imageLayout,
+    D3D12_CLEAR_VALUE*       clearValue,
     const wchar_t*           resourceName) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
   D3D12_RESOURCE_DESC TexDesc = {};
-  TexDesc.MipLevels           = InMipLevels;
+  TexDesc.MipLevels           = mipLevels;
   if (IsDepthFormat(GetDX12TextureFormat(format))) {
     DXGI_FORMAT TexFormat, SrvFormat;
     GetDepthFormatForSRV(TexFormat, SrvFormat, format);
@@ -532,26 +524,26 @@ std::shared_ptr<CreatedResource> CreateTexturenternal(
   TexDesc.Height = height;
   TexDesc.Flags  = D3D12_RESOURCE_FLAG_NONE;
 
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::RTV)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
     TexDesc.Flags = IsDepthFormat(GetDX12TextureFormat(format))
                       ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
                       : D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
   }
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::UAV)) {
+  if (!!(textureCreateFlag & ETextureCreateFlag::UAV)) {
     TexDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   }
-  TexDesc.DepthOrArraySize = InArrayLayers;
+  TexDesc.DepthOrArraySize = arrayLayers;
 
   const uint32_t StandardMSAAPattern = 0xFF'FF'FF'FF;
-  TexDesc.SampleDesc.Count           = InNumOfSample;
-  TexDesc.SampleDesc.Quality = InNumOfSample > 1 ? StandardMSAAPattern : 0;
+  TexDesc.SampleDesc.Count           = numOfSamples;
+  TexDesc.SampleDesc.Quality = numOfSamples > 1 ? StandardMSAAPattern : 0;
 
   TexDesc.Dimension = type;
   TexDesc.Layout    = D3D12_TEXTURE_LAYOUT_UNKNOWN;
   TexDesc.Alignment = 0;
 
   std::shared_ptr<CreatedResource> ImageResource = g_rhi_dx12->CreateResource(
-      &TexDesc, GetDX12ResourceLayout(InImageLayout), InClearValue);
+      &TexDesc, GetDX12ResourceLayout(imageLayout), clearValue);
   assert(ImageResource->m_resource_);
 
   if (resourceName && ImageResource->m_resource_) {
@@ -561,45 +553,44 @@ std::shared_ptr<CreatedResource> CreateTexturenternal(
   return ImageResource;
 }
 
-std::shared_ptr<TextureDx12> CreateTexture(
-    uint32_t             witdh,
-    uint32_t             height,
-    uint32_t             InArrayLayers,
-    uint32_t             InMipLevels,
-    uint32_t             InNumOfSample,
-    ETextureType         type,
-    ETextureFormat       format,
-    ETextureCreateFlag   InTextureCreateFlag,
-    EResourceLayout      InImageLayout,
-    const RTClearValue& InClearValue,
-    const wchar_t*       resourceName) {
+std::shared_ptr<TextureDx12> CreateTexture(uint32_t           witdh,
+                                           uint32_t           height,
+                                           uint32_t           arrayLayers,
+                                           uint32_t           mipLevels,
+                                           uint32_t           numOfSamples,
+                                           ETextureType       type,
+                                           ETextureFormat     format,
+                                           ETextureCreateFlag textureCreateFlag,
+                                           EResourceLayout    imageLayout,
+                                           const RTClearValue& clearValue,
+                                           const wchar_t*      resourceName) {
   bool              HasClearValue = false;
   D3D12_CLEAR_VALUE ClearValue{};
-  if (!!(InTextureCreateFlag & ETextureCreateFlag::RTV)) {
-    if (InClearValue.GetType() == ERTClearType::Color) {
-      ClearValue.Color[0] = InClearValue.GetCleraColor()[0];
-      ClearValue.Color[1] = InClearValue.GetCleraColor()[1];
-      ClearValue.Color[2] = InClearValue.GetCleraColor()[2];
-      ClearValue.Color[3] = InClearValue.GetCleraColor()[3];
+  if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
+    if (clearValue.GetType() == ERTClearType::Color) {
+      ClearValue.Color[0] = clearValue.GetCleraColor()[0];
+      ClearValue.Color[1] = clearValue.GetCleraColor()[1];
+      ClearValue.Color[2] = clearValue.GetCleraColor()[2];
+      ClearValue.Color[3] = clearValue.GetCleraColor()[3];
       ClearValue.Format   = GetDX12TextureFormat(format);
-    } else if (InClearValue.GetType() == ERTClearType::DepthStencil) {
-      ClearValue.DepthStencil.Depth   = InClearValue.GetCleraDepth();
-      ClearValue.DepthStencil.Stencil = InClearValue.GetCleraStencil();
+    } else if (clearValue.GetType() == ERTClearType::DepthStencil) {
+      ClearValue.DepthStencil.Depth   = clearValue.GetCleraDepth();
+      ClearValue.DepthStencil.Stencil = clearValue.GetCleraStencil();
       ClearValue.Format               = GetDX12TextureFormat(format);
     }
-    HasClearValue = InClearValue.GetType() != ERTClearType::None;
+    HasClearValue = clearValue.GetType() != ERTClearType::None;
   }
 
   std::shared_ptr<CreatedResource> TextureInternal
       = CreateTexturenternal(witdh,
                              height,
-                             InArrayLayers,
-                             InMipLevels,
-                             InNumOfSample,
+                             arrayLayers,
+                             mipLevels,
+                             numOfSamples,
                              GetDX12TextureDemension(type),
                              GetDX12TextureFormat(format),
-                             InTextureCreateFlag,
-                             InImageLayout,
+                             textureCreateFlag,
+                             imageLayout,
                              (HasClearValue ? &ClearValue : nullptr),
                              resourceName);
   assert(TextureInternal->IsValid());
@@ -609,15 +600,15 @@ std::shared_ptr<TextureDx12> CreateTexture(
       format,
       // TODO: remove casting
       math::Dimension2Di{static_cast<int>(witdh), static_cast<int>(height)},
-      InArrayLayers,
+      arrayLayers,
       EMSAASamples::COUNT_1,
       false,
-      InClearValue,
+      clearValue,
       TextureInternal);
   assert(TexturePtr);
   // TODO: hotfix (remove mip level assigning here)
-  TexturePtr->m_mipLevels_ = InMipLevels;
-  TexturePtr->m_layout_ = InImageLayout;
+  TexturePtr->m_mipLevels_ = mipLevels;
+  TexturePtr->m_layout_    = imageLayout;
 
   // TODO: general - why do we need ResourceName?
   if (resourceName) {
@@ -636,10 +627,10 @@ std::shared_ptr<TextureDx12> CreateTexture(
     CreateDepthStencilView(TexturePtr.get());
   } else {
     CreateShaderResourceView(TexturePtr.get());
-    if (!!(InTextureCreateFlag & ETextureCreateFlag::RTV)) {
+    if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
       CreateRenderTargetView(TexturePtr.get());
     }
-    if (!!(InTextureCreateFlag & ETextureCreateFlag::UAV)) {
+    if (!!(textureCreateFlag & ETextureCreateFlag::UAV)) {
       CreateUnorderedAccessView(TexturePtr.get());
     }
   }
@@ -648,12 +639,12 @@ std::shared_ptr<TextureDx12> CreateTexture(
 }
 
 std::shared_ptr<TextureDx12> CreateTexture(
-    const std::shared_ptr<CreatedResource>& InTexture,
-    ETextureCreateFlag                       InTextureCreateFlag,
-    EResourceLayout                          InImageLayout,
-    const RTClearValue&                     InClearValue,
-    const wchar_t*                           resourceName) {
-  const auto desc       = InTexture->m_resource_.get()->Get()->GetDesc();
+    const std::shared_ptr<CreatedResource>& texture,
+    ETextureCreateFlag                      textureCreateFlag,
+    EResourceLayout                         imageLayout,
+    const RTClearValue&                     clearValue,
+    const wchar_t*                          resourceName) {
+  const auto desc       = texture->m_resource_.get()->Get()->GetDesc();
   auto       TexturePtr = std::make_shared<TextureDx12>(
       GetDX12TextureDemension(desc.Dimension, desc.DepthOrArraySize > 1),
       GetDX12TextureFormat(desc.Format),
@@ -663,11 +654,11 @@ std::shared_ptr<TextureDx12> CreateTexture(
       (int32_t)desc.DepthOrArraySize,
       EMSAASamples::COUNT_1,
       false,
-      InClearValue,
-      InTexture);
+      clearValue,
+      texture);
 
   assert(TexturePtr);
-  TexturePtr->m_layout_ = InImageLayout;
+  TexturePtr->m_layout_ = imageLayout;
 
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
@@ -685,10 +676,10 @@ std::shared_ptr<TextureDx12> CreateTexture(
     CreateDepthStencilView(TexturePtr.get());
   } else {
     CreateShaderResourceView(TexturePtr.get());
-    if (!!(InTextureCreateFlag & ETextureCreateFlag::RTV)) {
+    if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
       CreateRenderTargetView(TexturePtr.get());
     }
-    if (!!(InTextureCreateFlag & ETextureCreateFlag::UAV)) {
+    if (!!(textureCreateFlag & ETextureCreateFlag::UAV)) {
       CreateUnorderedAccessView(TexturePtr.get());
     }
   }
@@ -699,11 +690,11 @@ std::shared_ptr<TextureDx12> CreateTexture(
 uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
                              ID3D12Resource*             buffer,
                              uint64_t                    bufferOffset,
-                             ID3D12Resource*             InImage,
-                             int32_t InImageSubresourceIndex) {
+                             ID3D12Resource*             image,
+                             int32_t imageSubresourceIndex) {
   assert(commandBuffer);
 
-  const auto                         imageDesc         = InImage->GetDesc();
+  const auto                         imageDesc         = image->GetDesc();
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout            = {};
   uint32_t                           numRow            = 0;
   uint64_t                           rowSize           = 0;
@@ -714,9 +705,9 @@ uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
       &imageDesc, 0, 1, 0, &layout, &numRow, &rowSize, &textureMemorySize);
 
   D3D12_TEXTURE_COPY_LOCATION dst = {};
-  dst.pResource                   = InImage;
+  dst.pResource                   = image;
   dst.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-  dst.SubresourceIndex            = InImageSubresourceIndex;
+  dst.SubresourceIndex            = imageSubresourceIndex;
 
   D3D12_TEXTURE_COPY_LOCATION src = {};
   src.pResource                   = buffer;
@@ -731,12 +722,12 @@ uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
 uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
                              ID3D12Resource*             buffer,
                              uint64_t                    bufferOffset,
-                             ID3D12Resource*             InImage,
-                             int32_t InNumOfImageSubresource,
-                             int32_t InStartImageSubresource) {
-  for (int32_t i = 0; i < InNumOfImageSubresource; ++i) {
-    bufferOffset += CopyBufferToTexture(
-        commandBuffer, buffer, bufferOffset, InImage, i);
+                             ID3D12Resource*             image,
+                             int32_t numOfImageSubresources,
+                             int32_t startImageSubresources) {
+  for (int32_t i = 0; i < numOfImageSubresources; ++i) {
+    bufferOffset
+        += CopyBufferToTexture(commandBuffer, buffer, bufferOffset, image, i);
   }
   return bufferOffset;  // total size of copy data
 }
@@ -744,54 +735,53 @@ uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
 void CopyBufferToTexture(
     ID3D12GraphicsCommandList4*              commandBuffer,
     ID3D12Resource*                          buffer,
-    ID3D12Resource*                          InImage,
-    const std::vector<ImageSubResourceData>& InSubresourceData) {
-  for (uint64_t i = 0; i < InSubresourceData.size(); ++i) {
+    ID3D12Resource*                          image,
+    const std::vector<ImageSubResourceData>& subresourceData) {
+  for (uint64_t i = 0; i < subresourceData.size(); ++i) {
     D3D12_TEXTURE_COPY_LOCATION dst = {};
-    dst.pResource                   = InImage;
+    dst.pResource                   = image;
     dst.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     dst.SubresourceIndex            = uint32_t(i);
     D3D12_TEXTURE_COPY_LOCATION src = {};
     src.pResource                   = buffer;
     src.Type                        = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     src.PlacedFootprint.Footprint.Format
-        = (DXGI_FORMAT)InSubresourceData[i].m_format_;
-    src.PlacedFootprint.Footprint.Width    = InSubresourceData[i].m_width_;
-    src.PlacedFootprint.Footprint.Height   = InSubresourceData[i].m_height_;
-    src.PlacedFootprint.Footprint.Depth    = InSubresourceData[i].m_depth_;
-    src.PlacedFootprint.Footprint.RowPitch = InSubresourceData[i].m_rowPitch_;
-    src.PlacedFootprint.Offset             = InSubresourceData[i].m_offset_;
+        = (DXGI_FORMAT)subresourceData[i].m_format_;
+    src.PlacedFootprint.Footprint.Width    = subresourceData[i].m_width_;
+    src.PlacedFootprint.Footprint.Height   = subresourceData[i].m_height_;
+    src.PlacedFootprint.Footprint.Depth    = subresourceData[i].m_depth_;
+    src.PlacedFootprint.Footprint.RowPitch = subresourceData[i].m_rowPitch_;
+    src.PlacedFootprint.Offset             = subresourceData[i].m_offset_;
     commandBuffer->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
   }
 }
 
 void CopyBuffer(ID3D12GraphicsCommandList4* commandBuffer,
-                ID3D12Resource*             InSrcBuffer,
-                ID3D12Resource*             InDstBuffer,
+                ID3D12Resource*             srcBuffer,
+                ID3D12Resource*             dstBuffer,
                 uint64_t                    size,
-                uint64_t                    InSrcOffset,
-                uint64_t                    InDstOffset) {
+                uint64_t                    srcOffset,
+                uint64_t                    dstOffset) {
   assert(commandBuffer);
-  assert(InSrcBuffer);
-  assert(InDstBuffer);
+  assert(srcBuffer);
+  assert(dstBuffer);
 
   commandBuffer->CopyBufferRegion(
-      InDstBuffer, InDstOffset, InSrcBuffer, InSrcOffset, size);
+      dstBuffer, dstOffset, srcBuffer, srcOffset, size);
 }
 
-void CopyBuffer(ID3D12Resource* InSrcBuffer,
-                ID3D12Resource* InDstBuffer,
+void CopyBuffer(ID3D12Resource* srcBuffer,
+                ID3D12Resource* dstBuffer,
                 uint64_t        size,
-                uint64_t        InSrcOffset,
-                uint64_t        InDstOffset) {
-  CommandBufferDx12* commandBuffer
-      = g_rhi_dx12->BeginSingleTimeCopyCommands();
+                uint64_t        srcOffset,
+                uint64_t        dstOffset) {
+  CommandBufferDx12* commandBuffer = g_rhi_dx12->BeginSingleTimeCopyCommands();
   CopyBuffer(commandBuffer->Get(),
-             InSrcBuffer,
-             InDstBuffer,
+             srcBuffer,
+             dstBuffer,
              size,
-             InSrcOffset,
-             InDstOffset);
+             srcOffset,
+             dstOffset);
   g_rhi_dx12->EndSingleTimeCopyCommands(commandBuffer);
 }
 
@@ -811,12 +801,13 @@ void CreateConstantBufferView(BufferDx12* buffer) {
   Desc.BufferLocation = buffer->GetGPUAddress();
   Desc.SizeInBytes    = (uint32_t)buffer->GetAllocatedSize();
 
-  g_rhi_dx12->m_device_->CreateConstantBufferView(&Desc, buffer->m_cbv_.m_cpuHandle_);
+  g_rhi_dx12->m_device_->CreateConstantBufferView(&Desc,
+                                                  buffer->m_cbv_.m_cpuHandle_);
 }
 
 void CreateShaderResourceView_StructuredBuffer(BufferDx12* buffer,
-                                               uint32_t      stride,
-                                               uint32_t      InCount) {
+                                               uint32_t    stride,
+                                               uint32_t    count) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
@@ -834,14 +825,13 @@ void CreateShaderResourceView_StructuredBuffer(BufferDx12* buffer,
   Desc.Shader4ComponentMapping    = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
   Desc.Buffer.FirstElement        = 0;
   Desc.Buffer.Flags               = D3D12_BUFFER_SRV_FLAG_NONE;
-  Desc.Buffer.NumElements         = InCount;
+  Desc.Buffer.NumElements         = count;
   Desc.Buffer.StructureByteStride = stride;
   g_rhi_dx12->m_device_->CreateShaderResourceView(
       buffer->m_buffer->Get(), &Desc, buffer->m_srv_.m_cpuHandle_);
 }
 
-void CreateShaderResourceView_Raw(BufferDx12* buffer,
-                                  uint32_t      bufferSize) {
+void CreateShaderResourceView_Raw(BufferDx12* buffer, uint32_t bufferSize) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
@@ -865,7 +855,7 @@ void CreateShaderResourceView_Raw(BufferDx12* buffer,
       buffer->m_buffer->Get(), &Desc, buffer->m_srv_.m_cpuHandle_);
 }
 
-void CreateShaderResourceView_Formatted(BufferDx12*  buffer,
+void CreateShaderResourceView_Formatted(BufferDx12*    buffer,
                                         ETextureFormat format,
                                         uint32_t       bufferSize) {
   assert(g_rhi_dx12);
@@ -879,8 +869,8 @@ void CreateShaderResourceView_Formatted(BufferDx12*  buffer,
   assert(!buffer->m_srv_.IsValid());
   buffer->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.Alloc();
 
-  const uint32_t Stride = GetDX12TextureComponentCount(format)
-                        * GetDX12TexturePixelSize(format);
+  const uint32_t Stride
+      = GetDX12TextureComponentCount(format) * GetDX12TexturePixelSize(format);
 
   D3D12_SHADER_RESOURCE_VIEW_DESC Desc{};
   Desc.Format                  = GetDX12TextureFormat(format);
@@ -894,8 +884,8 @@ void CreateShaderResourceView_Formatted(BufferDx12*  buffer,
 }
 
 void CreateUnorderedAccessView_StructuredBuffer(BufferDx12* buffer,
-                                                uint32_t      stride,
-                                                uint32_t      InCount) {
+                                                uint32_t    stride,
+                                                uint32_t    count) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
@@ -912,14 +902,13 @@ void CreateUnorderedAccessView_StructuredBuffer(BufferDx12* buffer,
   Desc.ViewDimension              = D3D12_UAV_DIMENSION_BUFFER;
   Desc.Buffer.FirstElement        = 0;
   Desc.Buffer.Flags               = D3D12_BUFFER_UAV_FLAG_NONE;
-  Desc.Buffer.NumElements         = InCount;
+  Desc.Buffer.NumElements         = count;
   Desc.Buffer.StructureByteStride = stride;
   g_rhi_dx12->m_device_->CreateUnorderedAccessView(
       buffer->m_buffer->Get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
-void CreateUnorderedAccessView_Raw(BufferDx12* buffer,
-                                   uint32_t      bufferSize) {
+void CreateUnorderedAccessView_Raw(BufferDx12* buffer, uint32_t bufferSize) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
@@ -942,7 +931,7 @@ void CreateUnorderedAccessView_Raw(BufferDx12* buffer,
       buffer->m_buffer->Get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
-void CreateUnorderedAccessView_Formatted(BufferDx12*  buffer,
+void CreateUnorderedAccessView_Formatted(BufferDx12*    buffer,
                                          ETextureFormat format,
                                          uint32_t       bufferSize) {
   assert(g_rhi_dx12);
@@ -956,8 +945,8 @@ void CreateUnorderedAccessView_Formatted(BufferDx12*  buffer,
   assert(!buffer->m_uav_.IsValid());
   buffer->m_uav_ = g_rhi_dx12->m_descriptorHeaps_.Alloc();
 
-  const uint32_t Stride = GetDX12TextureComponentCount(format)
-                        * GetDX12TexturePixelSize(format);
+  const uint32_t Stride
+      = GetDX12TextureComponentCount(format) * GetDX12TexturePixelSize(format);
 
   D3D12_UNORDERED_ACCESS_VIEW_DESC Desc{};
   Desc.Format              = GetDX12TextureFormat(format);
@@ -969,53 +958,53 @@ void CreateUnorderedAccessView_Formatted(BufferDx12*  buffer,
       buffer->m_buffer->Get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
-void CreateShaderResourceView(TextureDx12* InTexture) {
+void CreateShaderResourceView(TextureDx12* texture) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
-  assert(InTexture);
-  if (!InTexture) {
+  assert(texture);
+  if (!texture) {
     return;
   }
 
-  assert(!InTexture->m_srv_.IsValid());
-  InTexture->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.Alloc();
+  assert(!texture->m_srv_.IsValid());
+  texture->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.Alloc();
 
   D3D12_SHADER_RESOURCE_VIEW_DESC Desc = {};
   Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-  if (IsDepthFormat(InTexture->m_format_)) {
+  if (IsDepthFormat(texture->m_format_)) {
     DXGI_FORMAT TexFormat, SrvFormat;
     GetDepthFormatForSRV(
-        TexFormat, SrvFormat, GetDX12TextureFormat(InTexture->m_format_));
+        TexFormat, SrvFormat, GetDX12TextureFormat(texture->m_format_));
     Desc.Format = SrvFormat;
   } else {
-    Desc.Format = GetDX12TextureFormat(InTexture->m_format_);
+    Desc.Format = GetDX12TextureFormat(texture->m_format_);
   }
 
-  switch (InTexture->m_type_) {
+  switch (texture->m_type_) {
     case ETextureType::TEXTURE_2D:
-      Desc.ViewDimension                 = ((int32_t)InTexture->m_sampleCount_ > 1)
-                                             ? D3D12_SRV_DIMENSION_TEXTURE2DMS
-                                             : D3D12_SRV_DIMENSION_TEXTURE2D;
-      Desc.Texture2D.MipLevels           = InTexture->m_mipLevels_;
-      Desc.Texture2D.MostDetailedMip     = 0;
-      Desc.Texture2D.PlaneSlice          = 0;
+      Desc.ViewDimension             = ((int32_t)texture->m_sampleCount_ > 1)
+                                         ? D3D12_SRV_DIMENSION_TEXTURE2DMS
+                                         : D3D12_SRV_DIMENSION_TEXTURE2D;
+      Desc.Texture2D.MipLevels       = texture->m_mipLevels_;
+      Desc.Texture2D.MostDetailedMip = 0;
+      Desc.Texture2D.PlaneSlice      = 0;
       Desc.Texture2D.ResourceMinLODClamp = 0.0f;
       break;
     case ETextureType::TEXTURE_2D_ARRAY:
-      Desc.ViewDimension            = ((int32_t)InTexture->m_sampleCount_ > 1)
+      Desc.ViewDimension            = ((int32_t)texture->m_sampleCount_ > 1)
                                         ? D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY
                                         : D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-      Desc.Texture2DArray.MipLevels = InTexture->m_mipLevels_;
+      Desc.Texture2DArray.MipLevels = texture->m_mipLevels_;
       Desc.Texture2DArray.MostDetailedMip     = 0;
       Desc.Texture2DArray.PlaneSlice          = 0;
       Desc.Texture2DArray.ResourceMinLODClamp = 0.0f;
-      Desc.Texture2DArray.ArraySize           = InTexture->m_layerCount_;
+      Desc.Texture2DArray.ArraySize           = texture->m_layerCount_;
       Desc.Texture2DArray.FirstArraySlice     = 0;
       break;
     case ETextureType::TEXTURE_CUBE:
       Desc.ViewDimension                   = D3D12_SRV_DIMENSION_TEXTURECUBE;
-      Desc.TextureCube.MipLevels           = InTexture->m_mipLevels_;
+      Desc.TextureCube.MipLevels           = texture->m_mipLevels_;
       Desc.TextureCube.MostDetailedMip     = 0;
       Desc.TextureCube.ResourceMinLODClamp = 0.0f;
       break;
@@ -1025,25 +1014,25 @@ void CreateShaderResourceView(TextureDx12* InTexture) {
   }
 
   g_rhi_dx12->m_device_->CreateShaderResourceView(
-      InTexture->m_texture->Get(), &Desc, InTexture->m_srv_.m_cpuHandle_);
+      texture->m_texture->Get(), &Desc, texture->m_srv_.m_cpuHandle_);
 }
 
-void CreateDepthStencilView(TextureDx12* InTexture) {
+void CreateDepthStencilView(TextureDx12* texture) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
-  assert(InTexture);
-  if (!InTexture) {
+  assert(texture);
+  if (!texture) {
     return;
   }
 
-  assert(!InTexture->m_dsv_.IsValid());
-  InTexture->m_dsv_                     = g_rhi_dx12->m_dsvDescriptorHeaps_.Alloc();
+  assert(!texture->m_dsv_.IsValid());
+  texture->m_dsv_ = g_rhi_dx12->m_dsvDescriptorHeaps_.Alloc();
   D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
 
-  Desc.Format               = GetDX12TextureFormat(InTexture->m_format_);
-  const bool IsMultisampled = ((int32_t)InTexture->m_sampleCount_ > 1);
-  switch (InTexture->m_type_) {
+  Desc.Format               = GetDX12TextureFormat(texture->m_format_);
+  const bool IsMultisampled = ((int32_t)texture->m_sampleCount_ > 1);
+  switch (texture->m_type_) {
     case ETextureType::TEXTURE_2D:
       Desc.ViewDimension      = IsMultisampled ? D3D12_DSV_DIMENSION_TEXTURE2DMS
                                                : D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -1054,11 +1043,11 @@ void CreateDepthStencilView(TextureDx12* InTexture) {
       if (IsMultisampled) {
         Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
         Desc.Texture2DMSArray.FirstArraySlice = 0;
-        Desc.Texture2DMSArray.ArraySize       = InTexture->m_layerCount_;
+        Desc.Texture2DMSArray.ArraySize       = texture->m_layerCount_;
       } else {
         Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
         Desc.Texture2DArray.FirstArraySlice = 0;
-        Desc.Texture2DArray.ArraySize       = InTexture->m_layerCount_;
+        Desc.Texture2DArray.ArraySize       = texture->m_layerCount_;
         Desc.Texture2DArray.MipSlice        = 0;
       }
       break;
@@ -1067,33 +1056,33 @@ void CreateDepthStencilView(TextureDx12* InTexture) {
       break;
   }
 
-  // const bool HasStencil = !IsDepthOnlyFormat(InTexture->format);
+  // const bool HasStencil = !IsDepthOnlyFormat(texture->format);
   // Desc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH;
   // if (HasStencil)
   //     Desc.Flags |= D3D12_DSV_FLAG_READ_ONLY_STENCIL;
   Desc.Flags = D3D12_DSV_FLAG_NONE;
 
   g_rhi_dx12->m_device_->CreateDepthStencilView(
-      InTexture->m_texture->Get(), &Desc, InTexture->m_dsv_.m_cpuHandle_);
+      texture->m_texture->Get(), &Desc, texture->m_dsv_.m_cpuHandle_);
 }
 
-void CreateUnorderedAccessView(TextureDx12* InTexture) {
+void CreateUnorderedAccessView(TextureDx12* texture) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
-  assert(InTexture);
-  if (!InTexture) {
+  assert(texture);
+  if (!texture) {
     return;
   }
 
-  assert(!InTexture->m_uav_.IsValid());
-  assert(InTexture->m_mipLevels_ > 0);
-  for (int32_t i = 0; i < InTexture->m_mipLevels_; ++i) {
+  assert(!texture->m_uav_.IsValid());
+  assert(texture->m_mipLevels_ > 0);
+  for (int32_t i = 0; i < texture->m_mipLevels_; ++i) {
     DescriptorDx12 UAV = g_rhi_dx12->m_descriptorHeaps_.Alloc();
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC Desc = {};
-    Desc.Format = GetDX12TextureFormat(InTexture->m_format_);
-    switch (InTexture->m_type_) {
+    Desc.Format = GetDX12TextureFormat(texture->m_format_);
+    switch (texture->m_type_) {
       case ETextureType::TEXTURE_2D:
         Desc.ViewDimension        = D3D12_UAV_DIMENSION_TEXTURE2D;
         Desc.Texture2D.MipSlice   = i;
@@ -1101,14 +1090,14 @@ void CreateUnorderedAccessView(TextureDx12* InTexture) {
         break;
       case ETextureType::TEXTURE_2D_ARRAY:
         Desc.ViewDimension            = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-        Desc.Texture2DArray.ArraySize = InTexture->m_layerCount_;
+        Desc.Texture2DArray.ArraySize = texture->m_layerCount_;
         Desc.Texture2DArray.FirstArraySlice = 0;
         Desc.Texture2DArray.MipSlice        = i;
         Desc.Texture2DArray.PlaneSlice      = 0;
         break;
       case ETextureType::TEXTURE_CUBE:
         Desc.ViewDimension            = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-        Desc.Texture2DArray.ArraySize = InTexture->m_layerCount_;
+        Desc.Texture2DArray.ArraySize = texture->m_layerCount_;
         Desc.Texture2DArray.FirstArraySlice = 0;
         Desc.Texture2DArray.MipSlice        = i;
         Desc.Texture2DArray.PlaneSlice      = 0;
@@ -1119,31 +1108,31 @@ void CreateUnorderedAccessView(TextureDx12* InTexture) {
     }
 
     g_rhi_dx12->m_device_->CreateUnorderedAccessView(
-        InTexture->m_texture->Get(), nullptr, &Desc, UAV.m_cpuHandle_);
+        texture->m_texture->Get(), nullptr, &Desc, UAV.m_cpuHandle_);
 
     if (i == 0) {
-      InTexture->m_uav_ = UAV;
+      texture->m_uav_ = UAV;
     }
 
-    InTexture->m_uavMipMap[i] = UAV;
+    texture->m_uavMipMap[i] = UAV;
   }
 }
 
-void CreateRenderTargetView(TextureDx12* InTexture) {
+void CreateRenderTargetView(TextureDx12* texture) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
 
-  assert(InTexture);
-  if (!InTexture) {
+  assert(texture);
+  if (!texture) {
     return;
   }
 
-  assert(!InTexture->m_rtv_.IsValid());
-  InTexture->m_rtv_ = g_rhi_dx12->m_rtvDescriptorHeaps_.Alloc();
+  assert(!texture->m_rtv_.IsValid());
+  texture->m_rtv_ = g_rhi_dx12->m_rtvDescriptorHeaps_.Alloc();
 
   D3D12_RENDER_TARGET_VIEW_DESC Desc = {};
-  Desc.Format                        = GetDX12TextureFormat(InTexture->m_format_);
-  switch (InTexture->m_type_) {
+  Desc.Format                        = GetDX12TextureFormat(texture->m_format_);
+  switch (texture->m_type_) {
     case ETextureType::TEXTURE_2D:
       Desc.ViewDimension        = D3D12_RTV_DIMENSION_TEXTURE2D;
       Desc.Texture2D.MipSlice   = 0;
@@ -1151,15 +1140,15 @@ void CreateRenderTargetView(TextureDx12* InTexture) {
       break;
     case ETextureType::TEXTURE_2D_ARRAY:
       Desc.ViewDimension                  = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-      Desc.Texture2DArray.ArraySize       = InTexture->m_layerCount_;
+      Desc.Texture2DArray.ArraySize       = texture->m_layerCount_;
       Desc.Texture2DArray.FirstArraySlice = 0;
       Desc.Texture2DArray.MipSlice        = 0;
       Desc.Texture2DArray.PlaneSlice      = 0;
       break;
     case ETextureType::TEXTURE_CUBE:
-      assert(InTexture->m_layerCount_ == 6);
+      assert(texture->m_layerCount_ == 6);
       Desc.ViewDimension                  = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-      Desc.Texture2DArray.ArraySize       = InTexture->m_layerCount_;
+      Desc.Texture2DArray.ArraySize       = texture->m_layerCount_;
       Desc.Texture2DArray.FirstArraySlice = 0;
       Desc.Texture2DArray.MipSlice        = 0;
       Desc.Texture2DArray.PlaneSlice      = 0;
@@ -1170,7 +1159,7 @@ void CreateRenderTargetView(TextureDx12* InTexture) {
   }
 
   g_rhi_dx12->m_device_->CreateRenderTargetView(
-      InTexture->m_texture->Get(), &Desc, InTexture->m_rtv_.m_cpuHandle_);
+      texture->m_texture->Get(), &Desc, texture->m_rtv_.m_cpuHandle_);
 }
 
 }  // namespace game_engine

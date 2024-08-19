@@ -27,27 +27,27 @@ struct ResourceContainer {
     m_numOfData_ = data.m_numOfData_;
   }
 
-  void Add(T InElement) {
+  void Add(T element) {
     assert(NumOfInlineData > m_numOfData_);
 
-    m_data_[m_numOfData_] = InElement;
+    m_data_[m_numOfData_] = element;
     ++m_numOfData_;
   }
 
-  void Add(void* InElementAddress, int32_t InCount) {
-    assert(NumOfInlineData > (m_numOfData_ + InCount));
-    assert(InElementAddress);
+  void Add(void* elementAddress, int32_t count) {
+    assert(NumOfInlineData > (m_numOfData_ + count));
+    assert(elementAddress);
     // TODO: remove (replaced memcpy to std::copy_n
     /*if constexpr (std::is_trivially_copyable<T>::value) {
-      memcpy(&Data[NumOfData], InElementAddress, InCount * sizeof(T));
+      memcpy(&Data[NumOfData], elementAddress, count * sizeof(T));
     } else {
-      for (int32_t i = 0; i < InCount; ++i) {
-        Data[NumOfData + i] = *((T*)InElementAddress[i]);
+      for (int32_t i = 0; i < count; ++i) {
+        Data[NumOfData + i] = *((T*)elementAddress[i]);
       }
     }*/
     std::copy_n(
-        static_cast<const T*>(InElementAddress), InCount, m_data_ + m_numOfData_);
-    m_numOfData_ += InCount;
+        static_cast<const T*>(elementAddress), count, m_data_ + m_numOfData_);
+    m_numOfData_ += count;
   }
 
   void PopBack() {
@@ -65,8 +65,8 @@ struct ResourceContainer {
   }
 
   template <typename T2>
-  static void GetHash(size_t& InOutHash, int32_t index, const T2& data) {
-    InOutHash ^= (data->GetHash() << index);
+  static void GetHash(size_t& hash, int32_t index, const T2& data) {
+    hash ^= (data->GetHash() << index);
   }
 
   size_t GetHash() const {

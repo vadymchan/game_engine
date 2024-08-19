@@ -1,4 +1,5 @@
 #include "gfx/rhi/render_target.h"
+
 #include "gfx/rhi/render_target_pool.h"
 
 namespace game_engine {
@@ -9,9 +10,8 @@ void RenderTarget::Return() {
   }
 }
 
-
 void SceneRenderTarget::Create(std::shared_ptr<Window> window,
-                               const SwapchainImage* InSwapchain) {
+                               const SwapchainImage*   swapchain) {
   constexpr EMSAASamples MsaaSamples         = EMSAASamples::COUNT_1;
   constexpr uint32_t     layerCount          = 1;
   constexpr bool         IsGenerateMipmap    = false;
@@ -49,12 +49,13 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
   m_depthPtr_ = RenderTargetPool::GetRenderTarget(DepthRTInfo);
 
   if ((int32_t)MsaaSamples > 1) {
-    assert(InSwapchain);
-    m_resolvePtr_ = RenderTarget::CreateFromTexture(InSwapchain->m_TexturePtr_);
+    assert(swapchain);
+    m_resolvePtr_ = RenderTarget::CreateFromTexture(swapchain->m_TexturePtr_);
   }
 
   if (!m_finalColorPtr_) {
-    m_finalColorPtr_ = RenderTarget::CreateFromTexture(InSwapchain->m_TexturePtr_);
+    m_finalColorPtr_
+        = RenderTarget::CreateFromTexture(swapchain->m_TexturePtr_);
   }
 }
 

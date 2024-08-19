@@ -37,8 +37,8 @@ class SubMemoryAllocator {
 
   virtual ~SubMemoryAllocator() {}
 
-  virtual void Initialize(EVulkanBufferBits InUsage,
-                          EVulkanMemoryBits InProperties,
+  virtual void Initialize(EVulkanBufferBits usage,
+                          EVulkanMemoryBits properties,
                           uint64_t          size)
       = 0;
 
@@ -48,15 +48,15 @@ class SubMemoryAllocator {
 
   virtual void* GetMappedPointer() const { return m_mappedPointer_; }
 
-  virtual Memory Alloc(uint64_t InRequstedSize);
+  virtual Memory Alloc(uint64_t requstedSize);
 
-  virtual bool IsMatchType(EVulkanBufferBits InUsages,
-                           EVulkanMemoryBits InProperties) const {
-    return (m_usages_ == InUsages) && (m_properties_ == InProperties);
+  virtual bool IsMatchType(EVulkanBufferBits usages,
+                           EVulkanMemoryBits properties) const {
+    return (m_usages_ == usages) && (m_properties_ == properties);
   }
 
   protected:
-  virtual void Free(const Memory& InFreeMemory) {
+  virtual void Free(const Memory& freeMemory) {
     ScopedLock s(&m_lock_);
 
     // If All of the allocated memory returned then clear allocated list to use
@@ -65,7 +65,7 @@ class SubMemoryAllocator {
       m_allAllocatedLists_.clear();
       m_freeLists_.clear();
     } else {
-      m_freeLists_.push_back(InFreeMemory.m_range);
+      m_freeLists_.push_back(freeMemory.m_range);
     }
   }
 
@@ -120,9 +120,9 @@ class MemoryPool {
   struct PendingFreeMemory {
     PendingFreeMemory() = default;
 
-    PendingFreeMemory(int32_t InFrameIndex, const Memory& InMemory)
-        : m_frameIndex_(InFrameIndex)
-        , m_memory_(InMemory) {}
+    PendingFreeMemory(int32_t frameIndex, const Memory& memory)
+        : m_frameIndex_(frameIndex)
+        , m_memory_(memory) {}
 
     int32_t m_frameIndex_ = 0;
     Memory  m_memory_;
@@ -142,11 +142,11 @@ class MemoryPool {
     return EPoolSizeType::MAX;
   }
 
-  virtual Memory Alloc(EVulkanBufferBits InUsages,
-                       EVulkanMemoryBits InProperties,
+  virtual Memory Alloc(EVulkanBufferBits usages,
+                       EVulkanMemoryBits properties,
                        uint64_t          size);
 
-  virtual void Free(const Memory& InFreeMemory);
+  virtual void Free(const Memory& freeMemory);
 
   MutexLock                        m_lock_;
   std::vector<SubMemoryAllocator*> m_memoryPools_[(int32_t)EPoolSizeType::MAX + 1];

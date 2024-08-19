@@ -33,8 +33,8 @@ struct ShaderBindingResource
 struct UniformBufferResource : public ShaderBindingResource {
   UniformBufferResource() = default;
 
-  UniformBufferResource(const IUniformBufferBlock* InUniformBuffer)
-      : m_uniformBuffer_(InUniformBuffer) {}
+  UniformBufferResource(const IUniformBufferBlock* uniformBuffer)
+      : m_uniformBuffer_(uniformBuffer) {}
 
   virtual ~UniformBufferResource() {}
 
@@ -59,8 +59,8 @@ struct BufferResource : public ShaderBindingResource {
 struct SamplerResource : public ShaderBindingResource {
   SamplerResource() = default;
 
-  SamplerResource(const SamplerStateInfo* InSamplerState)
-      : m_samplerState_(InSamplerState) {}
+  SamplerResource(const SamplerStateInfo* samplerState)
+      : m_samplerState_(samplerState) {}
 
   virtual ~SamplerResource() {}
 
@@ -72,12 +72,12 @@ struct SamplerResource : public ShaderBindingResource {
 struct TextureResource : public SamplerResource {
   TextureResource() = default;
 
-  TextureResource(const Texture*          InTexture,
-                  const SamplerStateInfo* InSamplerState,
-                  int32_t                 InMipLevel = 0)
-      : SamplerResource(InSamplerState)
-      , m_texture(InTexture)
-      , m_mipLevel_(InMipLevel) {}
+  TextureResource(const Texture*          texture,
+                  const SamplerStateInfo* samplerState,
+                  int32_t                 mipLevel = 0)
+      : SamplerResource(samplerState)
+      , m_texture(texture)
+      , m_mipLevel_(mipLevel) {}
 
   virtual ~TextureResource() {}
 
@@ -90,10 +90,10 @@ struct TextureResource : public SamplerResource {
 struct TextureArrayResource : public ShaderBindingResource {
   TextureArrayResource() = default;
 
-  TextureArrayResource(const Texture** InTextureArray,
-                       const int32_t   InNumOfTexure)
-      : m_textureArray_(InTextureArray)
-      , m_mumOfTexures_(InNumOfTexure) {}
+  TextureArrayResource(const Texture** textureArray,
+                       const int32_t   numOfTexures)
+      : m_textureArray_(textureArray)
+      , m_mumOfTexures_(numOfTexures) {}
 
   virtual ~TextureArrayResource() {}
 
@@ -112,8 +112,8 @@ struct UniformBufferResourceBindless : public ShaderBindingResource {
   UniformBufferResourceBindless() = default;
 
   UniformBufferResourceBindless(
-      const std::vector<const IUniformBufferBlock*>& InUniformBuffers)
-      : m_uniformBuffers_(InUniformBuffers) {}
+      const std::vector<const IUniformBufferBlock*>& uniformBuffers)
+      : m_uniformBuffers_(uniformBuffers) {}
 
   virtual ~UniformBufferResourceBindless() {}
 
@@ -151,8 +151,8 @@ struct SamplerResourceBindless : public ShaderBindingResource {
   SamplerResourceBindless() = default;
 
   SamplerResourceBindless(
-      const std::vector<const SamplerStateInfo*>& InSamplerStates)
-      : m_samplerStates_(InSamplerStates) {}
+      const std::vector<const SamplerStateInfo*>& samplerStates)
+      : m_samplerStates_(samplerStates) {}
 
   virtual ~SamplerResourceBindless() {}
 
@@ -169,12 +169,12 @@ struct TextureResourceBindless : public ShaderBindingResource {
   struct TextureBindData {
     TextureBindData() = default;
 
-    TextureBindData(Texture*          InTexture,
-                    SamplerStateInfo* InSamplerState,
-                    int32_t           InMipLevel = 0)
-        : m_texture(InTexture)
-        , m_samplerState_(InSamplerState)
-        , m_mipLevel_(InMipLevel) {}
+    TextureBindData(Texture*          texture,
+                    SamplerStateInfo* samplerState,
+                    int32_t           mipLevel = 0)
+        : m_texture(texture)
+        , m_samplerState_(samplerState)
+        , m_mipLevel_(mipLevel) {}
 
     Texture*          m_texture       = nullptr;
     SamplerStateInfo* m_samplerState_ = nullptr;
@@ -183,8 +183,8 @@ struct TextureResourceBindless : public ShaderBindingResource {
 
   TextureResourceBindless() = default;
 
-  TextureResourceBindless(const std::vector<TextureBindData>& InTextureBindData)
-      : m_textureBindDatas_(InTextureBindData) {}
+  TextureResourceBindless(const std::vector<TextureBindData>& textureBindData)
+      : m_textureBindDatas_(textureBindData) {}
 
   virtual ~TextureResourceBindless() {}
 
@@ -206,8 +206,8 @@ struct TextureArrayResourceBindless : public ShaderBindingResource {
   TextureArrayResourceBindless() = default;
 
   TextureArrayResourceBindless(
-      const std::vector<TextureArrayBindData>& InTextureArrayBindDatas)
-      : m_textureArrayBindDatas_(InTextureArrayBindDatas) {}
+      const std::vector<TextureArrayBindData>& textureArrayBindDatas)
+      : m_textureArrayBindDatas_(textureArrayBindDatas) {}
 
   virtual ~TextureArrayResourceBindless() {}
 
@@ -249,26 +249,26 @@ struct ShaderBinding {
 
   ShaderBinding() = default;
 
-  ShaderBinding(const int32_t                InBindingPoint,
+  ShaderBinding(const int32_t                bindingPoint,
                 const int32_t                numOfDescriptors,
-                const EShaderBindingType     InBindingType,
-                const bool                   InIsBindless,
-                const EShaderAccessStageFlag InAccessStageFlags,
-                const ShaderBindingResource* InResource = nullptr,
-                bool                         InIsInline = false)
-      : m_bindingPoint_(InBindingPoint)
+                const EShaderBindingType     bindingType,
+                const bool                   isBindless,
+                const EShaderAccessStageFlag accessStageFlags,
+                const ShaderBindingResource* resource = nullptr,
+                bool                         isInline = false)
+      : m_bindingPoint_(bindingPoint)
       , m_numOfDescriptors_(numOfDescriptors)
-      , m_bindingType_(InBindingType)
-      , m_isBindless_(InIsBindless)
-      , m_accessStageFlags_(InAccessStageFlags)
-      , m_resource_(InResource)
-      , m_isInline_(InIsInline) {
+      , m_bindingType_(bindingType)
+      , m_isBindless_(isBindless)
+      , m_accessStageFlags_(accessStageFlags)
+      , m_resource_(resource)
+      , m_isInline_(isInline) {
     // SubpassInputAttachment must have the stageflag 0.
-    assert(EShaderBindingType::SUBPASS_INPUT_ATTACHMENT != InBindingType
-           || InAccessStageFlags == EShaderAccessStageFlag::FRAGMENT);
+    assert(EShaderBindingType::SUBPASS_INPUT_ATTACHMENT != bindingType
+           || accessStageFlags == EShaderAccessStageFlag::FRAGMENT);
 
-    if (InResource) {
-      assert(InResource->IsBindless() == InIsBindless);
+    if (resource) {
+      assert(resource->IsBindless() == isBindless);
     }
 
     GetHash();
@@ -374,13 +374,13 @@ struct ShaderBindingArray {
 
 template <typename T>
 struct TShaderBinding : public ShaderBinding {
-  TShaderBinding(const int32_t                InBindingPoint,
+  TShaderBinding(const int32_t                bindingPoint,
                  const int32_t                numOfDescriptors,
-                 const EShaderBindingType     InBindingType,
-                 const EShaderAccessStageFlag InAccessStageFlags,
+                 const EShaderBindingType     bindingType,
+                 const EShaderAccessStageFlag accessStageFlags,
                  const T&                     data)
       : ShaderBinding(
-          InBindingPoint, numOfDescriptors, InBindingType, InAccessStageFlags)
+          bindingPoint, numOfDescriptors, bindingType, accessStageFlags)
       , m_data_(data) {}
 
   T m_data_ = T();
@@ -394,7 +394,7 @@ struct TShaderBinding : public ShaderBinding {
 //
 //     uint8* GetAddress() const { return InlineStrage[0]; }
 //
-//     void SetHeapMemeory(uint8* InHeap) { InlineStrage[0] = InHeap; }
+//     void SetHeapMemeory(uint8* heap) { InlineStrage[0] = heap; }
 //   };
 //
 //   Allocator Data{};
@@ -507,8 +507,8 @@ struct DeallocatorMultiFrameResource {
   struct PendingFreeData {
     PendingFreeData() = default;
 
-    PendingFreeData(int32_t InFrameIndex, std::shared_ptr<T> dataPtr)
-        : m_frameIndex_(InFrameIndex)
+    PendingFreeData(int32_t frameIndex, std::shared_ptr<T> dataPtr)
+        : m_frameIndex_(frameIndex)
         , m_dataPtr_(dataPtr) {}
 
     int32_t            m_frameIndex_ = 0;

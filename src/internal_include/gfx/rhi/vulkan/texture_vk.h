@@ -22,8 +22,8 @@ class TextureVk : public Texture {
             const math::Dimension2Di& extent,
             uint32_t                  layerCount  = 1,
             EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
-            bool                      InSRGB      = false)
-      : Texture(type, format, extent, layerCount, sampleCount, InSRGB) {}
+            bool                      sRGB      = false)
+      : Texture(type, format, extent, layerCount, sampleCount, sRGB) {}
 
   virtual ~TextureVk() { ReleaseInternal(); }
 

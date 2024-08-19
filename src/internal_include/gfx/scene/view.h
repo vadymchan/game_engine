@@ -30,13 +30,13 @@ class View {
   void PrepareViewUniformBufferShaderBindingInstance();
 
   void GetShaderBindingInstance(
-      ShaderBindingInstanceArray& OutShaderBindingInstanceArray,
-      bool                        InIsForwardRenderer = false) const;
+      ShaderBindingInstanceArray& shaderBindingInstanceArray,
+      bool                        isForwardRenderer = false) const;
 
   // TODO: currently not used
   void GetShaderBindingLayout(
-      ShaderBindingLayoutArray& OutShaderBindingsLayoutArray,
-      bool                      InIsForwardRenderer = false) const;
+      ShaderBindingLayoutArray& shaderBindingsLayoutArray,
+      bool                      isForwardRenderer = false) const;
 
   const Camera*                          m_camera_ = nullptr;
   // std::vector<ViewLight>              lights;

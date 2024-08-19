@@ -22,7 +22,7 @@ struct RenderFrameContextVk : public RenderFrameContext {
       ECurrentRenderPass currentRenderPass) override;
 
   virtual void QueueSubmitCurrentActiveCommandBuffer(
-      Semaphore* InSignalSemaphore);
+      Semaphore* signalSemaphore);
 
   public:
   Semaphore* m_currentWaitSemaphore_ = nullptr;

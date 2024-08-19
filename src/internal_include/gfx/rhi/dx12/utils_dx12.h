@@ -64,7 +64,7 @@ std::shared_ptr<CreatedResource> CreateBufferInternal(
 std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
                                            uint64_t          alignment,
                                            EBufferCreateFlag bufferCreateFlag,
-                                           EResourceLayout   InLayout,
+                                           EResourceLayout   layout,
                                            const void*       data = nullptr,
                                            uint64_t          dataSize = 0,
                                            const wchar_t*    resourceName
@@ -73,63 +73,63 @@ std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
 std::shared_ptr<CreatedResource> CreateTexturenternal(
     uint32_t                 witdh,
     uint32_t                 height,
-    uint32_t                 InArrayLayers,
-    uint32_t                 InMipLevels,
-    uint32_t                 InNumOfSample,
+    uint32_t                 arrayLayers,
+    uint32_t                 mipLevels,
+    uint32_t                 numOfSamples,
     D3D12_RESOURCE_DIMENSION type,
     DXGI_FORMAT              format,
-    ETextureCreateFlag       InTextureCreateFlag,
-    EResourceLayout          InImageLayout  = EResourceLayout::UNDEFINED,
-    D3D12_CLEAR_VALUE*       InClearValue   = nullptr,
+    ETextureCreateFlag       textureCreateFlag,
+    EResourceLayout          imageLayout  = EResourceLayout::UNDEFINED,
+    D3D12_CLEAR_VALUE*       clearValue   = nullptr,
     const wchar_t*           resourceName = nullptr);
 
 std::shared_ptr<TextureDx12> CreateTexture(
     uint32_t             witdh,
     uint32_t             height,
-    uint32_t             InArrayLayers,
-    uint32_t             InMipLevels,
-    uint32_t             InNumOfSample,
+    uint32_t             arrayLayers,
+    uint32_t             mipLevels,
+    uint32_t             numOfSamples,
     ETextureType         type,
     ETextureFormat       format,
-    ETextureCreateFlag   InTextureCreateFlag,
-    EResourceLayout      InImageLayout  = EResourceLayout::UNDEFINED,
-    const RTClearValue& InClearValue   = RTClearValue::s_kInvalid,
+    ETextureCreateFlag   textureCreateFlag,
+    EResourceLayout      imageLayout  = EResourceLayout::UNDEFINED,
+    const RTClearValue& clearValue   = RTClearValue::s_kInvalid,
     const wchar_t*       resourceName = nullptr);
 
 std::shared_ptr<TextureDx12> CreateTexture(
-    const std::shared_ptr<CreatedResource>& InTexture,
-    ETextureCreateFlag                       InTextureCreateFlag,
-    EResourceLayout                          InImageLayout,
-    const RTClearValue&                     InClearValue,
+    const std::shared_ptr<CreatedResource>& texture,
+    ETextureCreateFlag                       textureCreateFlag,
+    EResourceLayout                          imageLayout,
+    const RTClearValue&                     clearValue,
     const wchar_t*                           resourceName);
 
 uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
                              ID3D12Resource*             buffer,
                              uint64_t                    bufferOffset,
-                             ID3D12Resource*             InImage,
-                             int32_t InImageSubresourceIndex = 0);
+                             ID3D12Resource*             image,
+                             int32_t imageSubresourceIndex = 0);
 uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
                              ID3D12Resource*             buffer,
                              uint64_t                    bufferOffset,
-                             ID3D12Resource*             InImage,
-                             int32_t InNumOfImageSubresource,
-                             int32_t InStartImageSubresource);
+                             ID3D12Resource*             image,
+                             int32_t numOfImageSubresources,
+                             int32_t startImageSubresources);
 void     CopyBufferToTexture(
         ID3D12GraphicsCommandList4*              commandBuffer,
         ID3D12Resource*                          buffer,
-        ID3D12Resource*                          InImage,
-        const std::vector<ImageSubResourceData>& InSubresourceData);
+        ID3D12Resource*                          image,
+        const std::vector<ImageSubResourceData>& subresourceData);
 void CopyBuffer(ID3D12GraphicsCommandList4* commandBuffer,
-                ID3D12Resource*             InSrcBuffer,
-                ID3D12Resource*             InDstBuffer,
+                ID3D12Resource*             srcBuffer,
+                ID3D12Resource*             dstBuffer,
                 uint64_t                    size,
-                uint64_t                    InSrcOffset,
-                uint64_t                    InDstOffset);
-void CopyBuffer(ID3D12Resource* InSrcBuffer,
-                ID3D12Resource* InDstBuffer,
+                uint64_t                    srcOffset,
+                uint64_t                    dstOffset);
+void CopyBuffer(ID3D12Resource* srcBuffer,
+                ID3D12Resource* dstBuffer,
                 uint64_t        size,
-                uint64_t        InSrcOffset,
-                uint64_t        InDstOffset);
+                uint64_t        srcOffset,
+                uint64_t        dstOffset);
 
 // Create CBV
 void CreateConstantBufferView(BufferDx12* buffer);
@@ -137,7 +137,7 @@ void CreateConstantBufferView(BufferDx12* buffer);
 // Create SRV for m_buffer
 void CreateShaderResourceView_StructuredBuffer(BufferDx12* buffer,
                                                uint32_t      stride,
-                                               uint32_t      InCount);
+                                               uint32_t      count);
 void CreateShaderResourceView_Raw(BufferDx12* buffer,
                                   uint32_t      bufferSize);
 void CreateShaderResourceView_Formatted(BufferDx12*  buffer,
@@ -147,7 +147,7 @@ void CreateShaderResourceView_Formatted(BufferDx12*  buffer,
 // Create UAV for m_buffer
 void CreateUnorderedAccessView_StructuredBuffer(BufferDx12* buffer,
                                                 uint32_t      stride,
-                                                uint32_t      InCount);
+                                                uint32_t      count);
 void CreateUnorderedAccessView_Raw(BufferDx12* buffer,
                                    uint32_t      bufferSize);
 void CreateUnorderedAccessView_Formatted(BufferDx12*  buffer,
@@ -155,13 +155,13 @@ void CreateUnorderedAccessView_Formatted(BufferDx12*  buffer,
                                          uint32_t       bufferSize);
 
 // Create SRV for Texture
-void CreateShaderResourceView(TextureDx12* InTexture);
+void CreateShaderResourceView(TextureDx12* texture);
 
 // Create UAV for Texture
-void CreateUnorderedAccessView(TextureDx12* InTexture);
+void CreateUnorderedAccessView(TextureDx12* texture);
 
-void CreateDepthStencilView(TextureDx12* InTexture);
-void CreateRenderTargetView(TextureDx12* InTexture);
+void CreateDepthStencilView(TextureDx12* texture);
+void CreateRenderTargetView(TextureDx12* texture);
 
 }  // namespace game_engine
 

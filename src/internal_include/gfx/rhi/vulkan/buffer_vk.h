@@ -38,11 +38,11 @@ class BufferVk : public Buffer {
            EVulkanMemoryBits properties,
            EResourceLayout   imageLayout);
 
-  BufferVk(const Memory& InMemory) { InitializeWithMemory(InMemory); }
+  BufferVk(const Memory& memory) { InitializeWithMemory(memory); }
 
   ~BufferVk() { Release(); }
 
-  void InitializeWithMemory(const Memory& InMemory);
+  void InitializeWithMemory(const Memory& memory);
 
   virtual void Release() override;
 
@@ -219,11 +219,11 @@ struct VertexBufferVk : public VertexBuffer {
                         renderFrameContext) const override;
 
   virtual bool Initialize(
-      const std::shared_ptr<VertexStreamData>& InStreamData) override;
+      const std::shared_ptr<VertexStreamData>& streamData) override;
 
-  Buffer* GetBuffer(int32_t InStreamIndex) const override {
-    assert(m_streams_.size() > InStreamIndex);
-    return m_streams_[InStreamIndex].m_bufferPtr_.get();
+  Buffer* GetBuffer(int32_t streamIndex) const override {
+    assert(m_streams_.size() > streamIndex);
+    return m_streams_[streamIndex].m_bufferPtr_.get();
   }
 
   mutable size_t              m_hash_ = 0;
@@ -260,7 +260,7 @@ struct IndexBufferVk : public IndexBuffer {
   virtual void Bind(const std::shared_ptr<RenderFrameContext>&
                         renderFrameContext) const override;
   virtual bool Initialize(
-      const std::shared_ptr<IndexStreamData>& InStreamData) override;
+      const std::shared_ptr<IndexStreamData>& streamData) override;
 
   virtual BufferVk* GetBuffer() const override { return m_bufferPtr_.get(); }
 

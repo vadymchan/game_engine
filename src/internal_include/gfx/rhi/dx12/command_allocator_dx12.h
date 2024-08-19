@@ -25,7 +25,7 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
   virtual CommandBufferDx12* GetOrCreateCommandBuffer() override;
   virtual void ReturnCommandBuffer(CommandBuffer* commandBuffer) override;
 
-  bool Initialize(ComPtr<ID3D12Device>    InDevice,
+  bool Initialize(ComPtr<ID3D12Device>    device,
                   D3D12_COMMAND_LIST_TYPE type
                   = D3D12_COMMAND_LIST_TYPE_DIRECT);
 
@@ -33,7 +33,7 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
 
   // CommandList
   void ExecuteCommandList(CommandBufferDx12* commandList,
-                          bool               bWaitUntilExecuteComplete = false);
+                          bool               waitUntilExecuteComplete = false);
 
   // Not destroying because it is referenced by the Fence manager
   FenceDx12* m_fence = nullptr;

@@ -28,14 +28,14 @@ struct Texture : public ShaderBindableResource {
            const math::Dimension2Di& extent,
            uint32_t                  layerCount  = 1,
            EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
-           bool                      InSRGB      = false)
+           bool                      sRGB      = false)
       : m_type_(type)
       , m_format_(format)
       , m_extent_(extent)
       , m_mipLevels_(GetMipLevels(extent.width(), extent.height()))
       , m_layerCount_(layerCount)
       , m_sampleCount_(sampleCount)
-      , m_sRGB_(InSRGB) {}
+      , m_sRGB_(sRGB) {}
 
   virtual ~Texture() {}
 

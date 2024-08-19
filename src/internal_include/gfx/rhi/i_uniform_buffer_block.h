@@ -18,9 +18,9 @@ enum class LifeTimeType : uint8_t {
 struct IUniformBufferBlock : public ShaderBindableResource {
   IUniformBufferBlock() = default;
 
-  IUniformBufferBlock(const Name& name, LifeTimeType InLifeType)
+  IUniformBufferBlock(const Name& name, LifeTimeType lifeType)
       : ShaderBindableResource(name)
-      , m_LifeType_(InLifeType) {}
+      , m_LifeType_(lifeType) {}
 
   virtual ~IUniformBufferBlock() {}
 

@@ -16,16 +16,16 @@ struct RootParameterExtractor {
   std::vector<D3D12_DESCRIPTOR_RANGE1> m_descriptors_;
   std::vector<D3D12_DESCRIPTOR_RANGE1> m_samplerDescriptors_;
 
-  void Extract(const ShaderBindingLayoutArray& InBindingLayoutArray,
-               int32_t                         InRegisterSpace = 0);
-  void Extract(const ShaderBindingInstanceArray& InBindingLayoutArray,
-               int32_t                           InRegisterSpace = 0);
+  void Extract(const ShaderBindingLayoutArray& bindingLayoutArray,
+               int32_t                         registerSpace = 0);
+  void Extract(const ShaderBindingInstanceArray& bindingLayoutArray,
+               int32_t                           registerSpace = 0);
 
   protected:
-  void Extract(int32_t&                  InOutDescriptorOffset,
-               int32_t&                  InOutSamplerDescriptorOffset,
+  void Extract(int32_t&                  descriptorOffset,
+               int32_t&                  samplerDescriptorOffset,
                const ShaderBindingArray& shaderBindingArray,
-               int32_t                   InRegisterSpace = 0);
+               int32_t                   registerSpace = 0);
 
   private:
   int32_t m_numOfInlineRootParameter_ = 0;
@@ -48,11 +48,11 @@ struct ShaderBindingLayoutDx12 : public ShaderBindingLayout {
       = std::function<void(RootParameterExtractor&)>;
 
   static ID3D12RootSignature* CreateRootSignatureInternal(
-      size_t hash, FuncGetRootParameterExtractor InFunc);
+      size_t hash, FuncGetRootParameterExtractor func);
   static ID3D12RootSignature* CreateRootSignature(
-      const ShaderBindingInstanceArray& InBindingInstanceArray);
+      const ShaderBindingInstanceArray& bindingInstanceArray);
   static ID3D12RootSignature* CreateRootSignature(
-      const ShaderBindingLayoutArray& InBindingLayoutArray);
+      const ShaderBindingLayoutArray& bindingLayoutArray);
 
   // TODO: seems unused
   std::vector<D3D12_ROOT_PARAMETER1>   m_rootParameters_;

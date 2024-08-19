@@ -25,7 +25,7 @@ class Material {
 
     Name                m_name_;
     Name                m_filePath_;
-    Texture*            m_texture_           = nullptr;
+    Texture*            m_texture_             = nullptr;
     ETextureAddressMode m_textureAddressModeU_ = ETextureAddressMode::REPEAT;
     ETextureAddressMode m_textureAddressModeV_ = ETextureAddressMode::REPEAT;
   };
@@ -38,7 +38,8 @@ class Material {
 
   bool IsUseSRGBAlbedoTexture() const {
     return m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_
-             ? m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_->m_sRGB_
+             ? m_texData_[(int32_t)EMaterialTextureType::Albedo]
+                   .m_texture_->m_sRGB_
              : false;
   }
 
@@ -55,7 +56,7 @@ class Material {
   const std::shared_ptr<ShaderBindingInstance>& CreateShaderBindingInstance();
 
   std::shared_ptr<ShaderBindingInstance> m_shaderBindingInstance_ = nullptr;
-  mutable bool m_needToUpdateShaderBindingInstance_                 = true;
+  mutable bool m_needToUpdateShaderBindingInstance_               = true;
 };
 
 }  // namespace game_engine

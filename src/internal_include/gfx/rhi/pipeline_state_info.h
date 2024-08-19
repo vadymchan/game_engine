@@ -399,12 +399,12 @@ struct PipelineStateFixedInfo {
       RasterizationStateInfo*                   rasterizationState,
       DepthStencilStateInfo*                    depthStencilState,
       BlendingStateInfo*                        blendingState,
-      const std::vector<EPipelineDynamicState>& InDynamicStates,
+      const std::vector<EPipelineDynamicState>& dynamicStates,
       bool                                      isUseVRS)
       : m_rasterizationState_(rasterizationState)
       , m_depthStencilState_(depthStencilState)
       , m_blendingState_(blendingState)
-      , m_dynamicStates_(InDynamicStates)
+      , m_dynamicStates_(dynamicStates)
       , m_isUseVRS_(isUseVRS) {
     CreateHash();
   }
@@ -635,11 +635,11 @@ struct PipelineStateInfo {
     m_pipelineType_ = EPipelineType::Graphics;
   }
 
-  PipelineStateInfo(const Shader*                   InComputeShader,
+  PipelineStateInfo(const Shader*                   computeShader,
                     const ShaderBindingLayoutArray& shaderBindingLayoutArray,
                     const PushConstant*             pushConstant = nullptr,
                     int32_t                         subpassIndex = 0)
-      : m_computeShader_(InComputeShader)
+      : m_computeShader_(computeShader)
       , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
       , m_pushConstant(pushConstant)
       , m_subpassIndex_(subpassIndex) {
@@ -648,46 +648,46 @@ struct PipelineStateInfo {
 
   // PipelineStateInfo(
   //     const std::vector<RaytracingPipelineShader>& shader,
-  //     const RaytracingPipelineData&                InRaytracingPipelineData,
+  //     const RaytracingPipelineData&                raytracingPipelineData,
   //     const ShaderBindingLayoutArray& shaderBindingLayoutArray, const
   //     PushConstant*                          pushConstant = nullptr,
   //     int32_t                                       subpassIndex = 0)
   //     : m_raytracingShaders_(shader)
-  //     , m_raytracingPipelineData_(InRaytracingPipelineData)
+  //     , m_raytracingPipelineData_(raytracingPipelineData)
   //     , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
   //     , m_pushConstant(pushConstant)
   //     , SubpassIndex(subpassIndex) {
   //   PipelineType = EPipelineType::RayTracing;
   // }
 
-  PipelineStateInfo(const PipelineStateInfo& InPipelineState)
-      : m_pipelineStateFixed_(InPipelineState.m_pipelineStateFixed_)
-      , m_graphicsShader_(InPipelineState.m_graphicsShader_)
-      , m_computeShader_(InPipelineState.m_computeShader_)
-      //, m_raytracingShaders_(InPipelineState.m_raytracingShaders_)
-      , m_pipelineType_(InPipelineState.m_pipelineType_)
-      , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
-      , m_renderPass(InPipelineState.m_renderPass)
-      , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
-      , m_pushConstant(InPipelineState.m_pushConstant)
-      , m_hash_(InPipelineState.m_hash_)
-      , m_subpassIndex_(InPipelineState.m_subpassIndex_)
-  //, m_raytracingPipelineData_(InPipelineState.m_raytracingPipelineData_)
+  PipelineStateInfo(const PipelineStateInfo& pipelineState)
+      : m_pipelineStateFixed_(pipelineState.m_pipelineStateFixed_)
+      , m_graphicsShader_(pipelineState.m_graphicsShader_)
+      , m_computeShader_(pipelineState.m_computeShader_)
+      //, m_raytracingShaders_(pipelineState.m_raytracingShaders_)
+      , m_pipelineType_(pipelineState.m_pipelineType_)
+      , m_vertexBufferArray(pipelineState.m_vertexBufferArray)
+      , m_renderPass(pipelineState.m_renderPass)
+      , m_shaderBindingLayoutArray(pipelineState.m_shaderBindingLayoutArray)
+      , m_pushConstant(pipelineState.m_pushConstant)
+      , m_hash_(pipelineState.m_hash_)
+      , m_subpassIndex_(pipelineState.m_subpassIndex_)
+  //, m_raytracingPipelineData_(pipelineState.m_raytracingPipelineData_)
   {}
 
-  PipelineStateInfo(PipelineStateInfo&& InPipelineState) noexcept
-      : m_pipelineStateFixed_(InPipelineState.m_pipelineStateFixed_)
-      , m_graphicsShader_(InPipelineState.m_graphicsShader_)
-      , m_computeShader_(InPipelineState.m_computeShader_)
-      //, m_raytracingShaders_(InPipelineState.m_raytracingShaders_)
-      , m_pipelineType_(InPipelineState.m_pipelineType_)
-      , m_vertexBufferArray(InPipelineState.m_vertexBufferArray)
-      , m_renderPass(InPipelineState.m_renderPass)
-      , m_shaderBindingLayoutArray(InPipelineState.m_shaderBindingLayoutArray)
-      , m_pushConstant(InPipelineState.m_pushConstant)
-      , m_hash_(InPipelineState.m_hash_)
-      , m_subpassIndex_(InPipelineState.m_subpassIndex_)
-  //, m_raytracingPipelineData_(InPipelineState.m_raytracingPipelineData_)
+  PipelineStateInfo(PipelineStateInfo&& pipelineState) noexcept
+      : m_pipelineStateFixed_(pipelineState.m_pipelineStateFixed_)
+      , m_graphicsShader_(pipelineState.m_graphicsShader_)
+      , m_computeShader_(pipelineState.m_computeShader_)
+      //, m_raytracingShaders_(pipelineState.m_raytracingShaders_)
+      , m_pipelineType_(pipelineState.m_pipelineType_)
+      , m_vertexBufferArray(pipelineState.m_vertexBufferArray)
+      , m_renderPass(pipelineState.m_renderPass)
+      , m_shaderBindingLayoutArray(pipelineState.m_shaderBindingLayoutArray)
+      , m_pushConstant(pipelineState.m_pushConstant)
+      , m_hash_(pipelineState.m_hash_)
+      , m_subpassIndex_(pipelineState.m_subpassIndex_)
+  //, m_raytracingPipelineData_(pipelineState.m_raytracingPipelineData_)
   {}
 
   virtual ~PipelineStateInfo() {}

@@ -56,14 +56,14 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
 
   RenderTarget() = default;
 
-  RenderTarget(const std::shared_ptr<Texture>& InTexturePtr)
-      : m_texturePtr_(InTexturePtr) {
-    if (InTexturePtr) {
-      m_info_.m_rype_        = InTexturePtr->m_type_;
-      m_info_.m_format_      = InTexturePtr->m_format_;
-      m_info_.m_extent_      = InTexturePtr->m_extent_;
-      m_info_.m_layerCount_  = InTexturePtr->m_layerCount_;
-      m_info_.m_sampleCount_ = InTexturePtr->m_sampleCount_;
+  RenderTarget(const std::shared_ptr<Texture>& texturePtr)
+      : m_texturePtr_(texturePtr) {
+    if (texturePtr) {
+      m_info_.m_rype_        = texturePtr->m_type_;
+      m_info_.m_format_      = texturePtr->m_format_;
+      m_info_.m_extent_      = texturePtr->m_extent_;
+      m_info_.m_layerCount_  = texturePtr->m_layerCount_;
+      m_info_.m_sampleCount_ = texturePtr->m_sampleCount_;
     }
   }
 
@@ -107,7 +107,7 @@ struct SceneRenderTarget {
   std::shared_ptr<RenderTarget> m_finalColorPtr_;
 
   void Create(std::shared_ptr<Window> window,
-              const SwapchainImage*   InSwapchain);
+              const SwapchainImage*   swapchain);
 
   void Return();
 };

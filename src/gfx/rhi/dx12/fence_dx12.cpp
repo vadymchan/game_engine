@@ -60,7 +60,7 @@ void FenceDx12::WaitForFenceValue(uint64_t fenceValue,
 }
 
 uint64_t FenceDx12::SignalWithNextFenceValue(
-    ID3D12CommandQueue* commandQueue, bool bWaitUntilExecuteComplete) {
+    ID3D12CommandQueue* commandQueue, bool waitUntilExecuteComplete) {
   {
     ScopedLock s(&m_fenceValueLock_);
 

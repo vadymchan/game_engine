@@ -102,11 +102,11 @@ class Camera {
       math::Vector3Df&       OutForward,
       math::Vector3Df&       OutRight,
       math::Vector3Df&       OutUp,
-      const math::Vector3Df& InEulerAngle) {
-    OutForward = math::GetDirectionFromEulerAngle(InEulerAngle).normalized();
+      const math::Vector3Df& eulerAngle) {
+    OutForward = math::GetDirectionFromEulerAngle(eulerAngle).normalized();
 
     const bool IsInvert
-        = (InEulerAngle.x() < 0 || math::g_kPi < InEulerAngle.x());
+        = (eulerAngle.x() < 0 || math::g_kPi < eulerAngle.x());
 
     const math::Vector3Df UpVector = (IsInvert ? math::g_downVector<float, 3>()
                                                : math::g_upVector<float, 3>());
@@ -240,9 +240,9 @@ class Camera {
     m_up_     = m_position_ + UpDir;
   }
 
-  void SetEulerAngle(const math::Vector3Df& InEulerAngle) {
-    if (m_eulerAngle_ != InEulerAngle) {
-      m_eulerAngle_ = InEulerAngle;
+  void SetEulerAngle(const math::Vector3Df& eulerAngle) {
+    if (m_eulerAngle_ != eulerAngle) {
+      m_eulerAngle_ = eulerAngle;
       UpdateCameraParameters();
     }
   }
@@ -338,7 +338,7 @@ class Camera {
 
   void GetRectInNDCSpace(math::Vector3Df&      OutPosMin,
                          math::Vector3Df&      OutPosMax,
-                         const math::Matrix4f& InVP) const {
+                         const math::Matrix4f& vp) const {
     math::Vector3Df far_lt;
     math::Vector3Df far_rt;
     math::Vector3Df far_lb;
@@ -396,15 +396,15 @@ class Camera {
 
     // Transform to NDC space
     {
-      far_lt = math::g_transformPoint(far_lt, InVP);
-      far_rt = math::g_transformPoint(far_rt, InVP);
-      far_lb = math::g_transformPoint(far_lb, InVP);
-      far_rb = math::g_transformPoint(far_rb, InVP);
+      far_lt = math::g_transformPoint(far_lt, vp);
+      far_rt = math::g_transformPoint(far_rt, vp);
+      far_lb = math::g_transformPoint(far_lb, vp);
+      far_rb = math::g_transformPoint(far_rb, vp);
 
-      near_lt = math::g_transformPoint(near_lt, InVP);
-      near_rt = math::g_transformPoint(near_rt, InVP);
-      near_lb = math::g_transformPoint(near_lb, InVP);
-      near_rb = math::g_transformPoint(near_rb, InVP);
+      near_lt = math::g_transformPoint(near_lt, vp);
+      near_rt = math::g_transformPoint(near_rt, vp);
+      near_lb = math::g_transformPoint(near_lb, vp);
+      near_rb = math::g_transformPoint(near_rb, vp);
     }
 
     OutPosMin = math::Vector3Df(FLT_MAX);
@@ -430,20 +430,20 @@ class Camera {
 
   void GetRectInScreenSpace(math::Vector3Df&       OutPosMin,
                             math::Vector3Df&       OutPosMax,
-                            const math::Matrix4f&  InVP,
-                            const math::Vector2Df& InScreenSize
+                            const math::Matrix4f&  vp,
+                            const math::Vector2Df& screenSize
                             = math::Vector2Df(1.0f, 1.0f)) const {
-    GetRectInNDCSpace(OutPosMin, OutPosMax, InVP);
+    GetRectInNDCSpace(OutPosMin, OutPosMax, vp);
 
     // Min XY
     OutPosMin     = std::max(OutPosMin, math::Vector3Df(-1.0f, -1.0f, -1.0f));
-    OutPosMin.x() = (OutPosMin.x() * 0.5f + 0.5f) * InScreenSize.x();
-    OutPosMin.y() = (OutPosMin.y() * 0.5f + 0.5f) * InScreenSize.y();
+    OutPosMin.x() = (OutPosMin.x() * 0.5f + 0.5f) * screenSize.x();
+    OutPosMin.y() = (OutPosMin.y() * 0.5f + 0.5f) * screenSize.y();
 
     // Max XY
     OutPosMax     = std::min(OutPosMax, math::Vector3Df(1.0f, 1.0f, 1.0f));
-    OutPosMax.x() = (OutPosMax.x() * 0.5f + 0.5f) * InScreenSize.x();
-    OutPosMax.y() = (OutPosMax.y() * 0.5f + 0.5f) * InScreenSize.y();
+    OutPosMax.x() = (OutPosMax.x() * 0.5f + 0.5f) * screenSize.x();
+    OutPosMax.y() = (OutPosMax.y() * 0.5f + 0.5f) * screenSize.y();
   }
 
   void GetFrustumVertexInWorld(math::Vector3Df* OutVertexArray) const {

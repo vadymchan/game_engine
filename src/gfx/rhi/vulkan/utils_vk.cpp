@@ -661,8 +661,8 @@ uint32_t FindMemoryType(VkPhysicalDevice      physicalDevice,
   return 0;
 }
 
-size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
-                             EVulkanMemoryBits InProperties,
+size_t CreateBuffer_LowLevel(EVulkanBufferBits usage,
+                             EVulkanMemoryBits properties,
                              uint64_t          size,
                              VkBuffer&         OutBuffer,
                              VkDeviceMemory&   OutBufferMemory,
@@ -671,7 +671,7 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
   VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size               = size;
-  bufferInfo.usage              = GetVulkanBufferBits(InUsage);
+  bufferInfo.usage              = GetVulkanBufferBits(usage);
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
   if (!vkCreateBuffer(g_rhi_vk->m_device_, &bufferInfo, nullptr, &OutBuffer)
@@ -690,7 +690,7 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
   allocInfo.memoryTypeIndex
       = FindMemoryType(g_rhi_vk->m_physicalDevice_,
                        memRequirements.memoryTypeBits,
-                       GetVulkanMemoryPropertyFlagBits(InProperties));
+                       GetVulkanMemoryPropertyFlagBits(properties));
 
   if (!vkAllocateMemory(
           g_rhi_vk->m_device_, &allocInfo, nullptr, &OutBufferMemory)
@@ -708,22 +708,22 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits InUsage,
   return memRequirements.size;
 }
 
-std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
-                                       EVulkanMemoryBits InProperties,
+std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits usage,
+                                       EVulkanMemoryBits properties,
                                        uint64_t          size,
-                                       EResourceLayout   InResourceLayout) {
+                                       EResourceLayout   resourceLayout) {
   auto BufferPtr            = std::make_shared<BufferVk>();
   BufferPtr->m_realBufferSize_ = size;
 #if USE_VK_MEMORY_POOL
   assert(g_rhi->GetMemoryPool());
   const Memory& m_memory
-      = g_rhi->GetMemoryPool()->Alloc(InUsage, InProperties, size);
+      = g_rhi->GetMemoryPool()->Alloc(usage, properties, size);
   BufferPtr->InitializeWithMemory(m_memory);
 #else
   if (!CreateBuffer_LowLevel(g_rhi_vk->m_device_,
                              g_rhi_vk->m_physicalDevice_,
-                             InUsage,
-                             InProperties,
+                             usage,
+                             properties,
                              size,
                              BufferPtr->m_buffer,
                              BufferPtr->m_deviceMemory,
@@ -735,15 +735,15 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
 
   // TODO: consider whether it's needed to use transition layout for buffer for
   // now
-  /*if (BufferPtr->Layout != InResourceLayout) {
-    g_rhi->TransitionLayoutImmediate(BufferPtr.get(), InResourceLayout);
+  /*if (BufferPtr->Layout != resourceLayout) {
+    g_rhi->TransitionLayoutImmediate(BufferPtr.get(), resourceLayout);
   }*/
 
   return BufferPtr;
 }
 
-// size_t AllocateBuffer(VkBufferUsageFlags    InUsage,
-//                       VkMemoryPropertyFlags InProperties,
+// size_t AllocateBuffer(VkBufferUsageFlags    usage,
+//                       VkMemoryPropertyFlags properties,
 //                       uint64_t              size,
 //                       BufferVk&             OutBuffer) {
 // #if USE_VK_MEMORY_POOL
@@ -751,8 +751,8 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits InUsage,
 // #else
 //   return CreateBuffer(g_rhi_vk->m_device_,
 //                       g_rhi_vk->m_physicalDevice_,
-//                       InUsage,
-//                       InProperties,
+//                       usage,
+//                       properties,
 //                       size,
 //                       OutBuffer.m_buffer,
 //                       OutBuffer.m_deviceMemory,

@@ -28,14 +28,14 @@ struct WriteDescriptorInfo {
   WriteDescriptorInfo(VkDescriptorBufferInfo bufferInfo)
       : m_bufferInfo_(bufferInfo) {}
 
-  WriteDescriptorInfo(VkDescriptorImageInfo InImageInfo)
-      : m_imageInfo_(InImageInfo) {}
+  WriteDescriptorInfo(VkDescriptorImageInfo imageInfo)
+      : m_imageInfo_(imageInfo) {}
 
   // Raytracing (WIP)
   // WriteDescriptorInfo(
   //     VkWriteDescriptorSetAccelerationStructureKHR
-  //     InAccelerationStructureInfo) :
-  //     AccelerationStructureInfo(InAccelerationStructureInfo) {}
+  //     accelerationStructureInfo) :
+  //     AccelerationStructureInfo(accelerationStructureInfo) {}
 
   VkDescriptorBufferInfo m_bufferInfo_{};
   VkDescriptorImageInfo  m_imageInfo_{};
@@ -65,12 +65,12 @@ struct ShaderBindingInstanceVk : public ShaderBindingInstance {
   const struct ShaderBindingLayoutVk* ShaderBindingsLayouts = nullptr;
 
   static void CreateWriteDescriptorSet(
-      WriteDescriptorSet&        OutDescriptorWrites,
-      const VkDescriptorSet      InDescriptorSet,
+      WriteDescriptorSet&        descriptorWrites,
+      const VkDescriptorSet      descriptorSet,
       const ShaderBindingArray& shaderBindingArray);
 
   static void UpdateWriteDescriptorSet(
-      WriteDescriptorSet&        OutDescriptorWrites,
+      WriteDescriptorSet&        descriptorWrites,
       const ShaderBindingArray& shaderBindingArray);
 
   virtual void Initialize(
