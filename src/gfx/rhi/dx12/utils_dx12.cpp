@@ -438,10 +438,10 @@ std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
     char         szResourceName[1024];
-    size_t       OutLength = 0;
+    size_t       length = 0;
     size_t       origsize  = wcslen(resourceName) + 1;
     const size_t newsize   = origsize * 2;
-    wcstombs_s(&OutLength, szResourceName, newsize, resourceName, _TRUNCATE);
+    wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
     BufferPtr->m_resourceName_ = Name(szResourceName);
   }
 
@@ -614,10 +614,10 @@ std::shared_ptr<TextureDx12> CreateTexture(uint32_t           witdh,
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
     char         szResourceName[1024];
-    size_t       OutLength = 0;
+    size_t       length = 0;
     size_t       origsize  = wcslen(resourceName) + 1;
     const size_t newsize   = origsize * 2;
-    wcstombs_s(&OutLength, szResourceName, newsize, resourceName, _TRUNCATE);
+    wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
 
     TexturePtr->m_resourceName_ = Name(szResourceName);
   }
@@ -663,10 +663,10 @@ std::shared_ptr<TextureDx12> CreateTexture(
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
     char         szResourceName[1024];
-    size_t       OutLength = 0;
+    size_t       length = 0;
     size_t       origsize  = wcslen(resourceName) + 1;
     const size_t newsize   = origsize * 2;
-    wcstombs_s(&OutLength, szResourceName, newsize, resourceName, _TRUNCATE);
+    wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
 
     TexturePtr->m_resourceName_ = Name(szResourceName);
   }

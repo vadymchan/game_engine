@@ -289,61 +289,61 @@ class RHI {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Matrix4d& outResult,
+  virtual bool GetUniformbuffer(math::Matrix4d& result,
                                 const Name&     name,
                                 const Shader*   shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(int&          outResult,
+  virtual bool GetUniformbuffer(int&          result,
                                 const Name&   name,
                                 const Shader* shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(std::uint32_t& outResult,
+  virtual bool GetUniformbuffer(std::uint32_t& result,
                                 const Name&    name,
                                 const Shader*  shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(float&        outResult,
+  virtual bool GetUniformbuffer(float&        result,
                                 const Name&   name,
                                 const Shader* shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector2Df& outResult,
+  virtual bool GetUniformbuffer(math::Vector2Df& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::VectorNf<1>& outResult,
+  virtual bool GetUniformbuffer(math::VectorNf<1>& result,
                                 const Name&        name,
                                 const Shader*      shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector4Df& outResult,
+  virtual bool GetUniformbuffer(math::Vector4Df& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector2Di& outResult,
+  virtual bool GetUniformbuffer(math::Vector2Di& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector3Di& outResult,
+  virtual bool GetUniformbuffer(math::Vector3Di& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector4Di& outResult,
+  virtual bool GetUniformbuffer(math::Vector4Di& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;

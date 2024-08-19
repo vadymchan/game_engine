@@ -21,7 +21,7 @@ struct Triangle {
   int32_t m_index[3];
 };
 
-void CalculateTangents(math::Vector4Df*       OutTangentArray,
+void CalculateTangents(math::Vector4Df*       tangentArray,
                        int32_t                triangleCount,
                        const Triangle*        triangleArray,
                        int32_t                vertexCount,
@@ -74,11 +74,11 @@ void CalculateTangents(math::Vector4Df*       OutTangentArray,
     // perform the rejection of the normal component from the tangent
     math::Vector3Df t_rejected = (t - n * t.dot(n)).normalized();
 
-    OutTangentArray[i]     = math::Vector4Df(t_rejected.x(),
+    tangentArray[i]     = math::Vector4Df(t_rejected.x(),
                                          t_rejected.y(),
                                          t_rejected.z(),
                                          0.0f);  // Normalize(t - Dot(t, n)*n)
-    OutTangentArray[i].w() = (t.cross(b).dot(n) > 0.0f) ? 1.0f : -1.0f;
+    tangentArray[i].w() = (t.cross(b).dot(n) > 0.0f) ? 1.0f : -1.0f;
   }
 
   delete[] Tangent;

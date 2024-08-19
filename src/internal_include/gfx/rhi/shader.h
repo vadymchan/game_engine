@@ -116,14 +116,14 @@ class Permutation<T, T1...> : public Permutation<T1...> {
     Super::SetFromPermutationId(permutationId);
   }
 
-  void GetPermutationDefines(std::string& OutDefines) const {
-    OutDefines += "#define ";
-    OutDefines += Type::DefineName;
-    OutDefines += " ";
-    OutDefines += std::to_string(T::Value[ValueIndex]);
-    OutDefines += "\r\n";
+  void GetPermutationDefines(std::string& defines) const {
+    defines += "#define ";
+    defines += Type::DefineName;
+    defines += " ";
+    defines += std::to_string(T::Value[ValueIndex]);
+    defines += "\r\n";
 
-    Super::GetPermutationDefines(OutDefines);
+    Super::GetPermutationDefines(defines);
   }
 
   int ValueIndex = 0;
@@ -257,7 +257,7 @@ struct Shader {
 
   virtual int32_t GetPermutationCount() const { return 1; }
 
-  virtual void GetPermutationDefines(std::string& OutResult) const {}
+  virtual void GetPermutationDefines(std::string& result) const {}
 
   CompiledShader* m_compiledShader = nullptr;
   // TODO: add abstraction (should be related to Vulkan)
@@ -279,8 +279,8 @@ struct Shader {
   virtual int32_t GetPermutationCount() const override {                  \
     return PermutationVariable.GetPermutationCount();                     \
   }                                                                       \
-  virtual void GetPermutationDefines(std::string& OutResult) const {      \
-    PermutationVariable.GetPermutationDefines(OutResult);                 \
+  virtual void GetPermutationDefines(std::string& result) const {      \
+    PermutationVariable.GetPermutationDefines(result);                 \
   }
 
 struct ShaderForwardPixelShader : public Shader {

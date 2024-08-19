@@ -288,14 +288,14 @@ struct ShaderBinding {
     return m_hash_;
   }
 
-  void CloneWithoutResource(ShaderBinding& OutReslut) const {
-    OutReslut.m_isInline_         = m_isInline_;
-    OutReslut.m_bindingPoint_     = m_bindingPoint_;
-    OutReslut.m_numOfDescriptors_ = m_numOfDescriptors_;
-    OutReslut.m_bindingType_      = m_bindingType_;
-    OutReslut.m_accessStageFlags_ = m_accessStageFlags_;
-    OutReslut.m_isBindless_       = m_isBindless_;
-    OutReslut.m_hash_             = m_hash_;
+  void CloneWithoutResource(ShaderBinding& result) const {
+    result.m_isInline_         = m_isInline_;
+    result.m_bindingPoint_     = m_bindingPoint_;
+    result.m_numOfDescriptors_ = m_numOfDescriptors_;
+    result.m_bindingType_      = m_bindingType_;
+    result.m_accessStageFlags_ = m_accessStageFlags_;
+    result.m_isBindless_       = m_isBindless_;
+    result.m_hash_             = m_hash_;
   }
 
   mutable size_t m_hash_ = 0;
@@ -355,17 +355,17 @@ struct ShaderBindingArray {
     return (ShaderBinding*)(&m_data_[index]);
   }
 
-  void CloneWithoutResource(ShaderBindingArray& OutResult) const {
-    memcpy(&OutResult.m_data_[0],
+  void CloneWithoutResource(ShaderBindingArray& result) const {
+    memcpy(&result.m_data_[0],
            &m_data_[0],
            sizeof(ShaderBinding) * m_numOfData_);
 
     for (int32_t i = 0; i < m_numOfData_; ++i) {
       ShaderBinding* SrcAddress = (ShaderBinding*)&m_data_[i];
-      ShaderBinding* DstAddress = (ShaderBinding*)&OutResult.m_data_[i];
+      ShaderBinding* DstAddress = (ShaderBinding*)&result.m_data_[i];
       SrcAddress->CloneWithoutResource(*DstAddress);
     }
-    OutResult.m_numOfData_ = m_numOfData_;
+    result.m_numOfData_ = m_numOfData_;
   }
 
   ShaderBinding m_data_[s_kNumOfInlineData];

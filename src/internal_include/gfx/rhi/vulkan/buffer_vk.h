@@ -190,9 +190,9 @@ struct VertexBufferVk : public VertexBuffer {
   VkPipelineInputAssemblyStateCreateInfo CreateInputAssemblyState() const;
 
   static void CreateVertexInputState(
-      VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
-      std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
-      std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
+      VkPipelineVertexInputStateCreateInfo&           vertexInputInfo,
+      std::vector<VkVertexInputBindingDescription>&   bindingDescriptions,
+      std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
       const VertexBufferArray&                        vertexBufferArray);
 
   virtual int32_t GetElementCount() const {

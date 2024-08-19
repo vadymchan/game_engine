@@ -210,13 +210,13 @@ struct VertexBufferDx12 : public VertexBuffer {
   }
 
   static void CreateVertexInputState(
-      std::vector<D3D12_INPUT_ELEMENT_DESC>& OutInputElementDescs,
+      std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescs,
       const VertexBufferArray&               vertexBufferArray) {
     for (int32_t i = 0; i < vertexBufferArray.m_numOfData_; ++i) {
       assert(vertexBufferArray[i]);
       const BindInfo& bindInfo
           = ((const VertexBufferDx12*)vertexBufferArray[i])->m_bindInfos_;
-      OutInputElementDescs.insert(OutInputElementDescs.end(),
+      inputElementDescs.insert(inputElementDescs.end(),
                                   bindInfo.m_inputElementDescs_.begin(),
                                   bindInfo.m_inputElementDescs_.end());
     }

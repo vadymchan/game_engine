@@ -134,33 +134,33 @@ inline auto GetVulkanTexturePixelSize(ETextureFormat type) {
     CONVERSION_TYPE_ELEMENT(ETextureFormat::D32_S8, 5));
 }
 
-inline void GetVulkanAttachmentLoadStoreOp(VkAttachmentLoadOp&    OutLoadOp,
-                                    VkAttachmentStoreOp&   OutStoreOp,
-                                    EAttachmentLoadStoreOp type) {
+inline void GetVulkanAttachmentLoadStoreOp(VkAttachmentLoadOp&    loadOp,
+                                           VkAttachmentStoreOp&   storeOp,
+                                           EAttachmentLoadStoreOp type) {
   switch (type) {
     case EAttachmentLoadStoreOp::LOAD_STORE:
-      OutLoadOp  = VK_ATTACHMENT_LOAD_OP_LOAD;
-      OutStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+      loadOp  = VK_ATTACHMENT_LOAD_OP_LOAD;
+      storeOp = VK_ATTACHMENT_STORE_OP_STORE;
       break;
     case EAttachmentLoadStoreOp::LOAD_DONTCARE:
-      OutLoadOp  = VK_ATTACHMENT_LOAD_OP_LOAD;
-      OutStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      loadOp  = VK_ATTACHMENT_LOAD_OP_LOAD;
+      storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       break;
     case EAttachmentLoadStoreOp::CLEAR_STORE:
-      OutLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      OutStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+      loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+      storeOp = VK_ATTACHMENT_STORE_OP_STORE;
       break;
     case EAttachmentLoadStoreOp::CLEAR_DONTCARE:
-      OutLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      OutStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+      storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       break;
     case EAttachmentLoadStoreOp::DONTCARE_STORE:
-      OutLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      OutStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+      loadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+      storeOp = VK_ATTACHMENT_STORE_OP_STORE;
       break;
     case EAttachmentLoadStoreOp::DONTCARE_DONTCARE:
-      OutLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      OutStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      loadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+      storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       break;
     case EAttachmentLoadStoreOp::MAX:
     default:

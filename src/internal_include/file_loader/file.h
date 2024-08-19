@@ -53,7 +53,7 @@ static uint64_t GetFileTimeStamp(const std::string& filename);
 
   const char* GetBuffer(size_t index = 0, size_t count = 0) const;
 
-  bool GetBuffer(FILE_BUFFER&       outBuffer,
+  bool GetBuffer(FILE_BUFFER&       buffer,
                  const std::string& startToken,
                  const std::string& endToken);
 

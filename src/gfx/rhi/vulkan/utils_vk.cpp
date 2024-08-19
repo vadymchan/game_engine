@@ -664,9 +664,9 @@ uint32_t FindMemoryType(VkPhysicalDevice      physicalDevice,
 size_t CreateBuffer_LowLevel(EVulkanBufferBits usage,
                              EVulkanMemoryBits properties,
                              uint64_t          size,
-                             VkBuffer&         OutBuffer,
-                             VkDeviceMemory&   OutBufferMemory,
-                             uint64_t&         OutAllocatedSize) {
+                             VkBuffer&         buffer,
+                             VkDeviceMemory&   bufferMemory,
+                             uint64_t&         allocateSize) {
   assert(size);
   VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -674,7 +674,7 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits usage,
   bufferInfo.usage              = GetVulkanBufferBits(usage);
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (!vkCreateBuffer(g_rhi_vk->m_device_, &bufferInfo, nullptr, &OutBuffer)
+  if (!vkCreateBuffer(g_rhi_vk->m_device_, &bufferInfo, nullptr, &buffer)
       == VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create buffer");
     return 0;
@@ -682,7 +682,7 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits usage,
 
   VkMemoryRequirements memRequirements;
   vkGetBufferMemoryRequirements(
-      g_rhi_vk->m_device_, OutBuffer, &memRequirements);
+      g_rhi_vk->m_device_, buffer, &memRequirements);
 
   VkMemoryAllocateInfo allocInfo = {};
   allocInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -693,14 +693,14 @@ size_t CreateBuffer_LowLevel(EVulkanBufferBits usage,
                        GetVulkanMemoryPropertyFlagBits(properties));
 
   if (!vkAllocateMemory(
-          g_rhi_vk->m_device_, &allocInfo, nullptr, &OutBufferMemory)
+          g_rhi_vk->m_device_, &allocInfo, nullptr, &bufferMemory)
       == VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to allocate buffer memory");
     return 0;
   }
 
-  OutAllocatedSize = memRequirements.size;
-  if (vkBindBufferMemory(g_rhi_vk->m_device_, OutBuffer, OutBufferMemory, 0)
+  allocateSize = memRequirements.size;
+  if (vkBindBufferMemory(g_rhi_vk->m_device_, buffer, bufferMemory, 0)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to bind buffer memory");
   }
@@ -745,7 +745,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits usage,
 // size_t AllocateBuffer(VkBufferUsageFlags    usage,
 //                       VkMemoryPropertyFlags properties,
 //                       uint64_t              size,
-//                       BufferVk&             OutBuffer) {
+//                       BufferVk&             buffer) {
 // #if USE_VK_MEMORY_POOL
 //// TODO: add memory pool logic
 // #else
@@ -754,9 +754,9 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits usage,
 //                       usage,
 //                       properties,
 //                       size,
-//                       OutBuffer.m_buffer,
-//                       OutBuffer.m_deviceMemory,
-//                       OutBuffer.AllocatedSize);
+//                       buffer.m_buffer,
+//                       buffer.m_deviceMemory,
+//                       buffer.AllocatedSize);
 // #endif
 // }
 

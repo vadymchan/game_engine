@@ -99,31 +99,31 @@ class Camera {
   }
 
   static void GetForwardRightUpFromEulerAngle(
-      math::Vector3Df&       OutForward,
-      math::Vector3Df&       OutRight,
-      math::Vector3Df&       OutUp,
+      math::Vector3Df&       forward,
+      math::Vector3Df&       right,
+      math::Vector3Df&       up,
       const math::Vector3Df& eulerAngle) {
-    OutForward = math::GetDirectionFromEulerAngle(eulerAngle).normalized();
+    forward = math::GetDirectionFromEulerAngle(eulerAngle).normalized();
 
     const bool IsInvert
         = (eulerAngle.x() < 0 || math::g_kPi < eulerAngle.x());
 
     const math::Vector3Df UpVector = (IsInvert ? math::g_downVector<float, 3>()
                                                : math::g_upVector<float, 3>());
-    OutRight                       = (IsInvert ? math::g_downVector<float, 3>()
+    right                       = (IsInvert ? math::g_downVector<float, 3>()
                                                : math::g_upVector<float, 3>())
-                   .cross(OutForward)
+                   .cross(forward)
                    .normalized();
-    if (math::g_isNearlyZero(OutRight.magnitudeSquared())) {
-      OutRight = (IsInvert ? math::g_backwardVector<float, 3>()
+    if (math::g_isNearlyZero(right.magnitudeSquared())) {
+      right = (IsInvert ? math::g_backwardVector<float, 3>()
                            : math::g_forwardVector<float, 3>())
-                     .cross(OutForward)
+                     .cross(forward)
                      .normalized();
     }
-    OutUp = OutForward.cross(OutRight).normalized();
+    up = forward.cross(right).normalized();
   }
 
-  static void SetCamera(Camera*                OutCamera,
+  static void SetCamera(Camera*                camera,
                         const math::Vector3Df& pos,
                         const math::Vector3Df& target,
                         const math::Vector3Df& up,
@@ -135,18 +135,18 @@ class Camera {
                         bool                   isPerspectiveProjection,
                         float                  distance = 300.0f) {
     const auto toTarget    = (target - pos);
-    OutCamera->m_position_ = pos;
-    OutCamera->m_target_   = target;
-    OutCamera->m_up_       = up;
-    OutCamera->m_distance_ = distance;
-    OutCamera->SetEulerAngle(math::GetEulerAngleFrom(toTarget));
+    camera->m_position_ = pos;
+    camera->m_target_   = target;
+    camera->m_up_       = up;
+    camera->m_distance_ = distance;
+    camera->SetEulerAngle(math::GetEulerAngleFrom(toTarget));
 
-    OutCamera->m_FOVRad_                  = fovRad;
-    OutCamera->m_Near_                    = nearDist;
-    OutCamera->m_far_                     = farDist;
-    OutCamera->m_width_                   = static_cast<int32_t>(width);
-    OutCamera->m_height_                  = static_cast<int32_t>(height);
-    OutCamera->m_isPerspectiveProjection_ = isPerspectiveProjection;
+    camera->m_FOVRad_                  = fovRad;
+    camera->m_Near_                    = nearDist;
+    camera->m_far_                     = farDist;
+    camera->m_width_                   = static_cast<int32_t>(width);
+    camera->m_height_                  = static_cast<int32_t>(height);
+    camera->m_isPerspectiveProjection_ = isPerspectiveProjection;
   }
 
   virtual math::Matrix4f CreateView() const {
@@ -336,8 +336,8 @@ class Camera {
 
   math::Vector3Df GetEulerAngle() const { return m_eulerAngle_; }
 
-  void GetRectInNDCSpace(math::Vector3Df&      OutPosMin,
-                         math::Vector3Df&      OutPosMax,
+  void GetRectInNDCSpace(math::Vector3Df&      minPosition,
+                         math::Vector3Df&      maxPosition,
                          const math::Matrix4f& vp) const {
     math::Vector3Df far_lt;
     math::Vector3Df far_rt;
@@ -407,46 +407,46 @@ class Camera {
       near_rb = math::g_transformPoint(near_rb, vp);
     }
 
-    OutPosMin = math::Vector3Df(FLT_MAX);
-    OutPosMin = std::min(OutPosMin, far_lt);
-    OutPosMin = std::min(OutPosMin, far_rt);
-    OutPosMin = std::min(OutPosMin, far_lb);
-    OutPosMin = std::min(OutPosMin, far_rb);
-    OutPosMin = std::min(OutPosMin, near_lt);
-    OutPosMin = std::min(OutPosMin, near_rt);
-    OutPosMin = std::min(OutPosMin, near_lb);
-    OutPosMin = std::min(OutPosMin, near_rb);
+    minPosition = math::Vector3Df(FLT_MAX);
+    minPosition = std::min(minPosition, far_lt);
+    minPosition = std::min(minPosition, far_rt);
+    minPosition = std::min(minPosition, far_lb);
+    minPosition = std::min(minPosition, far_rb);
+    minPosition = std::min(minPosition, near_lt);
+    minPosition = std::min(minPosition, near_rt);
+    minPosition = std::min(minPosition, near_lb);
+    minPosition = std::min(minPosition, near_rb);
 
-    OutPosMax = math::Vector3Df(FLT_MIN);
-    OutPosMax = std::max(OutPosMax, far_lt);
-    OutPosMax = std::max(OutPosMax, far_rt);
-    OutPosMax = std::max(OutPosMax, far_lb);
-    OutPosMax = std::max(OutPosMax, far_rb);
-    OutPosMax = std::max(OutPosMax, near_lt);
-    OutPosMax = std::max(OutPosMax, near_rt);
-    OutPosMax = std::max(OutPosMax, near_lb);
-    OutPosMax = std::max(OutPosMax, near_rb);
+    maxPosition = math::Vector3Df(FLT_MIN);
+    maxPosition = std::max(maxPosition, far_lt);
+    maxPosition = std::max(maxPosition, far_rt);
+    maxPosition = std::max(maxPosition, far_lb);
+    maxPosition = std::max(maxPosition, far_rb);
+    maxPosition = std::max(maxPosition, near_lt);
+    maxPosition = std::max(maxPosition, near_rt);
+    maxPosition = std::max(maxPosition, near_lb);
+    maxPosition = std::max(maxPosition, near_rb);
   }
 
-  void GetRectInScreenSpace(math::Vector3Df&       OutPosMin,
-                            math::Vector3Df&       OutPosMax,
+  void GetRectInScreenSpace(math::Vector3Df&       minPosition,
+                            math::Vector3Df&       maxPosition,
                             const math::Matrix4f&  vp,
                             const math::Vector2Df& screenSize
                             = math::Vector2Df(1.0f, 1.0f)) const {
-    GetRectInNDCSpace(OutPosMin, OutPosMax, vp);
+    GetRectInNDCSpace(minPosition, maxPosition, vp);
 
     // Min XY
-    OutPosMin     = std::max(OutPosMin, math::Vector3Df(-1.0f, -1.0f, -1.0f));
-    OutPosMin.x() = (OutPosMin.x() * 0.5f + 0.5f) * screenSize.x();
-    OutPosMin.y() = (OutPosMin.y() * 0.5f + 0.5f) * screenSize.y();
+    minPosition     = std::max(minPosition, math::Vector3Df(-1.0f, -1.0f, -1.0f));
+    minPosition.x() = (minPosition.x() * 0.5f + 0.5f) * screenSize.x();
+    minPosition.y() = (minPosition.y() * 0.5f + 0.5f) * screenSize.y();
 
     // Max XY
-    OutPosMax     = std::min(OutPosMax, math::Vector3Df(1.0f, 1.0f, 1.0f));
-    OutPosMax.x() = (OutPosMax.x() * 0.5f + 0.5f) * screenSize.x();
-    OutPosMax.y() = (OutPosMax.y() * 0.5f + 0.5f) * screenSize.y();
+    maxPosition     = std::min(maxPosition, math::Vector3Df(1.0f, 1.0f, 1.0f));
+    maxPosition.x() = (maxPosition.x() * 0.5f + 0.5f) * screenSize.x();
+    maxPosition.y() = (maxPosition.y() * 0.5f + 0.5f) * screenSize.y();
   }
 
-  void GetFrustumVertexInWorld(math::Vector3Df* OutVertexArray) const {
+  void GetFrustumVertexInWorld(math::Vector3Df* vertexArray) const {
     math::Vector3Df far_lt;
     math::Vector3Df far_rt;
     math::Vector3Df far_lb;
@@ -502,15 +502,15 @@ class Camera {
       near_rb = origin + targetVec * n + rightVec * w * 0.5f - upVec * h * 0.5f;
     }
 
-    OutVertexArray[0] = far_lt;
-    OutVertexArray[1] = far_rt;
-    OutVertexArray[2] = far_lb;
-    OutVertexArray[3] = far_rb;
+    vertexArray[0] = far_lt;
+    vertexArray[1] = far_rt;
+    vertexArray[2] = far_lb;
+    vertexArray[3] = far_rb;
 
-    OutVertexArray[4] = near_lt;
-    OutVertexArray[5] = near_rt;
-    OutVertexArray[6] = near_lb;
-    OutVertexArray[7] = near_rb;
+    vertexArray[4] = near_lt;
+    vertexArray[5] = near_rt;
+    vertexArray[6] = near_lb;
+    vertexArray[7] = near_rb;
   }
 
   // void AddLight(Light* light);
@@ -609,7 +609,7 @@ class OrthographicCamera : public Camera {
     return camera;
   }
 
-  static void SetCamera(OrthographicCamera*    OutCamera,
+  static void SetCamera(OrthographicCamera*    camera,
                         const math::Vector3Df& pos,
                         const math::Vector3Df& target,
                         const math::Vector3Df& up,
@@ -621,20 +621,20 @@ class OrthographicCamera : public Camera {
                         float                  farDist,
                         float                  distance = 300.0f) {
     const auto toTarget    = (target - pos);
-    OutCamera->m_position_ = pos;
-    OutCamera->m_target_   = target;
-    OutCamera->m_up_       = up;
-    OutCamera->m_distance_ = distance;
-    OutCamera->SetEulerAngle(math::GetEulerAngleFrom(toTarget));
+    camera->m_position_ = pos;
+    camera->m_target_   = target;
+    camera->m_up_       = up;
+    camera->m_distance_ = distance;
+    camera->SetEulerAngle(math::GetEulerAngleFrom(toTarget));
 
-    OutCamera->m_Near_                    = nearDist;
-    OutCamera->m_far_                     = farDist;
-    OutCamera->m_isPerspectiveProjection_ = false;
+    camera->m_Near_                    = nearDist;
+    camera->m_far_                     = farDist;
+    camera->m_isPerspectiveProjection_ = false;
 
-    OutCamera->m_minX_ = minX;
-    OutCamera->m_minY_ = minY;
-    OutCamera->m_maxX_ = maxX;
-    OutCamera->m_maxY_ = maxY;
+    camera->m_minX_ = minX;
+    camera->m_minY_ = minY;
+    camera->m_maxX_ = maxX;
+    camera->m_maxY_ = maxY;
   }
 
   OrthographicCamera() { m_type_ = ECameraType::ORTHO; }

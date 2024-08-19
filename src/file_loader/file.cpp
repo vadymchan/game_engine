@@ -99,7 +99,7 @@ const char* File::GetBuffer(size_t index, size_t count) const {
   return &m_buffer_[0];
 }
 
-bool File::GetBuffer(FILE_BUFFER&       outBuffer,
+bool File::GetBuffer(FILE_BUFFER&       buffer,
                       const std::string& startToken,
                       const std::string& endToken) {
   if (m_buffer_.empty()) {
@@ -119,8 +119,8 @@ bool File::GetBuffer(FILE_BUFFER&       outBuffer,
     }
 
     if (count > 0) {
-      outBuffer.resize(count);
-      std::memcpy(&outBuffer[0], startPos, count * sizeof(ELEMENT_TYPE));
+      buffer.resize(count);
+      std::memcpy(&buffer[0], startPos, count * sizeof(ELEMENT_TYPE));
       return true;
     }
   }

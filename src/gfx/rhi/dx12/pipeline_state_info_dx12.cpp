@@ -130,11 +130,11 @@ void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
 
   assert(m_vertexBufferArray.m_numOfData_ > 0);
 
-  std::vector<D3D12_INPUT_ELEMENT_DESC> OutInputElementDescs;
-  VertexBufferDx12::CreateVertexInputState(OutInputElementDescs,
+  std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
+  VertexBufferDx12::CreateVertexInputState(inputElementDescs,
                                              m_vertexBufferArray);
-  psoDesc.InputLayout.pInputElementDescs = OutInputElementDescs.data();
-  psoDesc.InputLayout.NumElements = (uint32_t)OutInputElementDescs.size();
+  psoDesc.InputLayout.pInputElementDescs = inputElementDescs.data();
+  psoDesc.InputLayout.NumElements = (uint32_t)inputElementDescs.size();
 
   // In DX12, only one can be used, but this will be changed. We need to decide
   // whether to use one or multiple.

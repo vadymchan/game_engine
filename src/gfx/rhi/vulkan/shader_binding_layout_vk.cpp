@@ -25,14 +25,14 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 //   return Hash;
 // }
 //
-// void ShaderBindingVk::CloneWithoutResource(ShaderBindingVk& OutReslut) const
+// void ShaderBindingVk::CloneWithoutResource(ShaderBindingVk& result) const
 // {
-//   OutReslut.m_isInline_         = m_isInline_;
-//   OutReslut.m_bindingPoint_     = m_bindingPoint_;
-//   OutReslut.NumOfDescriptors = NumOfDescriptors;
-//   OutReslut.BindingType      = BindingType;
-//   OutReslut.m_accessStageFlags_ = m_accessStageFlags_;
-//   OutReslut.Hash             = Hash;
+//   result.m_isInline_         = m_isInline_;
+//   result.m_bindingPoint_     = m_bindingPoint_;
+//   result.NumOfDescriptors = NumOfDescriptors;
+//   result.BindingType      = BindingType;
+//   result.m_accessStageFlags_ = m_accessStageFlags_;
+//   result.Hash             = Hash;
 // }
 //
 //// =========================================================
@@ -61,15 +61,15 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 // }
 //
 // void ShaderBindingArray::CloneWithoutResource(
-//     ShaderBindingArray& OutResult) const {
-//   memcpy(&OutResult.Data[0], &Data[0], sizeof(ShaderBindingVk) * NumOfData);
+//     ShaderBindingArray& result) const {
+//   memcpy(&result.Data[0], &Data[0], sizeof(ShaderBindingVk) * NumOfData);
 //
 //   for (int32_t i = 0; i < NumOfData; ++i) {
 //     ShaderBindingVk* SrcAddress = (ShaderBindingVk*)&Data[i];
-//     ShaderBindingVk* DstAddress = (ShaderBindingVk*)&OutResult.Data[i];
+//     ShaderBindingVk* DstAddress = (ShaderBindingVk*)&result.Data[i];
 //     SrcAddress->CloneWithoutResource(*DstAddress);
 //   }
-//   OutResult.NumOfData = NumOfData;
+//   result.NumOfData = NumOfData;
 // }
 //
 //// =========================================================

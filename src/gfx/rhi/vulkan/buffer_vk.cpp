@@ -436,32 +436,32 @@ VkPipelineInputAssemblyStateCreateInfo
 }
 
 void VertexBufferVk::CreateVertexInputState(
-    VkPipelineVertexInputStateCreateInfo&           OutVertexInputInfo,
-    std::vector<VkVertexInputBindingDescription>&   OutBindingDescriptions,
-    std::vector<VkVertexInputAttributeDescription>& OutAttributeDescriptions,
+    VkPipelineVertexInputStateCreateInfo&           vertexInputInfo,
+    std::vector<VkVertexInputBindingDescription>&   bindingDescriptions,
+    std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
     const VertexBufferArray&                        vertexBufferArray) {
   for (int32_t i = 0; i < vertexBufferArray.m_numOfData_; ++i) {
     // TODO: consider replace assertion
     assert(vertexBufferArray[i] != nullptr);
     const auto& bindInfo
         = ((const VertexBufferVk*)vertexBufferArray[i])->m_bindInfos_;
-    OutBindingDescriptions.insert(OutBindingDescriptions.end(),
+    bindingDescriptions.insert(bindingDescriptions.end(),
                                   bindInfo.m_inputBindingDescriptions_.begin(),
                                   bindInfo.m_inputBindingDescriptions_.end());
-    OutAttributeDescriptions.insert(OutAttributeDescriptions.end(),
+    attributeDescriptions.insert(attributeDescriptions.end(),
                                     bindInfo.m_attributeDescriptions_.begin(),
                                     bindInfo.m_attributeDescriptions_.end());
   }
 
-  OutVertexInputInfo.sType
+  vertexInputInfo.sType
       = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  OutVertexInputInfo.vertexBindingDescriptionCount
-      = (uint32_t)OutBindingDescriptions.size();
-  OutVertexInputInfo.pVertexBindingDescriptions = OutBindingDescriptions.data();
-  OutVertexInputInfo.vertexAttributeDescriptionCount
-      = (uint32_t)OutAttributeDescriptions.size();
-  OutVertexInputInfo.pVertexAttributeDescriptions
-      = OutAttributeDescriptions.data();
+  vertexInputInfo.vertexBindingDescriptionCount
+      = (uint32_t)bindingDescriptions.size();
+  vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+  vertexInputInfo.vertexAttributeDescriptionCount
+      = (uint32_t)attributeDescriptions.size();
+  vertexInputInfo.pVertexAttributeDescriptions
+      = attributeDescriptions.data();
 }
 
 // IndexBufferVk

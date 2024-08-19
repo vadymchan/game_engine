@@ -187,9 +187,9 @@ uint32_t FindMemoryType(VkPhysicalDevice      physicalDevice,
 size_t CreateBuffer_LowLevel(EVulkanBufferBits usage,
                              EVulkanMemoryBits properties,
                              uint64_t          size,
-                             VkBuffer&         OutBuffer,
-                             VkDeviceMemory&   OutBufferMemory,
-                             uint64_t&         OutAllocatedSize);
+                             VkBuffer&         buffer,
+                             VkDeviceMemory&   bufferMemory,
+                             uint64_t&         allocateSize);
 
 std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits usage,
                                        EVulkanMemoryBits properties,
@@ -199,7 +199,7 @@ std::shared_ptr<BufferVk> CreateBuffer(EVulkanBufferBits usage,
 // size_t AllocateBuffer(VkBufferUsageFlags    usage,
 //                       VkMemoryPropertyFlags properties,
 //                       uint64_t              size,
-//                       BufferVk&             OutBuffer);
+//                       BufferVk&             buffer);
 
 void CopyBuffer(VkCommandBuffer commandBuffer,
                 VkBuffer        srcBuffer,
