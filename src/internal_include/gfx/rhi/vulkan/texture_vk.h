@@ -25,22 +25,22 @@ class TextureVk : public Texture {
             bool                      sRGB      = false)
       : Texture(type, format, extent, layerCount, sampleCount, sRGB) {}
 
-  virtual ~TextureVk() { ReleaseInternal(); }
+  virtual ~TextureVk() { releaseInternal(); }
 
-  virtual void Release() override { ReleaseInternal(); }
+  virtual void release() override { releaseInternal(); }
 
-  void ReleaseInternal();
+  void releaseInternal();
 
-  virtual void* GetHandle() const override { return m_image_; }
+  virtual void* getHandle() const override { return m_image_; }
 
-  virtual void* GetSamplerStateHandle() const override { return m_sampler_; }
+  virtual void* getSamplerStateHandle() const override { return m_sampler_; }
 
-  virtual EResourceLayout GetLayout() const override { return m_imageLayout_; }
+  virtual EResourceLayout getLayout() const override { return m_imageLayout_; }
 
   // TODO: clear resources
 
-  static VkSampler CreateDefaultSamplerState();
-  static void      DestroyDefaultSamplerState();
+  static VkSampler s_createDefaultSamplerState();
+  static void      s_destroyDefaultSamplerState();
 
   // private:
   VkImage     m_image_ = VK_NULL_HANDLE;  // TODO: consider using pool

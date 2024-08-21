@@ -23,20 +23,20 @@ struct RenderFrameContext
 
   virtual ~RenderFrameContext();
 
-  virtual void Destroy();
+  virtual void destroy();
 
-  virtual CommandBuffer* GetActiveCommandBuffer() const {
+  virtual CommandBuffer* getActiveCommandBuffer() const {
     return m_commandBuffer_;
   }
 
-  virtual bool BeginActiveCommandBuffer();
-  virtual bool EndActiveCommandBuffer();
+  virtual bool beginActiveCommandBuffer();
+  virtual bool endActiveCommandBuffer();
 
-  virtual void SubmitCurrentActiveCommandBuffer(
+  virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) {}
 
   public:
-  // RaytracingScene*                   raytracingScene            = nullptr;
+  // RaytracingScene*                raytracingScene            = nullptr;
   std::shared_ptr<SceneRenderTarget> m_sceneRenderTargetPtr_       = nullptr;
   uint32_t                           m_frameIndex_                 = -1;
   bool                               m_useForwardRenderer_         = true;

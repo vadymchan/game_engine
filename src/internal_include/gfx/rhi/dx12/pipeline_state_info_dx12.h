@@ -15,12 +15,12 @@ struct SamplerStateInfoDx12 : public SamplerStateInfo {
   SamplerStateInfoDx12(const SamplerStateInfo& state)
       : SamplerStateInfo(state) {}
 
-  virtual ~SamplerStateInfoDx12() { Release(); }
+  virtual ~SamplerStateInfoDx12() { release(); }
 
-  virtual void Initialize() override;
-  void         Release();
+  virtual void initialize() override;
+  void         release();
 
-  virtual void* GetHandle() const { return (void*)&m_samplerDesc_; }
+  virtual void* getHandle() const { return (void*)&m_samplerDesc_; }
 
   D3D12_SAMPLER_DESC m_samplerDesc_;
   DescriptorDx12     m_samplerSRV_;
@@ -34,7 +34,7 @@ struct RasterizationStateInfoDx12 : public RasterizationStateInfo {
 
   virtual ~RasterizationStateInfoDx12() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   D3D12_RASTERIZER_DESC m_rasterizeDesc_   = {};
   DXGI_SAMPLE_DESC      m_multiSampleDesc_ = {};
@@ -48,7 +48,7 @@ struct StencilOpStateInfoDx12 : public StencilOpStateInfo {
 
   virtual ~StencilOpStateInfoDx12() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   D3D12_DEPTH_STENCILOP_DESC m_stencilOpStateDesc_ = {};
 };
@@ -61,7 +61,7 @@ struct DepthStencilStateInfoDx12 : public DepthStencilStateInfo {
 
   virtual ~DepthStencilStateInfoDx12() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   D3D12_DEPTH_STENCIL_DESC m_depthStencilStateDesc_ = {};
 };
@@ -74,7 +74,7 @@ struct BlendingStateInfoDx12 : public BlendingStateInfo {
 
   virtual ~BlendingStateInfoDx12() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   D3D12_RENDER_TARGET_BLEND_DESC m_blendDesc_ = {};
 };
@@ -105,22 +105,22 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
   PipelineStateInfoDx12(PipelineStateInfo&& pipelineState)
       : PipelineStateInfo(std::move(pipelineState)) {}
 
-  virtual ~PipelineStateInfoDx12() { Release(); }
+  virtual ~PipelineStateInfoDx12() { release(); }
 
-  void Release();
+  void release();
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
-  virtual void* GetHandle() const override { return nullptr; }
+  virtual void* getHandle() const override { return nullptr; }
 
-  virtual void* GetPipelineLayoutHandle() const override { return nullptr; }
+  virtual void* getPipelineLayoutHandle() const override { return nullptr; }
 
-  virtual void* CreateGraphicsPipelineState() override;
-  virtual void* CreateComputePipelineState() override;
-  // virtual void* CreateRaytracingPipelineState() override;
-  virtual void  Bind(const std::shared_ptr<RenderFrameContext>&
+  virtual void* createGraphicsPipelineState() override;
+  virtual void* createComputePipelineState() override;
+  // virtual void* createRaytracingPipelineState() override;
+  virtual void  bind(const std::shared_ptr<RenderFrameContext>&
                          renderFrameContext) const override;
-  void          Bind(CommandBufferDx12* commandList) const;
+  void          bind(CommandBufferDx12* commandList) const;
 
   ComPtr<ID3D12PipelineState> m_pipelineState_;
   std::vector<D3D12_VIEWPORT> m_viewports_;

@@ -15,7 +15,7 @@ concept Pointer = std::is_pointer_v<T>;
 
 template <typename T>
   requires Integral<T> || Pointer<T>
-constexpr T Align(T value, std::size_t alignment) {
+constexpr T g_align(T value, std::size_t alignment) {
 #ifdef USE_POWER_OF_TWO_ALIGNMENT
   GlobalLogger::Log(LogLevel::Error, "Alignment must be a power of two.");
   assert((alignment & (alignment - 1)) == 0

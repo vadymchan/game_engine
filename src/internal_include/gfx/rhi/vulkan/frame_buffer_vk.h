@@ -15,7 +15,7 @@
 //namespace game_engine {
 //
 //struct FrameBufferInfoVk {
-//  size_t GetHash() const {
+//  size_t s_getHash() const {
 //    return GETHASH_FROM_INSTANT_STRUCT(TextureType,
 //                                       Format,
 //                                       Extent.width(),
@@ -38,7 +38,7 @@
 //
 //  // No need for now
 //  //
-//  // virtual TextureVk* GetTexture(int32_t index = 0) const {
+//  // virtual TextureVk* getTexture(int32_t index = 0) const {
 //  //  return Textures[index].get();
 //  //}
 //  //
@@ -59,7 +59,7 @@
 //  // virtual bool FBOBegin(int index = 0, bool mrt = false) const { return true;
 //  // }
 //
-//  // virtual void End() const {}
+//  // virtual void end() const {}
 //
 //  FrameBufferInfoVk                        Info;
 //  std::vector<std::shared_ptr<TextureVk> > Textures;

@@ -14,7 +14,7 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 
 //// ShaderBindingVk
 //// =========================================================
-// size_t ShaderBindingVk::GetHash() const {
+// size_t ShaderBindingVk::s_getHash() const {
 //   if (Hash) {
 //     return Hash;
 //   }
@@ -25,7 +25,7 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 //   return Hash;
 // }
 //
-// void ShaderBindingVk::CloneWithoutResource(ShaderBindingVk& result) const
+// void ShaderBindingVk::cloneWithoutResource(ShaderBindingVk& result) const
 // {
 //   result.m_isInline_         = m_isInline_;
 //   result.m_bindingPoint_     = m_bindingPoint_;
@@ -39,11 +39,11 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 //
 //// ShaderBindingArray
 //// =========================================================
-// size_t ShaderBindingArray::GetHash() const {
+// size_t ShaderBindingArray::s_getHash() const {
 //   size_t           Hash    = 0;
 //   ShaderBindingVk* Address = (ShaderBindingVk*)&Data[0];
 //   for (int32_t i = 0; i < NumOfData; ++i) {
-//     Hash ^= ((Address + i)->GetHash() << i);
+//     Hash ^= ((Address + i)->s_getHash() << i);
 //   }
 //   return Hash;
 // }
@@ -60,14 +60,14 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 //   return (ShaderBindingVk*)(&Data[index]);
 // }
 //
-// void ShaderBindingArray::CloneWithoutResource(
+// void ShaderBindingArray::cloneWithoutResource(
 //     ShaderBindingArray& result) const {
 //   memcpy(&result.Data[0], &Data[0], sizeof(ShaderBindingVk) * NumOfData);
 //
 //   for (int32_t i = 0; i < NumOfData; ++i) {
 //     ShaderBindingVk* SrcAddress = (ShaderBindingVk*)&Data[i];
 //     ShaderBindingVk* DstAddress = (ShaderBindingVk*)&result.Data[i];
-//     SrcAddress->CloneWithoutResource(*DstAddress);
+//     SrcAddress->cloneWithoutResource(*DstAddress);
 //   }
 //   result.NumOfData = NumOfData;
 // }
@@ -77,18 +77,18 @@ std::unordered_map<uint64_t, VkPipelineLayout>
 // WriteDescriptorSet
 // =========================================================
 
-void WriteDescriptorSet::Reset() {
+void WriteDescriptorSet::reset() {
   m_writeDescriptorInfos_.clear();
   m_descriptorWrites_.clear();
   m_dynamicOffsets_.clear();
   m_isInitialized_ = false;
 }
 
-void WriteDescriptorSet::SetWriteDescriptorInfo(
+void WriteDescriptorSet::setWriteDescriptorInfo(
     int32_t index, const ShaderBinding* shaderBinding) {
   assert(shaderBinding);
   assert(shaderBinding->m_resource_);
-  const bool IsBindless = shaderBinding->m_resource_->IsBindless();
+  const bool IsBindless = shaderBinding->m_resource_->isBindless();
 
   switch (shaderBinding->m_bindingType_) {
     case EShaderBindingType::UNIFORMBUFFER: {
@@ -103,9 +103,9 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
             assert(UniformBuffer);
 
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = (VkBuffer)UniformBuffer->GetLowLevelResource();
-            bufferInfo.offset = UniformBuffer->GetBufferOffset();
-            bufferInfo.range  = UniformBuffer->GetBufferSize();
+            bufferInfo.buffer = (VkBuffer)UniformBuffer->getLowLevelResource();
+            bufferInfo.offset = UniformBuffer->getBufferOffset();
+            bufferInfo.range  = UniformBuffer->getBufferSize();
             assert(bufferInfo.buffer);
             m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(bufferInfo));
           }
@@ -119,9 +119,9 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
         if (ubor && ubor->m_uniformBuffer_) {
           VkDescriptorBufferInfo bufferInfo{};
           bufferInfo.buffer
-              = (VkBuffer)ubor->m_uniformBuffer_->GetLowLevelResource();
-          bufferInfo.offset = ubor->m_uniformBuffer_->GetBufferOffset();
-          bufferInfo.range  = ubor->m_uniformBuffer_->GetBufferSize();
+              = (VkBuffer)ubor->m_uniformBuffer_->getLowLevelResource();
+          bufferInfo.offset = ubor->m_uniformBuffer_->getBufferOffset();
+          bufferInfo.range  = ubor->m_uniformBuffer_->getBufferSize();
           assert(bufferInfo.buffer);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(bufferInfo));
         }
@@ -140,13 +140,13 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
             assert(UniformBuffer);
 
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = (VkBuffer)UniformBuffer->GetLowLevelResource();
+            bufferInfo.buffer = (VkBuffer)UniformBuffer->getLowLevelResource();
             bufferInfo.offset = 0;  // TODO: Use DynamicOffset instead
-            bufferInfo.range  = UniformBuffer->GetBufferSize();
+            bufferInfo.range  = UniformBuffer->getBufferSize();
             assert(bufferInfo.buffer);
             m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(bufferInfo));
             m_dynamicOffsets_.push_back(
-                (uint32_t)UniformBuffer->GetBufferOffset());
+                (uint32_t)UniformBuffer->getBufferOffset());
           }
         }
       } else {
@@ -158,13 +158,13 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
         if (ubor && ubor->m_uniformBuffer_) {
           VkDescriptorBufferInfo bufferInfo{};
           bufferInfo.buffer
-              = (VkBuffer)ubor->m_uniformBuffer_->GetLowLevelResource();
+              = (VkBuffer)ubor->m_uniformBuffer_->getLowLevelResource();
           bufferInfo.offset = 0;  // TODO: Use DynamicOffset instead
-          bufferInfo.range  = ubor->m_uniformBuffer_->GetBufferSize();
+          bufferInfo.range  = ubor->m_uniformBuffer_->getBufferSize();
           assert(bufferInfo.buffer);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(bufferInfo));
           m_dynamicOffsets_.push_back(
-              (uint32_t)ubor->m_uniformBuffer_->GetBufferOffset());
+              (uint32_t)ubor->m_uniformBuffer_->getBufferOffset());
         }
       }
       break;
@@ -183,18 +183,18 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout
-                = TextureData.m_texture->IsDepthFormat()
+                = TextureData.m_texture->isDepthFormat()
                     ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                     : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfo.imageView
                 = ((const TextureVk*)TextureData.m_texture)->m_imageView_;
             imageInfo.sampler
                 = TextureData.m_samplerState_
-                    ? (VkSampler)TextureData.m_samplerState_->GetHandle()
+                    ? (VkSampler)TextureData.m_samplerState_->getHandle()
                     : nullptr;
             if (!imageInfo.sampler) {
               imageInfo.sampler
-                  = TextureVk::CreateDefaultSamplerState();  // todo
+                  = TextureVk::s_createDefaultSamplerState();  // todo
             }
             assert(imageInfo.imageView);
             m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
@@ -208,16 +208,16 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
         if (tbor && tbor->m_texture) {
           VkDescriptorImageInfo imageInfo{};
           imageInfo.imageLayout
-              = tbor->m_texture->IsDepthFormat()
+              = tbor->m_texture->isDepthFormat()
                   ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                   : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
           imageInfo.imageView
               = ((const TextureVk*)tbor->m_texture)->m_imageView_;
           imageInfo.sampler = tbor->m_samplerState_
-                                ? (VkSampler)tbor->m_samplerState_->GetHandle()
+                                ? (VkSampler)tbor->m_samplerState_->getHandle()
                                 : nullptr;
           if (!imageInfo.sampler) {
-            imageInfo.sampler = TextureVk::CreateDefaultSamplerState();  // todo
+            imageInfo.sampler = TextureVk::s_createDefaultSamplerState();  // todo
           }
           assert(imageInfo.imageView);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
@@ -249,18 +249,18 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout
-                = TextureData.m_texture->IsDepthFormat()
+                = TextureData.m_texture->isDepthFormat()
                     ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                     : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfo.imageView
                 = ((const TextureVk*)TextureData.m_texture)->m_imageView_;
             imageInfo.sampler
                 = TextureData.m_samplerState_
-                    ? (VkSampler)TextureData.m_samplerState_->GetHandle()
+                    ? (VkSampler)TextureData.m_samplerState_->getHandle()
                     : nullptr;
             if (!imageInfo.sampler) {
               imageInfo.sampler
-                  = TextureVk::CreateDefaultSamplerState();  // todo
+                  = TextureVk::s_createDefaultSamplerState();  // todo
             }
             assert(imageInfo.imageView);
             m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
@@ -274,7 +274,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
         if (tbor && tbor->m_texture) {
           VkDescriptorImageInfo imageInfo{};
           imageInfo.imageLayout
-              = (tbor->m_texture->IsDepthFormat()
+              = (tbor->m_texture->isDepthFormat()
                      ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                      : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
           imageInfo.imageView
@@ -327,11 +327,11 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
 
       //      if (TextureData.SamplerState) {
       //        imageInfo.sampler
-      //            = (VkSampler)TextureData.SamplerState->GetHandle();
+      //            = (VkSampler)TextureData.SamplerState->getHandle();
       //      }
       //      if (!imageInfo.sampler) {
       //        imageInfo.sampler
-      //            = TextureVk::CreateDefaultSamplerState();  // todo
+      //            = TextureVk::s_createDefaultSamplerState();  // todo
       //      }
       //      assert(imageInfo.imageView);
       //      WriteDescriptorInfos.push_back(WriteDescriptorInfo(imageInfo));
@@ -369,11 +369,11 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
       //    }
 
       //    if (tbor->SamplerState) {
-      //      imageInfo.sampler = (VkSampler)tbor->SamplerState->GetHandle();
+      //      imageInfo.sampler = (VkSampler)tbor->SamplerState->getHandle();
       //    }
       //    if (!imageInfo.sampler) {
       //      imageInfo.sampler
-      //          = TextureVk::CreateDefaultSamplerState();  // todo
+      //          = TextureVk::s_createDefaultSamplerState();  // todo
       //    }
       //    assert(imageInfo.imageView);
       //    WriteDescriptorInfos.push_back(WriteDescriptorInfo(imageInfo));
@@ -394,7 +394,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.sampler     = (VkSampler)SamplerState->GetHandle();
+            imageInfo.sampler     = (VkSampler)SamplerState->getHandle();
             assert(imageInfo.sampler);
             m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
           }
@@ -407,7 +407,7 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
         if (sr && sr->m_samplerState_) {
           VkDescriptorImageInfo imageInfo{};
           imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-          imageInfo.sampler     = (VkSampler)sr->m_samplerState_->GetHandle();
+          imageInfo.sampler     = (VkSampler)sr->m_samplerState_->getHandle();
           assert(imageInfo.sampler);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
         }
@@ -427,9 +427,9 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
           assert(buffer);
 
           VkDescriptorBufferInfo bufferInfo{};
-          bufferInfo.buffer = (VkBuffer)buffer->GetHandle();
-          bufferInfo.offset = buffer->GetOffset();
-          bufferInfo.range  = buffer->GetBufferSize();
+          bufferInfo.buffer = (VkBuffer)buffer->getHandle();
+          bufferInfo.offset = buffer->getOffset();
+          bufferInfo.range  = buffer->getBufferSize();
           assert(bufferInfo.buffer);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(bufferInfo));
         }
@@ -439,9 +439,9 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
         assert(br && br->m_buffer);
         if (br && br->m_buffer) {
           VkDescriptorBufferInfo bufferInfo{};
-          bufferInfo.buffer = (VkBuffer)br->m_buffer->GetHandle();
-          bufferInfo.offset = br->m_buffer->GetOffset();
-          bufferInfo.range  = br->m_buffer->GetBufferSize();
+          bufferInfo.buffer = (VkBuffer)br->m_buffer->getHandle();
+          bufferInfo.offset = br->m_buffer->getOffset();
+          bufferInfo.range  = br->m_buffer->getBufferSize();
           assert(bufferInfo.buffer);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(bufferInfo));
         }
@@ -500,13 +500,13 @@ void WriteDescriptorSet::SetWriteDescriptorInfo(
 // ShaderBindingInstance
 // =========================================================
 
-void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
+void ShaderBindingInstanceVk::s_createWriteDescriptorSet(
     WriteDescriptorSet&       descriptorWrites,
     const VkDescriptorSet     descriptorSet,
     const ShaderBindingArray& shaderBindingArray) {
   //  assert(shaderBindingArray.NumOfData);
   //
-  //  descriptorWrites.Reset();
+  //  descriptorWrites.reset();
   //
   //  std::vector<WriteDescriptorInfo>& descriptors
   //      = descriptorWrites.WriteDescriptorInfos;
@@ -518,7 +518,7 @@ void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
   //  descriptorWrites.DynamicOffsets.reserve(shaderBindingArray.NumOfData);
   //
   //  for (int32_t i = 0; i < shaderBindingArray.NumOfData; ++i) {
-  //    descriptorWrites.SetWriteDescriptorInfo(i, shaderBindingArray[i]);
+  //    descriptorWrites.setWriteDescriptorInfo(i, shaderBindingArray[i]);
   //
   //    VkWriteDescriptorSet& CurDescriptorWrite = descriptorWrites[i];
   //    CurDescriptorWrite.sType           =
@@ -547,7 +547,7 @@ void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
     return;
   }
 
-  descriptorWrites.Reset();
+  descriptorWrites.reset();
 
   std::vector<WriteDescriptorInfo>& descriptors
       = descriptorWrites.m_writeDescriptorInfos_;
@@ -557,7 +557,7 @@ void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
 
   int32_t LastIndex = 0;
   for (int32_t i = 0; i < shaderBindingArray.m_numOfData_; ++i) {
-    descriptorWrites.SetWriteDescriptorInfo(i, shaderBindingArray[i]);
+    descriptorWrites.setWriteDescriptorInfo(i, shaderBindingArray[i]);
     descriptorWritesNative.resize(descriptors.size());
 
     for (int32_t k = LastIndex; k < descriptorWritesNative.size(); ++k) {
@@ -567,7 +567,7 @@ void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
       CurDescriptorWrite.dstBinding = i;
       CurDescriptorWrite.dstArrayElement = k - LastIndex;
       CurDescriptorWrite.descriptorType
-          = GetVulkanShaderBindingType(shaderBindingArray[i]->m_bindingType_);
+          = g_getVulkanShaderBindingType(shaderBindingArray[i]->m_bindingType_);
       CurDescriptorWrite.descriptorCount = 1;
     }
     LastIndex = (int32_t)descriptorWritesNative.size();
@@ -594,7 +594,7 @@ void ShaderBindingInstanceVk::CreateWriteDescriptorSet(
   descriptorWrites.m_isInitialized_ = true;
 }
 
-void ShaderBindingInstanceVk::UpdateWriteDescriptorSet(
+void ShaderBindingInstanceVk::s_updateWriteDescriptorSet(
     WriteDescriptorSet&       descriptorWrites,
     const ShaderBindingArray& shaderBindingArray) {
   assert(shaderBindingArray.m_numOfData_
@@ -602,18 +602,18 @@ void ShaderBindingInstanceVk::UpdateWriteDescriptorSet(
 
   descriptorWrites.m_dynamicOffsets_.clear();
   for (int32_t i = 0; i < shaderBindingArray.m_numOfData_; ++i) {
-    descriptorWrites.SetWriteDescriptorInfo(i, shaderBindingArray[i]);
+    descriptorWrites.setWriteDescriptorInfo(i, shaderBindingArray[i]);
   }
 }
 
-void ShaderBindingInstanceVk::Initialize(
+void ShaderBindingInstanceVk::initialize(
     const ShaderBindingArray& shaderBindingArray) {
   // if (!writeDescriptorSet.IsInitialized) {
-  CreateWriteDescriptorSet(
+  s_createWriteDescriptorSet(
       m_writeDescriptorSet_, m_descriptorSet_, shaderBindingArray);
   // TODO: currently not working
   //} else {
-  //  UpdateWriteDescriptorSet(writeDescriptorSet, shaderBindingArray);
+  //  s_updateWriteDescriptorSet(writeDescriptorSet, shaderBindingArray);
   //}
 
   vkUpdateDescriptorSets(
@@ -624,17 +624,17 @@ void ShaderBindingInstanceVk::Initialize(
       nullptr);
 }
 
-void ShaderBindingInstanceVk::UpdateShaderBindings(
+void ShaderBindingInstanceVk::updateShaderBindings(
     const ShaderBindingArray& shaderBindingArray) {
-  assert(ShaderBindingsLayouts->GetShaderBindingsLayout().m_numOfData_
+  assert(m_shaderBindingsLayouts_->getShaderBindingsLayout().m_numOfData_
          == shaderBindingArray.m_numOfData_);
   assert(shaderBindingArray.m_numOfData_);
 
   if (!m_writeDescriptorSet_.m_isInitialized_) {
-    CreateWriteDescriptorSet(
+    s_createWriteDescriptorSet(
         m_writeDescriptorSet_, m_descriptorSet_, shaderBindingArray);
   } else {
-    UpdateWriteDescriptorSet(m_writeDescriptorSet_, shaderBindingArray);
+    s_updateWriteDescriptorSet(m_writeDescriptorSet_, shaderBindingArray);
   }
 
   vkUpdateDescriptorSets(
@@ -645,9 +645,9 @@ void ShaderBindingInstanceVk::UpdateShaderBindings(
       nullptr);
 }
 
-void ShaderBindingInstanceVk::Free() {
-  if (GetType() == ShaderBindingInstanceType::MultiFrame) {
-    g_rhi_vk->GetDescriptorPoolMultiFrame()->Free(shared_from_this());
+void ShaderBindingInstanceVk::free() {
+  if (getType() == ShaderBindingInstanceType::MultiFrame) {
+    g_rhi_vk->getDescriptorPoolMultiFrame()->free(shared_from_this());
   }
 }
 
@@ -656,25 +656,25 @@ void ShaderBindingInstanceVk::Free() {
 // ShaderBindingLayoutVk
 // =========================================================
 
-bool ShaderBindingLayoutVk::Initialize(
+bool ShaderBindingLayoutVk::initialize(
     const ShaderBindingArray& shaderBindingArray) {
-  shaderBindingArray.CloneWithoutResource(m_shaderBindingArray_);
-  m_descriptorSetLayout_ = CreateDescriptorSetLayout(m_shaderBindingArray_);
+  shaderBindingArray.cloneWithoutResource(m_shaderBindingArray_);
+  m_descriptorSetLayout_ = s_createDescriptorSetLayout(m_shaderBindingArray_);
 
   return !!m_descriptorSetLayout_;
 }
 
 std::shared_ptr<ShaderBindingInstance>
-    ShaderBindingLayoutVk::CreateShaderBindingInstance(
+    ShaderBindingLayoutVk::createShaderBindingInstance(
         const ShaderBindingArray&       shaderBindingArray,
         const ShaderBindingInstanceType type) const {
   DescriptorPoolVk* DescriptorPool = nullptr;
   switch (type) {
     case ShaderBindingInstanceType::SingleFrame:
-      DescriptorPool = g_rhi_vk->GetDescriptorPoolForSingleFrame();
+      DescriptorPool = g_rhi_vk->getDescriptorPoolForSingleFrame();
       break;
     case ShaderBindingInstanceType::MultiFrame:
-      DescriptorPool = g_rhi_vk->GetDescriptorPoolMultiFrame();
+      DescriptorPool = g_rhi_vk->getDescriptorPoolMultiFrame();
       break;
     case ShaderBindingInstanceType::Max:
     default:
@@ -683,32 +683,32 @@ std::shared_ptr<ShaderBindingInstance>
   }
 
   std::shared_ptr<ShaderBindingInstance> DescriptorSet
-      = DescriptorPool->AllocateDescriptorSet(m_descriptorSetLayout_);
+      = DescriptorPool->allocateDescriptorSet(m_descriptorSetLayout_);
 
   assert(DescriptorSet && "DescriptorSet allocation failed");
 
   if (!DescriptorSet) {
     DescriptorSet
-        = DescriptorPool->AllocateDescriptorSet(m_descriptorSetLayout_);
+        = DescriptorPool->allocateDescriptorSet(m_descriptorSetLayout_);
     return nullptr;
   }
 
   DescriptorSet->m_shaderBindingsLayouts_ = this;
-  DescriptorSet->Initialize(shaderBindingArray);
-  DescriptorSet->SetType(type);
+  DescriptorSet->initialize(shaderBindingArray);
+  DescriptorSet->setType(type);
   return DescriptorSet;
 }
 
-size_t ShaderBindingLayoutVk::GetHash() const {
+size_t ShaderBindingLayoutVk::getHash() const {
   if (m_hash_) {
     return m_hash_;
   }
 
-  m_hash_ = m_shaderBindingArray_.GetHash();
+  m_hash_ = m_shaderBindingArray_.getHash();
   return m_hash_;
 }
 
-void ShaderBindingLayoutVk::Release() {
+void ShaderBindingLayoutVk::release() {
   if (m_descriptorSetLayout_) {
     vkDestroyDescriptorSetLayout(
         g_rhi_vk->m_device_, m_descriptorSetLayout_, nullptr);
@@ -717,17 +717,17 @@ void ShaderBindingLayoutVk::Release() {
 }
 
 std::vector<VkDescriptorPoolSize>
-    ShaderBindingLayoutVk::GetDescriptorPoolSizeArray(
+    ShaderBindingLayoutVk::getDescriptorPoolSizeArray(
         uint32_t maxAllocations) const {
   std::vector<VkDescriptorPoolSize> resultArray;
 
   if (!m_shaderBindingArray_.m_numOfData_) {
     uint32_t         NumOfSameType = 0;
     VkDescriptorType PrevType
-        = GetVulkanShaderBindingType(m_shaderBindingArray_[0]->m_bindingType_);
+        = g_getVulkanShaderBindingType(m_shaderBindingArray_[0]->m_bindingType_);
     for (int32_t i = 0; i < m_shaderBindingArray_.m_numOfData_; ++i) {
       if (PrevType
-          == GetVulkanShaderBindingType(
+          == g_getVulkanShaderBindingType(
               m_shaderBindingArray_[i]->m_bindingType_)) {
         ++NumOfSameType;
       } else {
@@ -736,7 +736,7 @@ std::vector<VkDescriptorPoolSize>
         poolSize.descriptorCount = NumOfSameType * maxAllocations;
         resultArray.push_back(poolSize);
 
-        PrevType = GetVulkanShaderBindingType(
+        PrevType = g_getVulkanShaderBindingType(
             m_shaderBindingArray_[i]->m_bindingType_);
         NumOfSameType = 1;
       }
@@ -753,10 +753,10 @@ std::vector<VkDescriptorPoolSize>
   return std::move(resultArray);
 }
 
-VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
+VkDescriptorSetLayout ShaderBindingLayoutVk::s_createDescriptorSetLayout(
     const ShaderBindingArray& shaderBindingArray) {
   VkDescriptorSetLayout DescriptorSetLayout = nullptr;
-  size_t                hash                = shaderBindingArray.GetHash();
+  size_t                hash                = shaderBindingArray.getHash();
   assert(hash);
   {
     ScopeReadLock sr(&s_descriptorLayoutPoolLock);
@@ -787,14 +787,14 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
         binding.binding = LastBindingIndex++;
       }
       binding.descriptorType
-          = GetVulkanShaderBindingType(shaderBindingArray[i]->m_bindingType_);
+          = g_getVulkanShaderBindingType(shaderBindingArray[i]->m_bindingType_);
       binding.descriptorCount = shaderBindingArray[i]->m_numOfDescriptors_;
-      binding.stageFlags      = GetVulkanShaderAccessFlags(
+      binding.stageFlags      = g_getVulkanShaderAccessFlags(
           shaderBindingArray[i]->m_accessStageFlags_);
       binding.pImmutableSamplers = nullptr;
       bindings.push_back(binding);
       bindingFlags.push_back(
-          shaderBindingArray[i]->m_resource_->IsBindless()
+          shaderBindingArray[i]->m_resource_->isBindless()
               ? (VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
                  | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT)
               : 0);
@@ -830,7 +830,7 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::CreateDescriptorSetLayout(
   return DescriptorSetLayout;
 }
 
-VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
+VkPipelineLayout ShaderBindingLayoutVk::s_createPipelineLayout(
     const ShaderBindingLayoutArray& shaderBindingLayoutArray,
     const PushConstant*             pushConstant) {
   if (shaderBindingLayoutArray.m_numOfData_ <= 0) {
@@ -840,10 +840,10 @@ VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
   }
 
   VkPipelineLayout vkPipelineLayout = nullptr;
-  size_t           hash             = shaderBindingLayoutArray.GetHash();
+  size_t           hash             = shaderBindingLayoutArray.getHash();
 
   if (pushConstant) {
-    hash = XXH64(pushConstant->GetHash(), hash);
+    hash = XXH64(pushConstant->getHash(), hash);
   }
   assert(hash);
 
@@ -877,7 +877,7 @@ VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
     std::vector<VkPushConstantRange> PushConstantRanges;
     if (pushConstant) {
       const ResourceContainer<PushConstantRange>* pushConstantRanges
-          = pushConstant->GetPushConstantRanges();
+          = pushConstant->getPushConstantRanges();
       assert(pushConstantRanges);
       if (pushConstantRanges) {
         PushConstantRanges.reserve(pushConstantRanges->m_numOfData_);
@@ -886,7 +886,7 @@ VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
 
           VkPushConstantRange pushConstantRange{};
           pushConstantRange.stageFlags
-              = GetVulkanShaderAccessFlags(range.m_accessStageFlag_);
+              = g_getVulkanShaderAccessFlags(range.m_accessStageFlag_);
           pushConstantRange.offset = range.m_offset_;
           pushConstantRange.size   = range.m_size_;
           PushConstantRanges.emplace_back(pushConstantRange);
@@ -919,7 +919,7 @@ VkPipelineLayout ShaderBindingLayoutVk::CreatePipelineLayout(
   return vkPipelineLayout;
 }
 
-void ShaderBindingLayoutVk::ClearPipelineLayout() {
+void ShaderBindingLayoutVk::s_clearPipelineLayout() {
   assert(g_rhi_vk);
   {
     ScopeWriteLock s(&s_pipelineLayoutPoolLock);

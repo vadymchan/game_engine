@@ -24,25 +24,25 @@ struct IUniformBufferBlock : public ShaderBindableResource {
 
   virtual ~IUniformBufferBlock() {}
 
-  virtual bool IsUseRingBuffer() const {
+  virtual bool isUseRingBuffer() const {
     return m_LifeType_ == LifeTimeType::OneFrame;
   }
 
-  virtual size_t GetBufferSize() const { return 0; }
+  virtual size_t getBufferSize() const { return 0; }
 
-  virtual size_t GetBufferOffset() const { return 0; }
+  virtual size_t getBufferOffset() const { return 0; }
 
-  virtual void Init(size_t size) = 0;
-  virtual void Release()         = 0;
+  virtual void init(size_t size) = 0;
+  virtual void release()         = 0;
 
-  virtual void Bind(const Shader* shader) const {}
+  virtual void bind(const Shader* shader) const {}
 
-  virtual void UpdateBufferData(const void* newData, size_t size) = 0;
-  virtual void ClearBuffer(int32_t clearValue = 0)                  = 0;
+  virtual void updateBufferData(const void* newData, size_t size) = 0;
+  virtual void clearBuffer(int32_t clearValue = 0)                  = 0;
 
-  virtual void* GetLowLevelResource() const { return nullptr; }
+  virtual void* getLowLevelResource() const { return nullptr; }
 
-  virtual void* GetLowLevelMemory() const { return nullptr; }  // Vulkan only
+  virtual void* getLowLevelMemory() const { return nullptr; }  // Vulkan only
 
   const LifeTimeType m_LifeType_ = LifeTimeType::MultiFrame;
 };

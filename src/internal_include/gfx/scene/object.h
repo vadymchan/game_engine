@@ -19,10 +19,10 @@ class Object {
   Object() {}
 
   virtual ~Object() {
-    Object::RemoveBoundBoxObject(m_boundBoxObject_);
+    Object::s_removeBoundBoxObject(m_boundBoxObject_);
     delete m_boundBoxObject_;
 
-    Object::RemoveBoundSphereObject(m_boundSphereObject_);
+    Object::s_removeBoundSphereObject(m_boundSphereObject_);
     delete m_boundSphereObject_;
 
     for (auto& RenderObject : m_renderObjects_) {
@@ -32,7 +32,7 @@ class Object {
   }
 
   //////////////////////////////////////////////////////////////////////////
-  static void AddObject(Object* object) {
+  static void s_addObject(Object* object) {
     if (!object) {
       return;
     }
@@ -58,7 +58,7 @@ class Object {
     }
   }
 
-  static void RemoveObject(Object* object) {
+  static void s_removeObject(Object* object) {
     if (!object) {
       return;
     }
@@ -90,7 +90,7 @@ class Object {
     }
   }
 
-  static void FlushDirtyState() {
+  static void s_flushDirtyState() {
     if (!s_dirtyStateObjects.empty()) {
       for (auto iter : s_dirtyStateObjects) {
         auto it_find = std::find(
@@ -111,15 +111,15 @@ class Object {
     }
   }
 
-  static const std::vector<Object*>& GetShadowCasterObject() {
+  static const std::vector<Object*>& s_getShadowCasterObject() {
     return s_shadowCasterObject;
   }
 
-  static const std::vector<Object*>& GetStaticObject() {
+  static const std::vector<Object*>& s_getStaticObject() {
     return s_staticObjects;
   }
 
-  static const std::vector<Object*>& GetBoundBoxObject() {
+  static const std::vector<Object*>& s_getBoundBoxObject() {
     return s_boundBoxObjects;
   }
 
@@ -127,30 +127,30 @@ class Object {
     return s_boundSphereObjects;
   }
 
-  static const std::vector<Object*>& GetDebugObject() { return s_debugObjects; }
+  static const std::vector<Object*>& s_getDebugObject() { return s_debugObjects; }
 
-  static const std::vector<Object*>& GetUIObject() { return s_UIObjects; }
+  static const std::vector<Object*>& s_getUIObject() { return s_UIObjects; }
 
-  static const std::vector<Object*>& GetUIDebugObject() {
+  static const std::vector<Object*>& s_getUIDebugObject() {
     return s_UIDebugObjects;
   }
 
-  static const std::vector<RenderObject*>& GetShadowCasterRenderObject() {
+  static const std::vector<RenderObject*>& s_getShadowCasterRenderObject() {
     return s_shadowCasterRenderObject;
   }
 
-  static const std::vector<RenderObject*>& GetStaticRenderObject() {
+  static const std::vector<RenderObject*>& s_getStaticRenderObject() {
     return s_staticRenderObjects;
   }
 
-  static void AddBoundBoxObject(Object* object) {
+  static void s_addBoundBoxObject(Object* object) {
     if (!object) {
       return;
     }
     s_boundBoxObjects.push_back(object);
   }
 
-  static void RemoveBoundBoxObject(Object* object) {
+  static void s_removeBoundBoxObject(Object* object) {
     if (!object) {
       return;
     }
@@ -160,14 +160,14 @@ class Object {
                        [&object](Object* param) { return param == object; }));
   }
 
-  static void AddBoundSphereObject(Object* object) {
+  static void s_addBoundSphereObject(Object* object) {
     if (!object) {
       return;
     }
     s_boundSphereObjects.push_back(object);
   }
 
-  static void RemoveBoundSphereObject(Object* object) {
+  static void s_removeBoundSphereObject(Object* object) {
     if (!object) {
       return;
     }
@@ -177,14 +177,14 @@ class Object {
                        [&object](Object* param) { return param == object; }));
   }
 
-  static void AddDebugObject(Object* object) {
+  static void s_addDebugObject(Object* object) {
     if (!object) {
       return;
     }
     s_debugObjects.push_back(object);
   }
 
-  static void RemoveDebugObject(Object* object) {
+  static void s_removeDebugObject(Object* object) {
     if (!object) {
       return;
     }
@@ -194,14 +194,14 @@ class Object {
         }));
   }
 
-  static void AddUIObject(Object* object) {
+  static void s_addUIObject(Object* object) {
     if (!object) {
       return;
     }
     s_UIObjects.push_back(object);
   }
 
-  static void RemoveUIObject(Object* object) {
+  static void s_removeUIObject(Object* object) {
     if (!object) {
       return;
     }
@@ -211,14 +211,14 @@ class Object {
         }));
   }
 
-  static void AddUIDebugObject(Object* object) {
+  static void s_addUIDebugObject(Object* object) {
     if (!object) {
       return;
     }
     s_UIDebugObjects.push_back(object);
   }
 
-  static void RemoveUIDebugObject(Object* object) {
+  static void s_removeUIDebugObject(Object* object) {
     if (!object) {
       return;
     }
@@ -230,44 +230,44 @@ class Object {
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual void Update(float deltaTime) {
+  virtual void update(float deltaTime) {
     if (m_isPostUpdate_ && m_postUpdateFunc_) {
       m_postUpdateFunc_(this, deltaTime);
     }
   }
 
-  void SetDirtyState() {
+  void setDirtyState() {
     m_dirtyObjectState_ = true;
     s_dirtyStateObjects.insert(this);
   }
 
-  void SetSkipShadowMapGen(bool skipShadowMapGen) {
+  void setSkipShadowMapGen(bool skipShadowMapGen) {
     m_skipShadowMapGen_ = skipShadowMapGen;
-    SetDirtyState();
+    setDirtyState();
   }
 
-  void SetSkipUpdateShadowVolume(bool skipUpdateShadowVolume) {
+  void setSkipUpdateShadowVolume(bool skipUpdateShadowVolume) {
     m_skipUpdateShadowVolume_ = skipUpdateShadowVolume;
-    SetDirtyState();
+    setDirtyState();
   }
 
-  void SetVisible(bool visible) {
+  void setVisible(bool visible) {
     m_isVisible_ = visible;
-    SetDirtyState();
+    setDirtyState();
   }
 
-  void ShowBoundBox(bool isShow) {
+  void showBoundBox(bool isShow) {
     if (isShow) {
-      Object::AddBoundBoxObject(m_boundBoxObject_);
-      Object::AddBoundSphereObject(m_boundSphereObject_);
+      Object::s_addBoundBoxObject(m_boundBoxObject_);
+      Object::s_addBoundSphereObject(m_boundSphereObject_);
     } else {
-      Object::RemoveBoundBoxObject(m_boundBoxObject_);
-      Object::RemoveBoundSphereObject(m_boundSphereObject_);
+      Object::s_removeBoundBoxObject(m_boundBoxObject_);
+      Object::s_removeBoundSphereObject(m_boundSphereObject_);
     }
   }
 
-  bool HasInstancing() const {
-    return m_renderObjects_[0] ? m_renderObjects_[0]->HasInstancing() : false;
+  bool hasInstancing() const {
+    return m_renderObjects_[0] ? m_renderObjects_[0]->hasInstancing() : false;
   }
 
   std::shared_ptr<RenderObjectGeometryData> m_renderObjectGeometryDataPtr_;

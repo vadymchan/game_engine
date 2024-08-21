@@ -8,7 +8,7 @@ namespace game_engine {
 
 // clang-format off
 
-GENERATE_CONVERSION_FUNCTION(GetDX12TextureFormat,
+GENERATE_CONVERSION_FUNCTION(g_getDX12TextureFormat,
   CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB8, DXGI_FORMAT_R8G8B8A8_UNORM),        // not support rgb8 -> rgba8
   CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB32F, DXGI_FORMAT_R32G32B32A32_FLOAT),  // not support for UAV rgb32 -> rgba32, check this https://learn.microsoft.com/en-us/windows/win32/direct3d12/typed-unordered-access-view-loads
   CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB16F, DXGI_FORMAT_R16G16B16A16_FLOAT),  // not support rgb16 -> rgba16
@@ -44,7 +44,7 @@ GENERATE_CONVERSION_FUNCTION(GetDX12TextureFormat,
   CONVERSION_TYPE_ELEMENT(ETextureFormat::BC6H_SF16, DXGI_FORMAT_BC6H_SF16),
   CONVERSION_TYPE_ELEMENT(ETextureFormat::BC7_UNORM, DXGI_FORMAT_BC7_UNORM))
 
-inline auto GetDX12TextureComponentCount(ETextureFormat type) {
+inline auto g_getDX12TextureComponentCount(ETextureFormat type) {
   GENERATE_STATIC_CONVERSION_ARRAY(
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB8, 4),   // not support rgb8 -> rgba8
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB32F, 4), // not support rgb32 -> rgba32
@@ -77,7 +77,7 @@ inline auto GetDX12TextureComponentCount(ETextureFormat type) {
     CONVERSION_TYPE_ELEMENT(ETextureFormat::D32_S8, 2));
 }
 
-inline auto GetDX12TexturePixelSize(ETextureFormat type) {
+inline auto g_getDX12TexturePixelSize(ETextureFormat type) {
   GENERATE_STATIC_CONVERSION_ARRAY(
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB8, 4),    // not support rgb8 -> rgba8
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB32F, 16), // not support rgb32 -> rgba32
@@ -110,7 +110,7 @@ inline auto GetDX12TexturePixelSize(ETextureFormat type) {
     CONVERSION_TYPE_ELEMENT(ETextureFormat::D32_S8, 5));
 }
 
-//GENERATE_CONVERSION_FUNCTION(GetDX12TextureDemension,
+//GENERATE_CONVERSION_FUNCTION(g_getDX12TextureDemension,
 //  CONVERSION_TYPE_ELEMENT(ETextureType::TEXTURE_1D, D3D12_RESOURCE_DIMENSION_TEXTURE1D),
 //  CONVERSION_TYPE_ELEMENT(ETextureType::TEXTURE_2D, D3D12_RESOURCE_DIMENSION_TEXTURE2D),
 //  CONVERSION_TYPE_ELEMENT(ETextureType::TEXTURE_2D_ARRAY, D3D12_RESOURCE_DIMENSION_TEXTURE2D),
@@ -118,7 +118,7 @@ inline auto GetDX12TexturePixelSize(ETextureFormat type) {
 
 // clang-format on
 
-inline ETextureType GetDX12TextureDemension(D3D12_RESOURCE_DIMENSION type,
+inline ETextureType g_getDX12TextureDemension(D3D12_RESOURCE_DIMENSION type,
                                             bool isArray) {
   switch (type) {
     case D3D12_RESOURCE_DIMENSION_TEXTURE2D: {
@@ -137,7 +137,7 @@ inline ETextureType GetDX12TextureDemension(D3D12_RESOURCE_DIMENSION type,
   }
 }
 
-inline D3D12_RESOURCE_DIMENSION GetDX12TextureDemension(ETextureType type) {
+inline D3D12_RESOURCE_DIMENSION g_getDX12TextureDemension(ETextureType type) {
   switch (type) {
     case ETextureType::TEXTURE_1D:
       return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
@@ -154,13 +154,13 @@ inline D3D12_RESOURCE_DIMENSION GetDX12TextureDemension(ETextureType type) {
 
 // clang-format off
 
-GENERATE_CONVERSION_FUNCTION(GetDX12DescriptorHeapType,
+GENERATE_CONVERSION_FUNCTION(g_getDX12DescriptorHeapType,
   CONVERSION_TYPE_ELEMENT(EDescriptorHeapTypeDX12::CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
   CONVERSION_TYPE_ELEMENT(EDescriptorHeapTypeDX12::SAMPLER, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER),
   CONVERSION_TYPE_ELEMENT(EDescriptorHeapTypeDX12::RTV, D3D12_DESCRIPTOR_HEAP_TYPE_RTV),
   CONVERSION_TYPE_ELEMENT(EDescriptorHeapTypeDX12::DSV, D3D12_DESCRIPTOR_HEAP_TYPE_DSV))
 
-GENERATE_CONVERSION_FUNCTION(GetDX12ShaderBindingType,
+GENERATE_CONVERSION_FUNCTION(g_getDX12ShaderBindingType,
   CONVERSION_TYPE_ELEMENT(EShaderBindingType::UNIFORMBUFFER, D3D12_DESCRIPTOR_RANGE_TYPE_CBV),
   CONVERSION_TYPE_ELEMENT(EShaderBindingType::UNIFORMBUFFER_DYNAMIC, D3D12_DESCRIPTOR_RANGE_TYPE_CBV),
   CONVERSION_TYPE_ELEMENT(EShaderBindingType::TEXTURE_SAMPLER_SRV, D3D12_DESCRIPTOR_RANGE_TYPE_SRV),
@@ -176,14 +176,14 @@ GENERATE_CONVERSION_FUNCTION(GetDX12ShaderBindingType,
   CONVERSION_TYPE_ELEMENT(EShaderBindingType::ACCELERATION_STRUCTURE_SRV, D3D12_DESCRIPTOR_RANGE_TYPE_SRV),
   CONVERSION_TYPE_ELEMENT(EShaderBindingType::SUBPASS_INPUT_ATTACHMENT, (D3D12_DESCRIPTOR_RANGE_TYPE)-1))
 
-GENERATE_CONVERSION_FUNCTION(GetDX12TextureAddressMode,
+GENERATE_CONVERSION_FUNCTION(g_getDX12TextureAddressMode,
   CONVERSION_TYPE_ELEMENT(ETextureAddressMode::REPEAT, D3D12_TEXTURE_ADDRESS_MODE_WRAP),
   CONVERSION_TYPE_ELEMENT(ETextureAddressMode::MIRRORED_REPEAT, D3D12_TEXTURE_ADDRESS_MODE_MIRROR),
   CONVERSION_TYPE_ELEMENT(ETextureAddressMode::CLAMP_TO_EDGE, D3D12_TEXTURE_ADDRESS_MODE_CLAMP),
   CONVERSION_TYPE_ELEMENT(ETextureAddressMode::CLAMP_TO_BORDER, D3D12_TEXTURE_ADDRESS_MODE_BORDER),
   CONVERSION_TYPE_ELEMENT(ETextureAddressMode::MIRROR_CLAMP_TO_EDGE, D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE))
 
-GENERATE_CONVERSION_FUNCTION(GetDX12CompareOp,
+GENERATE_CONVERSION_FUNCTION(g_getDX12CompareOp,
   CONVERSION_TYPE_ELEMENT(ECompareOp::NEVER, D3D12_COMPARISON_FUNC_NEVER),
   CONVERSION_TYPE_ELEMENT(ECompareOp::LESS, D3D12_COMPARISON_FUNC_LESS),
   CONVERSION_TYPE_ELEMENT(ECompareOp::EQUAL, D3D12_COMPARISON_FUNC_EQUAL),
@@ -193,7 +193,7 @@ GENERATE_CONVERSION_FUNCTION(GetDX12CompareOp,
   CONVERSION_TYPE_ELEMENT(ECompareOp::GEQUAL, D3D12_COMPARISON_FUNC_GREATER_EQUAL),
   CONVERSION_TYPE_ELEMENT(ECompareOp::ALWAYS, D3D12_COMPARISON_FUNC_ALWAYS))
 
-GENERATE_CONVERSION_FUNCTION(GetDX12StencilOp,
+GENERATE_CONVERSION_FUNCTION(g_getDX12StencilOp,
   CONVERSION_TYPE_ELEMENT(EStencilOp::KEEP, D3D12_STENCIL_OP_KEEP),
   CONVERSION_TYPE_ELEMENT(EStencilOp::ZERO, D3D12_STENCIL_OP_ZERO),
   CONVERSION_TYPE_ELEMENT(EStencilOp::REPLACE, D3D12_STENCIL_OP_REPLACE),
@@ -203,7 +203,7 @@ GENERATE_CONVERSION_FUNCTION(GetDX12StencilOp,
   CONVERSION_TYPE_ELEMENT(EStencilOp::DECR_WRAP, D3D12_STENCIL_OP_DECR),
   CONVERSION_TYPE_ELEMENT(EStencilOp::INVERT, D3D12_STENCIL_OP_INVERT))
 
-inline auto GetDX12PrimitiveTopologyTypeOnly(EPrimitiveType type) {
+inline auto g_getDX12PrimitiveTopologyTypeOnly(EPrimitiveType type) {
   GENERATE_STATIC_CONVERSION_ARRAY(
     CONVERSION_TYPE_ELEMENT(EPrimitiveType::POINTS, D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT),
     CONVERSION_TYPE_ELEMENT(EPrimitiveType::LINES, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE),
@@ -215,7 +215,7 @@ inline auto GetDX12PrimitiveTopologyTypeOnly(EPrimitiveType type) {
     CONVERSION_TYPE_ELEMENT(EPrimitiveType::TRIANGLE_STRIP_ADJACENCY, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE));
 }
 
-inline auto GetDX12PrimitiveTopology(EPrimitiveType type) {
+inline auto g_getDX12PrimitiveTopology(EPrimitiveType type) {
   GENERATE_STATIC_CONVERSION_ARRAY(
     CONVERSION_TYPE_ELEMENT(EPrimitiveType::POINTS, D3D_PRIMITIVE_TOPOLOGY_POINTLIST),
     CONVERSION_TYPE_ELEMENT(EPrimitiveType::LINES, D3D_PRIMITIVE_TOPOLOGY_LINELIST),
@@ -227,22 +227,22 @@ inline auto GetDX12PrimitiveTopology(EPrimitiveType type) {
     CONVERSION_TYPE_ELEMENT(EPrimitiveType::TRIANGLE_STRIP_ADJACENCY, D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ));
 }
 
-GENERATE_CONVERSION_FUNCTION(GetDX12VertexInputRate,
+GENERATE_CONVERSION_FUNCTION(g_getDX12VertexInputRate,
   CONVERSION_TYPE_ELEMENT(EVertexInputRate::VERTEX, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA),
   CONVERSION_TYPE_ELEMENT(EVertexInputRate::INSTANCE, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA))
 
-GENERATE_CONVERSION_FUNCTION(GetDX12PolygonMode,
+GENERATE_CONVERSION_FUNCTION(g_getDX12PolygonMode,
   CONVERSION_TYPE_ELEMENT(EPolygonMode::POINT, D3D12_FILL_MODE_WIREFRAME), // Not supported
   CONVERSION_TYPE_ELEMENT(EPolygonMode::LINE, D3D12_FILL_MODE_WIREFRAME),
   CONVERSION_TYPE_ELEMENT(EPolygonMode::FILL, D3D12_FILL_MODE_SOLID))
 
-GENERATE_CONVERSION_FUNCTION(GetDX12CullMode,
+GENERATE_CONVERSION_FUNCTION(g_getDX12CullMode,
   CONVERSION_TYPE_ELEMENT(ECullMode::NONE, D3D12_CULL_MODE_NONE),
   CONVERSION_TYPE_ELEMENT(ECullMode::BACK, D3D12_CULL_MODE_BACK),
   CONVERSION_TYPE_ELEMENT(ECullMode::FRONT, D3D12_CULL_MODE_FRONT),
   CONVERSION_TYPE_ELEMENT(ECullMode::FRONT_AND_BACK, D3D12_CULL_MODE_BACK)) // Not supported
 
-inline auto GetDX12BlendFactor(EBlendFactor type) {
+inline auto g_getDX12BlendFactor(EBlendFactor type) {
   GENERATE_STATIC_CONVERSION_ARRAY(
     CONVERSION_TYPE_ELEMENT(EBlendFactor::ZERO, D3D12_BLEND_ZERO),
     CONVERSION_TYPE_ELEMENT(EBlendFactor::ONE, D3D12_BLEND_ONE),
@@ -262,7 +262,7 @@ inline auto GetDX12BlendFactor(EBlendFactor type) {
     CONVERSION_TYPE_ELEMENT(EBlendFactor::SRC_ALPHA_SATURATE, D3D12_BLEND_SRC_ALPHA_SAT));
 }
 
-GENERATE_CONVERSION_FUNCTION(GetDX12BlendOp,
+GENERATE_CONVERSION_FUNCTION(g_getDX12BlendOp,
   CONVERSION_TYPE_ELEMENT(EBlendOp::ADD, D3D12_BLEND_OP_ADD),
   CONVERSION_TYPE_ELEMENT(EBlendOp::SUBTRACT, D3D12_BLEND_OP_SUBTRACT),
   CONVERSION_TYPE_ELEMENT(EBlendOp::REVERSE_SUBTRACT, D3D12_BLEND_OP_REV_SUBTRACT),
@@ -273,7 +273,7 @@ GENERATE_CONVERSION_FUNCTION(GetDX12BlendOp,
 
 // clang-format on
 
-inline uint8_t GetDX12ColorMask(EColorMask type) {
+inline uint8_t g_getDX12ColorMask(EColorMask type) {
   uint8_t result = 0;
 
   if (EColorMask::NONE == type) {
@@ -300,7 +300,7 @@ inline uint8_t GetDX12ColorMask(EColorMask type) {
   return result;
 }
 
-inline D3D12_FILTER GetDX12TextureFilter(ETextureFilter minification,
+inline D3D12_FILTER g_getDX12TextureFilter(ETextureFilter minification,
                                          ETextureFilter magnification,
                                          bool isComparison = false) {
   // Comparison is used for ShadowMap
@@ -461,7 +461,7 @@ inline D3D12_FILTER GetDX12TextureFilter(ETextureFilter minification,
   }
 }
 
-inline void GetDepthFormatForSRV(DXGI_FORMAT& texFormat,
+inline void g_getDepthFormatForSRV(DXGI_FORMAT& texFormat,
                                  DXGI_FORMAT& srvFormat,
                                  DXGI_FORMAT  originalTexFormat) {
   switch (originalTexFormat) {
@@ -489,7 +489,7 @@ inline void GetDepthFormatForSRV(DXGI_FORMAT& texFormat,
 
 // clang-format off
 
-GENERATE_CONVERSION_FUNCTION(GetDX12ResourceLayout,
+GENERATE_CONVERSION_FUNCTION(g_getDX12ResourceLayout,
   CONVERSION_TYPE_ELEMENT(EResourceLayout::UNDEFINED, D3D12_RESOURCE_STATE_COMMON),
   CONVERSION_TYPE_ELEMENT(EResourceLayout::GENERAL, D3D12_RESOURCE_STATE_COMMON),
   CONVERSION_TYPE_ELEMENT(EResourceLayout::UAV, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
@@ -523,7 +523,7 @@ GENERATE_CONVERSION_FUNCTION(GetDX12ResourceLayout,
 
 // Generated from CreateResource, CreateUploadResource
 struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
-  ~CreatedResource() { Free(); }
+  ~CreatedResource() { free(); }
 
   enum class EType : uint8_t {
     Standalone,    // CommittedResource
@@ -531,35 +531,36 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
     Swapchain,     // no need release by me
   };
 
-  static std::shared_ptr<CreatedResource> CreatedFromStandalone(
+  static std::shared_ptr<CreatedResource> s_createdFromStandalone(
       const ComPtr<ID3D12Resource>& resource) {
     return std::shared_ptr<CreatedResource>(
         new CreatedResource(EType::Standalone, resource));
   }
 
-  static std::shared_ptr<CreatedResource> CreatedFromResourcePool(
+  static std::shared_ptr<CreatedResource> s_createdFromResourcePool(
       const ComPtr<ID3D12Resource>& resource) {
     return std::shared_ptr<CreatedResource>(
         new CreatedResource(EType::ResourcePool, resource));
   }
 
-  static std::shared_ptr<CreatedResource> CreatedFromSwapchain(
+  static std::shared_ptr<CreatedResource> s_createdFromSwapchain(
       const ComPtr<ID3D12Resource>& resource) {
     return std::shared_ptr<CreatedResource>(
         new CreatedResource(EType::Swapchain, resource));
   }
 
-  bool IsValid() const { return m_resource_ && (*m_resource_).Get(); }
+  bool isValid() const { return m_resource_ && (*m_resource_).Get(); }
 
-  ID3D12Resource* Get() const { return m_resource_ ? (*m_resource_).Get() : nullptr; }
+  ID3D12Resource* get() const { return m_resource_ ? (*m_resource_).Get() : nullptr; }
 
-  const ComPtr<ID3D12Resource>& GetPtr() const { return *m_resource_; }
+  // TODO: not used
+  const ComPtr<ID3D12Resource>& getPtr() const { return *m_resource_; }
 
-  uint64_t GetGPUVirtualAddress() const {
+  uint64_t getGPUVirtualAddress() const {
     return m_resource_ ? (*m_resource_)->GetGPUVirtualAddress() : 0;
   }
 
-  void Free();
+  void free();
 
   EType                                   m_resourceType_ = EType::Standalone;
   // TODO: consider remove shared ptr and use pure Resource

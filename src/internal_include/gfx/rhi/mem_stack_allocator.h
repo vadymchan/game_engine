@@ -19,8 +19,8 @@ struct MemoryChunk {
       , m_offset_(offset)
       , m_dataSize_(dataSize) {}
 
-  void* Alloc(size_t numOfBytes) {
-    const uint64_t allocOffset = Align<uint64_t>(m_offset_, DEFAULT_ALIGNMENT);
+  void* alloc(size_t numOfBytes) {
+    const uint64_t allocOffset = g_align<uint64_t>(m_offset_, DEFAULT_ALIGNMENT);
     if (allocOffset + numOfBytes <= m_dataSize_) {
       m_offset_ = allocOffset + numOfBytes;
       return m_address_ + allocOffset;
@@ -41,7 +41,7 @@ class PageAllocator {
   static constexpr uint64_t s_kMaxMemoryChunkSize
       = s_kPageSize - sizeof(MemoryChunk);
 
-  static PageAllocator* Get() {
+  static PageAllocator* get() {
     static PageAllocator* s_pageAllocator = nullptr;
     if (!s_pageAllocator) {
       s_pageAllocator = new PageAllocator();
@@ -50,7 +50,7 @@ class PageAllocator {
     return s_pageAllocator;
   }
 
-  MemoryChunk* Allocate() {
+  MemoryChunk* allocate() {
     {
       ScopedLock s(&m_lock_);
       if (m_freeChunk_) {
@@ -66,7 +66,7 @@ class PageAllocator {
     return NewMemoryChunk;
   }
 
-  void Free(MemoryChunk* chunk) {
+  void free(MemoryChunk* chunk) {
     ScopedLock s(&m_lock_);
 
     chunk->m_offset_ = sizeof(MemoryChunk);
@@ -74,7 +74,7 @@ class PageAllocator {
     m_freeChunk_     = chunk;
   }
 
-  MemoryChunk* AllocateBigSize(uint64_t numOfBytes) {
+  MemoryChunk* allocateBigSize(uint64_t numOfBytes) {
     const uint64_t NeedToAllocateBytes = numOfBytes + sizeof(MemoryChunk);
 
     if (m_freeChunkBigSize_) {
@@ -100,7 +100,7 @@ class PageAllocator {
     return NewChunk;
   }
 
-  void FreeBigSize(MemoryChunk* chunk) {
+  void freeBigSize(MemoryChunk* chunk) {
     chunk->m_offset_ = sizeof(MemoryChunk);
 
     if (m_freeChunkBigSize_) {
@@ -128,7 +128,7 @@ class PageAllocator {
     m_freeChunkBigSize_ = chunk;
   }
 
-  void Flush() {
+  void flush() {
     ScopedLock s(&m_lock_);
     while (m_freeChunk_) {
       MemoryChunk* Next = m_freeChunk_->m_next_;
@@ -150,7 +150,7 @@ class PageAllocator {
 
 class MemStack {
   public:
-  static MemStack* Get() {
+  static MemStack* get() {
     static MemStack* s_memStack = nullptr;
     if (!s_memStack) {
       s_memStack = new MemStack();
@@ -160,52 +160,52 @@ class MemStack {
   }
 
   template <typename T>
-  T* Alloc() {
-    return (T*)Alloc(sizeof(T));
+  T* alloc() {
+    return (T*)alloc(sizeof(T));
   }
 
-  void* Alloc(uint64_t numOfBytes) {
+  void* alloc(uint64_t numOfBytes) {
     if (numOfBytes >= PageAllocator::s_kMaxMemoryChunkSize) {
       MemoryChunk* NewChunk
-          = PageAllocator::Get()->AllocateBigSize(numOfBytes);
+          = PageAllocator::get()->allocateBigSize(numOfBytes);
       assert(NewChunk);
 
       NewChunk->m_next_ = m_bigSizeChunk_;
       m_bigSizeChunk_   = NewChunk;
 
-      void* AllocatedMemory = m_bigSizeChunk_->Alloc(numOfBytes);
+      void* AllocatedMemory = m_bigSizeChunk_->alloc(numOfBytes);
       assert(AllocatedMemory);
       return AllocatedMemory;
     }
 
     if (m_topMemoryChunk_) {
-      void* AllocatedMemory = m_topMemoryChunk_->Alloc(numOfBytes);
+      void* AllocatedMemory = m_topMemoryChunk_->alloc(numOfBytes);
       if (AllocatedMemory) {
         return AllocatedMemory;
       }
     }
 
-    MemoryChunk* NewChunk = PageAllocator::Get()->Allocate();
+    MemoryChunk* NewChunk = PageAllocator::get()->allocate();
     assert(NewChunk);
 
     NewChunk->m_next_ = m_topMemoryChunk_;
     m_topMemoryChunk_ = NewChunk;
 
-    void* AllocatedMemory = m_topMemoryChunk_->Alloc(numOfBytes);
+    void* AllocatedMemory = m_topMemoryChunk_->alloc(numOfBytes);
     assert(AllocatedMemory);
     return AllocatedMemory;
   }
 
-  void Flush() {
+  void flush() {
     while (m_topMemoryChunk_) {
       MemoryChunk* Next = m_topMemoryChunk_->m_next_;
-      PageAllocator::Get()->Free(m_topMemoryChunk_);
+      PageAllocator::get()->free(m_topMemoryChunk_);
       m_topMemoryChunk_ = Next;
     }
 
     while (m_bigSizeChunk_) {
       MemoryChunk* Next = m_bigSizeChunk_->m_next_;
-      PageAllocator::Get()->FreeBigSize(m_bigSizeChunk_);
+      PageAllocator::get()->freeBigSize(m_bigSizeChunk_);
       m_bigSizeChunk_ = Next;
     }
   }
@@ -230,14 +230,14 @@ class MemStackAllocator {
   pointer allocate(size_t numOfElement) {
 #if ENABLE_ALLOCATOR_LOG
     pointer allocatedAddress = static_cast<pointer>(
-        MemStack::Get()->Alloc(numOfElement * sizeof(T)));
+        MemStack::get()->alloc(numOfElement * sizeof(T)));
     std::cout << "Called MemstackAllocator::allocate with 0x"
               << allocatedAddress << " address and " << numOfElement
               << " elements" << std::endl;
     return allocatedAddress;
 #else
     return static_cast<pointer>(
-        MemStack::Get()->Alloc(numOfElement * sizeof(T)));
+        MemStack::get()->alloc(numOfElement * sizeof(T)));
 #endif
   }
 

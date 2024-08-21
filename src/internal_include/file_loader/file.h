@@ -10,58 +10,59 @@ namespace game_engine {
 
 struct FileType {
   enum Enum {
-    BINARY = 0,
-    TEXT,
+    Binary = 0,
+    Text,
   };
 };
 
 struct ReadWriteType {
   enum Enum {
-    READ = 0,  // READ ONLY, MUST EXIST FILE
-    WRITE,   // WRITE ONLY, IF THE FILE EXIST, DELETE ALL CONTENTS, IF THE FILE
+    Read = 0,  // READ ONLY, MUST EXIST FILE
+    Write,   // WRITE ONLY, IF THE FILE EXIST, DELETE ALL CONTENTS, IF THE FILE
              // NOT EXIST CREATE FILE.
-    APPEND,  // WRITE ONLY END OF THE FILE, IF THE FILE NOT EXIST CREATE FILE.
-    READ_UPDATE,    // READ / WRITE, IF THE FILE NOT EXIST, NULL WILL RETURN
-    WRITE_UPDATE,   // READ / WRITE, IF THE FILE EXIST, DELETE ALL CONTENTS, IF
+    Append,  // WRITE ONLY END OF THE FILE, IF THE FILE NOT EXIST CREATE FILE.
+    ReadUpdate,    // READ / WRITE, IF THE FILE NOT EXIST, NULL WILL RETURN
+    WriteUpdate,   // READ / WRITE, IF THE FILE EXIST, DELETE ALL CONTENTS, IF
                     // THE FILE NOT EXIST, FILE WILL CREATE.
-    APPEND_UPDATE,  // READ / WRITE, WRITE END OF THE FILE, READ CAN ANY WHERE.
+    AppendUpdate,  // READ / WRITE, WRITE END OF THE FILE, READ CAN ANY WHERE.
                     // IF THE FILE NOT EXIST, FILE WILL CREATE
   };
 };
 
 class File {
   public:
-  typedef char                      ELEMENT_TYPE;
-  typedef std::vector<ELEMENT_TYPE> FILE_BUFFER;
+  typedef char                     ElementType;
+  typedef std::vector<ElementType> FileBuffer;
 
-static uint64_t GetFileTimeStamp(const std::string& filename);
+  static uint64_t s_getFileTimeStamp(const std::string& filename);
 
   File()
       : m_fp_(nullptr) {}
 
   ~File();
 
-  bool OpenFile(const std::string&  szFileName,
-                FileType::Enum      fileType      = FileType::BINARY,
-                ReadWriteType::Enum readWriteType = ReadWriteType::READ);
+  bool openFile(const std::string&  szFileName,
+                FileType::Enum      fileType      = FileType::Binary,
+                ReadWriteType::Enum readWriteType = ReadWriteType::Read);
 
-  size_t ReadFileToBuffer(bool   appendToEndofBuffer = true,
+  size_t readFileToBuffer(bool   appendToEndofBuffer = true,
                           size_t index               = 0,
                           size_t count               = 0);
 
-  void CloseFile();
+  void closeFile();
 
-  const char* GetBuffer(size_t index = 0, size_t count = 0) const;
+  const char* getBuffer(size_t index = 0, size_t count = 0) const;
 
-  bool GetBuffer(FILE_BUFFER&       buffer,
+  bool getBuffer(FileBuffer&        buffer,
                  const std::string& startToken,
                  const std::string& endToken);
 
-  bool IsBufferEmpty() const { return m_buffer_.empty(); }
+  // TODO: seems not used
+  bool isBufferEmpty() const { return m_buffer_.empty(); }
 
   private:
-  std::FILE*                m_fp_;
-  std::vector<ELEMENT_TYPE> m_buffer_;
+  std::FILE*               m_fp_;
+  std::vector<ElementType> m_buffer_;
 };
 
 }  // namespace game_engine

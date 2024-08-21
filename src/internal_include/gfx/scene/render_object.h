@@ -26,14 +26,14 @@ class RenderObjectGeometryData {
   RenderObjectGeometryData(
       const std::shared_ptr<VertexStreamData>& vertexStream,
       const std::shared_ptr<IndexStreamData>&  indexStream) {
-    Create(vertexStream, indexStream);
+    create(vertexStream, indexStream);
   }
 
   RenderObjectGeometryData(
       const std::shared_ptr<VertexStreamData>& vertexStream,
       const std::shared_ptr<VertexStreamData>& positionOnlyVertexStream,
       const std::shared_ptr<IndexStreamData>&  indexStream) {
-    CreateNew_ForRaytracing(
+    createNewForRaytracing(
         vertexStream, positionOnlyVertexStream, indexStream);
   }
 
@@ -42,12 +42,12 @@ class RenderObjectGeometryData {
     m_vertexStreamPositionOnlyPtr_.reset();
   }
 
-  void Create(const std::shared_ptr<VertexStreamData>& vertexStream,
+  void create(const std::shared_ptr<VertexStreamData>& vertexStream,
               const std::shared_ptr<IndexStreamData>&  indexStream,
               bool                                     hasVertexColor = true,
               bool hasVertexBiTangent = false);
 
-  void CreateNew_ForRaytracing(
+  void createNewForRaytracing(
       const std::shared_ptr<VertexStreamData>& vertexStream,
       const std::shared_ptr<VertexStreamData>& vertexStream_PositionOnly,
       const std::shared_ptr<IndexStreamData>&  indexStream,
@@ -55,19 +55,19 @@ class RenderObjectGeometryData {
       bool                                     hasVertexBiTangent = true);
 
   // Vertex buffers
-  void UpdateVertexStream(
+  void updateVertexStream(
       const std::shared_ptr<VertexStreamData>& vertexStream);
 
-  EPrimitiveType GetPrimitiveType() const {
+  EPrimitiveType getPrimitiveType() const {
     return m_vertexStreamPtr_ ? m_vertexStreamPtr_->m_primitiveType_
                               : EPrimitiveType::MAX;
   }
 
-  bool HasInstancing() const { return !!m_vertexBufferInstanceDataPtr_; }
+  bool hasInstancing() const { return !!m_vertexBufferInstanceDataPtr_; }
 
-  bool HasVertexColor() const { return m_hasVertexColor_; }
+  bool hasVertexColor() const { return m_hasVertexColor_; }
 
-  bool HasVertexBiTangent() const { return m_hasVertexBiTangent_; }
+  bool hasVertexBiTangent() const { return m_hasVertexBiTangent_; }
 
   std::shared_ptr<VertexStreamData> m_vertexStreamPtr_;
   std::shared_ptr<VertexStreamData> m_vertexStreamInstanceDataPtr_;
@@ -94,14 +94,14 @@ class RenderObject {
 
   virtual ~RenderObject() {}
 
-  virtual void CreateRenderObject(
+  virtual void createRenderObject(
       const std::shared_ptr<RenderObjectGeometryData>&
           renderObjectGeometryData) {
     m_geometryDataPtr_ = renderObjectGeometryData;
-    UpdateWorldMatrix();
+    updateWorldMatrix();
   }
 
-  virtual void Draw(
+  virtual void draw(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       int32_t                                    startIndex,
       int32_t                                    indexCount,
@@ -109,24 +109,24 @@ class RenderObject {
       int32_t                                    vertexCount,
       int32_t                                    instanceCount);
 
-  virtual void Draw(
+  virtual void draw(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       int32_t                                    instanceCount = 1) {
-    Draw(renderFrameContext, 0, -1, 0, -1, instanceCount);
+    draw(renderFrameContext, 0, -1, 0, -1, instanceCount);
   }
 
-  EPrimitiveType GetPrimitiveType() const {
-    return m_geometryDataPtr_->GetPrimitiveType();
+  EPrimitiveType getPrimitiveType() const {
+    return m_geometryDataPtr_->getPrimitiveType();
   }
 
-  virtual void BindBuffers(
+  virtual void bindBuffers(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       bool                                       positionOnly,
       const VertexBuffer* overrideInstanceData = nullptr) const;
 
-  const std::vector<float>& GetVertices() const;
+  const std::vector<float>& getVertices() const;
 
-  bool HasInstancing() const { return m_geometryDataPtr_->HasInstancing(); }
+  bool hasInstancing() const { return m_geometryDataPtr_->hasInstancing(); }
 
   // TODO: currently not needed, uncomment or delete
   /*virtual bool IsSupportRaytracing() const {
@@ -142,7 +142,7 @@ class RenderObject {
   m_geometryDataPtr_->m_vertexBufferPositionOnlyPtr_->IsSupportRaytracing();
   }*/
 
-  void UpdateWorldMatrix();
+  void updateWorldMatrix();
 
   math::Matrix4f m_world_;
 
@@ -153,41 +153,48 @@ class RenderObject {
   std::shared_ptr<Buffer> m_scratchASBuffer_;
   std::shared_ptr<Buffer> m_vertexAndIndexOffsetBuffer_;
 
+
+  // TODO: seems it not used, consider removing
   template <typename T>
-  T* GetBottomLevelASBuffer() const {
+  T* getBottomLevelASBuffer() const {
     return (T*)m_bottomLevelASBuffer_.get();
   }
 
+  // TODO: seems it not used, consider removing
   template <typename T>
-  T* GetScratchASBuffer() const {
+  T* getScratchASBuffer() const {
     return (T*)m_scratchASBuffer_.get();
   }
 
+  // TODO: seems it not used, consider removing
   template <typename T>
-  T* GetVertexAndIndexOffsetBuffer() const {
+  T* getVertexAndIndexOffsetBuffer() const {
     return (T*)m_vertexAndIndexOffsetBuffer_.get();
   }
 
-  void SetPos(const math::Vector3Df& position) {
+  // TODO: consider use parameter name `value`
+  void setPosition(const math::Vector3Df& position) {
     m_position_ = position;
-    SetDirtyFlags(EDirty::POS);
+    setDirtyFlags_(EDirty::POS);
   }
 
-  void SetRot(const math::Vector3Df& rotation) {
+  // TODO: consider use parameter name `value`
+  void setRotation(const math::Vector3Df& rotation) {
     m_rotation_ = rotation;
-    SetDirtyFlags(EDirty::ROT);
+    setDirtyFlags_(EDirty::ROT);
   }
 
-  void SetScale(const math::Vector3Df& scale) {
+  // TODO: consider use parameter name `value`
+  void setScale(const math::Vector3Df& scale) {
     m_scale_ = scale;
-    SetDirtyFlags(EDirty::SCALE);
+    setDirtyFlags_(EDirty::SCALE);
   }
 
-  const math::Vector3Df& GetPos() const { return m_position_; }
+  const math::Vector3Df& getPosition() const { return m_position_; }
 
-  const math::Vector3Df& GetRot() const { return m_rotation_; }
+  const math::Vector3Df& getRotation() const { return m_rotation_; }
 
-  const math::Vector3Df& GetScale() const { return m_scale_; }
+  const math::Vector3Df& getScale() const { return m_scale_; }
 
   bool m_isTwoSided_       = false;
   bool m_isHiddenBoundBox_ = false;
@@ -202,7 +209,7 @@ class RenderObject {
   //////////////////////////////////////////////////////////////////////////
   // RenderObjectUniformBuffer
   virtual const std::shared_ptr<ShaderBindingInstance>&
-      CreateShaderBindingInstance();
+      createShaderBindingInstance();
 
   //////////////////////////////////////////////////////////////////////////
 
@@ -222,19 +229,19 @@ class RenderObject {
   EDirty m_dirtyFlags_ = EDirty::POS_ROT_SCALE;
 
   // TODO: conside renaming 
-  void SetDirtyFlags(EDirty inEnum) {
+  void setDirtyFlags_(EDirty inEnum) {
     using T       = std::underlying_type<EDirty>::type;
     m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(inEnum)
                                         | static_cast<T>(m_dirtyFlags_));
   }
 
-  void ClearDirtyFlags(EDirty inEnum) {
+  void clearDirtyFlags_(EDirty inEnum) {
     using T       = std::underlying_type<EDirty>::type;
     m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(inEnum)
                                         & (!static_cast<T>(m_dirtyFlags_)));
   }
 
-  void ClearDirtyFlags() { m_dirtyFlags_ = EDirty::NONE; }
+  void clearDirtyFlags_() { m_dirtyFlags_ = EDirty::NONE; }
 
   math::Vector3Df m_position_ = math::Vector3Df(0);
   math::Vector3Df m_rotation_ = math::Vector3Df(0);

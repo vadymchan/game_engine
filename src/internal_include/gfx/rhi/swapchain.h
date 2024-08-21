@@ -16,10 +16,10 @@ class SwapchainImage {
   public:
   virtual ~SwapchainImage() {}
 
-  virtual void Release() = 0;
+  virtual void release() = 0;
 
-  virtual void* GetHandle() const {
-    return m_TexturePtr_ ? m_TexturePtr_->GetHandle() : nullptr;
+  virtual void* getHandle() const {
+    return m_TexturePtr_ ? m_TexturePtr_->getHandle() : nullptr;
   }
 
   std::shared_ptr<Texture> m_TexturePtr_;
@@ -29,13 +29,13 @@ class Swapchain {
   public:
   virtual ~Swapchain() {}
 
-  virtual bool           Create(const std::shared_ptr<Window>& window)     = 0;
-  virtual void           Release()                                         = 0;
-  virtual void*          GetHandle() const                                 = 0;
-  virtual ETextureFormat GetFormat() const                                 = 0;
-  virtual const math::Dimension2Di& GetExtent() const                      = 0;
-  virtual SwapchainImage*          GetSwapchainImage(int32_t index) const = 0;
-  virtual int32_t                   GetNumOfSwapchainImages() const        = 0;
+  virtual bool           create(const std::shared_ptr<Window>& window)     = 0;
+  virtual void           release()                                         = 0;
+  virtual void*          getHandle() const                                 = 0;
+  virtual ETextureFormat getFormat() const                                 = 0;
+  virtual const math::Dimension2Di& getExtent() const                      = 0;
+  virtual SwapchainImage*           getSwapchainImage(int32_t index) const = 0;
+  virtual int32_t                   getNumOfSwapchainImages() const        = 0;
 };
 
 }  // namespace game_engine

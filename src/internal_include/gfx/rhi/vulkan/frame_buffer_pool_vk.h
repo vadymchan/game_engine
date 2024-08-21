@@ -14,12 +14,12 @@
 //  FrameBufferPoolVk();
 //  ~FrameBufferPoolVk();
 //
-//  static std::shared_ptr<FrameBufferVk> GetFrameBuffer(
+//  static std::shared_ptr<FrameBufferVk> s_getFrameBuffer(
 //      const FrameBufferInfoVk& info);
 //
-//  static void ReturnFrameBuffer(FrameBufferVk* renderTarget);
+//  static void s_returnFrameBuffer(FrameBufferVk* renderTarget);
 //
-//  static void Release();
+//  static void release();
 //
 //  struct FrameBufferPoolResourceVk {
 //    bool                           IsUsing = false;

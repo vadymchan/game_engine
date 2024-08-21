@@ -14,8 +14,8 @@ struct RenderFrameContextDx12 : public RenderFrameContext {
   virtual ~RenderFrameContextDx12() {}
 
   // TODO: seems this method is not used
-  virtual void QueueSubmitCurrentActiveCommandBuffer();
-  virtual void SubmitCurrentActiveCommandBuffer(
+  virtual void queueSubmitCurrentActiveCommandBuffer();
+  virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) override;
 };
 

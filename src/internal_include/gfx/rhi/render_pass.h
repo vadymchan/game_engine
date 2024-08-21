@@ -61,15 +61,15 @@ struct Attachment {
   // TODO: consider rename
   bool m_ResolveAttachment = false;
 
-  bool IsValid() const { return m_renderTargetPtr_ != nullptr; }
+  bool isValid() const { return m_renderTargetPtr_ != nullptr; }
 
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
 
     m_hash_ = GETHASH_FROM_INSTANT_STRUCT(
-        (m_renderTargetPtr_ ? m_renderTargetPtr_->GetHash() : 0),
+        (m_renderTargetPtr_ ? m_renderTargetPtr_->getHash() : 0),
         m_loadStoreOp_,
         m_stencilLoadStoreOp_,
         m_rtClearValue,
@@ -78,18 +78,18 @@ struct Attachment {
     return m_hash_;
   }
 
-  bool IsDepthAttachment() const {
+  bool isDepthAttachment() const {
     assert(m_renderTargetPtr_);
-    return IsDepthFormat(m_renderTargetPtr_->m_info_.m_format_);
+    return s_isDepthFormat(m_renderTargetPtr_->m_info_.m_format_);
   }
 
-  bool IsResolveAttachment() const { return m_ResolveAttachment; }
+  bool isResolveAttachment() const { return m_ResolveAttachment; }
 
   mutable size_t m_hash_ = 0;
 };
 
 struct Subpass {
-  void Initialize(int32_t            sourceSubpassIndex,
+  void initialize(int32_t            sourceSubpassIndex,
                   int32_t            destSubpassIndex,
                   EPipelineStageMask attachmentProducePipelineBit,
                   EPipelineStageMask attachmentConsumePipelineBit) {
@@ -119,7 +119,7 @@ struct Subpass {
                                                   // attachments would use for
                                                   // next subapss
 
-  bool IsSubpassForExecuteInOrder() const {
+  bool isSubpassForExecuteInOrder() const {
     if ((m_sourceSubpassIndex_ == -1) && (m_destSubpassIndex_ == -1)) {
       return true;
     }
@@ -134,7 +134,7 @@ struct Subpass {
     return false;
   }
 
-  size_t GetHash() const {
+  size_t getHash() const {
     size_t Hash = 0;
     if (m_inputAttachments_.size() > 0) {
       Hash = ::XXH64(m_inputAttachments_.data(),
@@ -169,44 +169,44 @@ struct RenderPassInfo {
   Attachment              m_resolveAttachment_;
   std::vector<Subpass>    m_subpasses_;
 
-  void Reset() {
+  void reset() {
     m_attachments_.clear();
     m_subpasses_.clear();
   }
 
-  size_t GetHash() const {
+  size_t getHash() const {
     int64_t Hash = 0;
     for (const auto& iter : m_attachments_) {
-      Hash = XXH64(iter.GetHash(), Hash);
+      Hash = XXH64(iter.getHash(), Hash);
     }
     for (const auto& iter : m_subpasses_) {
-      Hash = XXH64(iter.GetHash(), Hash);
+      Hash = XXH64(iter.getHash(), Hash);
     }
     return Hash;
   }
 
   // If both SourceSubpass and DstSubpass of all subpasses are -1, subpasses
   // will be executed in order
-  bool IsSubpassForExecuteInOrder() const {
+  bool isSubpassForExecuteInOrder() const {
     assert(m_subpasses_.size());
 
     int32_t i = 0;
     bool    isSubpassForExecuteInOrder
-        = m_subpasses_[i++].IsSubpassForExecuteInOrder();
+        = m_subpasses_[i++].isSubpassForExecuteInOrder();
     for (; i < (int32_t)m_subpasses_.size(); ++i) {
       // All isSubpassForExecuteInOrder of subpasses must be same.
       assert(isSubpassForExecuteInOrder
-             == m_subpasses_[i].IsSubpassForExecuteInOrder());
+             == m_subpasses_[i].isSubpassForExecuteInOrder());
 
       if (isSubpassForExecuteInOrder
-          != m_subpasses_[i].IsSubpassForExecuteInOrder()) {
+          != m_subpasses_[i].isSubpassForExecuteInOrder()) {
         return false;
       }
     }
     return isSubpassForExecuteInOrder;
   }
 
-  bool Validate() const {
+  bool validate() const {
     for (const auto& iter : m_subpasses_) {
       for (const auto& inputIndex : iter.m_inputAttachments_) {
         assert(m_attachments_.size() > inputIndex);
@@ -249,16 +249,16 @@ class RenderPass {
   RenderPass(const std::vector<Attachment>& colorAttachments,
              const math::Vector2Di&         offset,
              const math::Vector2Di&         extent) {
-    SetAttachemnt(colorAttachments);
-    SetRenderArea(offset, extent);
+    setAttachemnt(colorAttachments);
+    setRenderArea(offset, extent);
   }
 
   RenderPass(const std::vector<Attachment>& colorAttachments,
              const Attachment&              depthAttachment,
              const math::Vector2Di&         offset,
              const math::Vector2Di&         extent) {
-    SetAttachemnt(colorAttachments, depthAttachment);
-    SetRenderArea(offset, extent);
+    setAttachemnt(colorAttachments, depthAttachment);
+    setRenderArea(offset, extent);
   }
 
   RenderPass(const std::vector<Attachment>& colorAttachments,
@@ -266,11 +266,11 @@ class RenderPass {
              const Attachment&              colorResolveAttachment,
              const math::Vector2Di&         offset,
              const math::Vector2Di&         extent) {
-    SetAttachemnt(colorAttachments, depthAttachment, colorResolveAttachment);
-    SetRenderArea(offset, extent);
+    setAttachemnt(colorAttachments, depthAttachment, colorResolveAttachment);
+    setRenderArea(offset, extent);
   }
 
-  void SetAttachemnt(const std::vector<Attachment>& colorAttachments) {
+  void setAttachemnt(const std::vector<Attachment>& colorAttachments) {
     // Add output color attachment
     const int32_t startColorIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
@@ -289,7 +289,7 @@ class RenderPass {
     }
   }
 
-  void SetAttachemnt(const std::vector<Attachment>& colorAttachments,
+  void setAttachemnt(const std::vector<Attachment>& colorAttachments,
                      const Attachment&              depthAttachment) {
     // Add output color attachment
     const int32_t startColorIndex
@@ -318,7 +318,7 @@ class RenderPass {
   }
 
   // TODO: consider using  std::optional and std::nullopt
-  void SetAttachemnt(const std::vector<Attachment>& colorAttachments,
+  void setAttachemnt(const std::vector<Attachment>& colorAttachments,
                      const Attachment&              depthAttachment,
                      const Attachment&              colorResolveAttachment) {
     // Add output color attachment
@@ -355,7 +355,7 @@ class RenderPass {
         = startResolveIndex;
   }
 
-  void SetRenderArea(const math::Vector2Di& offset,
+  void setRenderArea(const math::Vector2Di& offset,
                      const math::Vector2Di& extent) {
     m_renderOffset_ = offset;
     m_renderExtent_ = extent;
@@ -365,34 +365,34 @@ class RenderPass {
              const math::Vector2Di& offset,
              const math::Vector2Di& extent) {
     m_renderPassInfo_ = renderPassInfo;
-    SetRenderArea(offset, extent);
+    setRenderArea(offset, extent);
   }
 
-  virtual bool BeginRenderPass(const CommandBuffer* commandBuffer) {
+  virtual bool beginRenderPass(const CommandBuffer* commandBuffer) {
     return false;
   }
 
-  virtual void EndRenderPass() {}
+  virtual void endRenderPass() {}
 
-  virtual size_t GetHash() const final {
+  virtual size_t getHash() const final {
     if (m_hash_) {
       return m_hash_;
     }
 
     m_hash_ = GETHASH_FROM_INSTANT_STRUCT(
-        m_renderPassInfo_.GetHash(), m_renderOffset_, m_renderExtent_);
+        m_renderPassInfo_.getHash(), m_renderOffset_, m_renderExtent_);
     return m_hash_;
   }
 
-  virtual void* GetRenderPass() const { return nullptr; }
+  virtual void* getRenderPass() const { return nullptr; }
 
-  virtual void* GetFrameBuffer() const { return nullptr; }
+  virtual void* getFrameBuffer() const { return nullptr; }
 
   RenderPassInfo m_renderPassInfo_;
 
-  // std::vector<Attachment> ColorAttachments;
-  // Attachment DepthAttachment;
-  // Attachment ColorAttachmentResolve;
+  // std::vector<Attachment> m_colorAttachments_;
+  // Attachment m_depthAttachment_;
+  // Attachment m_colorAttachmentResolve_;
 
   // TODO: consider using Dimension2Di
   math::Vector2Di m_renderOffset_;

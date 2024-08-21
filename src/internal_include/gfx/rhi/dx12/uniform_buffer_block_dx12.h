@@ -11,25 +11,26 @@ struct UniformBufferBlockDx12 : public IUniformBufferBlock {
   friend struct PlacedResourcePool;
 
   using IUniformBufferBlock::IUniformBufferBlock;
-  using IUniformBufferBlock::UpdateBufferData;
+  using IUniformBufferBlock::updateBufferData;
   virtual ~UniformBufferBlockDx12();
 
-  virtual void Init(size_t size) override;
+  virtual void init(size_t size) override;
 
-  virtual void Release() override;
-  virtual void UpdateBufferData(const void* data, size_t size) override;
+  virtual void release() override;
+  virtual void updateBufferData(const void* data, size_t size) override;
 
-  virtual void ClearBuffer(int32_t clearValue) override;
+  virtual void clearBuffer(int32_t clearValue) override;
 
-  virtual void* GetLowLevelResource() const override;
-  virtual void* GetLowLevelMemory() const override;
+  virtual void* getLowLevelResource() const override;
+  virtual void* getLowLevelMemory() const override;
 
-  virtual size_t GetBufferSize() const override;
+  virtual size_t getBufferSize() const override;
 
-  virtual size_t GetBufferOffset() const override { return 0; }
+  virtual size_t getBufferOffset() const override { return 0; }
 
-  const DescriptorDx12& GetCBV() const;
-  uint64_t              GetGPUAddress() const;
+  // TODO: consider if the naming is correct
+  const DescriptorDx12& getCBV() const;
+  uint64_t              getGPUAddress() const;
 
   private:
   UniformBufferBlockDx12(const UniformBufferBlockDx12&)            = delete;

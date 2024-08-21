@@ -52,20 +52,20 @@ struct DescriptorPoolVk {
 
   virtual ~DescriptorPoolVk();
 
-  virtual void Create(uint32_t maxDescriptorSets = 128);
+  virtual void create(uint32_t maxDescriptorSets = 128);
 
-  virtual void Reset();
+  virtual void reset();
 
-  virtual std::shared_ptr<ShaderBindingInstance> AllocateDescriptorSet(
+  virtual std::shared_ptr<ShaderBindingInstance> allocateDescriptorSet(
       VkDescriptorSetLayout layout);
 
-  virtual void Free(
+  virtual void free(
       std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);
 
-  void Release();
+  void release();
 
   // This will be called from 'DeallocatorMultiFrameShaderBindingInstance'
-  void FreedFromPendingDelegate(
+  void freedFromPendingDelegate(
       std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);
 
   std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>

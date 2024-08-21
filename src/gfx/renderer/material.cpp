@@ -5,7 +5,7 @@
 
 namespace game_engine {
 
-Texture* Material::GetTexture(EMaterialTextureType inType) const {
+Texture* Material::getTexture(EMaterialTextureType inType) const {
   assert(EMaterialTextureType::Albedo <= inType);
   assert(EMaterialTextureType::Max > inType);
 
@@ -20,7 +20,7 @@ Texture* Material::GetTexture(EMaterialTextureType inType) const {
 }
 
 const std::shared_ptr<ShaderBindingInstance>&
-    Material::CreateShaderBindingInstance() {
+    Material::createShaderBindingInstance() {
   if (m_needToUpdateShaderBindingInstance_) {
     m_needToUpdateShaderBindingInstance_ = false;
 
@@ -30,7 +30,7 @@ const std::shared_ptr<ShaderBindingInstance>&
 
     for (int32_t i = 0; i < (int32_t)EMaterialTextureType::Max; ++i) {
       const TextureData& TextureData = m_texData_[i];
-      const Texture*     texture     = TextureData.GetTexture();
+      const Texture*     texture     = TextureData.getTexture();
 
       if (!texture) {
         if ((int32_t)EMaterialTextureType::Normal == i) {
@@ -42,20 +42,20 @@ const std::shared_ptr<ShaderBindingInstance>&
         }
       }
 
-      shaderBindingArray.Add(ShaderBinding(
+      shaderBindingArray.add(ShaderBinding(
           BindingPoint++,
           1,
           EShaderBindingType::TEXTURE_SAMPLER_SRV,
           false,
           EShaderAccessStageFlag::ALL_GRAPHICS,
-          ResourceInlineAllactor.Alloc<TextureResource>(texture, nullptr)));
+          ResourceInlineAllactor.alloc<TextureResource>(texture, nullptr)));
     }
 
     if (m_shaderBindingInstance_) {
-      m_shaderBindingInstance_->Free();
+      m_shaderBindingInstance_->free();
     }
 
-    m_shaderBindingInstance_ = g_rhi->CreateShaderBindingInstance(
+    m_shaderBindingInstance_ = g_rhi->createShaderBindingInstance(
         shaderBindingArray, ShaderBindingInstanceType::MultiFrame);
   }
   return m_shaderBindingInstance_;

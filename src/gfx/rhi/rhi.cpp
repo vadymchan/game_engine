@@ -23,7 +23,7 @@ bool RHI::init(const std::shared_ptr<Window>& window) {
   return false;
 }
 
-void RHI::OnInitRHI() {
+void RHI::onInitRHI() {
   ImageData image;
   image.m_imageBulkData_.m_imageData_ = {255, 255, 255, 255};
   image.m_width_                   = 1;
@@ -33,18 +33,18 @@ void RHI::OnInitRHI() {
   image.m_sRGB_                    = false;
 
   image.m_imageBulkData_.m_imageData_ = {255, 255, 255, 255};
-  g_whiteTexture                 = CreateTextureFromData(&image);
+  g_whiteTexture                 = createTextureFromData(&image);
 
   image.m_imageBulkData_.m_imageData_ = {0, 0, 0, 255};
-  g_blackTexture                 = CreateTextureFromData(&image);
+  g_blackTexture                 = createTextureFromData(&image);
 
   image.m_imageBulkData_.m_imageData_ = {255 / 2, 255 / 2, 255, 0};
-  g_normalTexture                = CreateTextureFromData(&image);
+  g_normalTexture                = createTextureFromData(&image);
 
   image.m_textureType_             = ETextureType::TEXTURE_CUBE;
   image.m_layerCount_              = 6;
   image.m_imageBulkData_.m_imageData_ = {255, 255, 255, 200, 255, 255};
-  g_whiteCubeTexture             = CreateTextureFromData(&image);
+  g_whiteCubeTexture             = createTextureFromData(&image);
 
   g_defaultMaterial = std::make_shared<Material>();
   g_defaultMaterial->m_texData_[(int32_t)Material::EMaterialTextureType::Albedo]
@@ -62,8 +62,8 @@ void RHI::release() {
   g_normalTexture.reset();
   g_defaultMaterial.reset();
 
-  Shader::ReleaseCheckUpdateShaderThread();
-  s_shaderPool.Release();
+  Shader::s_releaseCheckUpdateShaderThread();
+  s_shaderPool.release();
 }
 
 RHI::RHI() {

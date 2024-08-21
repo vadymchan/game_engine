@@ -12,9 +12,9 @@ std::map<RenderTarget*, size_t> RenderTargetPool::m_renderTargetHashVariableMap_
 
 // struct Texture* RenderTargetPool::GetNullTexture(ETextureType type) {
 //   static std::shared_ptr<RenderTarget> RTPtr
-//       = RenderTargetPool::GetRenderTarget(
+//       = RenderTargetPool::s_getRenderTarget(
 //           {type, ETextureFormat::RGBA8, 2, 2, 1});
-//   return RTPtr->GetTexture();
+//   return RTPtr->getTexture();
 // }
 
 RenderTargetPool::RenderTargetPool() {
@@ -23,9 +23,9 @@ RenderTargetPool::RenderTargetPool() {
 RenderTargetPool::~RenderTargetPool() {
 }
 
-std::shared_ptr<RenderTarget> RenderTargetPool::GetRenderTarget(
+std::shared_ptr<RenderTarget> RenderTargetPool::s_getRenderTarget(
     const RenderTargetInfo& info) {
-  auto hash = info.GetHash();
+  auto hash = info.getHash();
 
   auto it_find = m_renderTargetResourceMap_.find(hash);
   if (m_renderTargetResourceMap_.end() != it_find) {
@@ -38,7 +38,7 @@ std::shared_ptr<RenderTarget> RenderTargetPool::GetRenderTarget(
     }
   }
 
-  auto renderTargetPtr = g_rhi->CreateRenderTarget(info);
+  auto renderTargetPtr = g_rhi->createRenderTarget(info);
   if (renderTargetPtr) {
     renderTargetPtr->m_isCreatedFromRenderTargetPool_ = true;
     m_renderTargetResourceMap_[hash].push_back({true, renderTargetPtr});
@@ -48,7 +48,7 @@ std::shared_ptr<RenderTarget> RenderTargetPool::GetRenderTarget(
   return renderTargetPtr;
 }
 
-void RenderTargetPool::ReturnRenderTarget(RenderTarget* renderTarget) {
+void RenderTargetPool::s_seturnRenderTarget(RenderTarget* renderTarget) {
   auto it_find = m_renderTargetHashVariableMap_.find(renderTarget);
   if (m_renderTargetHashVariableMap_.end() == it_find) {
     return;

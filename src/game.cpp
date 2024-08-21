@@ -5,7 +5,7 @@
 
 namespace game_engine {
 
-void Game::Setup() {
+void Game::setup() {
   // TODO: consider change to std::mt19937
   srand(static_cast<uint32_t>(time(NULL)));
 
@@ -15,8 +15,8 @@ void Game::Setup() {
   // -1.00448179f);
   const math::Vector3Df mainCameraPos(0.0f, 0.0f, 0.0f);
   const math::Vector3Df mainCameraTarget(0.0f, 0.0f, 1.0f);
-  MainCamera
-      = Camera::CreateCamera(mainCameraPos,
+  m_mainCamera_
+      = Camera::s_createCamera(mainCameraPos,
                              mainCameraTarget,
                              mainCameraPos + math::Vector3Df(0.0, 1.0, 0.0),
                              math::g_degreeToRadian(45.0f),
@@ -25,64 +25,64 @@ void Game::Setup() {
                              (float)m_window_->getSize().width(),
                              (float)m_window_->getSize().height(),
                              true);
-  Camera::AddCamera(0, MainCamera);
+  Camera::s_addCamera(0, m_mainCamera_);
 
-  // auto cube = CreateCube(math::Vector3Df(0.0f, 60.0f, 5.0f),
+  // auto cube = g_createCube(math::Vector3Df(0.0f, 60.0f, 5.0f),
   // math::g_oneVector<float, 3>(), math::g_oneVector<float, 3>() * 10.f,
-  // math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f)); Object::AddObject(cube);
-  // SpawnedObjects.push_back(cube);
+  // math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f)); Object::s_addObject(cube);
+  // m_spawnedObjects_.push_back(cube);
 
   // Select spawning object type
-  SpawnObjects(ESpawnedType::TestPrimitive);
+  spawnObjects(ESpawnedType::TestPrimitive);
 
-  // SpawnObjects(ESpawnedType::InstancingPrimitive);
-  // SpawnObjects(ESpawnedType::IndirectDrawPrimitive);
+  // spawnObjects(ESpawnedType::InstancingPrimitive);
+  // spawnObjects(ESpawnedType::IndirectDrawPrimitive);
 
-  // ResourceLoadCompleteEvent = std::async(std::launch::async, [&]()
+  // m_resourceLoadCompleteEvent_ = std::async(std::launch::async, [&]()
   //{
 
   //{
-  //	ScopedLock s(&AsyncLoadLock);
-  //	CompletedAsyncLoadObjects.push_back(Sponza);
+  //	ScopedLock s(&m_asyncLoadLock_);
+  //	m_completedAsyncLoadObjects_.push_back(Sponza);
   //}
   //});
 
-  g_rhi->Finish();  // todo : Instead of this, it needs UAV barrier here
+  g_rhi->finish();  // todo : Instead of this, it needs UAV barrier here
 }
 
-void Game::SpawnObjects(ESpawnedType spawnType) {
-  if (spawnType != SpawnedType) {
-    SpawnedType = spawnType;
-    switch (SpawnedType) {
+void Game::spawnObjects(ESpawnedType spawnType) {
+  if (spawnType != m_spawnedType_) {
+    m_spawnedType_ = spawnType;
+    switch (m_spawnedType_) {
       case ESpawnedType::TestPrimitive:
-        SpawnTestPrimitives();
+        spawnTestPrimitives();
         break;
       case ESpawnedType::CubePrimitive:
-        SapwnCubePrimitives();
+        spawnCubePrimitives();
         break;
       case ESpawnedType::InstancingPrimitive:
-        SpawnInstancingPrimitives();
+        spawnInstancingPrimitives();
         break;
       case ESpawnedType::IndirectDrawPrimitive:
-        SpawnIndirectDrawPrimitives();
+        spawnIndirectDrawPrimitives();
         break;
     }
   }
 }
 
-void Game::RemoveSpawnedObjects() {
-  for (auto& iter : SpawnedObjects) {
+void Game::removeSpawnedObjects() {
+  for (auto& iter : m_spawnedObjects_) {
     assert(iter);
-    Object::RemoveObject(iter);
+    Object::s_removeObject(iter);
     delete iter;
   }
-  SpawnedObjects.clear();
+  m_spawnedObjects_.clear();
 }
 
-void Game::SpawnTestPrimitives() {
-  RemoveSpawnedObjects();
+void Game::spawnTestPrimitives() {
+  removeSpawnedObjects();
 
-  auto triangle            = CreateTriangle(math::Vector3Df(0.0, 0.0, 5.0),
+  auto triangle            = g_createTriangle(math::Vector3Df(0.0, 0.0, 5.0),
                                  math::g_oneVector<float, 3>(),
                                  math::Vector3Df(1.0, 1.0, 1.0),
                                  math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f));
@@ -91,26 +91,26 @@ void Game::SpawnTestPrimitives() {
     //                                     + math::Vector3Df(5.0f, 0.0f, 0.0f)
     //                                           * deltaTime);
   };
-  Object::AddObject(triangle);
-  SpawnedObjects.push_back(triangle);
+  Object::s_addObject(triangle);
+  m_spawnedObjects_.push_back(triangle);
 
-  //auto quad = CreateQuad(math::Vector3Df(1.0f, 1.0f, 1.0f),
+  //auto quad = createQuad(math::Vector3Df(1.0f, 1.0f, 1.0f),
   //                       math::Vector3Df(1.0f),
   //                       math::Vector3Df(1000.0f, 1000.0f, 1000.0f),
   //                       math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f));
-  //quad->SetPlane(math::Plane(math::Vector3Df(0.0, 1.0, 0.0), -0.1f));
+  //quad->setPlane(math::Plane(math::Vector3Df(0.0, 1.0, 0.0), -0.1f));
   //quad->m_skipUpdateShadowVolume_ = true;
-  //Object::AddObject(quad);
-  //SpawnedObjects.push_back(quad);
+  //Object::s_addObject(quad);
+  //m_spawnedObjects_.push_back(quad);
 
-  //auto gizmo              = CreateGizmo(math::g_zeroVector<float, 3>(),
+  //auto gizmo              = g_createGizmo(math::g_zeroVector<float, 3>(),
   //                         math::g_zeroVector<float, 3>(),
   //                         math::g_oneVector<float, 3>());
   //gizmo->m_skipShadowMapGen_ = true;
-  //Object::AddObject(gizmo);
-  //SpawnedObjects.push_back(gizmo);
+  //Object::s_addObject(gizmo);
+  //m_spawnedObjects_.push_back(gizmo);
 
-  //auto triangle            = CreateTriangle(math::Vector3Df(60.0, 100.0, 20.0),
+  //auto triangle            = g_createTriangle(math::Vector3Df(60.0, 100.0, 20.0),
   //                               math::g_oneVector<float, 3>(),
   //                               math::Vector3Df(40.0, 40.0, 40.0),
   //                               math::Vector4Df(0.5f, 0.1f, 1.0f, 1.0f));
@@ -119,10 +119,10 @@ void Game::SpawnTestPrimitives() {
   //                                       + math::Vector3Df(5.0f, 0.0f, 0.0f)
   //                                             * deltaTime);
   //};
-  //Object::AddObject(triangle);
-  //SpawnedObjects.push_back(triangle);
+  //Object::s_addObject(triangle);
+  //m_spawnedObjects_.push_back(triangle);
 
-  //auto cube            = CreateCube(math::Vector3Df(-60.0f, 55.0f, -20.0f),
+  //auto cube            = g_createCube(math::Vector3Df(-60.0f, 55.0f, -20.0f),
   //                       math::g_oneVector<float, 3>(),
   //                       math::Vector3Df(50.0f, 50.0f, 50.0f),
   //                       math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
@@ -131,17 +131,17 @@ void Game::SpawnTestPrimitives() {
   //                                       + math::Vector3Df(0.0f, 0.0f, 0.5f)
   //                                             * deltaTime);
   //};
-  //Object::AddObject(cube);
-  //SpawnedObjects.push_back(cube);
+  //Object::s_addObject(cube);
+  //m_spawnedObjects_.push_back(cube);
 
-  //auto cube2 = CreateCube(math::Vector3Df(-65.0f, 35.0f, 10.0f),
+  //auto cube2 = g_createCube(math::Vector3Df(-65.0f, 35.0f, 10.0f),
   //                        math::g_oneVector<float, 3>(),
   //                        math::Vector3Df(50.0f, 50.0f, 50.0f),
   //                        math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
-  //Object::AddObject(cube2);
-  //SpawnedObjects.push_back(cube2);
+  //Object::s_addObject(cube2);
+  //m_spawnedObjects_.push_back(cube2);
 
-  //auto capsule            = CreateCapsule(math::Vector3Df(30.0f, 30.0f, -80.0f),
+  //auto capsule            = g_createCapsule(math::Vector3Df(30.0f, 30.0f, -80.0f),
   //                             40.0f,
   //                             10.0f,
   //                             20,
@@ -152,10 +152,10 @@ void Game::SpawnTestPrimitives() {
   //                                       + math::Vector3Df(-1.0f, 0.0f, 0.0f)
   //                                             * deltaTime);
   //};
-  //Object::AddObject(capsule);
-  //SpawnedObjects.push_back(capsule);
+  //Object::s_addObject(capsule);
+  //m_spawnedObjects_.push_back(capsule);
 
-  //auto cone            = CreateCone(math::Vector3Df(0.0f, 50.0f, 60.0f),
+  //auto cone            = g_createCone(math::Vector3Df(0.0f, 50.0f, 60.0f),
   //                       40.0f,
   //                       20.0f,
   //                       15,
@@ -166,10 +166,10 @@ void Game::SpawnTestPrimitives() {
   //                                       + math::Vector3Df(0.0f, 3.0f, 0.0f)
   //                                             * deltaTime);
   //};
-  //Object::AddObject(cone);
-  //SpawnedObjects.push_back(cone);
+  //Object::s_addObject(cone);
+  //m_spawnedObjects_.push_back(cone);
 
-  //auto cylinder = CreateCylinder(math::Vector3Df(-30.0f, 60.0f, -60.0f),
+  //auto cylinder = g_createCylinder(math::Vector3Df(-30.0f, 60.0f, -60.0f),
   //                               20.0f,
   //                               10.0f,
   //                               20,
@@ -180,10 +180,10 @@ void Game::SpawnTestPrimitives() {
   //                                       + math::Vector3Df(5.0f, 0.0f, 0.0f)
   //                                             * deltaTime);
   //};
-  //Object::AddObject(cylinder);
-  //SpawnedObjects.push_back(cylinder);
+  //Object::s_addObject(cylinder);
+  //m_spawnedObjects_.push_back(cylinder);
 
-  //auto quad2            = CreateQuad(math::Vector3Df(-20.0f, 80.0f, 40.0f),
+  //auto quad2            = createQuad(math::Vector3Df(-20.0f, 80.0f, 40.0f),
   //                        math::g_oneVector<float, 3>(),
   //                        math::Vector3Df(20.0f, 20.0f, 20.0f),
   //                        math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f));
@@ -192,10 +192,10 @@ void Game::SpawnTestPrimitives() {
   //                                       + math::Vector3Df(0.0f, 0.0f, 8.0f)
   //                                             * deltaTime);
   //};
-  //Object::AddObject(quad2);
-  //SpawnedObjects.push_back(quad2);
+  //Object::s_addObject(quad2);
+  //m_spawnedObjects_.push_back(quad2);
 
-  //auto sphere            = CreateSphere(math::Vector3Df(65.0f, 35.0f, 10.0f),
+  //auto sphere            = g_createSphere(math::Vector3Df(65.0f, 35.0f, 10.0f),
   //                           1.0,
   //                           150,
   //                           75,
@@ -208,10 +208,10 @@ void Game::SpawnTestPrimitives() {
   //      + math::Vector3Df(0.0f, 0.0f, math::g_degreeToRadian(180.0f))
   //            * RotationSpeed * deltaTime);
   //};
-  //Object::AddObject(sphere);
-  //SpawnedObjects.push_back(sphere);
+  //Object::s_addObject(sphere);
+  //m_spawnedObjects_.push_back(sphere);
 
-  //auto sphere2            = CreateSphere(math::Vector3Df(150.0f, 5.0f, 0.0f),
+  //auto sphere2            = g_createSphere(math::Vector3Df(150.0f, 5.0f, 0.0f),
   //                            1.0,
   //                            150,
   //                            75,
@@ -228,18 +228,18 @@ void Game::SpawnTestPrimitives() {
   //    dir      = !dir;
   //    m_position_.y() += dir ? speed : -speed;
   //  }
-  //  thisObject->m_renderObjects_[0]->SetPos(m_position_);
+  //  thisObject->m_renderObjects_[0]->setPosition(m_position_);
   //};
-  //Object::AddObject(sphere2);
-  //SpawnedObjects.push_back(sphere2);
+  //Object::s_addObject(sphere2);
+  //m_spawnedObjects_.push_back(sphere2);
 
-  //auto billboard = CreateBillobardQuad(math::Vector3Df(0.0f, 60.0f, 80.0f),
+  //auto billboard = g_createBillobardQuad(math::Vector3Df(0.0f, 60.0f, 80.0f),
   //                                     math::g_oneVector<float, 3>(),
   //                                     math::Vector3Df(20.0f, 20.0f, 20.0f),
   //                                     math::Vector4Df(1.0f, 0.0f, 1.0f, 1.0f),
-  //                                     MainCamera);
-  //Object::AddObject(billboard);
-  //SpawnedObjects.push_back(billboard);
+  //                                     m_mainCamera_);
+  //Object::s_addObject(billboard);
+  //m_spawnedObjects_.push_back(billboard);
 
   // const float Size = 20.0f;
 
@@ -249,24 +249,24 @@ void Game::SpawnTestPrimitives() {
   //	{
   //		for (int32_t k = 0; k < 5; ++k)
   //		{
-  //			auto cube = CreateCube(math::Vector3Df(i * 25.0f,
+  //			auto cube = g_createCube(math::Vector3Df(i * 25.0f,
   // k * 25.0f, j * 25.0f), math::g_oneVector<float, 3>(),
   // math::Vector3Df(Size), math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
-  // Object::AddObject(cube);
-  //			SpawnedObjects.push_back(cube);
+  // Object::s_addObject(cube);
+  //			m_spawnedObjects_.push_back(cube);
   //		}
   //	}
   // }
 }
 
 // difference between perspective and orthographic projection
-void Game::SpawnGraphTestFunc() {
+void Game::spawnGraphTestFunc() {
   math::Vector3Df PerspectiveVector[90];
   math::Vector3Df OrthographicVector[90];
   {
     {
       static Camera* pCamera
-          = Camera::CreateCamera(math::Vector3Df(0.0),
+          = Camera::s_createCamera(math::Vector3Df(0.0),
                                  math::Vector3Df(0.0, 0.0, 1.0),
                                  math::Vector3Df(0.0, 1.0, 0.0),
                                  math::g_degreeToRadian(90.0f),
@@ -275,7 +275,7 @@ void Game::SpawnGraphTestFunc() {
                                  100.0,
                                  100.0,
                                  true);
-      pCamera->UpdateCamera();
+      pCamera->updateCamera();
       int  cnt = 0;
       auto MV  = pCamera->m_projection_ * pCamera->m_view_;
       for (int i = 0; i < 90; ++i) {
@@ -289,7 +289,7 @@ void Game::SpawnGraphTestFunc() {
     }
     {
       static Camera* pCamera
-          = Camera::CreateCamera(math::Vector3Df(0.0),
+          = Camera::s_createCamera(math::Vector3Df(0.0),
                                  math::Vector3Df(0.0, 0.0, 1.0),
                                  math::Vector3Df(0.0, 1.0, 0.0),
                                  math::g_degreeToRadian(90.0f),
@@ -298,7 +298,7 @@ void Game::SpawnGraphTestFunc() {
                                  100.0,
                                  100.0,
                                  false);
-      pCamera->UpdateCamera();
+      pCamera->updateCamera();
       int  cnt = 0;
       auto MV  = pCamera->m_projection_ * pCamera->m_view_;
       for (int i = 0; i < 90; ++i) {
@@ -324,51 +324,51 @@ void Game::SpawnGraphTestFunc() {
                                      OrthographicVector[i].z() * scale));
   }
 
-  auto graphObj1 = CreateGraph2D({360, 350}, {360, 300}, graph1);
-  Object::AddUIDebugObject(graphObj1);
+  auto graphObj1 = g_createGraph2D({360, 350}, {360, 300}, graph1);
+  Object::s_addUIDebugObject(graphObj1);
 
-  auto graphObj2 = CreateGraph2D({360, 700}, {360, 300}, graph2);
-  Object::AddUIDebugObject(graphObj2);
+  auto graphObj2 = g_createGraph2D({360, 700}, {360, 300}, graph2);
+  Object::s_addUIDebugObject(graphObj2);
 }
 
-void Game::SapwnCubePrimitives() {
-  RemoveSpawnedObjects();
+void Game::spawnCubePrimitives() {
+  removeSpawnedObjects();
 
   for (int i = 0; i < 20; ++i) {
     float height = 5.0f * i;
     auto  cube
-        = CreateCube(math::Vector3Df(-500.0f + i * 50.0f, height / 2.0f, 20.0f),
+        = g_createCube(math::Vector3Df(-500.0f + i * 50.0f, height / 2.0f, 20.0f),
                      math::g_oneVector<float, 3>(),
                      math::Vector3Df(10.0f, height, 20.0f),
                      math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
-    Object::AddObject(cube);
-    SpawnedObjects.push_back(cube);
-    cube = CreateCube(
+    Object::s_addObject(cube);
+    m_spawnedObjects_.push_back(cube);
+    cube = g_createCube(
         math::Vector3Df(-500.0f + i * 50.0f, height / 2.0f, 20.0f + i * 20.0f),
         math::g_oneVector<float, 3>(),
         math::Vector3Df(10.0f, height, 10.0f),
         math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
-    Object::AddObject(cube);
-    SpawnedObjects.push_back(cube);
-    cube = CreateCube(
+    Object::s_addObject(cube);
+    m_spawnedObjects_.push_back(cube);
+    cube = g_createCube(
         math::Vector3Df(-500.0f + i * 50.0f, height / 2.0f, 20.0f - i * 20.0f),
         math::g_oneVector<float, 3>(),
         math::Vector3Df(20.0f, height, 10.0f),
         math::Vector4Df(0.7f, 0.7f, 0.7f, 1.0f));
-    Object::AddObject(cube);
-    SpawnedObjects.push_back(cube);
+    Object::s_addObject(cube);
+    m_spawnedObjects_.push_back(cube);
   }
 
-  auto quad = CreateQuad(math::Vector3Df(1.0f, 1.0f, 1.0f),
+  auto quad = g_createQuad(math::Vector3Df(1.0f, 1.0f, 1.0f),
                          math::Vector3Df(1.0f),
                          math::Vector3Df(1000.0f, 1000.0f, 1000.0f),
                          math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f));
-  quad->SetPlane(math::Plane(math::Vector3Df(0.0, 1.0, 0.0), -0.1f));
-  Object::AddObject(quad);
-  SpawnedObjects.push_back(quad);
+  quad->setPlane(math::Plane(math::Vector3Df(0.0, 1.0, 0.0), -0.1f));
+  Object::s_addObject(quad);
+  m_spawnedObjects_.push_back(quad);
 }
 
-void Game::SpawnInstancingPrimitives() {
+void Game::spawnInstancingPrimitives() {
   struct InstanceData {
     math::Vector4Df m_color;
     math::Vector3Df m_w;
@@ -396,7 +396,7 @@ void Game::SpawnInstancingPrimitives() {
   }
 
   {
-    auto obj         = CreateTriangle(math::Vector3Df(0.0f, 0.0f, 0.0f),
+    auto obj         = g_createTriangle(math::Vector3Df(0.0f, 0.0f, 0.0f),
                               math::g_oneVector<float, 3>() * 8.0f,
                               math::g_oneVector<float, 3>(),
                               math::Vector4Df(1.0f, 0.0f, 0.0f, 1.0f));
@@ -432,7 +432,7 @@ void Game::SpawnInstancingPrimitives() {
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_elementCount_
         = std::size(instanceData);
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_startLocation_
-        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->GetEndLocation();
+        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->getEndLocation();
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_bindingIndex_
         = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->m_streams_.size();
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_vertexInputRate_
@@ -440,15 +440,15 @@ void Game::SpawnInstancingPrimitives() {
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_streams_.push_back(
         streamParam);
     GeometryDataPtr->m_vertexBufferInstanceDataPtr_
-        = g_rhi->CreateVertexBuffer(
+        = g_rhi->createVertexBuffer(
             GeometryDataPtr->m_vertexStreamInstanceDataPtr_);
 
-    Object::AddObject(obj);
-    SpawnedObjects.push_back(obj);
+    Object::s_addObject(obj);
+    m_spawnedObjects_.push_back(obj);
   }
 }
 
-void Game::SpawnIndirectDrawPrimitives() {
+void Game::spawnIndirectDrawPrimitives() {
   struct InstanceData {
     math::Vector4Df m_color;
     math::Vector3Df m_w;
@@ -476,7 +476,7 @@ void Game::SpawnIndirectDrawPrimitives() {
   }
 
   {
-    auto obj = CreateTriangle(math::Vector3Df(0.0f, 0.0f, 0.0f),
+    auto obj = g_createTriangle(math::Vector3Df(0.0f, 0.0f, 0.0f),
                               math::g_oneVector<float, 3>() * 8.0f,
                               math::g_oneVector<float, 3>(),
                               math::Vector4Df(1.0f, 0.0f, 0.0f, 1.0f));
@@ -512,7 +512,7 @@ void Game::SpawnIndirectDrawPrimitives() {
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_elementCount_
         = std::size(instanceData);
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_startLocation_
-        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->GetEndLocation();
+        = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->getEndLocation();
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_bindingIndex_
         = (int32_t)GeometryDataPtr->m_vertexStreamPtr_->m_streams_.size();
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_vertexInputRate_
@@ -520,12 +520,12 @@ void Game::SpawnIndirectDrawPrimitives() {
     GeometryDataPtr->m_vertexStreamInstanceDataPtr_->m_streams_.push_back(
         streamParam);
     GeometryDataPtr->m_vertexBufferInstanceDataPtr_
-        = g_rhi->CreateVertexBuffer(
+        = g_rhi->createVertexBuffer(
             GeometryDataPtr->m_vertexStreamInstanceDataPtr_);
 
     // Create indirect draw buffer
     // TODO: Refactor this code to decouple it from Vulkan-specific classes and
-    // functions (e.g., VkDrawIndirectCommand, g_rhi->CreateVertexBuffer).
+    // functions (e.g., VkDrawIndirectCommand, g_rhi->createVertexBuffer).
     // Consider using an abstract rendering interface to handle draw calls and
     // resource management.
     {
@@ -551,7 +551,7 @@ void Game::SpawnIndirectDrawPrimitives() {
 
       assert(!GeometryDataPtr->m_indirectCommandBufferPtr_);
       GeometryDataPtr->m_indirectCommandBufferPtr_
-          = g_rhi->CreateStructuredBuffer(bufferSize,
+          = g_rhi->createStructuredBuffer(bufferSize,
                                              0,
                                              sizeof(VkDrawIndirectCommand),
                                              EBufferCreateFlag::IndirectCommand,
@@ -560,104 +560,104 @@ void Game::SpawnIndirectDrawPrimitives() {
                                              bufferSize);
     }
 
-    Object::AddObject(obj);
-    SpawnedObjects.push_back(obj);
+    Object::s_addObject(obj);
+    m_spawnedObjects_.push_back(obj);
   }
 }
 
-void Game::Update(float deltaTime) {
-  // if (CompletedAsyncLoadObjects.size() > 0)
+void Game::update(float deltaTime) {
+  // if (m_completedAsyncLoadObjects_.size() > 0)
   //{
-  //       ScopedLock s(&AsyncLoadLock);
-  //	for (auto iter : CompletedAsyncLoadObjects)
+  //       ScopedLock s(&m_asyncLoadLock_);
+  //	for (auto iter : m_completedAsyncLoadObjects_)
   //	{
-  //           Object::AddObject(iter);
-  //           SpawnedObjects.push_back(iter);
+  //           Object::s_addObject(iter);
+  //           m_spawnedObjects_.push_back(iter);
   //	}
-  //	CompletedAsyncLoadObjects.clear();
+  //	m_completedAsyncLoadObjects_.clear();
   //}
 
-  // Update application property by using UI Pannel.
+  // update application property by using UI Pannel.
   // UpdateAppSetting();
 
-  // Update main camera
-  if (MainCamera) {
-    MainCamera->UpdateCamera();
+  // update main camera
+  if (m_mainCamera_) {
+    m_mainCamera_->updateCamera();
   }
 
-  // gOptions.CameraPos = MainCamera->m_position_;
+  // gOptions.CameraPos = m_mainCamera_->m_position_;
 
-  // for (auto iter : Object::GetStaticObject())
-  //	iter->Update(deltaTime);
+  // for (auto iter : Object::s_getStaticObject())
+  //	iter->update(deltaTime);
 
-  // for (auto& iter : Object::GetBoundBoxObject())
-  //	iter->Update(deltaTime);
+  // for (auto& iter : Object::s_getBoundBoxObject())
+  //	iter->update(deltaTime);
 
   // for (auto& iter : Object::GetBoundSphereObject())
-  //	iter->Update(deltaTime);
+  //	iter->update(deltaTime);
 
-  // for (auto& iter : Object::GetDebugObject())
-  //	iter->Update(deltaTime);
+  // for (auto& iter : Object::s_getDebugObject())
+  //	iter->update(deltaTime);
 
-  // Update object which have dirty flag
-  Object::FlushDirtyState();
+  // update object which have dirty flag
+  Object::s_flushDirtyState();
 
-  //// Render all objects by using selected renderer
-  // Renderer->Render(MainCamera);
+  //// render all objects by using selected renderer
+  // Renderer->render(m_mainCamera_);
 
-  for (auto& iter : Object::GetStaticObject()) {
-    iter->Update(deltaTime);
+  for (auto& iter : Object::s_getStaticObject()) {
+    iter->update(deltaTime);
 
     for (auto& RenderObject : iter->m_renderObjects_) {
-      RenderObject->UpdateWorldMatrix();
+      RenderObject->updateWorldMatrix();
     }
   }
 
-  for (auto& iter : Object::GetDebugObject()) {
-    iter->Update(deltaTime);
+  for (auto& iter : Object::s_getDebugObject()) {
+    iter->update(deltaTime);
 
     for (auto& RenderObject : iter->m_renderObjects_) {
-      RenderObject->UpdateWorldMatrix();
+      RenderObject->updateWorldMatrix();
     }
   }
 }
 
-void Game::Draw() {
+void Game::draw() {
   {
     std::shared_ptr<RenderFrameContext> renderFrameContext
-        = g_rhi->BeginRenderFrame();
+        = g_rhi->beginRenderFrame();
     if (!renderFrameContext) {
       // TODO: log error
       return;
     }
 
-    View view(MainCamera);
-    view.PrepareViewUniformBufferShaderBindingInstance();
+    View view(m_mainCamera_);
+    view.prepareViewUniformBufferShaderBindingInstance();
 
     Renderer renderer(renderFrameContext, view, m_window_);
-    renderer.Render();
+    renderer.render();
 
-    g_rhi->EndRenderFrame(renderFrameContext);
+    g_rhi->endRenderFrame(renderFrameContext);
   }
-  MemStack::Get()->Flush();
+  MemStack::get()->flush();
 }
 
-void Game::Resize(int32_t width, int32_t height) {
-  if (MainCamera) {
-    MainCamera->m_width_  = width;
-    MainCamera->m_height_ = height;
+void Game::resize(int32_t width, int32_t height) {
+  if (m_mainCamera_) {
+    m_mainCamera_->m_width_  = width;
+    m_mainCamera_->m_height_ = height;
   }
 }
 
-void Game::Release() {
-  g_rhi->Flush();
+void Game::release() {
+  g_rhi->flush();
 
-  for (Object* iter : SpawnedObjects) {
+  for (Object* iter : m_spawnedObjects_) {
     delete iter;
   }
-  SpawnedObjects.clear();
+  m_spawnedObjects_.clear();
 
-  delete MainCamera;
+  delete m_mainCamera_;
 }
 
 }  // namespace game_engine

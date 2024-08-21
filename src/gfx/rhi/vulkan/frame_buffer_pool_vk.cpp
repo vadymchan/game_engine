@@ -10,9 +10,9 @@
 //std::map<FrameBufferVk*, uint64_t>
 //    FrameBufferPoolVk::FrameBufferHashVariableMap;
 //
-//std::shared_ptr<FrameBufferVk> FrameBufferPoolVk::GetFrameBuffer(
+//std::shared_ptr<FrameBufferVk> FrameBufferPoolVk::s_getFrameBuffer(
 //    const FrameBufferInfoVk& info) {
-//  auto hash = info.GetHash();
+//  auto hash = info.s_getHash();
 //
 //  auto it_find = FrameBufferResourceMap.find(hash);
 //  if (FrameBufferResourceMap.end() != it_find) {
@@ -26,7 +26,7 @@
 //  }
 //
 //  auto renderTargetPtr
-//      = std::shared_ptr<FrameBufferVk>(g_rhi_vk->CreateFrameBuffer(info));
+//      = std::shared_ptr<FrameBufferVk>(g_rhi_vk->createFrameBuffer(info));
 //  if (renderTargetPtr) {
 //    FrameBufferResourceMap[hash].push_back({true, renderTargetPtr});
 //    FrameBufferHashVariableMap[renderTargetPtr.get()] = hash;
@@ -35,7 +35,7 @@
 //  return renderTargetPtr;
 //}
 //
-//void FrameBufferPoolVk::ReturnFrameBuffer(FrameBufferVk* renderTarget) {
+//void FrameBufferPoolVk::s_returnFrameBuffer(FrameBufferVk* renderTarget) {
 //  auto it_find = FrameBufferHashVariableMap.find(renderTarget);
 //  if (FrameBufferHashVariableMap.end() == it_find) {
 //    return;
@@ -50,7 +50,7 @@
 //  }
 //}
 //
-//void FrameBufferPoolVk::Release() {
+//void FrameBufferPoolVk::release() {
 //  FrameBufferResourceMap.clear();
 //  FrameBufferHashVariableMap.clear();
 //}

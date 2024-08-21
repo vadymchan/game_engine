@@ -8,21 +8,21 @@
 
 namespace game_engine {
 
-bool CommandBufferDx12::Begin() const {
-  Reset();
+bool CommandBufferDx12::begin() const {
+  reset();
 
   assert(m_onlineDescriptorHeap_ && m_onlineSamplerDescriptorHeap_
          || (!m_onlineDescriptorHeap_ && !m_onlineSamplerDescriptorHeap_));
   if (m_onlineDescriptorHeap_ && m_onlineSamplerDescriptorHeap_) {
-    ID3D12DescriptorHeap* ppHeaps[] = {m_onlineDescriptorHeap_->GetHeap(),
-                                       m_onlineSamplerDescriptorHeap_->GetHeap()};
+    ID3D12DescriptorHeap* ppHeaps[] = {m_onlineDescriptorHeap_->getHeap(),
+                                       m_onlineSamplerDescriptorHeap_->getHeap()};
     m_commandList_->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
   }
 
   return true;
 }
 
-void CommandBufferDx12::Reset() const {
+void CommandBufferDx12::reset() const {
   if (m_isClosed_) {
     HRESULT hr;
 
@@ -42,10 +42,10 @@ void CommandBufferDx12::Reset() const {
     }
 
     if (m_onlineDescriptorHeap_) {
-      m_onlineDescriptorHeap_->Reset();
+      m_onlineDescriptorHeap_->reset();
     }
     if (m_onlineSamplerDescriptorHeap_) {
-      m_onlineSamplerDescriptorHeap_->Reset();
+      m_onlineSamplerDescriptorHeap_->reset();
     }
     m_isClosed_ = false;
 
@@ -53,24 +53,24 @@ void CommandBufferDx12::Reset() const {
   }
 }
 
-void* CommandBufferDx12::GetFenceHandle() const {
-  return m_owner_->m_fence ? m_owner_->m_fence->GetHandle() : nullptr;
+void* CommandBufferDx12::getFenceHandle() const {
+  return m_owner_->m_fence ? m_owner_->m_fence->getHandle() : nullptr;
 }
 
-void CommandBufferDx12::SetFence(void* fence) {
+void CommandBufferDx12::setFence(void* fence) {
   // m_fence = (FenceDx12*)fence;
   assert(0);
 }
 
-Fence* CommandBufferDx12::GetFence() const {
+Fence* CommandBufferDx12::getFence() const {
   return m_owner_->m_fence;
 }
 
-bool CommandBufferDx12::IsCompleteForWaitFence() {
-  return m_owner_->m_fence->IsComplete(m_fenceValue_);
+bool CommandBufferDx12::isCompleteForWaitFence() {
+  return m_owner_->m_fence->isComplete(m_fenceValue_);
 }
 
-bool CommandBufferDx12::End() const {
+bool CommandBufferDx12::end() const {
   if (m_isClosed_) {
     return true;
   }

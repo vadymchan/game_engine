@@ -11,27 +11,27 @@ namespace game_engine {
 // TODO: add interface IUniformBufferBlock
 struct UniformBufferBlockVk : public IUniformBufferBlock {
   using IUniformBufferBlock::IUniformBufferBlock;
-  using IUniformBufferBlock::UpdateBufferData;
+  using IUniformBufferBlock::updateBufferData;
 
   virtual ~UniformBufferBlockVk() {}
 
-  virtual void Init(size_t size) override;
+  virtual void init(size_t size) override;
 
-  void AllocBufferFromGlobalMemory(size_t size);
+  void allocBufferFromGlobalMemory(size_t size);
 
-  virtual void Release() override { m_buffer_.Release(); }
+  virtual void release() override { m_buffer_.release(); }
 
-  virtual void UpdateBufferData(const void* data, size_t size) override;
+  virtual void updateBufferData(const void* data, size_t size) override;
 
-  virtual void ClearBuffer(int32_t clearValue) override;
+  virtual void clearBuffer(int32_t clearValue) override;
 
-  virtual void* GetLowLevelResource() const override { return m_buffer_.m_buffer_; }
+  virtual void* getLowLevelResource() const override { return m_buffer_.m_buffer_; }
 
-  virtual void* GetLowLevelMemory() const override { return m_buffer_.m_deviceMemory_; }
+  virtual void* getLowLevelMemory() const override { return m_buffer_.m_deviceMemory_; }
 
-  virtual size_t GetBufferSize() const override { return m_buffer_.m_allocatedSize_; }
+  virtual size_t getBufferSize() const override { return m_buffer_.m_allocatedSize_; }
 
-  virtual size_t GetBufferOffset() const override { return m_buffer_.m_offset_; }
+  virtual size_t getBufferOffset() const override { return m_buffer_.m_offset_; }
 
   BufferVk m_buffer_;
 

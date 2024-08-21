@@ -18,14 +18,14 @@ struct Range {
 };
 
 struct Memory {
-  bool IsValid() const { return m_buffer; }
+  bool isValid() const { return m_buffer; }
 
-  void* GetBuffer() const { return m_buffer; }
+  void* getBuffer() const { return m_buffer; }
 
-  void*               GetMappedPointer() const;
-  void*               GetMemory() const;
-  void                Free();
-  void                Reset();
+  void*               getMappedPointer() const;
+  void*               getMemory() const;
+  void                free();
+  void                reset();
   void*               m_buffer = nullptr;
   Range               m_range;
   SubMemoryAllocator* m_subMemoryAllocator = nullptr;
@@ -37,26 +37,26 @@ class SubMemoryAllocator {
 
   virtual ~SubMemoryAllocator() {}
 
-  virtual void Initialize(EVulkanBufferBits usage,
+  virtual void initialize(EVulkanBufferBits usage,
                           EVulkanMemoryBits properties,
                           uint64_t          size)
       = 0;
 
-  virtual void* GetBuffer() const { return nullptr; }
+  virtual void* getBuffer() const { return nullptr; }
 
-  virtual void* GetMemory() const { return nullptr; }
+  virtual void* getMemory() const { return nullptr; }
 
-  virtual void* GetMappedPointer() const { return m_mappedPointer_; }
+  virtual void* getMappedPointer() const { return m_mappedPointer_; }
 
-  virtual Memory Alloc(uint64_t requstedSize);
+  virtual Memory alloc(uint64_t requstedSize);
 
-  virtual bool IsMatchType(EVulkanBufferBits usages,
+  virtual bool isMatchType(EVulkanBufferBits usages,
                            EVulkanMemoryBits properties) const {
     return (m_usages_ == usages) && (m_properties_ == properties);
   }
 
   protected:
-  virtual void Free(const Memory& freeMemory) {
+  virtual void free_(const Memory& freeMemory) {
     ScopedLock s(&m_lock_);
 
     // If All of the allocated memory returned then clear allocated list to use
@@ -130,10 +130,10 @@ class MemoryPool {
 
   static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
 
-  virtual SubMemoryAllocator* CreateSubMemoryAllocator() const = 0;
+  virtual SubMemoryAllocator* createSubMemoryAllocator() const = 0;
 
   // select the appropriate PoolSize
-  virtual EPoolSizeType GetPoolSizeType(uint64_t size) const {
+  virtual EPoolSizeType getPoolSizeType(uint64_t size) const {
     for (int32_t i = 0; i < (int32_t)EPoolSizeType::MAX; ++i) {
       if (s_kMemorySize[i] > size) {
         return (EPoolSizeType)i;
@@ -142,11 +142,11 @@ class MemoryPool {
     return EPoolSizeType::MAX;
   }
 
-  virtual Memory Alloc(EVulkanBufferBits usages,
+  virtual Memory alloc(EVulkanBufferBits usages,
                        EVulkanMemoryBits properties,
                        uint64_t          size);
 
-  virtual void Free(const Memory& freeMemory);
+  virtual void free(const Memory& freeMemory);
 
   MutexLock                        m_lock_;
   std::vector<SubMemoryAllocator*> m_memoryPools_[(int32_t)EPoolSizeType::MAX + 1];

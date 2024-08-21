@@ -15,7 +15,7 @@ namespace game_engine {
 // TODO: consider name CommandPoolVk
 class CommandBufferManagerVk : public CommandBufferManager {
   public:
-  virtual ~CommandBufferManagerVk() { ReleaseInternal(); }
+  virtual ~CommandBufferManagerVk() { releaseInternal(); }
 
   //~CommandBufferManagerVk() {
   //  for (auto* commandBuffer : usedCommandBuffers) {
@@ -27,17 +27,17 @@ class CommandBufferManagerVk : public CommandBufferManager {
   //  vkDestroyCommandPool(g_rhi_vk->m_device_, commandPool, nullptr);
   //}
 
-  virtual bool CreatePool(uint32_t QueueIndex);
+  virtual bool createPool(uint32_t QueueIndex);
 
-  virtual void Release() override { ReleaseInternal(); }
+  virtual void release() override { releaseInternal(); }
 
-  void ReleaseInternal();
+  void releaseInternal();
 
-  const VkCommandPool& GetPool() const { return m_commandPool_; }
+  const VkCommandPool& getPool() const { return m_commandPool_; }
 
-  virtual CommandBuffer* GetOrCreateCommandBuffer() override;
+  virtual CommandBuffer* getOrCreateCommandBuffer() override;
 
-  void ReturnCommandBuffer(CommandBuffer* commandBuffer) override;
+  void returnCommandBuffer(CommandBuffer* commandBuffer) override;
 
   private:
   

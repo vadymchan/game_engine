@@ -11,19 +11,19 @@ std::map<FrameBuffer*, size_t> FrameBufferPool::s_frameBufferHashVariableMap;
 //struct Texture* FrameBufferPool::GetNullTexture(ETextureType type) {
 //  switch (type) {
 //    case ETextureType::TEXTURE_2D: {
-//      static auto temp = FrameBufferPool::GetFrameBuffer(
+//      static auto temp = FrameBufferPool::s_getFrameBuffer(
 //          {ETextureType::TEXTURE_2D, ETextureFormat::RGBA8, 2, 2, 1});
-//      return temp->GetTexture();
+//      return temp->getTexture();
 //    }
 //    case ETextureType::TEXTURE_2D_ARRAY: {
-//      static auto temp = FrameBufferPool::GetFrameBuffer(
+//      static auto temp = FrameBufferPool::s_getFrameBuffer(
 //          {ETextureType::TEXTURE_2D_ARRAY, ETextureFormat::RGBA8, 2, 2, 1});
-//      return temp->GetTexture();
+//      return temp->getTexture();
 //    }
 //    case ETextureType::TEXTURE_CUBE: {
-//      static auto temp = FrameBufferPool::GetFrameBuffer(
+//      static auto temp = FrameBufferPool::s_getFrameBuffer(
 //          {ETextureType::TEXTURE_CUBE, ETextureFormat::RGBA8, 2, 2, 1});
-//      return temp->GetTexture();
+//      return temp->getTexture();
 //    }
 //    default:
 //      JASSERT(0);
@@ -39,9 +39,9 @@ FrameBufferPool::FrameBufferPool() {
 FrameBufferPool::~FrameBufferPool() {
 }
 
-std::shared_ptr<FrameBuffer> FrameBufferPool::GetFrameBuffer(
+std::shared_ptr<FrameBuffer> FrameBufferPool::s_getFrameBuffer(
     const FrameBufferInfo& info) {
-  auto hash = info.GetHash();
+  auto hash = info.getHash();
 
   auto it_find = s_frameBufferResourceMap.find(hash);
   if (s_frameBufferResourceMap.end() != it_find) {
@@ -55,7 +55,7 @@ std::shared_ptr<FrameBuffer> FrameBufferPool::GetFrameBuffer(
   }
 
   auto renderTargetPtr
-      = std::shared_ptr<FrameBuffer>(g_rhi->CreateFrameBuffer(info));
+      = std::shared_ptr<FrameBuffer>(g_rhi->createFrameBuffer(info));
   if (renderTargetPtr) {
     s_frameBufferResourceMap[hash].push_back({true, renderTargetPtr});
     s_frameBufferHashVariableMap[renderTargetPtr.get()] = hash;
@@ -64,7 +64,7 @@ std::shared_ptr<FrameBuffer> FrameBufferPool::GetFrameBuffer(
   return renderTargetPtr;
 }
 
-void FrameBufferPool::ReturnFrameBuffer(FrameBuffer* renderTarget) {
+void FrameBufferPool::s_returnFrameBuffer(FrameBuffer* renderTarget) {
   auto it_find = s_frameBufferHashVariableMap.find(renderTarget);
   if (s_frameBufferHashVariableMap.end() == it_find) {
     return;

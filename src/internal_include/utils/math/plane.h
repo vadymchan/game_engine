@@ -11,18 +11,18 @@ struct Plane {
 
   // TODO: write documentation that n is the normal of the plane (or consider
   // renaming it)
-  Plane(float nx, float ny, float nz, float distance)
-      : n(nx, ny, nz)
-      , d(distance) {}
+  Plane(float nX, float nY, float nZ, float distance)
+      : m_n_(nX, nY, nZ)
+      , m_d_(distance) {}
 
   Plane(math::Vector3Df normal, float distance)
-      : n(std::move(normal))
-      , d(distance) {}
+      : m_n_(std::move(normal))
+      , m_d_(distance) {}
 
   // TODO: use Point3Df instead of Vector3Df
-  static Plane CreateFrustumFromThreePoints(const math::Vector3Df& p0,
-                                            const math::Vector3Df& p1,
-                                            const math::Vector3Df& p2) {
+  static Plane s_createFrustumFromThreePoints(const math::Vector3Df& p0,
+                                              const math::Vector3Df& p1,
+                                              const math::Vector3Df& p2) {
     const auto direction0 = p1 - p0;
     const auto direction1 = p2 - p0;
     auto       normal     = direction0.cross(direction1).normalized();
@@ -30,17 +30,21 @@ struct Plane {
     return Plane(normal, distance);
   }
 
-  float DotProductWithNormal(const math::Vector3Df& direction) {
-    return n.dot(direction);
+  // TODO: consider rename
+  float dotProductWithNormal(const math::Vector3Df& direction) {
+    return m_n_.dot(direction);
   }
 
-  float DotProductWithPosition(const math::Vector3Df& position) {
-    return n.x() * position.x() + n.y() * position.y() + n.z() * position.z()
-         + d;
+  // TODO: consider rename + investigate math_library/graphics.h for similar
+  // functionality
+  float dotProductWithPosition(const math::Vector3Df& position) {
+    return m_n_.x() * position.x() + m_n_.y() * position.y()
+         + m_n_.z() * position.z() + m_d_;
   }
 
-  math::Vector3Df n;
-  float           d;
+  // TODO: consider whether this is the acceptable name or not
+  math::Vector3Df m_n_;
+  float           m_d_;
 };
 }  // namespace math
 

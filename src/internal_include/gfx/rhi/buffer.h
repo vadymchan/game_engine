@@ -14,20 +14,19 @@ namespace game_engine {
 class IBufferAttribute {
   public:
   struct Attribute {
-
-    Attribute(EBufferElementType UnderlyingType = EBufferElementType::BYTE,
+    Attribute(EBufferElementType underlyingType = EBufferElementType::BYTE,
               int32_t            offset         = 0,
               int32_t            stride         = 0)
-        : m_underlyingType_(UnderlyingType)
+        : m_underlyingType_(underlyingType)
         , m_offset_(offset)
         , m_stride_(stride) {}
 
     Attribute(const Name&        name,
-              EBufferElementType UnderlyingType = EBufferElementType::BYTE,
+              EBufferElementType underlyingType = EBufferElementType::BYTE,
               int32_t            offset         = 0,
               int32_t            stride         = 0)
         : m_name_(name)
-        , m_underlyingType_(UnderlyingType)
+        , m_underlyingType_(underlyingType)
         , m_offset_(offset)
         , m_stride_(stride) {}
 
@@ -60,9 +59,9 @@ class IBufferAttribute {
 
   virtual ~IBufferAttribute() {}
 
-  virtual const void* GetBufferData() const  = 0;
-  virtual size_t      GetBufferSize() const  = 0;
-  virtual size_t      GetElementSize() const = 0;
+  virtual const void* getBufferData() const  = 0;
+  virtual size_t      getBufferSize() const  = 0;
+  virtual size_t      getElementSize() const = 0;
 
   // private:
   Name                   m_name_;
@@ -96,11 +95,11 @@ class BufferAttributeStream : public IBufferAttribute {
 
   virtual ~BufferAttributeStream() {}
 
-  virtual const void* GetBufferData() const { return m_data_.data(); }
+  virtual const void* getBufferData() const { return m_data_.data(); }
 
-  virtual size_t GetBufferSize() const { return m_data_.size() * sizeof(T); }
+  virtual size_t getBufferSize() const { return m_data_.size() * sizeof(T); }
 
-  virtual size_t GetElementSize() const { return sizeof(T); }
+  virtual size_t getElementSize() const { return sizeof(T); }
 
   // private:
   std::vector<T> m_data_;
@@ -111,21 +110,21 @@ struct Buffer
     , public std::enable_shared_from_this<Buffer> {
   virtual ~Buffer() {}
 
-  virtual void Release() = 0;
+  virtual void release() = 0;
 
-  virtual void* GetMappedPointer() const                      = 0;
-  virtual void* Map(uint64_t offset, uint64_t size)           = 0;
-  virtual void* Map()                                         = 0;
-  virtual void  Unmap()                                       = 0;
-  virtual void  UpdateBuffer(const void* data, uint64_t size) = 0;
+  virtual void* getMappedPointer() const                      = 0;
+  virtual void* map(uint64_t offset, uint64_t size)           = 0;
+  virtual void* map()                                         = 0;
+  virtual void  unmap()                                       = 0;
+  virtual void  updateBuffer(const void* data, uint64_t size) = 0;
 
-  virtual void*    GetHandle() const = 0;
-  virtual uint64_t GetOffset() const = 0;
-  virtual uint64_t GetAllocatedSize() const
-      = 0;                                     // AllocatedSize from memory pool
-  virtual uint64_t GetBufferSize() const = 0;  // RequstedSize
+  virtual void*    getHandle() const = 0;
+  virtual uint64_t getOffset() const = 0;
+  // AllocatedSize from memory pool
+  virtual uint64_t getAllocatedSize() const = 0;
+  virtual uint64_t getBufferSize() const    = 0;  // RequstedSize
 
-  virtual EResourceLayout GetLayout() const {
+  virtual EResourceLayout getLayout() const {
     return EResourceLayout::UNDEFINED;
   }
 };
@@ -134,7 +133,7 @@ class VertexStreamData {
   public:
   virtual ~VertexStreamData() { m_streams_.clear(); }
 
-  int32_t GetEndLocation() const {
+  int32_t getEndLocation() const {
     int32_t endLocation = m_startLocation_;
     for (const auto& stream : m_streams_) {
       endLocation += static_cast<int32_t>(stream->m_attributes_.size());
@@ -153,28 +152,26 @@ class VertexStreamData {
 };
 
 struct VertexBuffer {
-
   virtual ~VertexBuffer() {}
 
-  virtual Name GetName() const { return Name::s_kInvalid; }
+  virtual Name getName() const { return Name::s_kInvalid; }
 
-  virtual size_t GetHash() const { return 0; }
+  virtual size_t getHash() const { return 0; }
 
-  virtual void Bind(
+  virtual void bind(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
 
-  virtual int32_t GetElementCount() const {
+  virtual int32_t getElementCount() const {
     return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
   }
 
-  virtual bool Initialize(
-      const std::shared_ptr<VertexStreamData>& streamData) {
+  virtual bool initialize(const std::shared_ptr<VertexStreamData>& streamData) {
     return false;
   }
 
-  //virtual bool IsSupportRaytracing() const { return false; }
+  // virtual bool IsSupportRaytracing() const { return false; }
 
-  virtual Buffer* GetBuffer(int32_t streamIndex) const { return nullptr; }
+  virtual Buffer* getBuffer(int32_t streamIndex) const { return nullptr; }
 
   std::shared_ptr<VertexStreamData> m_vertexStreamData_;
 };
@@ -193,32 +190,31 @@ struct IndexBuffer {
 
   virtual ~IndexBuffer() {}
 
-  virtual Name GetName() const { return Name::s_kInvalid; }
+  virtual Name getName() const { return Name::s_kInvalid; }
 
-  virtual void Bind(
+  virtual void bind(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
 
-  virtual int32_t GetElementCount() const {
+  virtual int32_t getElementCount() const {
     return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
   }
 
-  virtual bool Initialize(
-      const std::shared_ptr<IndexStreamData>& streamData) {
+  virtual bool initialize(const std::shared_ptr<IndexStreamData>& streamData) {
     return false;
   }
 
-  virtual Buffer* GetBuffer() const { return nullptr; }
+  virtual Buffer* getBuffer() const { return nullptr; }
 };
 
 struct VertexBufferArray : public ResourceContainer<const VertexBuffer*> {
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
 
     m_hash_ = 0;
     for (int32_t i = 0; i < m_numOfData_; ++i) {
-      m_hash_ ^= (m_data_[i]->GetHash() << i);
+      m_hash_ ^= (m_data_[i]->getHash() << i);
     }
     return m_hash_;
   }

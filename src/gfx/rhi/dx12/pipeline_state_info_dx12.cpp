@@ -12,12 +12,12 @@
 
 namespace game_engine {
 
-void SamplerStateInfoDx12::Initialize() {
+void SamplerStateInfoDx12::initialize() {
   D3D12_SAMPLER_DESC samplerDesc = {};
 
-  samplerDesc.AddressU      = GetDX12TextureAddressMode(m_addressU_);
-  samplerDesc.AddressV      = GetDX12TextureAddressMode(m_addressV_);
-  samplerDesc.AddressW      = GetDX12TextureAddressMode(m_addressW_);
+  samplerDesc.AddressU      = g_getDX12TextureAddressMode(m_addressU_);
+  samplerDesc.AddressV      = g_getDX12TextureAddressMode(m_addressV_);
+  samplerDesc.AddressW      = g_getDX12TextureAddressMode(m_addressW_);
   samplerDesc.MinLOD        = m_minLOD_;
   samplerDesc.MaxLOD        = m_maxLOD_;
   samplerDesc.MipLODBias    = m_mipLODBias_;
@@ -25,26 +25,27 @@ void SamplerStateInfoDx12::Initialize() {
   if (m_maxAnisotropy_ > 1) {
     samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
   } else {
-    samplerDesc.Filter = GetDX12TextureFilter(
+    samplerDesc.Filter = g_getDX12TextureFilter(
         m_minification_, m_magnification_, m_isEnableComparisonMode_);
   }
-  samplerDesc.ComparisonFunc = GetDX12CompareOp(m_comparisonFunc_);
+  samplerDesc.ComparisonFunc = g_getDX12CompareOp(m_comparisonFunc_);
 
   assert(sizeof(samplerDesc.BorderColor) == sizeof(m_borderColor_));
   memcpy(samplerDesc.BorderColor, &m_borderColor_, sizeof(m_borderColor_));
 
-  m_samplerSRV_ = g_rhi_dx12->m_samplerDescriptorHeaps_.Alloc();
+  m_samplerSRV_ = g_rhi_dx12->m_samplerDescriptorHeaps_.alloc();
 
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
-  g_rhi_dx12->m_device_->CreateSampler(&samplerDesc, m_samplerSRV_.m_cpuHandle_);
+  g_rhi_dx12->m_device_->CreateSampler(&samplerDesc,
+                                       m_samplerSRV_.m_cpuHandle_);
 
-  m_resourceName_ = Name(ToString().c_str());
+  m_resourceName_ = Name(toString().c_str());
 }
 
-void RasterizationStateInfoDx12::Initialize() {
-  m_rasterizeDesc_.FillMode              = GetDX12PolygonMode(m_polygonMode_);
-  m_rasterizeDesc_.CullMode              = GetDX12CullMode(m_cullMode_);
+void RasterizationStateInfoDx12::initialize() {
+  m_rasterizeDesc_.FillMode              = g_getDX12PolygonMode(m_polygonMode_);
+  m_rasterizeDesc_.CullMode              = g_getDX12CullMode(m_cullMode_);
   m_rasterizeDesc_.FrontCounterClockwise = m_frontFace_ == EFrontFace::CCW;
   m_rasterizeDesc_.DepthBias
       = (int32_t)(m_depthBiasEnable_ ? m_depthBiasConstantFactor_ : 0);
@@ -60,19 +61,19 @@ void RasterizationStateInfoDx12::Initialize() {
   m_multiSampleDesc_.Count = (int32_t)m_sampleCount_;
 }
 
-void StencilOpStateInfoDx12::Initialize() {
-  m_stencilOpStateDesc_.StencilDepthFailOp = GetDX12StencilOp(m_depthFailOp_);
-  m_stencilOpStateDesc_.StencilFailOp      = GetDX12StencilOp(m_failOp_);
-  m_stencilOpStateDesc_.StencilFunc        = GetDX12CompareOp(m_compareOp_);
-  m_stencilOpStateDesc_.StencilPassOp      = GetDX12StencilOp(m_passOp_);
+void StencilOpStateInfoDx12::initialize() {
+  m_stencilOpStateDesc_.StencilDepthFailOp = g_getDX12StencilOp(m_depthFailOp_);
+  m_stencilOpStateDesc_.StencilFailOp      = g_getDX12StencilOp(m_failOp_);
+  m_stencilOpStateDesc_.StencilFunc        = g_getDX12CompareOp(m_compareOp_);
+  m_stencilOpStateDesc_.StencilPassOp      = g_getDX12StencilOp(m_passOp_);
 }
 
-void DepthStencilStateInfoDx12::Initialize() {
+void DepthStencilStateInfoDx12::initialize() {
   m_depthStencilStateDesc_.DepthEnable    = m_depthTestEnable_;
   m_depthStencilStateDesc_.DepthWriteMask = m_depthWriteEnable_
-                                           ? D3D12_DEPTH_WRITE_MASK_ALL
-                                           : D3D12_DEPTH_WRITE_MASK_ZERO;
-  m_depthStencilStateDesc_.DepthFunc      = GetDX12CompareOp(m_depthCompareOp_);
+                                              ? D3D12_DEPTH_WRITE_MASK_ALL
+                                              : D3D12_DEPTH_WRITE_MASK_ZERO;
+  m_depthStencilStateDesc_.DepthFunc      = g_getDX12CompareOp(m_depthCompareOp_);
   m_depthStencilStateDesc_.StencilEnable  = m_stencilTestEnable_;
   // DepthStencilStateDesc.StencilReadMask;
   // DepthStencilStateDesc.StencilWriteMask;
@@ -90,40 +91,40 @@ void DepthStencilStateInfoDx12::Initialize() {
   // MaxDepthBounds;
 }
 
-void BlendingStateInfoDx12::Initialize() {
+void BlendingStateInfoDx12::initialize() {
   m_blendDesc_.BlendEnable           = m_blendEnable_;
-  m_blendDesc_.SrcBlend              = GetDX12BlendFactor(m_src_);
-  m_blendDesc_.DestBlend             = GetDX12BlendFactor(m_dest_);
-  m_blendDesc_.BlendOp               = GetDX12BlendOp(m_blendOp_);
-  m_blendDesc_.SrcBlendAlpha         = GetDX12BlendFactor(m_srcAlpha_);
-  m_blendDesc_.DestBlendAlpha        = GetDX12BlendFactor(m_destAlpha_);
-  m_blendDesc_.BlendOpAlpha          = GetDX12BlendOp(m_alphaBlendOp_);
-  m_blendDesc_.RenderTargetWriteMask = GetDX12ColorMask(m_colorWriteMask_);
+  m_blendDesc_.SrcBlend              = g_getDX12BlendFactor(m_src_);
+  m_blendDesc_.DestBlend             = g_getDX12BlendFactor(m_dest_);
+  m_blendDesc_.BlendOp               = g_getDX12BlendOp(m_blendOp_);
+  m_blendDesc_.SrcBlendAlpha         = g_getDX12BlendFactor(m_srcAlpha_);
+  m_blendDesc_.DestBlendAlpha        = g_getDX12BlendFactor(m_destAlpha_);
+  m_blendDesc_.BlendOpAlpha          = g_getDX12BlendOp(m_alphaBlendOp_);
+  m_blendDesc_.RenderTargetWriteMask = g_getDX12ColorMask(m_colorWriteMask_);
 
   // BlendDesc.LogicOpEnable;
   // BlendDesc.LogicOp;
 }
 
-void SamplerStateInfoDx12::Release() {
-  m_samplerSRV_.Free();
+void SamplerStateInfoDx12::release() {
+  m_samplerSRV_.free();
 }
 
-void PipelineStateInfoDx12::Release() {
+void PipelineStateInfoDx12::release() {
 }
 
-void PipelineStateInfoDx12::Initialize() {
+void PipelineStateInfoDx12::initialize() {
   if (m_pipelineType_ == EPipelineType::Graphics) {
-    CreateGraphicsPipelineState();
+    createGraphicsPipelineState();
   } else if (m_pipelineType_ == EPipelineType::Compute) {
-    CreateComputePipelineState();
+    createComputePipelineState();
   } else if (m_pipelineType_ == EPipelineType::RayTracing) {
-    CreateRaytracingPipelineState();
+    // createRaytracingPipelineState();
   } else {
     assert(0);
   }
 }
 
-void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
+void* PipelineStateInfoDx12::createGraphicsPipelineState() {
   m_pipelineState_ = nullptr;
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -131,75 +132,80 @@ void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
   assert(m_vertexBufferArray.m_numOfData_ > 0);
 
   std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
-  VertexBufferDx12::CreateVertexInputState(inputElementDescs,
-                                             m_vertexBufferArray);
+  VertexBufferDx12::s_createVertexInputState(inputElementDescs,
+                                           m_vertexBufferArray);
   psoDesc.InputLayout.pInputElementDescs = inputElementDescs.data();
-  psoDesc.InputLayout.NumElements = (uint32_t)inputElementDescs.size();
+  psoDesc.InputLayout.NumElements        = (uint32_t)inputElementDescs.size();
 
   // In DX12, only one can be used, but this will be changed. We need to decide
   // whether to use one or multiple.
   ComPtr<ID3D12RootSignature> RootSignature
-      = ShaderBindingLayoutDx12::CreateRootSignature(
+      = ShaderBindingLayoutDx12::s_createRootSignature(
           m_shaderBindingLayoutArray);
   psoDesc.pRootSignature = RootSignature.Get();
 
   if (m_graphicsShader_.m_vertexShader_) {
-    auto VS_Compiled = (CompiledShaderDx12*)
-                           m_graphicsShader_.m_vertexShader_->GetCompiledShader();
+    // TODO: rename
+    auto VS_Compiled
+        = (CompiledShaderDx12*)
+              m_graphicsShader_.m_vertexShader_->getCompiledShader();
     assert(VS_Compiled);
     psoDesc.VS
         = {.pShaderBytecode = VS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = VS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
   if (m_graphicsShader_.m_geometryShader_) {
-    auto GS_Compiled = (CompiledShaderDx12*)
-                           m_graphicsShader_.m_geometryShader_->GetCompiledShader();
+    auto GS_Compiled
+        = (CompiledShaderDx12*)
+              m_graphicsShader_.m_geometryShader_->getCompiledShader();
     assert(GS_Compiled);
     psoDesc.GS
         = {.pShaderBytecode = GS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = GS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
   if (m_graphicsShader_.m_pixelShader_) {
-    auto PS_Compiled = (CompiledShaderDx12*)
-                           m_graphicsShader_.m_pixelShader_->GetCompiledShader();
+    auto PS_Compiled
+        = (CompiledShaderDx12*)
+              m_graphicsShader_.m_pixelShader_->getCompiledShader();
     assert(PS_Compiled);
     psoDesc.PS
         = {.pShaderBytecode = PS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = PS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
 
-  psoDesc.RasterizerState
-      = ((RasterizationStateInfoDx12*)m_pipelineStateFixed_->m_rasterizationState_)
-            ->m_rasterizeDesc_;
-  psoDesc.SampleDesc.Count
-      = ((RasterizationStateInfoDx12*)m_pipelineStateFixed_->m_rasterizationState_)
-            ->m_multiSampleDesc_.Count;
+  psoDesc.RasterizerState = ((RasterizationStateInfoDx12*)
+                                 m_pipelineStateFixed_->m_rasterizationState_)
+                                ->m_rasterizeDesc_;
+  psoDesc.SampleDesc.Count = ((RasterizationStateInfoDx12*)
+                                  m_pipelineStateFixed_->m_rasterizationState_)
+                                 ->m_multiSampleDesc_.Count;
 
   RenderPassDx12* RenderPassDX12 = (RenderPassDx12*)m_renderPass;
 
   // Should we specify the blending operation separately? Let's check the
   // current support of RenderPass.
-  for (int32_t i = 0; i < (int32_t)RenderPassDX12->GetRTVFormats().size();
+  for (int32_t i = 0; i < (int32_t)RenderPassDX12->getRTVFormats().size();
        ++i) {
     psoDesc.BlendState.RenderTarget[i]
         = ((BlendingStateInfoDx12*)m_pipelineStateFixed_->m_blendingState_)
               ->m_blendDesc_;
   }
   psoDesc.DepthStencilState
-      = ((DepthStencilStateInfoDx12*)(m_pipelineStateFixed_->m_depthStencilState_))
+      = ((DepthStencilStateInfoDx12*)(m_pipelineStateFixed_
+                                          ->m_depthStencilState_))
             ->m_depthStencilStateDesc_;
   psoDesc.SampleMask = UINT_MAX;
   psoDesc.PrimitiveTopologyType
-      = ((VertexBufferDx12*)m_vertexBufferArray[0])->GetTopologyTypeOnly();
-  psoDesc.NumRenderTargets = (uint32_t)RenderPassDX12->GetRTVFormats().size();
+      = ((VertexBufferDx12*)m_vertexBufferArray[0])->getTopologyTypeOnly();
+  psoDesc.NumRenderTargets = (uint32_t)RenderPassDX12->getRTVFormats().size();
 
   const int32_t NumOfRTVs
       = std::min(static_cast<int32_t>(std::size(psoDesc.RTVFormats)),
-                 static_cast<int32_t>(RenderPassDX12->GetRTVFormats().size()));
+                 static_cast<int32_t>(RenderPassDX12->getRTVFormats().size()));
   for (int32_t i = 0; i < NumOfRTVs; ++i) {
-    psoDesc.RTVFormats[i] = RenderPassDX12->GetRTVFormats()[i];
+    psoDesc.RTVFormats[i] = RenderPassDX12->getRTVFormats()[i];
   }
-  psoDesc.DSVFormat = RenderPassDX12->GetDSVFormat();
+  psoDesc.DSVFormat = RenderPassDX12->getDSVFormat();
 
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
@@ -213,7 +219,8 @@ void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
   }
 
   m_viewports_.resize(m_pipelineStateFixed_->m_viewports_.size());
-  for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_viewports_.size(); ++i) {
+  for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_viewports_.size();
+       ++i) {
     const Viewport& Src = m_pipelineStateFixed_->m_viewports_[i];
     D3D12_VIEWPORT& Dst = m_viewports_[i];
     Dst.TopLeftX        = Src.m_x_;
@@ -225,7 +232,8 @@ void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
   }
 
   m_scissors_.resize(m_pipelineStateFixed_->m_scissors_.size());
-  for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_scissors_.size(); ++i) {
+  for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_scissors_.size();
+       ++i) {
     const Scissor& Src = m_pipelineStateFixed_->m_scissors_[i];
     D3D12_RECT&    Dst = m_scissors_[i];
     Dst.left           = Src.m_offset_.x();
@@ -234,7 +242,7 @@ void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
     Dst.bottom         = Src.m_offset_.y() + Src.m_extent_.height();
   }
 
-  size_t hash = GetHash();
+  size_t hash = getHash();
   assert(hash);
   if (hash) {
     if (m_graphicsShader_.m_vertexShader_) {
@@ -246,25 +254,25 @@ void* PipelineStateInfoDx12::CreateGraphicsPipelineState() {
           .push_back(hash);
     }
     if (m_graphicsShader_.m_pixelShader_) {
-      Shader::s_connectedPipelineStateHash[m_graphicsShader_.m_pixelShader_].push_back(
-          hash);
+      Shader::s_connectedPipelineStateHash[m_graphicsShader_.m_pixelShader_]
+          .push_back(hash);
     }
   }
 
   return m_pipelineState_.Get();
 }
 
-void* PipelineStateInfoDx12::CreateComputePipelineState() {
+void* PipelineStateInfoDx12::createComputePipelineState() {
   m_pipelineState_ = nullptr;
 
   D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
   ComPtr<ID3D12RootSignature>       RootSignature
-      = ShaderBindingLayoutDx12::CreateRootSignature(
+      = ShaderBindingLayoutDx12::s_createRootSignature(
           m_shaderBindingLayoutArray);
   psoDesc.pRootSignature = RootSignature.Get();
   if (m_computeShader_) {
     auto CS_Compiled
-        = (CompiledShaderDx12*)m_computeShader_->GetCompiledShader();
+        = (CompiledShaderDx12*)m_computeShader_->getCompiledShader();
     assert(CS_Compiled);
     psoDesc.CS
         = {.pShaderBytecode = CS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -281,7 +289,7 @@ void* PipelineStateInfoDx12::CreateComputePipelineState() {
     return nullptr;
   }
 
-  size_t hash = GetHash();
+  size_t hash = getHash();
   assert(hash);
   if (hash) {
     if (m_computeShader_) {
@@ -292,31 +300,32 @@ void* PipelineStateInfoDx12::CreateComputePipelineState() {
   return m_pipelineState_.Get();
 }
 
-void PipelineStateInfoDx12::Bind(
+void PipelineStateInfoDx12::bind(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
-  Bind(commandBufferDx12);
+  bind(commandBufferDx12);
 }
 
-void PipelineStateInfoDx12::Bind(CommandBufferDx12* commandList) const {
+void PipelineStateInfoDx12::bind(CommandBufferDx12* commandList) const {
   assert(commandList->m_commandList_);
   if (m_pipelineType_ == PipelineStateInfo::EPipelineType::Graphics) {
     assert(m_pipelineState_);
     commandList->m_commandList_->SetPipelineState(m_pipelineState_.Get());
 
     commandList->m_commandList_->RSSetViewports((uint32_t)m_viewports_.size(),
-                                               m_viewports_.data());
+                                                m_viewports_.data());
     commandList->m_commandList_->RSSetScissorRects((uint32_t)m_scissors_.size(),
-                                                  m_scissors_.data());
+                                                   m_scissors_.data());
   } else if (m_pipelineType_ == PipelineStateInfo::EPipelineType::Compute) {
     assert(m_pipelineState_);
     commandList->m_commandList_->SetPipelineState(m_pipelineState_.Get());
   } else if (m_pipelineType_ == PipelineStateInfo::EPipelineType::RayTracing) {
     assert(m_raytracingStateObject_);
-    commandList->m_commandList_->SetPipelineState1(m_raytracingStateObject_.Get());
+    commandList->m_commandList_->SetPipelineState1(
+        m_raytracingStateObject_.Get());
   }
 }
 

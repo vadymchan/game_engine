@@ -35,7 +35,7 @@ namespace game_engine {
 
 // TODO: consider move to other file
 struct PlacedResource {
-  bool IsValid() const { return m_size_ > 0 && m_placedSubResource_.Get(); }
+  bool isValid() const { return m_size_ > 0 && m_placedSubResource_.Get(); }
 
   ComPtr<ID3D12Resource> m_placedSubResource_;
   // TODO: seems that this is not used
@@ -75,14 +75,14 @@ struct PlacedResourcePool {
     100 * 1024 * 1024,  // E100M
   };
 
-  void Init();
-  void Release();
+  void init();
+  void release();
 
-  const PlacedResource Alloc(size_t requestedSize, bool isUploadResource) {
+  const PlacedResource alloc(size_t requestedSize, bool isUploadResource) {
     ScopedLock s(&m_lock_);
 
     auto& PendingList
-        = GetPendingPlacedResources(isUploadResource, requestedSize);
+        = getPendingPlacedResources(isUploadResource, requestedSize);
     for (int32_t i = 0; i < (int32_t)PendingList.size(); ++i) {
       if (PendingList[i].m_size_ >= requestedSize) {
         PlacedResource resource = PendingList[i];
@@ -96,10 +96,10 @@ struct PlacedResourcePool {
     return PlacedResource();
   }
 
-  void Free(const ComPtr<ID3D12Resource>& data);
+  void free(const ComPtr<ID3D12Resource>& data);
 
-  void AddUsingPlacedResource(const PlacedResource placedResource) {
-    assert(placedResource.IsValid());
+  void addUsingPlacedResource(const PlacedResource placedResource) {
+    assert(placedResource.isValid());
     {
       ScopedLock s(&m_lock_);
       m_usingPlacedResources_.insert(std::make_pair(
@@ -110,21 +110,21 @@ struct PlacedResourcePool {
   // This will be called from 'DeallocatorMultiFrameUniformBufferBlock'
   // TODO: consider remove nested smart pointers (probably need changes in
   // DeallocatorMultiFrameResource)
-  void FreedFromPendingDelegateForCreatedResource(
+  void freedFromPendingDelegateForCreatedResource(
       const std::shared_ptr<ComPtr<ID3D12Resource>>& data) {
-    Free(data.get()->Get());
+    free(data.get()->Get());
   }
 
-  std::vector<PlacedResource>& GetPendingPlacedResources(
+  std::vector<PlacedResource>& getPendingPlacedResources(
       bool isUploadPlacedResource, size_t size) {
-    const int32_t Index = (int32_t)GetPoolSizeType(size);
+    const int32_t Index = (int32_t)getPoolSizeType(size);
     assert(Index != (int32_t)EPoolSizeType::MAX);
     return isUploadPlacedResource ? m_pendingUploadPlacedResources_[Index]
                                   : m_pendingPlacedResources_[Index];
   }
 
   // PoolSize
-  EPoolSizeType GetPoolSizeType(uint64_t size) const {
+  EPoolSizeType getPoolSizeType(uint64_t size) const {
     for (int32_t i = 0; i < (int32_t)EPoolSizeType::MAX; ++i) {
       if (s_kMemorySize[i] > size) {
         return (EPoolSizeType)i;
@@ -146,13 +146,13 @@ class RhiDx12 : public RHI {
   RhiDx12();
   virtual ~RhiDx12();
 
-  virtual Name GetRHIName() override { return NameStatic("DirectX12"); }
+  virtual Name getRHIName() override { return NameStatic("DirectX12"); }
 
   virtual bool init(const std::shared_ptr<Window>& window) override;
   virtual void release() override;
 
   template <typename T>
-  std::shared_ptr<CreatedResource> CreateResource(
+  std::shared_ptr<CreatedResource> createResource(
       T&&                   desc,
       D3D12_RESOURCE_STATES resourceState,
       D3D12_CLEAR_VALUE*    clearValue = nullptr) {
@@ -163,9 +163,9 @@ class RhiDx12 : public RHI {
           = m_device_->GetResourceAllocationInfo(0, 1, desc);
 
       PlacedResource ReusePlacedResource
-          = m_placedResourcePool_.Alloc(info.SizeInBytes, false);
-      if (ReusePlacedResource.IsValid()) {
-        return CreatedResource::CreatedFromResourcePool(
+          = m_placedResourcePool_.alloc(info.SizeInBytes, false);
+      if (ReusePlacedResource.isValid()) {
+        return CreatedResource::s_createdFromResourcePool(
             ReusePlacedResource.m_placedSubResource_);
       } else {
         ScopedLock s(&m_placedPlacedResourceDefaultHeapOffsetLock_);
@@ -194,9 +194,9 @@ class RhiDx12 : public RHI {
           NewPlacedResource.m_isUploadResource_  = false;
           NewPlacedResource.m_placedSubResource_ = NewResource;
           NewPlacedResource.m_size_              = info.SizeInBytes;
-          m_placedResourcePool_.AddUsingPlacedResource(NewPlacedResource);
+          m_placedResourcePool_.addUsingPlacedResource(NewPlacedResource);
 
-          return CreatedResource::CreatedFromResourcePool(
+          return CreatedResource::s_createdFromResourcePool(
               NewPlacedResource.m_placedSubResource_);
         }
       }
@@ -212,11 +212,11 @@ class RhiDx12 : public RHI {
                                                     clearValue,
                                                     IID_PPV_ARGS(&NewResource));
     assert(SUCCEEDED(hr));
-    return CreatedResource::CreatedFromStandalone(NewResource);
+    return CreatedResource::s_createdFromStandalone(NewResource);
   }
 
   template <typename T>
-  std::shared_ptr<CreatedResource> CreateUploadResource(
+  std::shared_ptr<CreatedResource> createUploadResource(
       T&&                   desc,
       D3D12_RESOURCE_STATES resourceState,
       D3D12_CLEAR_VALUE*    clearValue = nullptr) {
@@ -227,9 +227,9 @@ class RhiDx12 : public RHI {
           = m_device_->GetResourceAllocationInfo(0, 1, desc);
 
       PlacedResource ReusePlacedUploadResource
-          = m_placedResourcePool_.Alloc(info.SizeInBytes, true);
-      if (ReusePlacedUploadResource.IsValid()) {
-        return CreatedResource::CreatedFromResourcePool(
+          = m_placedResourcePool_.alloc(info.SizeInBytes, true);
+      if (ReusePlacedUploadResource.isValid()) {
+        return CreatedResource::s_createdFromResourcePool(
             ReusePlacedUploadResource.m_placedSubResource_);
       } else {
         ScopedLock s(&m_placedResourceDefaultUploadOffsetLock_);
@@ -258,9 +258,9 @@ class RhiDx12 : public RHI {
           NewPlacedResource.m_isUploadResource_  = true;
           NewPlacedResource.m_placedSubResource_ = NewResource;
           NewPlacedResource.m_size_              = info.SizeInBytes;
-          m_placedResourcePool_.AddUsingPlacedResource(NewPlacedResource);
+          m_placedResourcePool_.addUsingPlacedResource(NewPlacedResource);
 
-          return CreatedResource::CreatedFromResourcePool(NewResource);
+          return CreatedResource::s_createdFromResourcePool(NewResource);
         }
       }
     }
@@ -276,77 +276,77 @@ class RhiDx12 : public RHI {
                                                     IID_PPV_ARGS(&NewResource));
 
     assert(SUCCEEDED(hr));
-    return CreatedResource::CreatedFromStandalone(NewResource);
+    return CreatedResource::s_createdFromStandalone(NewResource);
   }
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual bool OnHandleResized(uint32_t witdh,
+  virtual bool onHandleResized(uint32_t witdh,
                                uint32_t height,
                                bool     isMinimized) override;
 
-  virtual CommandBufferDx12* BeginSingleTimeCommands() const override;
-  virtual void               EndSingleTimeCommands(
+  virtual CommandBufferDx12* beginSingleTimeCommands() const override;
+  virtual void               endSingleTimeCommands(
                     CommandBuffer* commandBuffer) const override;
 
-  CommandBufferDx12* BeginSingleTimeCopyCommands() const;
-  void EndSingleTimeCopyCommands(CommandBufferDx12* commandBuffer) const;
+  CommandBufferDx12* beginSingleTimeCopyCommands() const;
+  void endSingleTimeCopyCommands(CommandBufferDx12* commandBuffer) const;
 
-  virtual std::shared_ptr<Texture> CreateTextureFromData(
+  virtual std::shared_ptr<Texture> createTextureFromData(
       const ImageData* imageData) const override;
 
-  virtual FenceManager* GetFenceManager() override { return &m_fenceManager_; }
+  virtual FenceManager* getFenceManager() override { return &m_fenceManager_; }
 
-  RingBufferDx12* GetOneFrameUniformRingBuffer() const {
+  RingBufferDx12* getOneFrameUniformRingBuffer() const {
     return m_oneFrameUniformRingBuffers_[m_currentFrameIndex_];
   }
 
-  virtual ShaderBindingLayout* CreateShaderBindings(
+  virtual ShaderBindingLayout* createShaderBindings(
       const ShaderBindingArray& shaderBindingArray) const override;
 
-  virtual SamplerStateInfo* CreateSamplerState(
+  virtual SamplerStateInfo* createSamplerState(
       const SamplerStateInfo& initializer) const override;
-  virtual RasterizationStateInfo* CreateRasterizationState(
+  virtual RasterizationStateInfo* createRasterizationState(
       const RasterizationStateInfo& initializer) const override;
-  virtual StencilOpStateInfo* CreateStencilOpStateInfo(
+  virtual StencilOpStateInfo* createStencilOpStateInfo(
       const StencilOpStateInfo& initializer) const override;
-  virtual DepthStencilStateInfo* CreateDepthStencilState(
+  virtual DepthStencilStateInfo* createDepthStencilState(
       const DepthStencilStateInfo& initializer) const override;
-  virtual BlendingStateInfo* CreateBlendingState(
+  virtual BlendingStateInfo* createBlendingState(
       const BlendingStateInfo& initializer) const override;
 
-  virtual void IncrementFrameNumber() { ++m_currentFrameNumber_; }
+  virtual void incrementFrameNumber() { ++m_currentFrameNumber_; }
 
-  virtual uint32_t GetCurrentFrameNumber() const override {
+  virtual uint32_t getCurrentFrameNumber() const override {
     return m_currentFrameNumber_;
   }
 
-  virtual uint32_t GetCurrentFrameIndex() const { return m_currentFrameIndex_; }
+  virtual uint32_t getCurrentFrameIndex() const { return m_currentFrameIndex_; }
 
-  virtual bool CreateShaderInternal(
+  virtual bool createShaderInternal(
       Shader* shader, const ShaderInfo& shaderInfo) const override;
 
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const math::Vector2Di&         offset,
       const math::Vector2Di&         extent) const override;
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
       const math::Vector2Di&         offset,
       const math::Vector2Di&         extent) const override;
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
       const Attachment&              colorResolveAttachment,
       const math::Vector2Di&         offset,
       const math::Vector2Di&         extent) const override;
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const RenderPassInfo&  renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const override;
 
-  virtual PipelineStateInfo* CreatePipelineStateInfo(
+  virtual PipelineStateInfo* createPipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
       const GraphicsPipelineShader    shader,
       const VertexBufferArray&        vertexBufferArray,
@@ -354,77 +354,77 @@ class RhiDx12 : public RHI {
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant,
       int32_t                         subpassIndex) const override;
-  virtual PipelineStateInfo* CreateComputePipelineStateInfo(
+  virtual PipelineStateInfo* createComputePipelineStateInfo(
       const Shader*                   shader,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const override;
 
-  virtual void RemovePipelineStateInfo(size_t hash) override;
+  virtual void removePipelineStateInfo(size_t hash) override;
 
-  virtual std::shared_ptr<RenderFrameContext> BeginRenderFrame() override;
-  virtual void EndRenderFrame(const std::shared_ptr<RenderFrameContext>&
+  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() override;
+  virtual void endRenderFrame(const std::shared_ptr<RenderFrameContext>&
                                   renderFrameContextPtr) override;
 
-  virtual CommandBufferManagerDx12* GetCommandBufferManager() const override {
+  virtual CommandBufferManagerDx12* getCommandBufferManager() const override {
     return m_commandBufferManager_;
   }
 
-  virtual CommandBufferManagerDx12* GetCopyCommandBufferManager() const {
+  virtual CommandBufferManagerDx12* getCopyCommandBufferManager() const {
     return m_copyCommandBufferManager_;
   }
 
-  virtual void BindGraphicsShaderBindingInstances(
+  virtual void bindGraphicsShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       uint32_t                             firstSet) const override;
-  virtual void BindComputeShaderBindingInstances(
+  virtual void bindComputeShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       uint32_t                             firstSet) const override;
-  virtual void BindRaytracingShaderBindingInstances(
+  virtual void bindRaytracingShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       uint32_t                             firstSet) const override;
 
-  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+  virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
       const ShaderBindingInstanceType type) const override;
 
-  virtual void DrawArrays(
+  virtual void drawArrays(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       int32_t                                    vertStartIndex,
       int32_t                                    vertCount) const override;
-  virtual void DrawArraysInstanced(
+  virtual void drawArraysInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       int32_t                                    vertStartIndex,
       int32_t                                    vertCount,
       int32_t                                    instanceCount) const override;
-  virtual void DrawElements(
+  virtual void drawElements(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount) const override;
-  virtual void DrawElementsInstanced(
+  virtual void drawElementsInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount,
       int32_t                                    instanceCount) const override;
-  virtual void DrawElementsBaseVertex(
+  virtual void drawElementsBaseVertex(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       int32_t                                    elementSize,
       int32_t                                    startIndex,
       int32_t                                    indexCount,
       int32_t baseVertexIndex) const override;
-  virtual void DrawElementsInstancedBaseVertex(
+  virtual void drawElementsInstancedBaseVertex(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       int32_t                                    elementSize,
@@ -432,75 +432,75 @@ class RhiDx12 : public RHI {
       int32_t                                    indexCount,
       int32_t                                    baseVertexIndex,
       int32_t                                    instanceCount) const override;
-  virtual void DrawIndirect(
+  virtual void drawIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       Buffer*                                    buffer,
       int32_t                                    startIndex,
       int32_t                                    drawCount) const override;
-  virtual void DrawElementsIndirect(
+  virtual void drawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
       Buffer*                                    buffer,
       int32_t                                    startIndex,
       int32_t                                    drawCount) const override;
-  virtual void DispatchCompute(
+  virtual void dispatchCompute(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       uint32_t                                   numGroupsX,
       uint32_t                                   numGroupsY,
       uint32_t                                   numGroupsZ) const override;
 
-  virtual void* GetWindow() const override { return m_hWnd; }
+  virtual void* getWindow() const override { return m_hWnd; }
 
-  virtual std::shared_ptr<RenderTarget> CreateRenderTarget(
+  virtual std::shared_ptr<RenderTarget> createRenderTarget(
       const RenderTargetInfo& info) const override;
 
   // Resource Barrier
-  bool         TransitionLayout_Internal(CommandBuffer*        commandBuffer,
+  bool         transitionLayoutInternal(CommandBuffer*        commandBuffer,
                                          ID3D12Resource*       resource,
                                          D3D12_RESOURCE_STATES srcLayout,
                                          D3D12_RESOURCE_STATES dstLayout) const;
-  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
                                 Texture*        texture,
                                 EResourceLayout newLayout) const override;
-  virtual bool TransitionLayoutImmediate(
+  virtual bool transitionLayoutImmediate(
       Texture* texture, EResourceLayout newLayout) const override;
-  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
                                 Buffer*         buffer,
                                 EResourceLayout newLayout) const override;
-  virtual bool TransitionLayoutImmediate(
+  virtual bool transitionLayoutImmediate(
       Buffer* buffer, EResourceLayout newLayout) const override;
 
-  virtual void UAVBarrier(CommandBuffer* commandBuffer,
+  virtual void uavBarrier(CommandBuffer* commandBuffer,
                           Texture*       texture) const override;
-  virtual void UAVBarrierImmediate(Texture* texture) const override;
-  virtual void UAVBarrier(CommandBuffer* commandBuffer,
+  virtual void uavBarrierImmediate(Texture* texture) const override;
+  virtual void uavBarrier(CommandBuffer* commandBuffer,
                           Buffer*        buffer) const override;
-  virtual void UAVBarrierImmediate(Buffer* buffer) const override;
+  virtual void uavBarrierImmediate(Buffer* buffer) const override;
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual std::shared_ptr<Swapchain> GetSwapchain() const override {
+  virtual std::shared_ptr<Swapchain> getSwapchain() const override {
     return m_swapchain_;
   }
 
-  virtual SwapchainImage* GetSwapchainImage(int32_t index) const override {
-    return m_swapchain_->GetSwapchainImage(index);
+  virtual SwapchainImage* getSwapchainImage(int32_t index) const override {
+    return m_swapchain_->getSwapchainImage(index);
   }
 
   // TODO: implement
-  // virtual void BeginDebugEvent(CommandBuffer*        commandBuffer,
+  // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
   //                             const char*            name,
   //                             const math::Vector4Df& color
-  //                             = math::ColorGreen) const override;
+  //                             = math::g_colorGreen) const override;
 
-  // virtual void EndDebugEvent(CommandBuffer* commandBuffer) const override;
+  // virtual void endDebugEvent(CommandBuffer* commandBuffer) const override;
 
-  virtual void Flush() const override;
-  virtual void Finish() const override;
+  virtual void flush() const override;
+  virtual void finish() const override;
 
   // Create m_buffers
-  virtual std::shared_ptr<Buffer> CreateStructuredBuffer(
+  virtual std::shared_ptr<Buffer> createStructuredBuffer(
       uint64_t          size,
       uint64_t          alignment,
       uint64_t          stride,
@@ -510,7 +510,7 @@ class RhiDx12 : public RHI {
       uint64_t          dataSize = 0
       /*, const wchar_t*    resourceName = nullptr*/) const override;
 
-  virtual std::shared_ptr<Buffer> CreateRawBuffer(
+  virtual std::shared_ptr<Buffer> createRawBuffer(
       uint64_t          size,
       uint64_t          alignment,
       EBufferCreateFlag bufferCreateFlag,
@@ -519,7 +519,7 @@ class RhiDx12 : public RHI {
       uint64_t          dataSize = 0
       /*, const wchar_t*    resourceName = nullptr*/) const override;
 
-  virtual std::shared_ptr<Buffer> CreateFormattedBuffer(
+  virtual std::shared_ptr<Buffer> createFormattedBuffer(
       uint64_t          size,
       uint64_t          alignment,
       ETextureFormat    format,
@@ -529,16 +529,16 @@ class RhiDx12 : public RHI {
       uint64_t          dataSize = 0
       /*, const wchar_t*    resourceName = nullptr*/) const override;
 
-  virtual std::shared_ptr<IUniformBufferBlock> CreateUniformBufferBlock(
+  virtual std::shared_ptr<IUniformBufferBlock> createUniformBufferBlock(
       Name name, LifeTimeType lifeTimeType, size_t size = 0) const override;
-  virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(
+  virtual std::shared_ptr<VertexBuffer> createVertexBuffer(
       const std::shared_ptr<VertexStreamData>& streamData) const override;
-  virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(
+  virtual std::shared_ptr<IndexBuffer> createIndexBuffer(
       const std::shared_ptr<IndexStreamData>& streamData) const override;
   //////////////////////////////////////////////////////////////////////////
 
   // Create Images
-  virtual std::shared_ptr<Texture> Create2DTexture(
+  virtual std::shared_ptr<Texture> create2DTexture(
       uint32_t             witdh,
       uint32_t             height,
       uint32_t             arrayLayers,
@@ -550,7 +550,7 @@ class RhiDx12 : public RHI {
       const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const override;
 
-  virtual std::shared_ptr<Texture> CreateCubeTexture(
+  virtual std::shared_ptr<Texture> createCubeTexture(
       uint32_t             witdh,
       uint32_t             height,
       uint32_t             mipLevels,
@@ -562,7 +562,7 @@ class RhiDx12 : public RHI {
       const wchar_t*       resourceName  = nullptr) const override;
   //////////////////////////////////////////////////////////////////////////
 
-  virtual bool IsSupportVSync() const override;
+  virtual bool isSupportVSync() const override;
 
   static constexpr UINT s_kMaxFrameCount = 3;
 
@@ -597,7 +597,8 @@ class RhiDx12 : public RHI {
 
   // 7. Create sync object
   FenceManagerDx12 m_fenceManager_;
-  void             WaitForGPU() const;
+  // TODO: move to another place
+  void             waitForGPU() const;
 
   HWND m_hWnd = 0;
 

@@ -84,7 +84,7 @@ For refactoring naming conventions this project uses **clang-format**.
 | Protected Methods                | camelCase + `_` postfix                           | `run_()`                                 |
 | Private Methods                  | camelCase + `_` postfix                           | `initialize_()`                          |
 | Enums (both scoped and unscoped) | CamelCase                                         | `Color`                                  |
-| Enum Constants                   | CamelCase                                         | `Difficulty::Easy`, `RED`                |
+| Enum Constants                   | CamelCase                                         | `Difficulty::Easy`                       |
 | Namespaces                       | lowercase with underscores                        | `game_logic`                             |
 | Interface Classes                | `I` prefix + CamelCase                            | `ICollidable`                            |
 | Template Parameters              | CamelCase                                         | `ContainerType`                          |

@@ -32,14 +32,14 @@ struct Texture : public ShaderBindableResource {
       : m_type_(type)
       , m_format_(format)
       , m_extent_(extent)
-      , m_mipLevels_(GetMipLevels(extent.width(), extent.height()))
+      , m_mipLevels_(s_getMipLevels(extent.width(), extent.height()))
       , m_layerCount_(layerCount)
       , m_sampleCount_(sampleCount)
       , m_sRGB_(sRGB) {}
 
   virtual ~Texture() {}
 
-  static int32_t GetMipLevels(int32_t witdh, int32_t height) {
+  static int32_t s_getMipLevels(int32_t witdh, int32_t height) {
     return 1
          + static_cast<uint32_t>(
                // TODO: instead of using (std::max) consider undefine max macro
@@ -47,20 +47,20 @@ struct Texture : public ShaderBindableResource {
                std::floor(std::log2((std::max)(witdh, height))));
   }
 
-  virtual void* GetHandle() const { return nullptr; }
+  virtual void* getHandle() const { return nullptr; }
 
-  virtual void* GetSamplerStateHandle() const { return nullptr; }
+  virtual void* getSamplerStateHandle() const { return nullptr; }
 
-  virtual void Release() {}
+  virtual void release() {}
 
-  virtual EResourceLayout GetLayout() const {
+  virtual EResourceLayout getLayout() const {
     return EResourceLayout::UNDEFINED;
   }
 
-  bool IsDepthFormat() const { return game_engine::IsDepthFormat(m_format_); }
+  bool isDepthFormat() const { return game_engine::s_isDepthFormat(m_format_); }
 
-  bool IsDepthOnlyFormat() const {
-    return game_engine::IsDepthOnlyFormat(m_format_);
+  bool isDepthOnlyFormat() const {
+    return game_engine::s_isDepthOnlyFormat(m_format_);
   }
 
   ETextureType       m_type_;  // TODO: analog to VkImageViewType imageViewType

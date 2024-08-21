@@ -53,7 +53,7 @@
 //    ClearValue.DepthStencil.Stencil = InStencil;
 //  }
 //
-//  void SetColor(const math::Vector4Di& InColor) {
+//  void setColor(const math::Vector4Di& InColor) {
 //    Type                = ERTClearType::Color;
 //    ClearValue.Color[0] = InColor.x();
 //    ClearValue.Color[1] = InColor.y();
@@ -61,29 +61,29 @@
 //    ClearValue.Color[3] = InColor.w();
 //  }
 //
-//  void SetDepthStencil(float InDepth, uint8_t InStencil) {
+//  void setDepthStencil(float InDepth, uint8_t InStencil) {
 //    Type                            = ERTClearType::DepthStencil;
 //    ClearValue.DepthStencil.Depth   = InDepth;
 //    ClearValue.DepthStencil.Stencil = InStencil;
 //  }
 //
-//  const float* GetCleraColor() const { return &ClearValue.Color[0]; }
+//  const float* getCleraColor() const { return &ClearValue.Color[0]; }
 //
-//  DepthStencilClearTypeVk GetCleraDepthStencil() const {
+//  DepthStencilClearTypeVk getClearDepthStencil() const {
 //    return ClearValue.DepthStencil;
 //  }
 //
-//  float GetCleraDepth() const { return ClearValue.DepthStencil.Depth; }
+//  float getClearDepth() const { return ClearValue.DepthStencil.Depth; }
 //
-//  uint32_t GetCleraStencil() const { return ClearValue.DepthStencil.Stencil; }
+//  uint32_t getClearStencil() const { return ClearValue.DepthStencil.Stencil; }
 //
-//  ClearValueTypeVk GetClearValue() const { return ClearValue; }
+//  ClearValueTypeVk getClearValue() const { return ClearValue; }
 //
-//  void ResetToNoneType() { Type = ERTClearType::None; }
+//  void resetToNoneType() { Type = ERTClearType::None; }
 //
-//  ERTClearType GetType() const { return Type; }
+//  ERTClearType getType() const { return Type; }
 //
-//  size_t GetHash() const {
+//  size_t s_getHash() const {
 //    if (Type == ERTClearType::Color) {
 //      return GETHASH_FROM_INSTANT_STRUCT(Type,
 //                                         ClearValue.Color[0],
@@ -116,7 +116,7 @@
 //
 //class RenderTargetInfoVk {
 //  public:
-//  size_t GetHash() const {
+//  size_t s_getHash() const {
 //    return GETHASH_FROM_INSTANT_STRUCT(Type,
 //                                       Format,
 //                                       Extent.width(),
@@ -124,7 +124,7 @@
 //                                       LayerCount,
 //                                       IsGenerateMipmap,
 //                                       SampleCount,
-//                                       m_rtClearValue.GetHash(),
+//                                       m_rtClearValue.s_getHash(),
 //                                       TextureCreateFlag,
 //                                       IsUseAsSubpassInput,
 //                                       IsMemoryless);
@@ -157,28 +157,28 @@
 //    }
 //  }
 //
-//  static std::shared_ptr<RenderTargetVk> CreateFromTexture(
+//  static std::shared_ptr<RenderTargetVk> s_createFromTexture(
 //      const std::shared_ptr<TextureVk>& texturePtr) {
 //    return std::make_shared<RenderTargetVk>(texturePtr);
 //  }
 //
-//  TextureVk* GetTexture() const { return m_TexturePtr_.get(); }
+//  TextureVk* getTexture() const { return m_TexturePtr_.get(); }
 //
 //  const RenderTargetInfoVk& GetInfo() const { return Info; }
 //
-//  size_t GetHash() const {
+//  size_t s_getHash() const {
 //    if (Hash) {
 //      return Hash;
 //    }
 //
-//    Hash = Info.GetHash();
-//    if (GetTexture()) {
-//      Hash = XXH64(reinterpret_cast<uint64_t>(GetTexture()->image), Hash);
+//    Hash = Info.s_getHash();
+//    if (getTexture()) {
+//      Hash = XXH64(reinterpret_cast<uint64_t>(getTexture()->image), Hash);
 //    }
 //    return Hash;
 //  }
 //
-//  void Return();
+//  void returnRt();
 //
 //  mutable size_t             Hash = 0;
 //  RenderTargetInfoVk         Info;
@@ -201,7 +201,7 @@
 ////   void Create(std::shared_ptr<Window> window,
 ////               const SwapchainImageVk* InSwapchain);
 ////
-////   void Return();
+////   void returnRt();
 //// };
 //
 //}  // namespace game_engine

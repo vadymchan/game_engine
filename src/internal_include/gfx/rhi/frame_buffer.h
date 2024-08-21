@@ -15,7 +15,7 @@ namespace game_engine {
 
 struct FrameBufferInfo {
 
-  size_t GetHash() const {
+  size_t getHash() const {
     return GETHASH_FROM_INSTANT_STRUCT(m_textureType_,
                                        m_format_,
                                        m_extent_.width(),
@@ -37,26 +37,26 @@ struct FrameBuffer : public std::enable_shared_from_this<FrameBuffer> {
   virtual ~FrameBuffer() {}
 
   // No need for now
-  //virtual Texture* GetTexture(int32_t index = 0) const {
+  //virtual Texture* getTexture(int32_t index = 0) const {
   //  return Textures[index].get();
   //}
 
-  //virtual Texture* GetTextureDepth(int32_t index = 0) const {
+  //virtual Texture* getTextureDepth(int32_t index = 0) const {
   //  return TextureDepth.get();
   //}
 
-  //virtual ETextureType GetTextureType() const { return Info.TextureType; }
+  //virtual ETextureType getTextureType() const { return Info.TextureType; }
 
-  //virtual bool SetDepthAttachment(const std::shared_ptr<Texture>& depth) {
+  //virtual bool setDepthAttachment(const std::shared_ptr<Texture>& depth) {
   //  TextureDepth = depth;
   //  return true;
   //}
 
-  //virtual void SetDepthMipLevel(int32_t level) {}
+  //virtual void setDepthMipLevel(int32_t level) {}
 
   //virtual bool FBOBegin(int index = 0, bool mrt = false) const { return true; }
 
-  //virtual void End() const {}
+  //virtual void end() const {}
 
   FrameBufferInfo                        m_info_;
   std::vector<std::shared_ptr<Texture> > m_textures_;

@@ -20,26 +20,26 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
 
   virtual ~CommandBufferManagerDx12() {}
 
-  virtual void Release() override;
+  virtual void release() override;
 
-  virtual CommandBufferDx12* GetOrCreateCommandBuffer() override;
-  virtual void ReturnCommandBuffer(CommandBuffer* commandBuffer) override;
+  virtual CommandBufferDx12* getOrCreateCommandBuffer() override;
+  virtual void returnCommandBuffer(CommandBuffer* commandBuffer) override;
 
-  bool Initialize(ComPtr<ID3D12Device>    device,
+  bool initialize(ComPtr<ID3D12Device>    device,
                   D3D12_COMMAND_LIST_TYPE type
                   = D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-  ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return m_commandQueue_; }
+  ComPtr<ID3D12CommandQueue> getCommandQueue() const { return m_commandQueue_; }
 
   // CommandList
-  void ExecuteCommandList(CommandBufferDx12* commandList,
+  void executeCommandList(CommandBufferDx12* commandList,
                           bool               waitUntilExecuteComplete = false);
 
   // Not destroying because it is referenced by the Fence manager
   FenceDx12* m_fence = nullptr;
 
   private:
-  ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() const {
+  ComPtr<ID3D12CommandAllocator> createCommandAllocator_() const {
     ComPtr<ID3D12CommandAllocator> commandAllocator;
     if (FAILED(m_device_->CreateCommandAllocator(
             m_commandListType_, IID_PPV_ARGS(&commandAllocator)))) {
@@ -49,7 +49,7 @@ class CommandBufferManagerDx12 : public CommandBufferManager {
     return commandAllocator;
   }
 
-  CommandBufferDx12* CreateCommandList() const;
+  CommandBufferDx12* createCommandList_() const;
 
   MutexLock                               m_commandListLock_;
   std::vector<CommandBufferDx12*>         m_availableCommandLists_;

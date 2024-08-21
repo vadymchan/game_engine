@@ -21,15 +21,16 @@ namespace fs = std::filesystem;
 
 class DxcUtil {
   public:
-  static DxcUtil& GetInstance(const wchar_t* dllName = L"dxcompiler.dll",
-                              const char*    fnName  = "DxcCreateInstance") {
+  // TODO: consider whether this is the good naming convention
+  static DxcUtil& s_getInstance(const wchar_t* dllName = L"dxcompiler.dll",
+                                const char*    fnName  = "DxcCreateInstance") {
     static DxcUtil instance;
     // TODO: not good solution
-    instance.Initialize(dllName, fnName);
+    instance.initialize(dllName, fnName);
     return instance;
   }
 
-  HRESULT Initialize(const wchar_t* dllName = L"dxcompiler.dll",
+  HRESULT initialize(const wchar_t* dllName = L"dxcompiler.dll",
                      const char*    fnName  = "DxcCreateInstance") {
     if (m_dll_) {
       return S_OK;
@@ -51,7 +52,7 @@ class DxcUtil {
     return S_OK;
   }
 
-  void Release() {
+  void release() {
     if (m_dll_) {
       m_createFn_ = nullptr;
       FreeLibrary(m_dll_);
@@ -62,7 +63,7 @@ class DxcUtil {
   ComPtr<IDxcBlob> compileHlslFileToDxil(const fs::path&     shaderFilePath,
                                          const std::wstring& shaderProfile,
                                          const std::wstring& entryPoint) {
-    std::string hlslCode = ReadShaderFile(shaderFilePath);
+    std::string hlslCode = s_readShaderFile_(shaderFilePath);
     return compileHlslCodeToDxil(hlslCode, shaderProfile, entryPoint);
   }
 
@@ -73,8 +74,8 @@ class DxcUtil {
     ComPtr<IDxcUtils>          utils;
     ComPtr<IDxcIncludeHandler> includeHandler;
 
-    if (FAILED(CreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)))
-        || FAILED(CreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils)))
+    if (FAILED(createInstance_(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler)))
+        || FAILED(createInstance_(CLSID_DxcUtils, IID_PPV_ARGS(&utils)))
         || FAILED(utils->CreateDefaultIncludeHandler(&includeHandler))) {
       GlobalLogger::Log(LogLevel::Error, "Failed to create DXC instances");
       return nullptr;
@@ -138,12 +139,12 @@ class DxcUtil {
   private:
   DxcUtil() = default;
 
-  ~DxcUtil() { Release(); }
+  ~DxcUtil() { release(); }
 
   DxcUtil(const DxcUtil&)            = delete;
   DxcUtil& operator=(const DxcUtil&) = delete;
 
-  HRESULT CreateInstance(REFCLSID clsid, REFIID iid, void** result) {
+  HRESULT createInstance_(REFCLSID clsid, REFIID iid, void** result) {
     if (!result) {
       return E_POINTER;
     }
@@ -156,7 +157,7 @@ class DxcUtil {
     return m_createFn_(clsid, iid, result);
   }
 
-  static std::string ReadShaderFile(const fs::path& shaderFilePath) {
+  static std::string s_readShaderFile_(const fs::path& shaderFilePath) {
     std::ifstream shaderFile(shaderFilePath);
     if (!shaderFile) {
       GlobalLogger::Log(

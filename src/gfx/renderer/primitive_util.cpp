@@ -84,64 +84,64 @@ void CalculateTangents(math::Vector4Df*       tangentArray,
   delete[] Tangent;
 }
 
-void QuadPrimitive::SetPlane(const math::Plane& plane) {
+void QuadPrimitive::setPlane(const math::Plane& plane) {
   this->m_plane_ = plane;
-  m_renderObjects_[0]->SetRot(math::GetEulerAngleFrom(plane.n));
-  m_renderObjects_[0]->SetPos(plane.n * plane.d);
+  m_renderObjects_[0]->setRotation(math::g_getEulerAngleFrom(plane.m_n_));
+  m_renderObjects_[0]->setPosition(plane.m_n_ * plane.m_d_);
 }
 
-void BillboardQuadPrimitive::Update(float deltaTime) {
+void BillboardQuadPrimitive::update(float deltaTime) {
   if (m_camera_) {
     const math::Vector3Df normalizedCameraDir
-        = (m_camera_->m_position_ - m_renderObjects_[0]->GetPos()).normalized();
+        = (m_camera_->m_position_ - m_renderObjects_[0]->getPosition()).normalized();
     const math::Vector3Df eularAngleOfCameraDir
-        = math::GetEulerAngleFrom(normalizedCameraDir);
+        = math::g_getEulerAngleFrom(normalizedCameraDir);
 
-    m_renderObjects_[0]->SetRot(eularAngleOfCameraDir);
+    m_renderObjects_[0]->setRotation(eularAngleOfCameraDir);
   } else {
     GlobalLogger::Log(LogLevel::Warning,
                       "BillboardQuad is updated without camera");
   }
 }
 
-void UIQuadPrimitive::SetTexture(const Texture* texture) {
+void UIQuadPrimitive::setTexture(const Texture* texture) {
   // Todo
   assert(0);
 }
 
-void UIQuadPrimitive::SetUniformParams(const Shader* shader) const {
+void UIQuadPrimitive::setUniformParams(const Shader* shader) const {
   // Todo
   assert(0);
 }
 
-const Texture* UIQuadPrimitive::GetTexture() const {
+const Texture* UIQuadPrimitive::getTexture() const {
   // Todo
   assert(0);
   return nullptr;
 }
 
-void FullscreenQuadPrimitive::SetUniformBuffer(const Shader* shader) const {
+void FullscreenQuadPrimitive::setUniformBuffer(const Shader* shader) const {
   // Todo
   assert(0);
 }
 
-void FullscreenQuadPrimitive::SetTexture(
+void FullscreenQuadPrimitive::setTexture(
     int index, const Texture* texture, const SamplerStateInfo* samplerState) {
   // Todo
   assert(0);
 }
 
-void BoundBoxObject::SetUniformBuffer(const Shader* shader) {
+void BoundBoxObject::setUniformBuffer(const Shader* shader) {
   // Todo
   assert(0);
 }
 
-void BoundBoxObject::UpdateBoundBox(const BoundBox& boundBox) {
+void BoundBoxObject::updateBoundBox(const BoundBox& boundBox) {
   this->m_boundBox_ = boundBox;
-  UpdateBoundBox();
+  updateBoundBox();
 }
 
-void BoundBoxObject::UpdateBoundBox() {
+void BoundBoxObject::updateBoundBox() {
   float vertices[] = {
     m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(),
     m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(),
@@ -175,42 +175,42 @@ void BoundBoxObject::UpdateBoundBox() {
   memcpy(&PositionParam->m_data_[0], vertices, sizeof(vertices));
 }
 
-void BoundSphereObject::SetUniformBuffer(const Shader* shader) {
+void BoundSphereObject::setUniformBuffer(const Shader* shader) {
   // Todo
   assert(0);
 }
 
-void ArrowSegmentPrimitive::Update(float deltaTime) {
-  Object::Update(deltaTime);
+void ArrowSegmentPrimitive::update(float deltaTime) {
+  Object::update(deltaTime);
 
   if (m_segmentObject_) {
-    m_segmentObject_->Update(deltaTime);
+    m_segmentObject_->update(deltaTime);
   }
   if (m_coneObject_) {
-    m_coneObject_->Update(deltaTime);
+    m_coneObject_->update(deltaTime);
   }
 }
 
-void ArrowSegmentPrimitive::SetPos(const math::Vector3Df& pos) {
-  m_segmentObject_->m_renderObjects_[0]->SetPos(pos);
+void ArrowSegmentPrimitive::setPosition(const math::Vector3Df& pos) {
+  m_segmentObject_->m_renderObjects_[0]->setPosition(pos);
 }
 
-void ArrowSegmentPrimitive::SetStart(const math::Vector3Df& start) {
+void ArrowSegmentPrimitive::setStart(const math::Vector3Df& start) {
   m_segmentObject_->m_start_ = start;
 }
 
-void ArrowSegmentPrimitive::SetEnd(const math::Vector3Df& end) {
+void ArrowSegmentPrimitive::setEnd(const math::Vector3Df& end) {
   m_segmentObject_->m_end_ = end;
 }
 
-void ArrowSegmentPrimitive::SetTime(float time) {
+void ArrowSegmentPrimitive::setTime(float time) {
   m_segmentObject_->m_time_ = time;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Utilities
 
-std::vector<float> GenerateColor(const math::Vector4Df& color,
+std::vector<float> g_generateColor(const math::Vector4Df& color,
                                  int32_t                elementCount) {
   std::vector<float> temp;
   temp.resize(elementCount * 4);
@@ -224,7 +224,7 @@ std::vector<float> GenerateColor(const math::Vector4Df& color,
   return std::move(temp);
 }
 
-BoundBox GenerateBoundBox(const std::vector<float>& vertices) {
+BoundBox g_generateBoundBox(const std::vector<float>& vertices) {
   auto min = math::Vector3Df(FLT_MAX);
   auto max = math::Vector3Df(FLT_MIN);
   for (size_t i = 0; i < vertices.size() / 3; ++i) {
@@ -256,7 +256,7 @@ BoundBox GenerateBoundBox(const std::vector<float>& vertices) {
   return {min, max};
 }
 
-BoundSphere GenerateBoundSphere(const std::vector<float>& vertices) {
+BoundSphere g_generateBoundSphere(const std::vector<float>& vertices) {
   auto maxDist = FLT_MIN;
   for (size_t i = 0; i < vertices.size() / 3; ++i) {
     auto curIndex = i * 3;
@@ -273,20 +273,20 @@ BoundSphere GenerateBoundSphere(const std::vector<float>& vertices) {
   return {maxDist};
 }
 
-void CreateBoundObjects(const std::vector<float>& vertices,
+void g_createBoundObjects(const std::vector<float>& vertices,
                         Object*                   ownerObject) {
-  ownerObject->m_boundBox_    = GenerateBoundBox(vertices);
-  ownerObject->m_boundSphere_ = GenerateBoundSphere(vertices);
+  ownerObject->m_boundBox_    = g_generateBoundBox(vertices);
+  ownerObject->m_boundSphere_ = g_generateBoundSphere(vertices);
 
   ownerObject->m_boundBoxObject_
-      = CreateBoundBox(ownerObject->m_boundBox_, ownerObject);
+      = g_createBoundBox(ownerObject->m_boundBox_, ownerObject);
   ownerObject->m_boundSphereObject_
-      = CreateBoundSphere(ownerObject->m_boundSphere_, ownerObject);
-  Object::AddBoundBoxObject(ownerObject->m_boundBoxObject_);
-  Object::AddBoundSphereObject(ownerObject->m_boundSphereObject_);
+      = g_createBoundSphere(ownerObject->m_boundSphere_, ownerObject);
+  Object::s_addBoundBoxObject(ownerObject->m_boundBoxObject_);
+  Object::s_addBoundSphereObject(ownerObject->m_boundSphereObject_);
 }
 
-BoundBoxObject* CreateBoundBox(BoundBox               boundBox,
+BoundBoxObject* g_createBoundBox(BoundBox               boundBox,
                                Object*                ownerObject,
                                const math::Vector4Df& color) {
   float vertices[] = {
@@ -335,7 +335,7 @@ BoundBoxObject* CreateBoundBox(BoundBox               boundBox,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
   object->m_skipShadowMapGen_       = true;
   object->m_skipUpdateShadowVolume_ = true;
@@ -353,12 +353,12 @@ BoundBoxObject* CreateBoundBox(BoundBox               boundBox,
       assert(boundBoxObject->m_ownerObject_);
       auto ownerObject = boundBoxObject->m_ownerObject_;
 
-      boundBoxObject->m_renderObjects_[0]->SetPos(
-          ownerObject->m_renderObjects_[0]->GetPos());
-      boundBoxObject->m_renderObjects_[0]->SetRot(
-          ownerObject->m_renderObjects_[0]->GetRot());
-      boundBoxObject->m_renderObjects_[0]->SetScale(
-          ownerObject->m_renderObjects_[0]->GetScale());
+      boundBoxObject->m_renderObjects_[0]->setPosition(
+          ownerObject->m_renderObjects_[0]->getPosition());
+      boundBoxObject->m_renderObjects_[0]->setRotation(
+          ownerObject->m_renderObjects_[0]->getRotation());
+      boundBoxObject->m_renderObjects_[0]->setScale(
+          ownerObject->m_renderObjects_[0]->getScale());
       boundBoxObject->m_isVisible_ = ownerObject->m_isVisible_;
     };
   }
@@ -366,7 +366,7 @@ BoundBoxObject* CreateBoundBox(BoundBox               boundBox,
   return object;
 }
 
-BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
+BoundSphereObject* g_createBoundSphere(BoundSphere            boundSphere,
                                      Object*                ownerObject,
                                      const math::Vector4Df& color) {
   int32_t slice = 15;
@@ -376,7 +376,7 @@ BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
 
   std::vector<float> vertices;
   const float        stepRadian = math::g_degreeToRadian(360.0f / slice);
-  const float        radius     = boundSphere.Radius;
+  const float        radius     = boundSphere.m_radius_;
 
   for (int32_t j = 0; j < slice / 2; ++j) {
     for (int32_t i = 0; i <= slice; ++i) {
@@ -468,7 +468,7 @@ BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData,
                                                    indexStreamData);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
   object->m_skipShadowMapGen_       = true;
   object->m_skipUpdateShadowVolume_ = true;
@@ -485,12 +485,12 @@ BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
     assert(boundSphereObject->m_ownerObject_);
     auto ownerObject = boundSphereObject->m_ownerObject_;
 
-    boundSphereObject->m_renderObjects_[0]->SetPos(
-        ownerObject->m_renderObjects_[0]->GetPos());
-    boundSphereObject->m_renderObjects_[0]->SetRot(
-        ownerObject->m_renderObjects_[0]->GetRot());
-    boundSphereObject->m_renderObjects_[0]->SetScale(
-        ownerObject->m_renderObjects_[0]->GetScale());
+    boundSphereObject->m_renderObjects_[0]->setPosition(
+        ownerObject->m_renderObjects_[0]->getPosition());
+    boundSphereObject->m_renderObjects_[0]->setRotation(
+        ownerObject->m_renderObjects_[0]->getRotation());
+    boundSphereObject->m_renderObjects_[0]->setScale(
+        ownerObject->m_renderObjects_[0]->getScale());
     boundSphereObject->m_isVisible_ = ownerObject->m_isVisible_;
   };
 
@@ -635,14 +635,14 @@ RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
   auto renderObject                = new RenderObject();
   auto RenderObjectGeometryDataPtr = std::make_shared<RenderObjectGeometryData>(
       vertexStreamData, positionOnlyVertexStreamData, indexStreamData);
-  renderObject->CreateRenderObject(RenderObjectGeometryDataPtr);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
+  renderObject->createRenderObject(RenderObjectGeometryDataPtr);
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
   renderObject->m_materialPtr_ = g_defaultMaterial;
   return renderObject;
 }
 
-QuadPrimitive* CreateQuad(const math::Vector3Df& pos,
+QuadPrimitive* g_createQuad(const math::Vector3Df& pos,
                           const math::Vector3Df& size,
                           const math::Vector3Df& scale,
                           const math::Vector4Df& color) {
@@ -651,12 +651,12 @@ QuadPrimitive* CreateQuad(const math::Vector3Df& pos,
   object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
   object->m_renderObjects_.push_back(RenderObject);
   RenderObject->m_isTwoSided_ = true;
-  // object->CreateBoundBox();
+  // object->createBoundBox();
   return object;
 }
 
 //////////////////////////////////////////////////////////////////////////
-Object* CreateGizmo(const math::Vector3Df& pos,
+Object* g_createGizmo(const math::Vector3Df& pos,
                     const math::Vector3Df& rot,
                     const math::Vector3Df& scale) {
   float length     = 5.0f;
@@ -782,15 +782,15 @@ Object* CreateGizmo(const math::Vector3Df& pos,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
-  // object->CreateBoundBox();
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
+  // object->createBoundBox();
   return object;
 }
 
-Object* CreateTriangle(const math::Vector3Df& pos,
+Object* g_createTriangle(const math::Vector3Df& pos,
                        const math::Vector3Df& size,
                        const math::Vector3Df& scale,
                        const math::Vector4Df& color) {
@@ -854,7 +854,7 @@ Object* CreateTriangle(const math::Vector3Df& pos,
         sizeof(float) * 4,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        GenerateColor(color, elementCount));
+        g_generateColor(color, elementCount));
     vertexStreamData->m_streams_.push_back(streamParam);
   }
 
@@ -919,17 +919,17 @@ Object* CreateTriangle(const math::Vector3Df& pos,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
   renderObject->m_isTwoSided_ = true;
-  // object->CreateBoundBox();
+  // object->createBoundBox();
 
   return object;
 }
 
-Object* CreateCube(const math::Vector3Df& pos,
+Object* g_createCube(const math::Vector3Df& pos,
                    const math::Vector3Df& size,
                    const math::Vector3Df& scale,
                    const math::Vector4Df& color) {
@@ -1067,7 +1067,7 @@ Object* CreateCube(const math::Vector3Df& pos,
         sizeof(float) * 4,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        GenerateColor(color, elementCount));
+        g_generateColor(color, elementCount));
     vertexStreamData->m_streams_.push_back(streamParam);
   }
 
@@ -1165,16 +1165,16 @@ Object* CreateCube(const math::Vector3Df& pos,
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData,
                                                    indexStreamData);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
-  // object->CreateBoundBox();
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
+  // object->createBoundBox();
 
   return object;
 }
 
-Object* CreateCapsule(const math::Vector3Df& pos,
+Object* g_createCapsule(const math::Vector3Df& pos,
                       float                  height,
                       float                  radius,
                       int32_t                slice,
@@ -1254,7 +1254,7 @@ Object* CreateCapsule(const math::Vector3Df& pos,
         sizeof(float) * 4,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        GenerateColor(color, elementCount));
+        g_generateColor(color, elementCount));
     vertexStreamData->m_streams_.push_back(streamParam);
   }
 
@@ -1331,16 +1331,16 @@ Object* CreateCapsule(const math::Vector3Df& pos,
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData,
                                                    indexStreamData);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
-  // object->CreateBoundBox();
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
+  // object->createBoundBox();
 
   return object;
 }
 
-ConePrimitive* CreateCone(const math::Vector3Df& pos,
+ConePrimitive* g_createCone(const math::Vector3Df& pos,
                           float                  height,
                           float                  radius,
                           int32_t                slice,
@@ -1436,7 +1436,7 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
         sizeof(float) * 4,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        GenerateColor(color, elementCount));
+        g_generateColor(color, elementCount));
     vertexStreamData->m_streams_.push_back(streamParam);
   }
 
@@ -1483,19 +1483,19 @@ ConePrimitive* CreateCone(const math::Vector3Df& pos,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
   object->m_height_ = height;
   object->m_radius_ = radius;
   object->m_color_  = color;
   // if (createBoundInfo)
-  //	object->CreateBoundBox();
+  //	object->createBoundBox();
   return object;
 }
 
-Object* CreateCylinder(const math::Vector3Df& pos,
+Object* g_createCylinder(const math::Vector3Df& pos,
                        float                  height,
                        float                  radius,
                        int32_t                slices,
@@ -1706,15 +1706,15 @@ Object* CreateCylinder(const math::Vector3Df& pos,
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(
           vertexStreamData, positionOnlyVertexStreamData, indexStreamData);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
   renderObject->m_materialPtr_ = g_defaultMaterial;
   return object;
 }
 
-Object* CreateSphere(const math::Vector3Df& pos,
+Object* g_createSphere(const math::Vector3Df& pos,
                      float                  radius,
                      uint32_t               slices,
                      uint32_t               stacks,
@@ -1880,15 +1880,15 @@ Object* CreateSphere(const math::Vector3Df& pos,
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(
           vertexStreamData, positionOnlyVertexStreamData, indexStreamData);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  renderObject->SetPos(pos);
-  renderObject->SetScale(scale);
+  renderObject->setPosition(pos);
+  renderObject->setScale(scale);
   renderObject->m_materialPtr_ = g_defaultMaterial;
   return object;
 }
 
-BillboardQuadPrimitive* CreateBillobardQuad(const math::Vector3Df& pos,
+BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df& pos,
                                             const math::Vector3Df& size,
                                             const math::Vector3Df& scale,
                                             const math::Vector4Df& color,
@@ -1902,7 +1902,7 @@ BillboardQuadPrimitive* CreateBillobardQuad(const math::Vector3Df& pos,
   return object;
 }
 
-UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
+UIQuadPrimitive* g_createUIQuad(const math::Vector2Df& pos,
                               const math::Vector2Df& size,
                               Texture*              texture) {
   float vertices[] = {
@@ -1946,7 +1946,7 @@ UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
   object->m_position_  = pos;
   object->m_size_ = size;
@@ -1954,7 +1954,7 @@ UIQuadPrimitive* CreateUIQuad(const math::Vector2Df& pos,
   return object;
 }
 
-FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture) {
+FullscreenQuadPrimitive* g_createFullscreenQuad(Texture* texture) {
   float vertices[] = {0.0f, 1.0f, 2.0f};
 
   uint32_t elementCount = static_cast<uint32_t>(std::size(vertices));
@@ -1979,12 +1979,12 @@ FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture) {
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
   return object;
 }
 
-SegmentPrimitive* CreateSegment(const math::Vector3Df& start,
+SegmentPrimitive* g_createSegment(const math::Vector3Df& start,
                                 const math::Vector3Df& end,
                                 float                  time,
                                 const math::Vector4Df& color) {
@@ -2022,7 +2022,7 @@ SegmentPrimitive* CreateSegment(const math::Vector3Df& start,
   }
 
   {
-    auto colorData   = GenerateColor(color, elementCount);
+    auto colorData   = g_generateColor(color, elementCount);
     auto streamParam = std::make_shared<BufferAttributeStream<float>>(
         Name("COLOR"),
         EBufferType::Static,
@@ -2040,32 +2040,32 @@ SegmentPrimitive* CreateSegment(const math::Vector3Df& start,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
   renderObject = renderObject;
-  renderObject->SetScale(math::Vector3Df(time));
+  renderObject->setScale(math::Vector3Df(time));
   object->m_time_           = time;
   object->m_start_          = start;
   object->m_end_            = end;
   object->m_color_          = color;
   object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
     auto thisSegmentObject = static_cast<SegmentPrimitive*>(thisObject);
-    thisObject->m_renderObjects_[0]->SetScale(
+    thisObject->m_renderObjects_[0]->setScale(
         math::Vector3Df(thisSegmentObject->m_time_));
   };
-  // object->CreateBoundBox();
+  // object->createBoundBox();
   return object;
 }
 
-ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
+ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
                                           const math::Vector3Df& end,
                                           float                  time,
                                           float                  coneHeight,
                                           float                  coneRadius,
                                           const math::Vector4Df& color) {
   auto object            = new ArrowSegmentPrimitive();
-  object->m_segmentObject_  = CreateSegment(start, end, time, color);
-  object->m_coneObject_     = CreateCone(math::g_zeroVector<float, 3>(),
+  object->m_segmentObject_  = g_createSegment(start, end, time, color);
+  object->m_coneObject_     = g_createCone(math::g_zeroVector<float, 3>(),
                                   coneHeight,
                                   coneRadius,
                                   10,
@@ -2074,12 +2074,12 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
   object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
     auto thisArrowSegmentObject
         = static_cast<ArrowSegmentPrimitive*>(thisObject);
-    thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->SetPos(
-        thisArrowSegmentObject->m_segmentObject_->m_renderObjects_[0]->GetPos()
-        + thisArrowSegmentObject->m_segmentObject_->GetCurrentEnd());
-    thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->SetRot(
-        math::GetEulerAngleFrom(
-            thisArrowSegmentObject->m_segmentObject_->GetDirectionNormalized()));
+    thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->setPosition(
+        thisArrowSegmentObject->m_segmentObject_->m_renderObjects_[0]->getPosition()
+        + thisArrowSegmentObject->m_segmentObject_->getCurrentEnd());
+    thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->setRotation(
+        math::g_getEulerAngleFrom(
+            thisArrowSegmentObject->m_segmentObject_->getDirectionNormalized()));
   };
 
   return object;
@@ -2095,15 +2095,15 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //   DirectionalLightPrimitive* object = new DirectionalLightPrimitive();
 //
 //   std::weak_ptr<ImageData> data
-//       = ImageFileLoader::GetInstance().LoadImageDataFromFile(
+//       = ImageFileLoader::s_getInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
-//   object->BillboardObject = CreateBillobardQuad(pos,
+//   object->BillboardObject = g_createBillobardQuad(pos,
 //                                                 math::g_oneVector<float,
 //                                                 3>(), scale,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
 //   if (data.lock()->imageBulkData.ImageData.size() > 0) {
-//     Texture* texture = ImageFileLoader::GetInstance()
+//     Texture* texture = ImageFileLoader::s_getInstance()
 //                              .LoadTextureFromFile(Name(textureFilename))
 //                              .lock()
 //                              .get();
@@ -2117,7 +2117,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //     object->BillboardObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   }
 //   object->ArrowSegementObject
-//       = CreateArrowSegment(math::g_zeroVector<float, 3>(),
+//       = g_createArrowSegment(math::g_zeroVector<float, 3>(),
 //                            light->GetLightData().Direction * length,
 //                            1.0f,
 //                            scale.x(),
@@ -2132,11 +2132,11 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //   object->m_postUpdateFunc_ = [length](Object* thisObject, float deltaTime) {
 //     auto thisDirectionalLightObject
 //         = static_cast<DirectionalLightPrimitive*>(thisObject);
-//     thisDirectionalLightObject->BillboardObject->m_renderObjects_[0]->SetPos(
+//     thisDirectionalLightObject->BillboardObject->m_renderObjects_[0]->setPosition(
 //         thisDirectionalLightObject->m_position_);
-//     thisDirectionalLightObject->ArrowSegementObject->SetPos(
+//     thisDirectionalLightObject->ArrowSegementObject->setPosition(
 //         thisDirectionalLightObject->m_position_);
-//     thisDirectionalLightObject->ArrowSegementObject->SetEnd(
+//     thisDirectionalLightObject->ArrowSegementObject->setEnd(
 //         thisDirectionalLightObject->Light->GetLightData().Direction *
 //         length);
 //   };
@@ -2153,16 +2153,16 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //   PointLightPrimitive* object = new PointLightPrimitive();
 //
 //   std::weak_ptr<ImageData> data
-//       = ImageFileLoader::GetInstance().LoadImageDataFromFile(
+//       = ImageFileLoader::s_getInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   const PointLightUniformBufferData& LightData = light->GetLightData();
-//   object->BillboardObject = CreateBillobardQuad(LightData.Position,
+//   object->BillboardObject = g_createBillobardQuad(LightData.Position,
 //                                                 math::g_oneVector<float,
 //                                                 3>(), scale,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
 //   if (data.lock()->imageBulkData.ImageData.size() > 0) {
-//     auto texture = ImageFileLoader::GetInstance()
+//     auto texture = ImageFileLoader::s_getInstance()
 //                        .LoadTextureFromFile(Name(textureFilename))
 //                        .lock()
 //                        .get();
@@ -2175,7 +2175,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //         = texture;
 //     object->BillboardObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
 //   }
-//   object->SphereObject = CreateSphere(LightData.Position,
+//   object->SphereObject = g_createSphere(LightData.Position,
 //                                       LightData.MaxDistance,
 //                                       20,
 //                                       10,
@@ -2190,9 +2190,9 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //     static_cast<PointLightPrimitive*>(thisObject); const
 //     PointLightUniformBufferData& LightData
 //         = pointLightPrimitive->Light->GetLightData();
-//     pointLightPrimitive->BillboardObject->m_renderObjects_[0]->SetPos(
+//     pointLightPrimitive->BillboardObject->m_renderObjects_[0]->setPosition(
 //         LightData.Position);
-//     pointLightPrimitive->SphereObject->m_renderObjects_[0]->SetPos(
+//     pointLightPrimitive->SphereObject->m_renderObjects_[0]->setPosition(
 //         LightData.Position);
 //     pointLightPrimitive->SphereObject->m_renderObjects_[0]->SetScale(
 //         math::Vector3Df(LightData.MaxDistance));
@@ -2210,16 +2210,16 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //   SpotLightPrimitive* object = new SpotLightPrimitive();
 //
 //   std::weak_ptr<ImageData> data
-//       = ImageFileLoader::GetInstance().LoadImageDataFromFile(
+//       = ImageFileLoader::s_getInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   const SpotLightUniformBufferData& LightData = light->GetLightData();
-//   object->BillboardObject = CreateBillobardQuad(LightData.Position,
+//   object->BillboardObject = g_createBillobardQuad(LightData.Position,
 //                                                 math::g_oneVector<float,
 //                                                 3>(), scale,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
 //   if (data.lock()->imageBulkData.ImageData.size() > 0) {
-//     auto texture = ImageFileLoader::GetInstance()
+//     auto texture = ImageFileLoader::s_getInstance()
 //                        .LoadTextureFromFile(Name(textureFilename))
 //                        .lock()
 //                        .get();
@@ -2231,7 +2231,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //         .Texture
 //         = texture;
 //   }
-//   object->UmbraConeObject = CreateCone(
+//   object->UmbraConeObject = g_createCone(
 //       LightData.Position,
 //       1.0,
 //       1.0,
@@ -2243,7 +2243,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //       true,
 //       false);
 //   object->UmbraConeObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
-//   object->PenumbraConeObject                                  = CreateCone(
+//   object->PenumbraConeObject                                  = g_createCone(
 //       LightData.Position,
 //       1.0,
 //       1.0,
@@ -2260,11 +2260,11 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //     auto spotLightObject = static_cast<SpotLightPrimitive*>(thisObject);
 //     const SpotLightUniformBufferData& LightData
 //         = spotLightObject->Light->GetLightData();
-//     spotLightObject->BillboardObject->m_renderObjects_[0]->SetPos(
+//     spotLightObject->BillboardObject->m_renderObjects_[0]->setPosition(
 //         LightData.Position);
 //
 //     const auto lightDir       = -LightData.Direction;
-//     const auto directionToRot = math::GetEulerAngleFrom(lightDir);
+//     const auto directionToRot = math::g_getEulerAngleFrom(lightDir);
 //     const auto spotLightPos
 //         = LightData.Position
 //         + lightDir
@@ -2277,7 +2277,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //         = tanf(LightData.UmbraRadian) * LightData.MaxDistance;
 //     spotLightObject->UmbraConeObject->m_renderObjects_[0]->SetScale(
 //         math::Vector3Df(umbraRadius, LightData.MaxDistance, umbraRadius));
-//     spotLightObject->UmbraConeObject->m_renderObjects_[0]->SetPos(spotLightPos);
+//     spotLightObject->UmbraConeObject->m_renderObjects_[0]->setPosition(spotLightPos);
 //     spotLightObject->UmbraConeObject->m_renderObjects_[0]->SetRot(directionToRot);
 //
 //     const auto penumbraRadius
@@ -2285,7 +2285,7 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->SetScale(
 //         math::Vector3Df(penumbraRadius, LightData.MaxDistance,
 //         penumbraRadius));
-//     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->SetPos(spotLightPos);
+//     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->setPosition(spotLightPos);
 //     spotLightObject->PenumbraConeObject->m_renderObjects_[0]->SetRot(
 //         directionToRot);
 //   };
@@ -2295,11 +2295,11 @@ ArrowSegmentPrimitive* CreateArrowSegment(const math::Vector3Df& start,
 //   return object;
 // }
 
-FrustumPrimitive* CreateFrustumDebug(const Camera* targetCamera) {
+FrustumPrimitive* g_createFrustumDebug(const Camera* targetCamera) {
   FrustumPrimitive* frustumPrimitive = new FrustumPrimitive(targetCamera);
   for (int32_t i = 0; i < 16; ++i) {
     frustumPrimitive->m_segments_[i]
-        = CreateSegment(math::g_zeroVector<float, 3>(),
+        = g_createSegment(math::g_zeroVector<float, 3>(),
                         math::g_zeroVector<float, 3>(),
                         1.0f,
                         math::Vector4Df(1.0f));
@@ -2307,7 +2307,7 @@ FrustumPrimitive* CreateFrustumDebug(const Camera* targetCamera) {
   }
 
   for (int32_t i = 0; i < 6; ++i) {
-    frustumPrimitive->m_plane_[i] = CreateQuad(math::g_zeroVector<float, 3>(),
+    frustumPrimitive->m_plane_[i] = g_createQuad(math::g_zeroVector<float, 3>(),
                                             math::g_oneVector<float, 3>(),
                                             math::g_oneVector<float, 3>(),
                                             math::Vector4Df(1.0f));
@@ -2316,7 +2316,7 @@ FrustumPrimitive* CreateFrustumDebug(const Camera* targetCamera) {
   return frustumPrimitive;
 }
 
-Graph2D* CreateGraph2D(const math::Vector2Df&              pos,
+Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
                        const math::Vector2Df&              size,
                        const std::vector<math::Vector2Df>& points) {
   const math::Vector2Df point[4] = {
@@ -2362,40 +2362,40 @@ Graph2D* CreateGraph2D(const math::Vector2Df&              pos,
   auto renderObject = new RenderObject();
   object->m_renderObjectGeometryDataPtr_
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
-  renderObject->CreateRenderObject(object->m_renderObjectGeometryDataPtr_);
+  renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  object->SethPos(pos);
-  object->SetGuardLineSize(size);
-  object->SetPoints(points);
+  object->sethPosition(pos);
+  object->setGuardLineSize(size);
+  object->setPoints(points);
 
   return object;
 }
 
-// void DirectionalLightPrimitive::Update(float deltaTime) {
-//   Object::Update(deltaTime);
+// void DirectionalLightPrimitive::update(float deltaTime) {
+//   Object::update(deltaTime);
 //
 //   if (BillboardObject) {
-//     BillboardObject->Update(deltaTime);
+//     BillboardObject->update(deltaTime);
 //   }
 //   if (ArrowSegementObject) {
-//     ArrowSegementObject->Update(deltaTime);
+//     ArrowSegementObject->update(deltaTime);
 //   }
 // }
 //
-// void PointLightPrimitive::Update(float deltaTime) {
-//   Object::Update(deltaTime);
-//   BillboardObject->Update(deltaTime);
-//   SphereObject->Update(deltaTime);
+// void PointLightPrimitive::update(float deltaTime) {
+//   Object::update(deltaTime);
+//   BillboardObject->update(deltaTime);
+//   SphereObject->update(deltaTime);
 // }
 //
-// void SpotLightPrimitive::Update(float deltaTime) {
-//   Object::Update(deltaTime);
-//   BillboardObject->Update(deltaTime);
-//   UmbraConeObject->Update(deltaTime);
-//   PenumbraConeObject->Update(deltaTime);
+// void SpotLightPrimitive::update(float deltaTime) {
+//   Object::update(deltaTime);
+//   BillboardObject->update(deltaTime);
+//   UmbraConeObject->update(deltaTime);
+//   PenumbraConeObject->update(deltaTime);
 // }
 
-void SegmentPrimitive::UpdateSegment() {
+void SegmentPrimitive::updateSegment() {
   if (m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_.size() < 2) {
     assert(0);
     return;
@@ -2403,7 +2403,7 @@ void SegmentPrimitive::UpdateSegment() {
 
   m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0].reset();
   m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[1].reset();
-  const auto currentEnd = GetCurrentEnd();
+  const auto currentEnd = getCurrentEnd();
 
   const float vertices[] = {
     m_start_.x(),
@@ -2432,12 +2432,12 @@ void SegmentPrimitive::UpdateSegment() {
         sizeof(float) * 4,
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        GenerateColor(m_color_, 2));
+        g_generateColor(m_color_, 2));
     m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[1] = streamParam;
   }
 }
 
-void SegmentPrimitive::UpdateSegment(const math::Vector3Df& start,
+void SegmentPrimitive::updateSegment(const math::Vector3Df& start,
                                      const math::Vector3Df& end,
                                      const math::Vector4Df& color,
                                      float                  time) {
@@ -2445,16 +2445,16 @@ void SegmentPrimitive::UpdateSegment(const math::Vector3Df& start,
   m_end_   = end;
   m_color_ = color;
   m_time_  = time;
-  UpdateSegment();
+  updateSegment();
 }
 
-void SegmentPrimitive::Update(float deltaTime) {
-  Object::Update(deltaTime);
+void SegmentPrimitive::update(float deltaTime) {
+  Object::update(deltaTime);
 
-  UpdateSegment();
+  updateSegment();
 }
 
-void FrustumPrimitive::Update(float deltaTime) {
+void FrustumPrimitive::update(float deltaTime) {
   math::Vector3Df far_lt;
   math::Vector3Df far_rt;
   math::Vector3Df far_lb;
@@ -2473,10 +2473,10 @@ void FrustumPrimitive::Update(float deltaTime) {
     const float InvAspect
         = ((float)m_targetCamera_->m_width_ / (float)m_targetCamera_->m_height_);
     const float     length    = tanf(m_targetCamera_->m_FOVRad_ * 0.5f);
-    math::Vector3Df targetVec = m_targetCamera_->GetForwardVector().normalized();
+    math::Vector3Df targetVec = m_targetCamera_->getForwardVector().normalized();
     math::Vector3Df rightVec
-        = m_targetCamera_->GetRightVector() * length * InvAspect;
-    math::Vector3Df upVec = m_targetCamera_->GetUpVector() * length;
+        = m_targetCamera_->getRightVector() * length * InvAspect;
+    math::Vector3Df upVec = m_targetCamera_->getUpVector() * length;
 
     math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
     math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
@@ -2510,9 +2510,9 @@ void FrustumPrimitive::Update(float deltaTime) {
     const float w = (float)m_targetCamera_->m_width_;
     const float h = (float)m_targetCamera_->m_height_;
 
-    math::Vector3Df targetVec = m_targetCamera_->GetForwardVector().normalized();
-    math::Vector3Df rightVec  = m_targetCamera_->GetRightVector().normalized();
-    math::Vector3Df upVec     = m_targetCamera_->GetUpVector().normalized();
+    math::Vector3Df targetVec = m_targetCamera_->getForwardVector().normalized();
+    math::Vector3Df rightVec  = m_targetCamera_->getRightVector().normalized();
+    math::Vector3Df upVec     = m_targetCamera_->getUpVector().normalized();
 
     far_lt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
     far_rt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
@@ -2529,29 +2529,29 @@ void FrustumPrimitive::Update(float deltaTime) {
       = (m_targetCamera_->m_isPerspectiveProjection_
              ? math::Vector4Df(1.0f)
              : math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f));
-  m_segments_[0]->UpdateSegment(near_rt, far_rt, baseColor);
-  m_segments_[1]->UpdateSegment(near_lt, far_lt, baseColor);
-  m_segments_[2]->UpdateSegment(near_rb, far_rb, baseColor);
-  m_segments_[3]->UpdateSegment(near_lb, far_lb, baseColor);
+  m_segments_[0]->updateSegment(near_rt, far_rt, baseColor);
+  m_segments_[1]->updateSegment(near_lt, far_lt, baseColor);
+  m_segments_[2]->updateSegment(near_rb, far_rb, baseColor);
+  m_segments_[3]->updateSegment(near_lb, far_lb, baseColor);
 
   const math::Vector4Df green(0.0f, 1.0f, 0.0f, 1.0f);
-  m_segments_[4]->UpdateSegment(near_lt, near_rt, green);
-  m_segments_[5]->UpdateSegment(near_lb, near_rb, green);
-  m_segments_[6]->UpdateSegment(
+  m_segments_[4]->updateSegment(near_lt, near_rt, green);
+  m_segments_[5]->updateSegment(near_lb, near_rb, green);
+  m_segments_[6]->updateSegment(
       near_lt, near_lb, math::Vector4Df(1.0f, 1.0f, 0.0f, 1.0f));
-  m_segments_[7]->UpdateSegment(near_rt, near_rb, green);
+  m_segments_[7]->updateSegment(near_rt, near_rb, green);
 
   const math::Vector4Df red(1.0f, 0.0f, 0.0f, 1.0f);
-  m_segments_[8]->UpdateSegment(far_lt, far_rt, red);
-  m_segments_[9]->UpdateSegment(far_lb, far_rb, red);
-  m_segments_[10]->UpdateSegment(
+  m_segments_[8]->updateSegment(far_lt, far_rt, red);
+  m_segments_[9]->updateSegment(far_lb, far_rb, red);
+  m_segments_[10]->updateSegment(
       far_lt, far_lb, math::Vector4Df(0.0f, 1.0f, 1.0f, 1.0f));
-  m_segments_[11]->UpdateSegment(far_rt, far_rb, red);
+  m_segments_[11]->updateSegment(far_rt, far_rb, red);
 
-  m_segments_[12]->UpdateSegment(far_rt, near_rt, baseColor);
-  m_segments_[13]->UpdateSegment(far_rb, near_rb, baseColor);
-  m_segments_[14]->UpdateSegment(far_lb, near_lb, baseColor);
-  m_segments_[15]->UpdateSegment(far_rb, near_rb, baseColor);
+  m_segments_[12]->updateSegment(far_rt, near_rt, baseColor);
+  m_segments_[13]->updateSegment(far_rb, near_rb, baseColor);
+  m_segments_[14]->updateSegment(far_lb, near_lb, baseColor);
+  m_segments_[15]->updateSegment(far_rb, near_rb, baseColor);
 
   auto updateQuadFunc = [this](QuadPrimitive*         quad,
                                const math::Vector3Df& p1,
@@ -2611,7 +2611,7 @@ void FrustumPrimitive::Update(float deltaTime) {
           sizeof(float) * 4,
           std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
               EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-          GenerateColor(color, elementCount)  // Assuming this function returns
+          g_generateColor(color, elementCount)  // Assuming this function returns
                                               // std::vector<float>
       );
       vertexStreamData->m_streams_.push_back(streamParam);
@@ -2638,7 +2638,7 @@ void FrustumPrimitive::Update(float deltaTime) {
     vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
     vertexStreamData->m_elementCount_  = elementCount;
 
-    quad->m_renderObjectGeometryDataPtr_->UpdateVertexStream(vertexStreamData);
+    quad->m_renderObjectGeometryDataPtr_->updateVertexStream(vertexStreamData);
   };
 
   updateQuadFunc(m_plane_[0],
@@ -2679,35 +2679,35 @@ void FrustumPrimitive::Update(float deltaTime) {
                  math::Vector4Df(1.0f, 1.0f, 1.0f, 0.3f));
 
   for (int32_t i = 0; i < 16; ++i) {
-    m_segments_[i]->m_renderObjects_[0]->SetPos(m_offset_);
-    m_segments_[i]->m_renderObjects_[0]->SetScale(m_scale_);
-    m_segments_[i]->Update(deltaTime);
+    m_segments_[i]->m_renderObjects_[0]->setPosition(m_offset_);
+    m_segments_[i]->m_renderObjects_[0]->setScale(m_scale_);
+    m_segments_[i]->update(deltaTime);
   }
 
   for (int32_t i = 0; i < 6; ++i) {
-    m_plane_[i]->m_renderObjects_[0]->SetPos(m_offset_);
-    m_plane_[i]->m_renderObjects_[0]->SetScale(m_scale_);
-    m_plane_[i]->Update(deltaTime);
+    m_plane_[i]->m_renderObjects_[0]->setPosition(m_offset_);
+    m_plane_[i]->m_renderObjects_[0]->setScale(m_scale_);
+    m_plane_[i]->update(deltaTime);
   }
 }
 
-void Graph2D::Update(float deltaTime) {
-  UpdateBuffer();
+void Graph2D::update(float deltaTime) {
+  updateBuffer();
 }
 
-void Graph2D::SethPos(const math::Vector2Df& pos) {
+void Graph2D::sethPosition(const math::Vector2Df& pos) {
   if (m_position_ != pos) {
     m_dirtyFlag_ = true;
     m_position_       = pos;
   }
 }
 
-void Graph2D::SetPoints(const std::vector<math::Vector2Df>& points) {
+void Graph2D::setPoints(const std::vector<math::Vector2Df>& points) {
   m_points_    = points;
   m_dirtyFlag_ = true;
 }
 
-void Graph2D::UpdateBuffer() {
+void Graph2D::updateBuffer() {
   if (m_dirtyFlag_) {
     m_dirtyFlag_ = false;
 

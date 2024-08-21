@@ -128,7 +128,7 @@ RhiDx12::~RhiDx12() {
 //
 //  // Create the window and store a handle to it.
 //  auto hWnd = CreateWindow(windowClass.lpszClassName,
-//                           TEXT("DX12"),
+//                           Text("DX12"),
 //                           WS_OVERLAPPEDWINDOW,
 //                           CW_USEDEFAULT,
 //                           CW_USEDEFAULT,
@@ -198,14 +198,14 @@ int32_t GetHardwareAdapter(IDXGIFactory1*  factory,
   return adapterIndex;
 }
 
-void RhiDx12::WaitForGPU() const {
+void RhiDx12::waitForGPU() const {
   assert(m_swapchain_);
 
-  auto Queue = m_commandBufferManager_->GetCommandQueue();
+  auto Queue = m_commandBufferManager_->getCommandQueue();
   assert(Queue);
 
   if (m_commandBufferManager_ && m_commandBufferManager_->m_fence) {
-    m_commandBufferManager_->m_fence->SignalWithNextFenceValue(Queue.Get(),
+    m_commandBufferManager_->m_fence->signalWithNextFenceValue(Queue.Get(),
                                                               true);
   }
 }
@@ -348,7 +348,7 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
     }
   }
 
-  m_placedResourcePool_.Init();
+  m_placedResourcePool_.init();
   // TODO: consider remove nested smart pointers (probably need changes in
   // DeallocatorMultiFrameResource)
   m_deallocatorMultiFrameStandaloneResource_.m_freeDelegate_
@@ -399,30 +399,30 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
 
   // 2. Command
   m_commandBufferManager_ = new CommandBufferManagerDx12();
-  m_commandBufferManager_->Initialize(m_device_, D3D12_COMMAND_LIST_TYPE_DIRECT);
+  m_commandBufferManager_->initialize(m_device_, D3D12_COMMAND_LIST_TYPE_DIRECT);
   m_copyCommandBufferManager_ = new CommandBufferManagerDx12();
-  m_copyCommandBufferManager_->Initialize(m_device_, D3D12_COMMAND_LIST_TYPE_COPY);
+  m_copyCommandBufferManager_->initialize(m_device_, D3D12_COMMAND_LIST_TYPE_COPY);
 
   // 4. Heap
-  m_rtvDescriptorHeaps_.Initialize(EDescriptorHeapTypeDX12::RTV);
-  m_dsvDescriptorHeaps_.Initialize(EDescriptorHeapTypeDX12::DSV);
-  m_descriptorHeaps_.Initialize(EDescriptorHeapTypeDX12::CBV_SRV_UAV);
-  m_samplerDescriptorHeaps_.Initialize(EDescriptorHeapTypeDX12::SAMPLER);
+  m_rtvDescriptorHeaps_.initialize(EDescriptorHeapTypeDX12::RTV);
+  m_dsvDescriptorHeaps_.initialize(EDescriptorHeapTypeDX12::DSV);
+  m_descriptorHeaps_.initialize(EDescriptorHeapTypeDX12::CBV_SRV_UAV);
+  m_samplerDescriptorHeaps_.initialize(EDescriptorHeapTypeDX12::SAMPLER);
 
   // 3. Swapchain
   // m_swapchain_ = new SwapchainDx12();
-  m_swapchain_->Create(m_window_);
-  m_currentFrameIndex_ = m_swapchain_->GetCurrentBackBufferIndex();
+  m_swapchain_->create(m_window_);
+  m_currentFrameIndex_ = m_swapchain_->getCurrentBackBufferIndex();
 
-  m_oneFrameUniformRingBuffers_.resize(m_swapchain_->GetNumOfSwapchainImages());
+  m_oneFrameUniformRingBuffers_.resize(m_swapchain_->getNumOfSwapchainImages());
   for (RingBufferDx12*& iter : m_oneFrameUniformRingBuffers_) {
     iter = new RingBufferDx12();
     // iter->Create(16 * 1024 * 1024);
-    iter->Create(65'536);
+    iter->create(65'536);
   }
 
   // 7. Create sync object
-  WaitForGPU();
+  waitForGPU();
 
   // 8. Raytracing device and commandlist
   D3D12_FEATURE_DATA_D3D12_OPTIONS5 featureSupportData{};
@@ -449,7 +449,7 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
   // QueryPoolTime->Create();
 
   // g_ImGUI = new ImGUIDx12();
-  // g_ImGUI->Initialize((float)m_window_->getSize().width(),
+  // g_ImGUI->initialize((float)m_window_->getSize().width(),
   //                     (float)m_window_->getSize().height());
 
   //////////////////////////////////////////////////////////////////////////
@@ -464,19 +464,19 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
 }
 
 void RhiDx12::release() {
-  WaitForGPU();
+  waitForGPU();
 
   RHI::release();
 
   if (m_commandBufferManager_) {
-    m_commandBufferManager_->Release();
+    m_commandBufferManager_->release();
   }
 
   if (m_copyCommandBufferManager_) {
-    m_copyCommandBufferManager_->Release();
+    m_copyCommandBufferManager_->release();
   }
 
-  s_samplerStatePool.Release();
+  s_samplerStatePool.release();
 
   {
     ScopeWriteLock s(&m_shaderBindingPoolLock_);
@@ -492,31 +492,31 @@ void RhiDx12::release() {
 
   //////////////////////////////////////////////////////////////////////////
   // 4. Heap
-  m_rtvDescriptorHeaps_.Release();
-  m_dsvDescriptorHeaps_.Release();
-  m_descriptorHeaps_.Release();
-  m_samplerDescriptorHeaps_.Release();
+  m_rtvDescriptorHeaps_.release();
+  m_dsvDescriptorHeaps_.release();
+  m_descriptorHeaps_.release();
+  m_samplerDescriptorHeaps_.release();
 
-  m_onlineDescriptorHeapManager_.Release();
+  m_onlineDescriptorHeapManager_.release();
 
   //////////////////////////////////////////////////////////////////////////
   // 3. Swapchain
   // TODO: consider using destructor
-  m_swapchain_->Release();
+  m_swapchain_->release();
   // delete m_swapchain_;
 
   //////////////////////////////////////////////////////////////////////////
   // 2. Command
   delete m_commandBufferManager_;
 
-  m_placedResourcePool_.Release();
+  m_placedResourcePool_.release();
 
   //////////////////////////////////////////////////////////////////////////
   // 1. Device
   m_device_.Reset();
 }
 
-bool RhiDx12::OnHandleResized(uint32_t witdh,
+bool RhiDx12::onHandleResized(uint32_t witdh,
                               uint32_t height,
                               bool     isMinimized) {
   assert(witdh > 0);
@@ -526,46 +526,46 @@ bool RhiDx12::OnHandleResized(uint32_t witdh,
     char szTemp[126];
     sprintf_s(szTemp,
               sizeof(szTemp),
-              "Called OnHandleResized %d %d\n",
+              "Called onHandleResized %d %d\n",
               witdh,
               height);
     OutputDebugStringA(szTemp);
   }
 
-  WaitForGPU();
+  waitForGPU();
 
-  m_swapchain_->Resize(witdh, height);
-  m_currentFrameIndex_ = m_swapchain_->GetCurrentBackBufferIndex();
+  m_swapchain_->resize(witdh, height);
+  m_currentFrameIndex_ = m_swapchain_->getCurrentBackBufferIndex();
 
   return true;
 }
 
-CommandBufferDx12* RhiDx12::BeginSingleTimeCommands() const {
+CommandBufferDx12* RhiDx12::beginSingleTimeCommands() const {
   assert(m_commandBufferManager_);
-  return m_commandBufferManager_->GetOrCreateCommandBuffer();
+  return m_commandBufferManager_->getOrCreateCommandBuffer();
 }
 
-void RhiDx12::EndSingleTimeCommands(CommandBuffer* commandBuffer) const {
+void RhiDx12::endSingleTimeCommands(CommandBuffer* commandBuffer) const {
   auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
 
   assert(m_commandBufferManager_);
-  m_commandBufferManager_->ExecuteCommandList(commandBufferDx12, true);
-  m_commandBufferManager_->ReturnCommandBuffer(commandBufferDx12);
+  m_commandBufferManager_->executeCommandList(commandBufferDx12, true);
+  m_commandBufferManager_->returnCommandBuffer(commandBufferDx12);
 }
 
-CommandBufferDx12* RhiDx12::BeginSingleTimeCopyCommands() const {
+CommandBufferDx12* RhiDx12::beginSingleTimeCopyCommands() const {
   assert(m_copyCommandBufferManager_);
-  return m_copyCommandBufferManager_->GetOrCreateCommandBuffer();
+  return m_copyCommandBufferManager_->getOrCreateCommandBuffer();
 }
 
-void RhiDx12::EndSingleTimeCopyCommands(
+void RhiDx12::endSingleTimeCopyCommands(
     CommandBufferDx12* commandBuffer) const {
   assert(m_copyCommandBufferManager_);
-  m_copyCommandBufferManager_->ExecuteCommandList(commandBuffer, true);
-  m_copyCommandBufferManager_->ReturnCommandBuffer(commandBuffer);
+  m_copyCommandBufferManager_->executeCommandList(commandBuffer, true);
+  m_copyCommandBufferManager_->returnCommandBuffer(commandBuffer);
 }
 
-std::shared_ptr<Texture> RhiDx12::CreateTextureFromData(
+std::shared_ptr<Texture> RhiDx12::createTextureFromData(
     const ImageData* imageData) const {
   assert(imageData);
 
@@ -575,7 +575,7 @@ std::shared_ptr<Texture> RhiDx12::CreateTextureFromData(
   std::shared_ptr<TextureDx12> TexturePtr;
   if (imageData->m_textureType_ == ETextureType::TEXTURE_CUBE) {
     TexturePtr
-        = g_rhi->CreateCubeTexture<TextureDx12>(imageData->m_width_,
+        = g_rhi->createCubeTexture<TextureDx12>(imageData->m_width_,
                                                 imageData->m_height_,
                                                 MipLevel,
                                                 imageData->m_format_,
@@ -584,7 +584,7 @@ std::shared_ptr<Texture> RhiDx12::CreateTextureFromData(
                                                 imageData->m_imageBulkData_);
   } else {
     TexturePtr
-        = g_rhi->Create2DTexture<TextureDx12>(imageData->m_width_,
+        = g_rhi->create2DTexture<TextureDx12>(imageData->m_width_,
                                               imageData->m_height_,
                                               imageData->m_layerCount_,
                                               MipLevel,
@@ -597,9 +597,9 @@ std::shared_ptr<Texture> RhiDx12::CreateTextureFromData(
   return TexturePtr;
 }
 
-ShaderBindingLayout* RhiDx12::CreateShaderBindings(
+ShaderBindingLayout* RhiDx12::createShaderBindings(
     const ShaderBindingArray& shaderBindingArray) const {
-  size_t hash = shaderBindingArray.GetHash();
+  size_t hash = shaderBindingArray.getHash();
 
   {
     ScopeReadLock sr(&m_shaderBindingPoolLock_);
@@ -620,7 +620,7 @@ ShaderBindingLayout* RhiDx12::CreateShaderBindings(
     }
 
     auto NewShaderBinding = new ShaderBindingLayoutDx12();
-    NewShaderBinding->Initialize(shaderBindingArray);
+    NewShaderBinding->initialize(shaderBindingArray);
     NewShaderBinding->m_hash_  = hash;
     s_shaderBindingPool[hash] = NewShaderBinding;
 
@@ -628,50 +628,50 @@ ShaderBindingLayout* RhiDx12::CreateShaderBindings(
   }
 }
 
-SamplerStateInfo* RhiDx12::CreateSamplerState(
+SamplerStateInfo* RhiDx12::createSamplerState(
     const SamplerStateInfo& initializer) const {
-  return s_samplerStatePool.GetOrCreate(initializer);
+  return s_samplerStatePool.getOrCreate(initializer);
 }
 
-RasterizationStateInfo* RhiDx12::CreateRasterizationState(
+RasterizationStateInfo* RhiDx12::createRasterizationState(
     const RasterizationStateInfo& initializer) const {
-  return s_rasterizationStatePool.GetOrCreate(initializer);
+  return s_rasterizationStatePool.getOrCreate(initializer);
 }
 
-StencilOpStateInfo* RhiDx12::CreateStencilOpStateInfo(
+StencilOpStateInfo* RhiDx12::createStencilOpStateInfo(
     const StencilOpStateInfo& initializer) const {
-  return s_stencilOpStatePool.GetOrCreate(initializer);
+  return s_stencilOpStatePool.getOrCreate(initializer);
 }
 
-DepthStencilStateInfo* RhiDx12::CreateDepthStencilState(
+DepthStencilStateInfo* RhiDx12::createDepthStencilState(
     const DepthStencilStateInfo& initializer) const {
-  return s_depthStencilStatePool.GetOrCreate(initializer);
+  return s_depthStencilStatePool.getOrCreate(initializer);
 }
 
-BlendingStateInfo* RhiDx12::CreateBlendingState(
+BlendingStateInfo* RhiDx12::createBlendingState(
     const BlendingStateInfo& initializer) const {
-  return s_blendingStatePool.GetOrCreate(initializer);
+  return s_blendingStatePool.getOrCreate(initializer);
 }
 
 // TODO: consider rewriting this method for DX12 shader creation
-bool RhiDx12::CreateShaderInternal(Shader*           shader,
+bool RhiDx12::createShaderInternal(Shader*           shader,
                                    const ShaderInfo& shaderInfo) const {
   std::vector<Name> IncludeFilePaths;
   Shader*           shader_dx12 = shader;
-  assert(shader_dx12->GetPermutationCount());
+  assert(shader_dx12->s_getPermutationCount());
   {
     assert(!shader_dx12->m_compiledShader);
     CompiledShaderDx12* CurCompiledShader = new CompiledShaderDx12();
     shader_dx12->m_compiledShader         = CurCompiledShader;
 
     // Prepare for compilation by setting the PermutationId.
-    shader_dx12->SetPermutationId(shaderInfo.GetPermutationId());
+    shader_dx12->setPermutationId(shaderInfo.getPermutationId());
 
     std::string PermutationDefines;
-    shader_dx12->GetPermutationDefines(PermutationDefines);
+    shader_dx12->getPermutationDefines(PermutationDefines);
 
     const wchar_t* ShadingModel = nullptr;
-    switch (shaderInfo.GetShaderType()) {
+    switch (shaderInfo.getShaderType()) {
       case EShaderAccessStageFlag::VERTEX:
         ShadingModel = TEXT(L"vs_6_6");
         break;
@@ -698,32 +698,32 @@ bool RhiDx12::CreateShaderInternal(Shader*           shader,
 
     {
       const bool isHLSL
-          = !!strstr(shaderInfo.GetShaderFilepath().ToStr(), ".hlsl");
+          = !!strstr(shaderInfo.getShaderFilepath().toStr(), ".hlsl");
 
       File ShaderFile;
-      if (!ShaderFile.OpenFile(shaderInfo.GetShaderFilepath().ToStr(),
-                               FileType::TEXT,
-                               ReadWriteType::READ)) {
+      if (!ShaderFile.openFile(shaderInfo.getShaderFilepath().toStr(),
+                               FileType::Text,
+                               ReadWriteType::Read)) {
         return false;
       }
-      ShaderFile.ReadFileToBuffer(false);
+      ShaderFile.readFileToBuffer(false);
       std::string ShaderText;
 
-      if (shaderInfo.GetPreProcessors().GetStringLength() > 0) {
-        ShaderText += shaderInfo.GetPreProcessors().ToStr();
+      if (shaderInfo.getPreProcessors().getStringLength() > 0) {
+        ShaderText += shaderInfo.getPreProcessors().toStr();
         ShaderText += "\r\n";
       }
       ShaderText += PermutationDefines;
       ShaderText += "\r\n";
 
-      ShaderText += ShaderFile.GetBuffer();
+      ShaderText += ShaderFile.getBuffer();
 
       // Find relative file path
       constexpr char    includePrefixString[] = "#include \"";
       constexpr int32_t includePrefixLength   = sizeof(includePrefixString) - 1;
 
       const std::filesystem::path shaderFilePath(
-          shaderInfo.GetShaderFilepath().ToStr());
+          shaderInfo.getShaderFilepath().toStr());
       const std::string includeShaderPath
           = shaderFilePath.has_parent_path()
               ? (shaderFilePath.parent_path().string() + "/")
@@ -758,21 +758,21 @@ bool RhiDx12::CreateShaderInternal(Shader*           shader,
 
         // Load include shader file
         File IncludeShaderFile;
-        if (!IncludeShaderFile.OpenFile(
-                includeFilepath.c_str(), FileType::TEXT, ReadWriteType::READ)) {
+        if (!IncludeShaderFile.openFile(
+                includeFilepath.c_str(), FileType::Text, ReadWriteType::Read)) {
           return false;
         }
-        IncludeShaderFile.ReadFileToBuffer(false);
+        IncludeShaderFile.readFileToBuffer(false);
         ShaderText.replace(
-            ReplaceStartPos, ReplaceCount, IncludeShaderFile.GetBuffer());
-        IncludeShaderFile.CloseFile();
+            ReplaceStartPos, ReplaceCount, IncludeShaderFile.getBuffer());
+        IncludeShaderFile.closeFile();
       }
 
       const std::wstring EntryPoint
-          = ConvertToWchar(shaderInfo.GetEntryPoint());
+          = g_convertToWchar(shaderInfo.getEntryPoint());
 
-      auto& dxcUtil = game_engine::DxcUtil::GetInstance();
-      if (FAILED(dxcUtil.Initialize())) {
+      auto& dxcUtil = game_engine::DxcUtil::s_getInstance();
+      if (FAILED(dxcUtil.initialize())) {
         std::cerr << "Failed to initialize DxcUtil" << std::endl;
         return false;
       }
@@ -786,50 +786,50 @@ bool RhiDx12::CreateShaderInternal(Shader*           shader,
     }
   }
   shader_dx12->m_shaderInfo_ = shaderInfo;
-  shader_dx12->m_shaderInfo_.SetIncludeShaderFilePaths(IncludeFilePaths);
+  shader_dx12->m_shaderInfo_.setIncludeShaderFilePaths(IncludeFilePaths);
 
   return true;
 }
 
-RenderPass* RhiDx12::GetOrCreateRenderPass(
+RenderPass* RhiDx12::getOrCreateRenderPass(
     const std::vector<Attachment>& colorAttachments,
     const math::Vector2Di&         offset,
     const math::Vector2Di&         extent) const {
-  return s_renderPassPool.GetOrCreate(
+  return s_renderPassPool.getOrCreate(
       RenderPassDx12(colorAttachments, offset, extent));
 }
 
-RenderPass* RhiDx12::GetOrCreateRenderPass(
+RenderPass* RhiDx12::getOrCreateRenderPass(
     const std::vector<Attachment>& colorAttachments,
     const Attachment&              depthAttachment,
     const math::Vector2Di&         offset,
     const math::Vector2Di&         extent) const {
-  return s_renderPassPool.GetOrCreate(
+  return s_renderPassPool.getOrCreate(
       RenderPassDx12(colorAttachments, depthAttachment, offset, extent));
 }
 
-RenderPass* RhiDx12::GetOrCreateRenderPass(
+RenderPass* RhiDx12::getOrCreateRenderPass(
     const std::vector<Attachment>& colorAttachments,
     const Attachment&              depthAttachment,
     const Attachment&              colorResolveAttachment,
     const math::Vector2Di&         offset,
     const math::Vector2Di&         extent) const {
-  return s_renderPassPool.GetOrCreate(RenderPassDx12(colorAttachments,
+  return s_renderPassPool.getOrCreate(RenderPassDx12(colorAttachments,
                                                    depthAttachment,
                                                    colorResolveAttachment,
                                                    offset,
                                                    extent));
 }
 
-RenderPass* RhiDx12::GetOrCreateRenderPass(
+RenderPass* RhiDx12::getOrCreateRenderPass(
     const RenderPassInfo&  renderPassInfo,
     const math::Vector2Di& offset,
     const math::Vector2Di& extent) const {
-  return s_renderPassPool.GetOrCreate(
+  return s_renderPassPool.getOrCreate(
       RenderPassDx12(renderPassInfo, offset, extent));
 }
 
-PipelineStateInfo* RhiDx12::CreatePipelineStateInfo(
+PipelineStateInfo* RhiDx12::createPipelineStateInfo(
     const PipelineStateFixedInfo*   pipelineStateFixed,
     const GraphicsPipelineShader    shader,
     const VertexBufferArray&        vertexBufferArray,
@@ -837,7 +837,7 @@ PipelineStateInfo* RhiDx12::CreatePipelineStateInfo(
     const ShaderBindingLayoutArray& shaderBindingArray,
     const PushConstant*             pushConstant,
     int32_t                         subpassIndex) const {
-  return s_pipelineStatePool.GetOrCreateMove(
+  return s_pipelineStatePool.getOrCreateMove(
       std::move(PipelineStateInfo(pipelineStateFixed,
                                   shader,
                                   vertexBufferArray,
@@ -847,34 +847,34 @@ PipelineStateInfo* RhiDx12::CreatePipelineStateInfo(
                                   subpassIndex)));
 }
 
-PipelineStateInfo* RhiDx12::CreateComputePipelineStateInfo(
+PipelineStateInfo* RhiDx12::createComputePipelineStateInfo(
     const Shader*                   shader,
     const ShaderBindingLayoutArray& shaderBindingArray,
     const PushConstant*             pushConstant) const {
-  return s_pipelineStatePool.GetOrCreateMove(
+  return s_pipelineStatePool.getOrCreateMove(
       std::move(PipelineStateInfo(shader, shaderBindingArray, pushConstant)));
 }
 
-void RhiDx12::RemovePipelineStateInfo(size_t hash) {
-  s_pipelineStatePool.Release(hash);
+void RhiDx12::removePipelineStateInfo(size_t hash) {
+  s_pipelineStatePool.release(hash);
 }
 
-std::shared_ptr<RenderFrameContext> RhiDx12::BeginRenderFrame() {
-  // SCOPE_CPU_PROFILE(BeginRenderFrame);
+std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
+  // SCOPE_CPU_PROFILE(beginRenderFrame);
 
   //////////////////////////////////////////////////////////////////////////
   // Acquire new swapchain image
-  SwapchainImageDx12* CurrentSwapchainImage
-      = (SwapchainImageDx12*)m_swapchain_->GetCurrentSwapchainImage();
+  SwapchainImageDx12* currentSwapchainImage
+      = (SwapchainImageDx12*)m_swapchain_->getCurrentSwapchainImage();
   assert(m_commandBufferManager_);
-  m_commandBufferManager_->m_fence->WaitForFenceValue(
-      CurrentSwapchainImage->m_fenceValue_);
+  m_commandBufferManager_->m_fence->waitForFenceValue(
+      currentSwapchainImage->m_fenceValue_);
   //////////////////////////////////////////////////////////////////////////
 
-  GetOneFrameUniformRingBuffer()->Reset();
+  getOneFrameUniformRingBuffer()->reset();
 
   CommandBufferDx12* commandBuffer
-      = (CommandBufferDx12*)m_commandBufferManager_->GetOrCreateCommandBuffer();
+      = (CommandBufferDx12*)m_commandBufferManager_->getOrCreateCommandBuffer();
 
   auto renderFrameContextPtr
       = std::make_shared<RenderFrameContextDx12>(commandBuffer);
@@ -883,33 +883,33 @@ std::shared_ptr<RenderFrameContext> RhiDx12::BeginRenderFrame() {
   renderFrameContextPtr->m_frameIndex_         = m_currentFrameIndex_;
   renderFrameContextPtr->m_sceneRenderTargetPtr_
       = std::make_shared<SceneRenderTarget>();
-  renderFrameContextPtr->m_sceneRenderTargetPtr_->Create(m_window_,
-                                                      CurrentSwapchainImage);
+  renderFrameContextPtr->m_sceneRenderTargetPtr_->create(m_window_,
+                                                      currentSwapchainImage);
 
   return renderFrameContextPtr;
 }
 
-void RhiDx12::EndRenderFrame(
+void RhiDx12::endRenderFrame(
     const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {
-  // SCOPE_CPU_PROFILE(EndRenderFrame);
+  // SCOPE_CPU_PROFILE(endRenderFrame);
 
   CommandBufferDx12* commandBuffer
-      = (CommandBufferDx12*)renderFrameContextPtr->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContextPtr->getActiveCommandBuffer();
 
   SwapchainImageDx12* CurrentSwapchainImage
-      = (SwapchainImageDx12*)m_swapchain_->GetCurrentSwapchainImage();
-  g_rhi->TransitionLayout(commandBuffer,
+      = (SwapchainImageDx12*)m_swapchain_->getCurrentSwapchainImage();
+  g_rhi->transitionLayout(commandBuffer,
                           CurrentSwapchainImage->m_TexturePtr_.get(),
                           EResourceLayout::PRESENT_SRC);
 
-  m_commandBufferManager_->ExecuteCommandList(commandBuffer);
+  m_commandBufferManager_->executeCommandList(commandBuffer);
 
   CurrentSwapchainImage->m_fenceValue_
-      = commandBuffer->m_owner_->m_fence->SignalWithNextFenceValue(
-          m_commandBufferManager_->GetCommandQueue().Get());
+      = commandBuffer->m_owner_->m_fence->signalWithNextFenceValue(
+          m_commandBufferManager_->getCommandQueue().Get());
 
   HRESULT hr = S_OK;
-  if (g_rhi->IsSupportVSync()) {
+  if (g_rhi->isSupportVSync()) {
     // Wait for VSync, the application will sleep until the next VSync.
     // This is done to save cycles of frames that do not appear on the screen.
     hr = m_swapchain_->m_swapChain_->Present(1, 0);
@@ -920,19 +920,19 @@ void RhiDx12::EndRenderFrame(
   assert(hr == S_OK);
 
   // CurrentFrameIndex = (CurrentFrameIndex + 1) % m_swapchain_->Images.size();
-  m_currentFrameIndex_ = m_swapchain_->GetCurrentBackBufferIndex();
-  renderFrameContextPtr->Destroy();
+  m_currentFrameIndex_ = m_swapchain_->getCurrentBackBufferIndex();
+  renderFrameContextPtr->destroy();
 }
 
-std::shared_ptr<IUniformBufferBlock> RhiDx12::CreateUniformBufferBlock(
+std::shared_ptr<IUniformBufferBlock> RhiDx12::createUniformBufferBlock(
     Name name, LifeTimeType lifeTimeType, size_t size /*= 0*/) const {
   auto uniformBufferBlockPtr
       = std::make_shared<UniformBufferBlockDx12>(name, lifeTimeType);
-  uniformBufferBlockPtr->Init(size);
+  uniformBufferBlockPtr->init(size);
   return uniformBufferBlockPtr;
 }
 
-void RhiDx12::BindGraphicsShaderBindingInstances(
+void RhiDx12::bindGraphicsShaderBindingInstances(
     const CommandBuffer*                 commandBuffer,
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
@@ -945,7 +945,7 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
     const ShaderBindingInstanceArray& m_shaderBindingInstanceArray
         = *(shaderBindingInstanceCombiner.m_shaderBindingInstanceArray);
     commandBufferDx12->m_commandList_->SetGraphicsRootSignature(
-        ShaderBindingLayoutDx12::CreateRootSignature(
+        ShaderBindingLayoutDx12::s_createRootSignature(
             m_shaderBindingInstanceArray));
 
     int32_t RootParameterIndex     = 0;
@@ -966,21 +966,21 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
 
       // Check if the descriptor is sufficient, if not, allocate a new one.
       bool NeedSetDescriptorHeapsAgain = false;
-      if (!commandBufferDx12->m_onlineDescriptorHeap_->CanAllocate(
+      if (!commandBufferDx12->m_onlineDescriptorHeap_->canAllocate(
               NumOfDescriptor)) {
         const ID3D12DescriptorHeap* PrevDescriptorHeap
-            = commandBufferDx12->m_onlineDescriptorHeap_->GetHeap();
+            = commandBufferDx12->m_onlineDescriptorHeap_->getHeap();
 
-        commandBufferDx12->m_onlineDescriptorHeap_->Release();
+        commandBufferDx12->m_onlineDescriptorHeap_->release();
         commandBufferDx12->m_onlineDescriptorHeap_
             = ((RhiDx12*)this)
-                  ->m_onlineDescriptorHeapManager_.Alloc(
+                  ->m_onlineDescriptorHeapManager_.alloc(
                       EDescriptorHeapTypeDX12::CBV_SRV_UAV);
-        assert(commandBufferDx12->m_onlineDescriptorHeap_->CanAllocate(
+        assert(commandBufferDx12->m_onlineDescriptorHeap_->canAllocate(
             NumOfDescriptor));
 
         if (PrevDescriptorHeap
-            != commandBufferDx12->m_onlineDescriptorHeap_->GetHeap()) {
+            != commandBufferDx12->m_onlineDescriptorHeap_->getHeap()) {
           NeedSetDescriptorHeapsAgain = true;
         }
       }
@@ -988,22 +988,22 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
       // Check if the sampler descriptor is sufficient, if not, allocate a new
       // one.
       const ID3D12DescriptorHeap* PrevOnlineSamplerDescriptorHeap
-          = commandBufferDx12->m_onlineDescriptorHeap_->GetHeap();
-      if (!commandBufferDx12->m_onlineSamplerDescriptorHeap_->CanAllocate(
+          = commandBufferDx12->m_onlineDescriptorHeap_->getHeap();
+      if (!commandBufferDx12->m_onlineSamplerDescriptorHeap_->canAllocate(
               NumOfSamplerDescriptor)) {
         const ID3D12DescriptorHeap* PrevDescriptorHeap
-            = commandBufferDx12->m_onlineSamplerDescriptorHeap_->GetHeap();
+            = commandBufferDx12->m_onlineSamplerDescriptorHeap_->getHeap();
 
-        commandBufferDx12->m_onlineSamplerDescriptorHeap_->Release();
+        commandBufferDx12->m_onlineSamplerDescriptorHeap_->release();
         commandBufferDx12->m_onlineSamplerDescriptorHeap_
             = ((RhiDx12*)this)
-                  ->m_onlineDescriptorHeapManager_.Alloc(
+                  ->m_onlineDescriptorHeapManager_.alloc(
                       EDescriptorHeapTypeDX12::SAMPLER);
-        assert(commandBufferDx12->m_onlineSamplerDescriptorHeap_->CanAllocate(
+        assert(commandBufferDx12->m_onlineSamplerDescriptorHeap_->canAllocate(
             NumOfSamplerDescriptor));
 
         if (PrevDescriptorHeap
-            != commandBufferDx12->m_onlineSamplerDescriptorHeap_->GetHeap()) {
+            != commandBufferDx12->m_onlineSamplerDescriptorHeap_->getHeap()) {
           NeedSetDescriptorHeapsAgain = true;
         }
       }
@@ -1018,8 +1018,8 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
         if (commandBufferDx12->m_onlineDescriptorHeap_
             && commandBufferDx12->m_onlineSamplerDescriptorHeap_) {
           ID3D12DescriptorHeap* ppHeaps[]
-              = {commandBufferDx12->m_onlineDescriptorHeap_->GetHeap(),
-                 commandBufferDx12->m_onlineSamplerDescriptorHeap_->GetHeap()};
+              = {commandBufferDx12->m_onlineDescriptorHeap_->getHeap(),
+                 commandBufferDx12->m_onlineSamplerDescriptorHeap_->getHeap()};
           commandBufferDx12->m_commandList_->SetDescriptorHeaps(_countof(ppHeaps),
                                                              ppHeaps);
         }
@@ -1027,12 +1027,12 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
     }
 
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUDescriptorHandle
-        = commandBufferDx12->m_onlineDescriptorHeap_->GetGPUHandle(
-            commandBufferDx12->m_onlineDescriptorHeap_->GetNumOfAllocated());
+        = commandBufferDx12->m_onlineDescriptorHeap_->getGPUHandle(
+            commandBufferDx12->m_onlineDescriptorHeap_->getNumOfAllocated());
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUSamplerDescriptorHandle
-        = commandBufferDx12->m_onlineSamplerDescriptorHeap_->GetGPUHandle(
+        = commandBufferDx12->m_onlineSamplerDescriptorHeap_->getGPUHandle(
             commandBufferDx12->m_onlineSamplerDescriptorHeap_
-                ->GetNumOfAllocated());
+                ->getNumOfAllocated());
 
     for (int32_t i = 0; i < m_shaderBindingInstanceArray.m_numOfData_; ++i) {
       ShaderBindingInstanceDx12* Instance
@@ -1040,8 +1040,8 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
       ShaderBindingLayoutDx12* Layout
           = (ShaderBindingLayoutDx12*)(Instance->m_shaderBindingsLayouts_);
 
-      Instance->CopyToOnlineDescriptorHeap(commandBufferDx12);
-      Instance->BindGraphics(commandBufferDx12, RootParameterIndex);
+      Instance->copyToOnlineDescriptorHeap(commandBufferDx12);
+      Instance->bindGraphics(commandBufferDx12, RootParameterIndex);
     }
 
     // DescriptorTable is always bound last.
@@ -1061,7 +1061,7 @@ void RhiDx12::BindGraphicsShaderBindingInstances(
   }
 }
 
-void RhiDx12::BindComputeShaderBindingInstances(
+void RhiDx12::bindComputeShaderBindingInstances(
     const CommandBuffer*                 commandBuffer,
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
@@ -1074,7 +1074,7 @@ void RhiDx12::BindComputeShaderBindingInstances(
     const ShaderBindingInstanceArray& m_shaderBindingInstanceArray
         = *(shaderBindingInstanceCombiner.m_shaderBindingInstanceArray);
     commandBufferDx12->m_commandList_->SetComputeRootSignature(
-        ShaderBindingLayoutDx12::CreateRootSignature(
+        ShaderBindingLayoutDx12::s_createRootSignature(
             m_shaderBindingInstanceArray));
 
     int32_t RootParameterIndex   = 0;
@@ -1082,12 +1082,12 @@ void RhiDx12::BindComputeShaderBindingInstances(
     bool    HasSamplerDescriptor = false;
 
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUDescriptorHandle
-        = commandBufferDx12->m_onlineDescriptorHeap_->GetGPUHandle(
-            commandBufferDx12->m_onlineDescriptorHeap_->GetNumOfAllocated());
+        = commandBufferDx12->m_onlineDescriptorHeap_->getGPUHandle(
+            commandBufferDx12->m_onlineDescriptorHeap_->getNumOfAllocated());
     const D3D12_GPU_DESCRIPTOR_HANDLE FirstGPUSamplerDescriptorHandle
-        = commandBufferDx12->m_onlineSamplerDescriptorHeap_->GetGPUHandle(
+        = commandBufferDx12->m_onlineSamplerDescriptorHeap_->getGPUHandle(
             commandBufferDx12->m_onlineSamplerDescriptorHeap_
-                ->GetNumOfAllocated());
+                ->getNumOfAllocated());
 
     for (int32_t i = 0; i < m_shaderBindingInstanceArray.m_numOfData_; ++i) {
       ShaderBindingInstanceDx12* Instance
@@ -1095,12 +1095,12 @@ void RhiDx12::BindComputeShaderBindingInstances(
       ShaderBindingLayoutDx12* Layout
           = (ShaderBindingLayoutDx12*)(Instance->m_shaderBindingsLayouts_);
 
-      Instance->CopyToOnlineDescriptorHeap(commandBufferDx12);
+      Instance->copyToOnlineDescriptorHeap(commandBufferDx12);
 
       HasDescriptor        |= Instance->m_descriptors_.size() > 0;
       HasSamplerDescriptor |= Instance->m_samplerDescriptors_.size() > 0;
 
-      Instance->BindCompute(commandBufferDx12, RootParameterIndex);
+      Instance->bindCompute(commandBufferDx12, RootParameterIndex);
     }
 
     // DescriptorTable is always bound last.
@@ -1120,29 +1120,29 @@ void RhiDx12::BindComputeShaderBindingInstances(
   }
 }
 
-void RhiDx12::BindRaytracingShaderBindingInstances(
+void RhiDx12::bindRaytracingShaderBindingInstances(
     const CommandBuffer*                 commandBuffer,
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
     uint32_t                             firstSet) const {
-  BindComputeShaderBindingInstances(commandBuffer,
+  bindComputeShaderBindingInstances(commandBuffer,
                                     piplineState,
                                     shaderBindingInstanceCombiner,
                                     firstSet);
 }
 
-std::shared_ptr<VertexBuffer> RhiDx12::CreateVertexBuffer(
+std::shared_ptr<VertexBuffer> RhiDx12::createVertexBuffer(
     const std::shared_ptr<VertexStreamData>& streamData) const {
   if (!streamData) {
     return nullptr;
   }
 
   auto vertexBufferPtr = std::make_shared<VertexBufferDx12>();
-  vertexBufferPtr->Initialize(streamData);
+  vertexBufferPtr->initialize(streamData);
   return vertexBufferPtr;
 }
 
-std::shared_ptr<IndexBuffer> RhiDx12::CreateIndexBuffer(
+std::shared_ptr<IndexBuffer> RhiDx12::createIndexBuffer(
     const std::shared_ptr<IndexStreamData>& streamData) const {
   if (!streamData) {
     return nullptr;
@@ -1152,11 +1152,11 @@ std::shared_ptr<IndexBuffer> RhiDx12::CreateIndexBuffer(
   assert(streamData->m_stream_);
 
   auto indexBufferPtr = std::make_shared<IndexBufferDx12>();
-  indexBufferPtr->Initialize(streamData);
+  indexBufferPtr->initialize(streamData);
   return indexBufferPtr;
 }
 
-std::shared_ptr<Texture> RhiDx12::Create2DTexture(
+std::shared_ptr<Texture> RhiDx12::create2DTexture(
     uint32_t             witdh,
     uint32_t             height,
     uint32_t             arrayLayers,
@@ -1167,7 +1167,7 @@ std::shared_ptr<Texture> RhiDx12::Create2DTexture(
     const ImageBulkData& imageBulkData,
     const RTClearValue&  clearValue,
     const wchar_t*       resourceName) const {
-  auto TexturePtr = CreateTexture(witdh,
+  auto TexturePtr = g_createTexture(witdh,
                                   height,
                                   arrayLayers,
                                   mipLevels,
@@ -1180,7 +1180,7 @@ std::shared_ptr<Texture> RhiDx12::Create2DTexture(
                                   resourceName);
   if (imageBulkData.m_imageData_.size() > 0) {
     // TODO: recycle temp buffer
-    auto BufferPtr = CreateBuffer(imageBulkData.m_imageData_.size(),
+    auto BufferPtr = g_createBuffer(imageBulkData.m_imageData_.size(),
                                   0,
                                   EBufferCreateFlag::CPUAccess,
                                   EResourceLayout::READ_ONLY,
@@ -1188,25 +1188,25 @@ std::shared_ptr<Texture> RhiDx12::Create2DTexture(
                                   imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
-    CommandBufferDx12* commandList = BeginSingleTimeCopyCommands();
+    CommandBufferDx12* commandList = beginSingleTimeCopyCommands();
     if (imageBulkData.m_subresourceFootprints_.size() > 0) {
-      CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->m_buffer->Get(),
-                          TexturePtr->m_texture->Get(),
+      g_copyBufferToTexture(commandList->get(),
+                          BufferPtr->m_buffer->get(),
+                          TexturePtr->m_texture->get(),
                           imageBulkData.m_subresourceFootprints_);
     } else {
-      CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->m_buffer->Get(),
+      g_copyBufferToTexture(commandList->get(),
+                          BufferPtr->m_buffer->get(),
                           0,
-                          TexturePtr->m_texture->Get());
+                          TexturePtr->m_texture->get());
     }
 
-    EndSingleTimeCopyCommands(commandList);
+    endSingleTimeCopyCommands(commandList);
   }
   return TexturePtr;
 }
 
-std::shared_ptr<Texture> RhiDx12::CreateCubeTexture(
+std::shared_ptr<Texture> RhiDx12::createCubeTexture(
     uint32_t             witdh,
     uint32_t             height,
     uint32_t             mipLevels,
@@ -1216,7 +1216,7 @@ std::shared_ptr<Texture> RhiDx12::CreateCubeTexture(
     const ImageBulkData& imageBulkData,
     const RTClearValue&  clearValue,
     const wchar_t*       resourceName) const {
-  auto TexturePtr = CreateTexture(witdh,
+  auto TexturePtr = g_createTexture(witdh,
                                   height,
                                   6,
                                   mipLevels,
@@ -1229,7 +1229,7 @@ std::shared_ptr<Texture> RhiDx12::CreateCubeTexture(
                                   resourceName);
   if (imageBulkData.m_imageData_.size() > 0) {
     // TODO: recycle temp buffer
-    auto BufferPtr = CreateBuffer(imageBulkData.m_imageData_.size(),
+    auto BufferPtr = g_createBuffer(imageBulkData.m_imageData_.size(),
                                   0,
                                   EBufferCreateFlag::CPUAccess,
                                   EResourceLayout::READ_ONLY,
@@ -1237,75 +1237,75 @@ std::shared_ptr<Texture> RhiDx12::CreateCubeTexture(
                                   imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
-    CommandBufferDx12* commandList = BeginSingleTimeCopyCommands();
+    CommandBufferDx12* commandList = beginSingleTimeCopyCommands();
     if (imageBulkData.m_subresourceFootprints_.size() > 0) {
-      CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->m_buffer->Get(),
-                          TexturePtr->m_texture->Get(),
+      g_copyBufferToTexture(commandList->get(),
+                          BufferPtr->m_buffer->get(),
+                          TexturePtr->m_texture->get(),
                           imageBulkData.m_subresourceFootprints_);
     } else {
-      CopyBufferToTexture(commandList->Get(),
-                          BufferPtr->m_buffer->Get(),
+      g_copyBufferToTexture(commandList->get(),
+                          BufferPtr->m_buffer->get(),
                           0,
-                          TexturePtr->m_texture->Get());
+                          TexturePtr->m_texture->get());
     }
 
-    EndSingleTimeCopyCommands(commandList);
+    endSingleTimeCopyCommands(commandList);
   }
   return TexturePtr;
 }
 
-std::shared_ptr<ShaderBindingInstance> RhiDx12::CreateShaderBindingInstance(
+std::shared_ptr<ShaderBindingInstance> RhiDx12::createShaderBindingInstance(
     const ShaderBindingArray&       shaderBindingArray,
     const ShaderBindingInstanceType type) const {
-  auto shaderBindingsLayout = CreateShaderBindings(shaderBindingArray);
+  auto shaderBindingsLayout = createShaderBindings(shaderBindingArray);
   assert(shaderBindingsLayout);
-  return shaderBindingsLayout->CreateShaderBindingInstance(shaderBindingArray,
+  return shaderBindingsLayout->createShaderBindingInstance(shaderBindingArray,
                                                            type);
 }
 
-void RhiDx12::DrawArrays(
+void RhiDx12::drawArrays(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     int32_t                                    vertStartIndex,
     int32_t                                    vertCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawInstanced(
       vertCount, 1, vertStartIndex, 0);
 }
 
-void RhiDx12::DrawArraysInstanced(
+void RhiDx12::drawArraysInstanced(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     int32_t                                    vertStartIndex,
     int32_t                                    vertCount,
     int32_t                                    instanceCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawInstanced(
       vertCount, instanceCount, vertStartIndex, 0);
 }
 
-void RhiDx12::DrawElements(
+void RhiDx12::drawElements(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     int32_t                                    elementSize,
     int32_t                                    startIndex,
     int32_t                                    indexCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
       indexCount, 1, startIndex, 0, 0);
 }
 
-void RhiDx12::DrawElementsInstanced(
+void RhiDx12::drawElementsInstanced(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     int32_t                                    elementSize,
@@ -1313,14 +1313,14 @@ void RhiDx12::DrawElementsInstanced(
     int32_t                                    indexCount,
     int32_t                                    instanceCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
       indexCount, instanceCount, startIndex, 0, 0);
 }
 
-void RhiDx12::DrawElementsBaseVertex(
+void RhiDx12::drawElementsBaseVertex(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     int32_t                                    elementSize,
@@ -1328,14 +1328,14 @@ void RhiDx12::DrawElementsBaseVertex(
     int32_t                                    indexCount,
     int32_t                                    baseVertexIndex) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
       indexCount, 1, startIndex, baseVertexIndex, 0);
 }
 
-void RhiDx12::DrawElementsInstancedBaseVertex(
+void RhiDx12::drawElementsInstancedBaseVertex(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     int32_t                                    elementSize,
@@ -1344,46 +1344,46 @@ void RhiDx12::DrawElementsInstancedBaseVertex(
     int32_t                                    baseVertexIndex,
     int32_t                                    instanceCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
       indexCount, instanceCount, startIndex, baseVertexIndex, 0);
 }
 
-void RhiDx12::DrawIndirect(
+void RhiDx12::drawIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     Buffer*                                    buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   assert(0);
 }
 
-void RhiDx12::DrawElementsIndirect(
+void RhiDx12::drawElementsIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
     Buffer*                                    buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
 
   assert(0);
 }
 
-void RhiDx12::DispatchCompute(
+void RhiDx12::dispatchCompute(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     uint32_t                                   numGroupsX,
     uint32_t                                   numGroupsY,
     uint32_t                                   numGroupsZ) const {
   auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->GetActiveCommandBuffer();
+      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
   assert(commandBufferDx12);
   assert(commandBufferDx12->m_commandList_);
   assert(numGroupsX * numGroupsY * numGroupsZ > 0);
@@ -1391,7 +1391,7 @@ void RhiDx12::DispatchCompute(
   commandBufferDx12->m_commandList_->Dispatch(numGroupsX, numGroupsY, numGroupsZ);
 }
 
-std::shared_ptr<RenderTarget> RhiDx12::CreateRenderTarget(
+std::shared_ptr<RenderTarget> RhiDx12::createRenderTarget(
     const RenderTargetInfo& info) const {
   const uint16_t MipLevels
       = info.m_isGenerateMipmap_
@@ -1401,7 +1401,7 @@ std::shared_ptr<RenderTarget> RhiDx12::CreateRenderTarget(
           : 1;
 
   auto TexturePtr
-      = CreateTexture(info.m_extent_.width(),
+      = g_createTexture(info.m_extent_.width(),
                       info.m_extent_.height(),
                       info.m_layerCount_,
                       MipLevels,
@@ -1422,7 +1422,7 @@ std::shared_ptr<RenderTarget> RhiDx12::CreateRenderTarget(
   return RenderTargetPtr;
 }
 
-bool RhiDx12::TransitionLayout_Internal(CommandBuffer*        commandBuffer,
+bool RhiDx12::transitionLayoutInternal(CommandBuffer*        commandBuffer,
                                         ID3D12Resource*       resource,
                                         D3D12_RESOURCE_STATES srcLayout,
                                         D3D12_RESOURCE_STATES dstLayout) const {
@@ -1449,44 +1449,44 @@ bool RhiDx12::TransitionLayout_Internal(CommandBuffer*        commandBuffer,
   return true;
 }
 
-bool RhiDx12::TransitionLayout(CommandBuffer*  commandBuffer,
+bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
                                Texture*        texture,
                                EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(texture);
 
   auto       textureDx12 = (TextureDx12*)texture;
-  const auto SrcLayout   = GetDX12ResourceLayout(textureDx12->m_layout_);
-  const auto DstLayout   = GetDX12ResourceLayout(newLayout);
+  const auto SrcLayout   = g_getDX12ResourceLayout(textureDx12->m_layout_);
+  const auto DstLayout   = g_getDX12ResourceLayout(newLayout);
   if (SrcLayout == DstLayout) {
     return true;
   }
 
   textureDx12->m_layout_ = newLayout;
-  return TransitionLayout_Internal(
-      commandBuffer, textureDx12->m_texture->Get(), SrcLayout, DstLayout);
+  return transitionLayoutInternal(
+      commandBuffer, textureDx12->m_texture->get(), SrcLayout, DstLayout);
 }
 
-bool RhiDx12::TransitionLayoutImmediate(Texture*        texture,
+bool RhiDx12::transitionLayoutImmediate(Texture*        texture,
                                         EResourceLayout newLayout) const {
   assert(texture);
-  if (texture->GetLayout() != newLayout) {
+  if (texture->getLayout() != newLayout) {
     auto       textureDx12 = (TextureDx12*)texture;
-    const auto SrcLayout   = GetDX12ResourceLayout(textureDx12->m_layout_);
-    const auto DstLayout   = GetDX12ResourceLayout(newLayout);
+    const auto SrcLayout   = g_getDX12ResourceLayout(textureDx12->m_layout_);
+    const auto DstLayout   = g_getDX12ResourceLayout(newLayout);
     if (SrcLayout == DstLayout) {
       return true;
     }
 
-    CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
+    CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
     assert(commandBuffer);
 
     if (commandBuffer) {
-      const bool ret = TransitionLayout_Internal(
-          commandBuffer, textureDx12->m_texture->Get(), SrcLayout, DstLayout);
+      const bool ret = transitionLayoutInternal(
+          commandBuffer, textureDx12->m_texture->get(), SrcLayout, DstLayout);
       textureDx12->m_layout_ = newLayout;
 
-      EndSingleTimeCommands(commandBuffer);
+      endSingleTimeCommands(commandBuffer);
       return ret;
     }
   }
@@ -1494,7 +1494,7 @@ bool RhiDx12::TransitionLayoutImmediate(Texture*        texture,
   return false;
 }
 
-void RhiDx12::UAVBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
+void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
   assert(commandBuffer);
   auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
   auto texture_dx12      = (TextureDx12*)texture;
@@ -1502,12 +1502,12 @@ void RhiDx12::UAVBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
   uavBarrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-  uavBarrier.UAV.pResource          = texture_dx12->m_texture->Get();
+  uavBarrier.UAV.pResource          = texture_dx12->m_texture->get();
   assert(uavBarrier.UAV.pResource);
   commandBufferDx12->m_commandList_->ResourceBarrier(1, &uavBarrier);
 }
 
-void RhiDx12::UAVBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {
+void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {
   assert(commandBuffer);
   auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
   auto buffer_dx12       = (BufferDx12*)buffer;
@@ -1515,70 +1515,70 @@ void RhiDx12::UAVBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
   uavBarrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-  uavBarrier.UAV.pResource          = buffer_dx12->m_buffer->Get();
+  uavBarrier.UAV.pResource          = buffer_dx12->m_buffer->get();
   assert(uavBarrier.UAV.pResource);
   commandBufferDx12->m_commandList_->ResourceBarrier(1, &uavBarrier);
 }
 
-void RhiDx12::UAVBarrierImmediate(Texture* texture) const {
-  CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
+void RhiDx12::uavBarrierImmediate(Texture* texture) const {
+  CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
   assert(commandBuffer);
 
   if (commandBuffer) {
-    UAVBarrier(commandBuffer, texture);
-    EndSingleTimeCommands(commandBuffer);
+    uavBarrier(commandBuffer, texture);
+    endSingleTimeCommands(commandBuffer);
   }
 }
 
-void RhiDx12::UAVBarrierImmediate(Buffer* buffer) const {
-  CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
+void RhiDx12::uavBarrierImmediate(Buffer* buffer) const {
+  CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
   assert(commandBuffer);
 
   if (commandBuffer) {
-    UAVBarrier(commandBuffer, buffer);
-    EndSingleTimeCommands(commandBuffer);
+    uavBarrier(commandBuffer, buffer);
+    endSingleTimeCommands(commandBuffer);
   }
 }
 
-bool RhiDx12::TransitionLayout(CommandBuffer*  commandBuffer,
+bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
                                Buffer*         buffer,
                                EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(buffer);
-  assert(buffer->GetLayout() != newLayout);
+  assert(buffer->getLayout() != newLayout);
 
   auto       bufferDx12 = (BufferDx12*)buffer;
-  const auto SrcLayout  = GetDX12ResourceLayout(bufferDx12->m_layout_);
-  const auto DstLayout  = GetDX12ResourceLayout(newLayout);
+  const auto SrcLayout  = g_getDX12ResourceLayout(bufferDx12->m_layout_);
+  const auto DstLayout  = g_getDX12ResourceLayout(newLayout);
   if (SrcLayout == DstLayout) {
     return true;
   }
 
   bufferDx12->m_layout_ = newLayout;
-  return TransitionLayout_Internal(
-      commandBuffer, bufferDx12->m_buffer->Get(), SrcLayout, DstLayout);
+  return transitionLayoutInternal(
+      commandBuffer, bufferDx12->m_buffer->get(), SrcLayout, DstLayout);
 }
 
-bool RhiDx12::TransitionLayoutImmediate(Buffer*         buffer,
+bool RhiDx12::transitionLayoutImmediate(Buffer*         buffer,
                                         EResourceLayout newLayout) const {
   assert(buffer);
-  if (buffer->GetLayout() != newLayout) {
+  if (buffer->getLayout() != newLayout) {
     auto       bufferDx12 = (BufferDx12*)buffer;
-    const auto SrcLayout  = GetDX12ResourceLayout(bufferDx12->m_layout_);
-    const auto DstLayout  = GetDX12ResourceLayout(newLayout);
+    const auto SrcLayout  = g_getDX12ResourceLayout(bufferDx12->m_layout_);
+    const auto DstLayout  = g_getDX12ResourceLayout(newLayout);
     if (SrcLayout == DstLayout) {
       return true;
     }
 
-    CommandBufferDx12* commandBuffer = BeginSingleTimeCommands();
+    CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
     assert(commandBuffer);
 
     if (commandBuffer) {
-      const bool ret = TransitionLayout_Internal(
-          commandBuffer, bufferDx12->m_buffer->Get(), SrcLayout, DstLayout);
+      const bool ret = transitionLayoutInternal(
+          commandBuffer, bufferDx12->m_buffer->get(), SrcLayout, DstLayout);
       bufferDx12->m_layout_ = newLayout;
 
-      EndSingleTimeCommands(commandBuffer);
+      endSingleTimeCommands(commandBuffer);
       return ret;
     }
   }
@@ -1586,38 +1586,38 @@ bool RhiDx12::TransitionLayoutImmediate(Buffer*         buffer,
   return false;
 }
 
-// void RhiDx12::BeginDebugEvent(
+// void RhiDx12::beginDebugEvent(
 //     CommandBuffer* commandBuffer,
 //     const char*     name,
-//     const Vector4&  color /*= Vector4::ColorGreen*/) const {
+//     const Vector4&  color /*= Vector4::g_colorGreen*/) const {
 //   CommandBufferDx12* CommandList = (CommandBufferDx12*)commandBuffer;
 //   assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
-//   PIXBeginEvent(CommandList->Get(),
+//   PIXBeginEvent(CommandList->get(),
 //                 PIX_COLOR((BYTE)(255 * color.x),
 //                           (BYTE)(255 * color.y),
 //                           (BYTE)(255 * color.z)),
 //                 name);
 // }
 //
-// void RhiDx12::EndDebugEvent(CommandBuffer* commandBuffer) const {
+// void RhiDx12::endDebugEvent(CommandBuffer* commandBuffer) const {
 //   CommandBufferDx12* CommandList = (CommandBufferDx12*)commandBuffer;
 //   assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
-//   PIXEndEvent(CommandList->Get());
+//   PIXEndEvent(CommandList->get());
 // }
 
-void RhiDx12::Flush() const {
-  WaitForGPU();
+void RhiDx12::flush() const {
+  waitForGPU();
 }
 
-void RhiDx12::Finish() const {
-  WaitForGPU();
+void RhiDx12::finish() const {
+  waitForGPU();
 }
 
-std::shared_ptr<Buffer> RhiDx12::CreateStructuredBuffer(
+std::shared_ptr<Buffer> RhiDx12::createStructuredBuffer(
     uint64_t          size,
     uint64_t          alignment,
     uint64_t          stride,
@@ -1627,7 +1627,7 @@ std::shared_ptr<Buffer> RhiDx12::CreateStructuredBuffer(
     uint64_t          dataSize
     /*, const wchar_t*    resourceName*/) const {
   auto BufferPtr
-      = CreateBuffer(size,
+      = g_createBuffer(size,
                      stride,
                      bufferCreateFlag,
                      initialState,
@@ -1636,18 +1636,18 @@ std::shared_ptr<Buffer> RhiDx12::CreateStructuredBuffer(
                      // TODO: consider why using L prefix in string constant
                      TEXT(L"StructuredBuffer"));
 
-  CreateShaderResourceView_StructuredBuffer(
+  g_createShaderResourceViewStructuredBuffer(
       BufferPtr.get(), (uint32_t)stride, (uint32_t)(size / stride));
 
   if (!!(EBufferCreateFlag::UAV & bufferCreateFlag)) {
-    CreateUnorderedAccessView_StructuredBuffer(
+    g_createUnorderedAccessViewStructuredBuffer(
         BufferPtr.get(), (uint32_t)stride, (uint32_t)(size / stride));
   }
 
   return std::shared_ptr<Buffer>(BufferPtr);
 }
 
-std::shared_ptr<Buffer> RhiDx12::CreateRawBuffer(
+std::shared_ptr<Buffer> RhiDx12::createRawBuffer(
     uint64_t          size,
     uint64_t          alignment,
     EBufferCreateFlag bufferCreateFlag,
@@ -1655,7 +1655,7 @@ std::shared_ptr<Buffer> RhiDx12::CreateRawBuffer(
     const void*       data,
     uint64_t          dataSize
     /*, const wchar_t*    resourceName*/) const {
-  auto BufferPtr = CreateBuffer(size,
+  auto BufferPtr = g_createBuffer(size,
                                 alignment,
                                 bufferCreateFlag,
                                 initialState,
@@ -1663,16 +1663,16 @@ std::shared_ptr<Buffer> RhiDx12::CreateRawBuffer(
                                 dataSize,
                                 TEXT(L"RawBuffer"));
 
-  CreateShaderResourceView_Raw(BufferPtr.get(), (uint32_t)size);
+  g_createShaderResourceViewRaw(BufferPtr.get(), (uint32_t)size);
 
   if (!!(EBufferCreateFlag::UAV & bufferCreateFlag)) {
-    CreateUnorderedAccessView_Raw(BufferPtr.get(), (uint32_t)size);
+    g_createUnorderedAccessViewRaw(BufferPtr.get(), (uint32_t)size);
   }
 
   return BufferPtr;
 }
 
-std::shared_ptr<Buffer> RhiDx12::CreateFormattedBuffer(
+std::shared_ptr<Buffer> RhiDx12::createFormattedBuffer(
     uint64_t          size,
     uint64_t          alignment,
     ETextureFormat    format,
@@ -1681,7 +1681,7 @@ std::shared_ptr<Buffer> RhiDx12::CreateFormattedBuffer(
     const void*       data,
     uint64_t          dataSize
     /*, const wchar_t*    resourceName*/) const {
-  auto BufferPtr = CreateBuffer(size,
+  auto BufferPtr = g_createBuffer(size,
                                 alignment,
                                 bufferCreateFlag,
                                 initialState,
@@ -1689,23 +1689,23 @@ std::shared_ptr<Buffer> RhiDx12::CreateFormattedBuffer(
                                 dataSize,
                                 TEXT(L"FormattedBuffer"));
 
-  CreateShaderResourceView_Formatted(BufferPtr.get(), format, (uint32_t)size);
+  g_createShaderResourceViewFormatted(BufferPtr.get(), format, (uint32_t)size);
 
   if (!!(EBufferCreateFlag::UAV & bufferCreateFlag)) {
-    CreateUnorderedAccessView_Formatted(
+    g_createUnorderedAccessViewFormatted(
         BufferPtr.get(), format, (uint32_t)size);
   }
 
   return BufferPtr;
 }
 
-bool RhiDx12::IsSupportVSync() const {
+bool RhiDx12::isSupportVSync() const {
   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // PlacedResourcePool
-void PlacedResourcePool::Init() {
+void PlacedResourcePool::init() {
   // The allocator should be able to allocate memory larger than the
   // PlacedResourceSizeThreshold.
   assert(g_rhi_dx12->s_kPlacedResourceSizeThreshold
@@ -1715,17 +1715,17 @@ void PlacedResourcePool::Init() {
   // TODO: consider remove nested smart pointers (probably need changes in
   // DeallocatorMultiFrameResource)
   g_rhi_dx12->m_deallocatorMultiFramePlacedResource_.m_freeDelegate_ = std::bind(
-      &PlacedResourcePool::FreedFromPendingDelegateForCreatedResource,
+      &PlacedResourcePool::freedFromPendingDelegateForCreatedResource,
       this,
       std::placeholders::_1);
 }
 
-void PlacedResourcePool::Release() {
+void PlacedResourcePool::release() {
   assert(g_rhi_dx12);
   g_rhi_dx12->m_deallocatorMultiFramePlacedResource_.m_freeDelegate_ = nullptr;
 }
 
-void PlacedResourcePool::Free(const ComPtr<ID3D12Resource>& data) {
+void PlacedResourcePool::free(const ComPtr<ID3D12Resource>& data) {
   if (!data) {
     return;
   }
@@ -1735,7 +1735,7 @@ void PlacedResourcePool::Free(const ComPtr<ID3D12Resource>& data) {
 
     auto it_find = m_usingPlacedResources_.find(data.Get());
     if (m_usingPlacedResources_.end() != it_find) {
-      auto& PendingList = GetPendingPlacedResources(
+      auto& PendingList = getPendingPlacedResources(
           it_find->second.m_isUploadResource_, it_find->second.m_size_);
       PendingList.push_back(it_find->second);
       m_usingPlacedResources_.erase(it_find);

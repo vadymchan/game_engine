@@ -49,8 +49,8 @@ class Renderer {
 
   virtual ~Renderer() {}
 
-  virtual void Setup() {
-    m_frameIndex_            = g_rhi->GetCurrentFrameIndex();
+  virtual void setup() {
+    m_frameIndex_            = g_rhi->getCurrentFrameIndex();
     m_useForwardRenderer_ = m_renderFrameContextPtr_->m_useForwardRenderer_;
 
     // view.ShadowCasterLights.reserve(view.Lights.size());
@@ -67,7 +67,7 @@ class Renderer {
 
     //    viewLight.m_shaderBindingInstance
     //        = viewLight.Light->PrepareShaderBindingInstance(
-    //            viewLight.ShadowMapPtr ? viewLight.ShadowMapPtr->GetTexture()
+    //            viewLight.ShadowMapPtr ? viewLight.ShadowMapPtr->getTexture()
     //                                   : nullptr);
 
     //    if (viewLight.Light->IsShadowCaster) {
@@ -84,20 +84,20 @@ class Renderer {
         = std::async(std::launch::async, &Renderer::SetupShadowPass, this);
 #else
     // TODO: shadow pass setup before base pass
-    Renderer::SetupBasePass();
+    Renderer::setupBasePass();
 #endif
   }
 
-  void SetupBasePass() {
+  void setupBasePass() {
     const auto& screenWidth  = m_window_->getSize().width();
     const auto& screenHeight = m_window_->getSize().height();
 
     // Prepare basepass pipeline
     // TODO: refactor code to create RasterizationState
-    RasterizationStateInfo* RasterizationState = nullptr;
-    switch (g_rhi->GetSelectedMSAASamples()) {
+    RasterizationStateInfo* rasterizationState = nullptr;
+    switch (g_rhi->getSelectedMSAASamples()) {
       case EMSAASamples::COUNT_1:
-        RasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
+        rasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
                                                      ECullMode::BACK,
                                                      EFrontFace::CCW,
                                                      false,
@@ -111,10 +111,10 @@ class Renderer {
                                                      true,
                                                      0.2f,
                                                      false,
-                                                     false>::Create();
+                                                     false>::s_create();
         break;
       case EMSAASamples::COUNT_2:
-        RasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
+        rasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
                                                      ECullMode::BACK,
                                                      EFrontFace::CCW,
                                                      false,
@@ -128,10 +128,10 @@ class Renderer {
                                                      true,
                                                      0.2f,
                                                      false,
-                                                     false>::Create();
+                                                     false>::s_create();
         break;
       case EMSAASamples::COUNT_4:
-        RasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
+        rasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
                                                      ECullMode::BACK,
                                                      EFrontFace::CCW,
                                                      false,
@@ -145,10 +145,10 @@ class Renderer {
                                                      true,
                                                      0.2f,
                                                      false,
-                                                     false>::Create();
+                                                     false>::s_create();
         break;
       case EMSAASamples::COUNT_8:
-        RasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
+        rasterizationState = TRasterizationStateInfo<EPolygonMode::FILL,
                                                      ECullMode::BACK,
                                                      EFrontFace::CCW,
                                                      false,
@@ -162,7 +162,7 @@ class Renderer {
                                                      true,
                                                      0.2f,
                                                      false,
-                                                     false>::Create();
+                                                     false>::s_create();
         break;
       default:
         assert(0);
@@ -175,7 +175,7 @@ class Renderer {
                                                     false,
                                                     false,
                                                     0.0f,
-                                                    1.0f>::Create();
+                                                    1.0f>::s_create();
     auto BlendingState     = TBlendingStateInfo<false,
                                             EBlendFactor::ONE,
                                             EBlendFactor::ZERO,
@@ -183,10 +183,10 @@ class Renderer {
                                             EBlendFactor::ONE,
                                             EBlendFactor::ZERO,
                                             EBlendOp::ADD,
-                                            EColorMask::ALL>::Create();
+                                            EColorMask::ALL>::s_create();
 
     PipelineStateFixedInfo BasePassPipelineStateFixed = PipelineStateFixedInfo(
-        RasterizationState,
+        rasterizationState,
         DepthStencilState,
         BlendingState,
         Viewport(0.0f, 0.0f, (float)screenWidth, (float)screenHeight),
@@ -203,10 +203,10 @@ class Renderer {
     //                         EBlendFactor::ONE,
     //                         EBlendFactor::ZERO,
     //                         EBlendOp::ADD,
-    //                         EColorMask::ALL>::Create();
+    //                         EColorMask::ALL>::s_create();
     // PipelineStateFixedInfo TranslucentPassPipelineStateFixed
     //    = PipelineStateFixedInfo(
-    //        RasterizationState,
+    //        rasterizationState,
     //        DepthStencilState,
     //        TranslucentBlendingState,
     //        Viewport(0.0f, 0.0f, (float)screenWidth, (float)screenHeight),
@@ -227,7 +227,7 @@ class Renderer {
     Attachment resolve;
 
     if (m_useForwardRenderer_) {
-      if ((int32_t)g_rhi->GetSelectedMSAASamples() > 1) {
+      if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
         resolve = Attachment(
             m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_resolvePtr_,
             EAttachmentLoadStoreOp::DONTCARE_STORE,
@@ -282,17 +282,17 @@ class Renderer {
     const int32_t ResolveAttachemntIndex
         = (int32_t)renderPassInfo.m_attachments_.size();
     if (m_useForwardRenderer_) {
-      if ((int32_t)g_rhi->GetSelectedMSAASamples() > 1) {
+      if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
         renderPassInfo.m_attachments_.push_back(resolve);
       }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // Setup subpass of BasePass
+    // Setup subpass of basePass
     {
       // First subpass, Geometry pass
       Subpass subpass;
-      subpass.Initialize(0,
+      subpass.initialize(0,
                          1,
                          EPipelineStageMask::COLOR_ATTACHMENT_OUTPUT_BIT,
                          EPipelineStageMask::FRAGMENT_SHADER_BIT);
@@ -308,7 +308,7 @@ class Renderer {
 
       subpass.m_outputDepthAttachment_ = DepthAttachmentIndex;
       if (m_useForwardRenderer_) {
-        if ((int32_t)g_rhi->GetSelectedMSAASamples() > 1) {
+        if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
           subpass.m_outputResolveAttachment_ = ResolveAttachemntIndex;
         }
       }
@@ -318,7 +318,7 @@ class Renderer {
     // if (!UseForwardRenderer && gOptions.UseSubpass) {
     //   // Second subpass, Lighting pass
     //   Subpass subpass;
-    //   subpass.Initialize(1,
+    //   subpass.initialize(1,
     //                      2,
     //                      EPipelineStageMask::COLOR_ATTACHMENT_OUTPUT_BIT,
     //                      EPipelineStageMask::FRAGMENT_SHADER_BIT);
@@ -331,14 +331,14 @@ class Renderer {
     //  subpass.OutputColorAttachments.push_back(LightPassAttachmentIndex);
     //  subpass.OutputDepthAttachment = DepthAttachmentIndex;
 
-    //  if ((int32_t)g_rhi->GetSelectedMSAASamples() > 1) {
+    //  if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
     //    subpass.OutputResolveAttachment = ResolveAttachemntIndex;
     //  }
 
     //  renderPassInfo.Subpasses.push_back(subpass);
     //}
     //////////////////////////////////////////////////////////////////////////
-    m_baseRenderPass_ = (RenderPass*)g_rhi->GetOrCreateRenderPass(
+    m_baseRenderPass_ = (RenderPass*)g_rhi->getOrCreateRenderPass(
         renderPassInfo, {0, 0}, {screenWidth, screenHeight});
 
     auto GetOrCreateShaderFunc = [UseForwardRenderer
@@ -347,87 +347,87 @@ class Renderer {
       GraphicsPipelineShader Shaders;
       ShaderInfo             shaderInfo;
 
-      if (renderObject->HasInstancing()) {
+      if (renderObject->hasInstancing()) {
         assert(UseForwardRenderer);
 
         ShaderInfo shaderInfo;
-        shaderInfo.SetName(NameStatic("default_instancing_testVS"));
-        shaderInfo.SetShaderFilepath(NameStatic(
+        shaderInfo.setName(NameStatic("default_instancing_testVS"));
+        shaderInfo.setShaderFilepath(NameStatic(
             "assets/shaders/forward_rendering/shader_instancing.vs.hlsl"));
-        shaderInfo.SetShaderType(EShaderAccessStageFlag::VERTEX);
-        Shaders.m_vertexShader_ = g_rhi->CreateShader(shaderInfo);
+        shaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+        Shaders.m_vertexShader_ = g_rhi->createShader(shaderInfo);
 
-        shaderInfo.SetName(NameStatic("default_instancing_testPS"));
-        shaderInfo.SetShaderFilepath(
+        shaderInfo.setName(NameStatic("default_instancing_testPS"));
+        shaderInfo.setShaderFilepath(
             NameStatic("assets/shaders/forward_rendering/shader.ps.hlsl"));
-        shaderInfo.SetShaderType(EShaderAccessStageFlag::FRAGMENT);
-        Shaders.m_pixelShader_ = g_rhi->CreateShader(shaderInfo);
+        shaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
+        Shaders.m_pixelShader_ = g_rhi->createShader(shaderInfo);
         return Shaders;
       }
 
       if (UseForwardRenderer) {
-        shaderInfo.SetName(NameStatic("default_testVS"));
-        shaderInfo.SetShaderFilepath(
+        shaderInfo.setName(NameStatic("default_testVS"));
+        shaderInfo.setShaderFilepath(
             // NameStatic("assets/shaders/forward_rendering/shader.vs.hlsl"));
             NameStatic("assets/shaders/demo/first_triangle.vs.hlsl"));
-        shaderInfo.SetShaderType(EShaderAccessStageFlag::VERTEX);
-        Shaders.m_vertexShader_ = g_rhi->CreateShader(shaderInfo);
+        shaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+        Shaders.m_vertexShader_ = g_rhi->createShader(shaderInfo);
 
         ShaderForwardPixelShader::ShaderPermutation ShaderPermutation;
         /*ShaderPermutation
-            .SetIndex<ShaderForwardPixelShader::USE_VARIABLE_SHADING_RATE>(
+            .setIndex<ShaderForwardPixelShader::USE_VARIABLE_SHADING_RATE>(
                 USE_VARIABLE_SHADING_RATE_TIER2);*/
-        ShaderPermutation.SetIndex<ShaderForwardPixelShader::USE_REVERSEZ>(
+        ShaderPermutation.setIndex<ShaderForwardPixelShader::USE_REVERSEZ>(
             USE_REVERSEZ_PERSPECTIVE_SHADOW);
         Shaders.m_pixelShader_
             = ShaderForwardPixelShader::CreateShader(ShaderPermutation);
       } else {
         const bool IsUseSphericalMap
             = renderObject->m_materialPtr_
-           && renderObject->m_materialPtr_->IsUseSphericalMap();
-        const bool HasAlbedoTexture
+           && renderObject->m_materialPtr_->isUseSphericalMap();
+        const bool hasAlbedoTexture
             = renderObject->m_materialPtr_
-           && renderObject->m_materialPtr_->HasAlbedoTexture();
-        const bool IsUseSRGBAlbedoTexture
+           && renderObject->m_materialPtr_->hasAlbedoTexture();
+        const bool isUseSRGBAlbedoTexture
             = renderObject->m_materialPtr_
-           && renderObject->m_materialPtr_->IsUseSRGBAlbedoTexture();
+           && renderObject->m_materialPtr_->isUseSRGBAlbedoTexture();
         const bool HasVertexColor
             = renderObject->m_geometryDataPtr_
-           && renderObject->m_geometryDataPtr_->HasVertexColor();
+           && renderObject->m_geometryDataPtr_->hasVertexColor();
         const bool HasVertexBiTangent
             = renderObject->m_geometryDataPtr_
-           && renderObject->m_geometryDataPtr_->HasVertexBiTangent();
+           && renderObject->m_geometryDataPtr_->hasVertexBiTangent();
 
         ShaderGBufferVertexShader::ShaderPermutation ShaderPermutationVS;
         ShaderPermutationVS
-            .SetIndex<ShaderGBufferVertexShader::USE_VERTEX_COLOR>(
+            .setIndex<ShaderGBufferVertexShader::USE_VERTEX_COLOR>(
                 HasVertexColor);
         ShaderPermutationVS
-            .SetIndex<ShaderGBufferVertexShader::USE_VERTEX_BITANGENT>(
+            .setIndex<ShaderGBufferVertexShader::USE_VERTEX_BITANGENT>(
                 HasVertexBiTangent);
         ShaderPermutationVS
-            .SetIndex<ShaderGBufferVertexShader::USE_ALBEDO_TEXTURE>(
-                HasAlbedoTexture);
+            .setIndex<ShaderGBufferVertexShader::USE_ALBEDO_TEXTURE>(
+                hasAlbedoTexture);
         ShaderPermutationVS
-            .SetIndex<ShaderGBufferVertexShader::USE_SPHERICAL_MAP>(
+            .setIndex<ShaderGBufferVertexShader::USE_SPHERICAL_MAP>(
                 IsUseSphericalMap);
         Shaders.m_vertexShader_
             = ShaderGBufferVertexShader::CreateShader(ShaderPermutationVS);
 
         ShaderGBufferPixelShader::ShaderPermutation ShaderPermutationPS;
         ShaderPermutationPS
-            .SetIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
+            .setIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
                 HasVertexColor);
         ShaderPermutationPS
-            .SetIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
-                HasAlbedoTexture);
+            .setIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
+                hasAlbedoTexture);
         ShaderPermutationPS
-            .SetIndex<ShaderGBufferPixelShader::USE_SRGB_ALBEDO_TEXTURE>(
-                IsUseSRGBAlbedoTexture);
+            .setIndex<ShaderGBufferPixelShader::USE_SRGB_ALBEDO_TEXTURE>(
+                isUseSRGBAlbedoTexture);
         // ShaderPermutationPS
-        //     .SetIndex<ShaderGBufferPixelShader::USE_VARIABLE_SHADING_RATE>(
+        //     .setIndex<ShaderGBufferPixelShader::USE_VARIABLE_SHADING_RATE>(
         //         USE_VARIABLE_SHADING_RATE_TIER2);
-        ShaderPermutationPS.SetIndex<ShaderGBufferPixelShader::USE_PBR>(
+        ShaderPermutationPS.setIndex<ShaderGBufferPixelShader::USE_PBR>(
             ENABLE_PBR);
         Shaders.m_pixelShader_
             = ShaderGBufferPixelShader::CreateShader(ShaderPermutationPS);
@@ -439,20 +439,20 @@ class Renderer {
     // ShaderInfo             shaderInfo;
     // GraphicsPipelineShader TranslucentPassShader;
     //{
-    //  shaderInfo.SetName(NameStatic("default_testVS"));
-    //  shaderInfo.SetShaderFilepath(
+    //  shaderInfo.setName(NameStatic("default_testVS"));
+    //  shaderInfo.setShaderFilepath(
     //      NameStatic("assets/shaders/deferred_rendering/gbuffer.vs.hlsl"));
     //      //NameStatic("assets/shaders/demo/first_triangle.vs.hlsl"));
-    //  shaderInfo.SetShaderType(EShaderAccessStageFlag::VERTEX);
-    //  TranslucentPassShader.m_vertexShader_ = g_rhi->CreateShader(shaderInfo);
+    //  shaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+    //  TranslucentPassShader.m_vertexShader_ = g_rhi->createShader(shaderInfo);
 
     //  ShaderGBufferPixelShader::ShaderPermutation ShaderPermutation;
-    //  ShaderPermutation.SetIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
+    //  ShaderPermutation.setIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
     //      0);
-    //  ShaderPermutation.SetIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
+    //  ShaderPermutation.setIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
     //      1);
     //  //ShaderPermutation
-    //  //    .SetIndex<ShaderGBufferPixelShader::USE_VARIABLE_SHADING_RATE>(
+    //  //    .setIndex<ShaderGBufferPixelShader::USE_VARIABLE_SHADING_RATE>(
     //  //        USE_VARIABLE_SHADING_RATE_TIER2);
     //  TranslucentPassShader.m_pixelShader_
     //      = ShaderGBufferPixelShader::CreateShader(ShaderPermutation);
@@ -463,7 +463,7 @@ class Renderer {
     // SimplePushConstantData.ShowGrid    = gOptions.ShowGrid;
 
     PushConstant* SimplePushConstant
-        = new (MemStack::Get()->Alloc<PushConstant>()) PushConstant(
+        = new (MemStack::get()->alloc<PushConstant>()) PushConstant(
             SimplePushConstantData, EShaderAccessStageFlag::FRAGMENT);
 
 #if PARALLELFOR_WITH_PASSSETUP
@@ -491,12 +491,12 @@ class Renderer {
                           material,
                           {},
                           SimplePushConstant);
-          BasePasses[index].PrepareToDraw(false);
+          BasePasses[index].prepareToDraw(false);
         });
 #else
-    m_basePasses_.resize(Object::GetStaticRenderObject().size());
+    m_basePasses_.resize(Object::s_getStaticRenderObject().size());
     int32_t i = 0;
-    for (auto iter : Object::GetStaticRenderObject()) {
+    for (auto iter : Object::s_getStaticRenderObject()) {
       Material* material = nullptr;
       if (iter->m_materialPtr_) {
         material = iter->m_materialPtr_.get();
@@ -515,13 +515,13 @@ class Renderer {
                                        material,
                                        {},
                                        SimplePushConstant);
-      m_basePasses_[i].PrepareToDraw(false);
+      m_basePasses_[i].prepareToDraw(false);
       ++i;
     }
 #endif
   }
 
-  virtual void BasePass() {
+  virtual void basePass() {
     const auto& screenWidth  = m_window_->getSize().width();
     const auto& screenHeight = m_window_->getSize().height();
 
@@ -531,11 +531,11 @@ class Renderer {
 
     {
       if (m_useForwardRenderer_) {
-        g_rhi->TransitionLayout(
-            m_renderFrameContextPtr_->GetActiveCommandBuffer(),
-            // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->GetTexture(),
+        g_rhi->transitionLayout(
+            m_renderFrameContextPtr_->getActiveCommandBuffer(),
+            // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->getTexture(),
             m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_finalColorPtr_
-                ->GetTexture(),
+                ->getTexture(),
             EResourceLayout::COLOR_ATTACHMENT);
         // TODO: worked for Vulkan
         // EResourceLayout::PRESENT_SRC);
@@ -545,10 +545,10 @@ class Renderer {
            i
            < std::size(RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer);
            ++i) {
-        g_rhi->TransitionLayout(
-            RenderFrameContextPtr->GetActiveCommandBuffer(),
+        g_rhi->transitionLayout(
+            RenderFrameContextPtr->getActiveCommandBuffer(),
             RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i]
-                ->GetTexture(),
+                ->getTexture(),
             EResourceLayout::COLOR_ATTACHMENT);
       }*/
       }
@@ -556,53 +556,53 @@ class Renderer {
       {
         auto NewLayout
             = m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
-                      ->GetTexture()
-                      ->IsDepthOnlyFormat()
+                      ->getTexture()
+                      ->isDepthOnlyFormat()
                 ? EResourceLayout::DEPTH_ATTACHMENT
                 : EResourceLayout::DEPTH_STENCIL_ATTACHMENT;
-        g_rhi->TransitionLayout(
-            m_renderFrameContextPtr_->GetActiveCommandBuffer(),
+        g_rhi->transitionLayout(
+            m_renderFrameContextPtr_->getActiveCommandBuffer(),
             m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
-                ->GetTexture(),
+                ->getTexture(),
             NewLayout);
       }
 
-      // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->GetActiveCommandBuffer());
+      // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->getActiveCommandBuffer());
       if (m_baseRenderPass_
-          && m_baseRenderPass_->BeginRenderPass(
-              m_renderFrameContextPtr_->GetActiveCommandBuffer())) {
+          && m_baseRenderPass_->beginRenderPass(
+              m_renderFrameContextPtr_->getActiveCommandBuffer())) {
         // Draw G-m_buffer : subpass 0
         for (const auto& command : m_basePasses_) {
-          command.Draw();
+          command.draw();
         }
 
         // TODO: not used for now
         // Draw Light : subpass 1
         /*if (!UseForwardRenderer && gOptions.UseSubpass) {
-          g_rhi->NextSubpass(
-              RenderFrameContextPtr->GetActiveCommandBuffer());
+          g_rhi->nextSubpass(
+              RenderFrameContextPtr->getActiveCommandBuffer());
           DeferredLightPass_TodoRefactoring(BaseRenderPass);
         }*/
 
-        m_baseRenderPass_->EndRenderPass();
+        m_baseRenderPass_->endRenderPass();
       }
     }
   }
 
-  virtual void Render() {
-    Setup();
+  virtual void render() {
+    setup();
 
-    BasePass();
+    basePass();
 
     // Queue submit to prepare scenecolor RT for postprocess
     // if (gOptions.QueueSubmitAfterBasePass) {
-    // RenderFrameContextPtr->GetActiveCommandBuffer()->End();
-    m_renderFrameContextPtr_->SubmitCurrentActiveCommandBuffer(
+    // RenderFrameContextPtr->getActiveCommandBuffer()->end();
+    m_renderFrameContextPtr_->submitCurrentActiveCommandBuffer(
         RenderFrameContext::BasePass);
-    // RenderFrameContextPtr->GetActiveCommandBuffer()->Begin();
+    // RenderFrameContextPtr->getActiveCommandBuffer()->begin();
     //}
 
-    g_rhi->IncrementFrameNumber();
+    g_rhi->incrementFrameNumber();
   }
 
   bool m_useForwardRenderer_ = true;

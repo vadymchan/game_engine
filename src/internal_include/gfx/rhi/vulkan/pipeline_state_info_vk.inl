@@ -26,7 +26,7 @@
 //    TComparisonFunc,
 //    TMinLOD,
 //    TMaxLOD,
-//    TTextureComparisonMode>::Create(math::Vector4Df BorderColor) {
+//    TTextureComparisonMode>::s_create(math::Vector4Df BorderColor) {
 //  static SamplerStateInfoVk* CachedInfo = nullptr;
 //  if (CachedInfo) {
 //    return CachedInfo;
@@ -46,8 +46,8 @@
 //  initializer.BorderColor            = BorderColor;
 //  initializer.MinLOD                 = TMinLOD;
 //  initializer.MaxLOD                 = TMaxLOD;
-//  initializer.GetHash();
-//  CachedInfo = g_rhi_vk->CreateSamplerState(initializer);
+//  initializer.s_getHash();
+//  CachedInfo = g_rhi_vk->createSamplerState(initializer);
 //  return CachedInfo;
 //}
 //
@@ -81,7 +81,7 @@
 //    TSampleShadingEnable,
 //    TMinSampleShading,
 //    TAlphaToCoverageEnable,
-//    TAlphaToOneEnable>::Create(std::optional<EMSAASamples> sampleCountOpt) {
+//    TAlphaToOneEnable>::s_create(std::optional<EMSAASamples> sampleCountOpt) {
 //  static RasterizationStateInfoVk* CachedInfo = nullptr;
 //  if (CachedInfo) {
 //    return CachedInfo;
@@ -105,9 +105,9 @@
 //  initializer.AlphaToCoverageEnable = TAlphaToCoverageEnable;
 //  initializer.AlphaToOneEnable      = TAlphaToOneEnable;
 //
-//  initializer.GetHash();
+//  initializer.s_getHash();
 //  // TODO: problem (should be in cpp)
-//  CachedInfo = g_rhi_vk->CreateRasterizationState(initializer);
+//  CachedInfo = g_rhi_vk->createRasterizationState(initializer);
 //  return CachedInfo;
 //}
 //
@@ -125,7 +125,7 @@
 //    TDepthBoundsTestEnable,
 //    TStencilTestEnable,
 //    TMinDepthBounds,
-//    TMaxDepthBounds>::Create(StencilOpStateInfoVk* Front,
+//    TMaxDepthBounds>::s_create(StencilOpStateInfoVk* Front,
 //                             StencilOpStateInfoVk* Back) {
 //  static DepthStencilStateInfoVk* CachedInfo = nullptr;
 //  if (CachedInfo) {
@@ -142,8 +142,8 @@
 //  initializer.Back                  = Back;
 //  initializer.MinDepthBounds        = TMinDepthBounds;
 //  initializer.MaxDepthBounds        = TMaxDepthBounds;
-//  initializer.GetHash();
-//  CachedInfo = g_rhi_vk->CreateDepthStencilState(initializer);
+//  initializer.s_getHash();
+//  CachedInfo = g_rhi_vk->createDepthStencilState(initializer);
 //  return CachedInfo;
 //}
 //
@@ -162,7 +162,7 @@
 //                                        TSrcAlpha,
 //                                        TDestAlpha,
 //                                        TAlphaBlendOp,
-//                                        TColorWriteMask>::Create() {
+//                                        TColorWriteMask>::s_create() {
 //  static BlendingStateInfoVk* CachedInfo = nullptr;
 //  if (CachedInfo) {
 //    return CachedInfo;
@@ -177,8 +177,8 @@
 //  initializer.DestAlpha      = TDestAlpha;
 //  initializer.AlphaBlendOp   = TAlphaBlendOp;
 //  initializer.ColorWriteMask = TColorWriteMask;
-//  initializer.GetHash();
-//  CachedInfo = g_rhi_vk->CreateBlendingState(initializer);
+//  initializer.s_getHash();
+//  CachedInfo = g_rhi_vk->createBlendingState(initializer);
 //  return CachedInfo;
 //}
 //

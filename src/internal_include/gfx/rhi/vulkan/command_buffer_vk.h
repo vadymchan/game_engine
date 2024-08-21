@@ -14,27 +14,27 @@ class CommandBufferVk : public CommandBuffer {
     // Clean-up code if needed
   }
 
-  virtual bool Begin() const override;
+  virtual bool begin() const override;
 
-  virtual bool End() const override;
+  virtual bool end() const override;
 
   // TODO: add flags parameter
-  virtual void Reset(/*VkCommandBufferResetFlags flags = 0*/) const override;
+  virtual void reset(/*VkCommandBufferResetFlags flags = 0*/) const override;
 
-  VkCommandBuffer& GetRef() { return m_commandBuffer_; }
+  VkCommandBuffer& getRef() { return m_commandBuffer_; }
 
-  virtual void* GetNativeHandle() const override {
+  virtual void* getNativeHandle() const override {
     return m_commandBuffer_;
   }
 
   // TODO: consider remove that
-  virtual void* GetFenceHandle() const override {
-    return m_fence_ ? m_fence_->GetHandle() : nullptr;
+  virtual void* getFenceHandle() const override {
+    return m_fence_ ? m_fence_->getHandle() : nullptr;
   }
 
-  virtual Fence* GetFence() const override { return m_fence_; }
+  virtual Fence* getFence() const override { return m_fence_; }
 
-  virtual void SetFence(Fence* fence) { m_fence_ = fence; }
+  virtual void setFence(Fence* fence) { m_fence_ = fence; }
 
   private:
   Fence*         m_fence_         = nullptr;

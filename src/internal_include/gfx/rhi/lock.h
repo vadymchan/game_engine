@@ -20,35 +20,35 @@ namespace game_engine {
 
 class MutexLock {
   public:
-  void Lock() { m_lock_.lock(); }
+  void lock() { m_lock_.lock(); }
 
-  void Unlock() { m_lock_.unlock(); }
+  void unlock() { m_lock_.unlock(); }
 
   std::mutex m_lock_;
 };
 
 // class RWLock {
 //   public:
-//   void LockRead() {}
+//   void lockRead() {}
 //
-//   void UnlockRead() {}
+//   void unlockRead() {}
 //
-//   void LockWrite() {}
+//   void lockWrite() {}
 //
-//   void UnlockWrite() {}
+//   void unlockWrite() {}
 // };
 //
 // using EmtpyRWLock = RWLock;
 
 class MutexRWLock {
   public:
-  void LockRead() { m_lock_.lock_shared(); }
+  void lockRead() { m_lock_.lock_shared(); }
 
-  void UnlockRead() { m_lock_.unlock_shared(); }
+  void unlockRead() { m_lock_.unlock_shared(); }
 
-  void LockWrite() { m_lock_.lock(); }
+  void lockWrite() { m_lock_.lock(); }
 
-  void UnlockWrite() { m_lock_.unlock(); }
+  void unlockWrite() { m_lock_.unlock(); }
 
   std::shared_mutex m_lock_;
 };
@@ -58,10 +58,10 @@ class ScopedLock {
   public:
   ScopedLock(T* lock)
       : m_scopedLock_(lock) {
-    m_scopedLock_->Lock();
+    m_scopedLock_->lock();
   }
 
-  ~ScopedLock() { m_scopedLock_->Unlock(); }
+  ~ScopedLock() { m_scopedLock_->unlock(); }
 
   T* m_scopedLock_;
 };
@@ -71,10 +71,10 @@ class ScopeReadLock {
   public:
   ScopeReadLock(T* lock)
       : m_scopedLock_(lock) {
-    m_scopedLock_->LockRead();
+    m_scopedLock_->lockRead();
   }
 
-  ~ScopeReadLock() { m_scopedLock_->UnlockRead(); }
+  ~ScopeReadLock() { m_scopedLock_->unlockRead(); }
 
   T* m_scopedLock_;
 };
@@ -84,10 +84,10 @@ class ScopeWriteLock {
   public:
   ScopeWriteLock(T* lock)
       : m_scopedLock_(lock) {
-    m_scopedLock_->LockWrite();
+    m_scopedLock_->lockWrite();
   }
 
-  ~ScopeWriteLock() { m_scopedLock_->UnlockWrite(); }
+  ~ScopeWriteLock() { m_scopedLock_->unlockWrite(); }
 
   T* m_scopedLock_;
 };

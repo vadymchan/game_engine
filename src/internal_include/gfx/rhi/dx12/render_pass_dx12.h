@@ -11,22 +11,22 @@ class RenderPassDx12 : public RenderPass {
   public:
   using RenderPass::RenderPass;
 
-  virtual ~RenderPassDx12() { Release(); }
+  virtual ~RenderPassDx12() { release(); }
 
-  void Initialize();
-  bool CreateRenderPass();
-  void Release();
+  void initialize();
+  bool createRenderPass();
+  void release();
 
-  // virtual void* GetRenderPass() const override { return m_renderPass; }
+  // virtual void* getRenderPass() const override { return m_renderPass; }
   // inline const VkRenderPass& GetRenderPassRaw() const { return
-  // m_renderPass; } virtual void* GetFrameBuffer() const override { return
+  // m_renderPass; } virtual void* getFrameBuffer() const override { return
   // m_frameBuffer; }
 
-  virtual bool BeginRenderPass(const CommandBuffer* commandBuffer) override;
+  virtual bool beginRenderPass(const CommandBuffer* commandBuffer) override;
 
   // Remove this. After organizing the relationship between CommandBufferDx12
   // and CommandBuffer.
-  bool BeginRenderPass(const CommandBufferDx12*    commandBuffer,
+  bool beginRenderPass(const CommandBufferDx12*    commandBuffer,
                        D3D12_CPU_DESCRIPTOR_HANDLE tempRTV) {
     assert(commandBuffer);
     if (!commandBuffer) {
@@ -49,15 +49,15 @@ class RenderPassDx12 : public RenderPass {
         &m_dsvCPUDHandle_);
 
     for (int32_t i = 0; i < m_rtvClears_.size(); ++i) {
-      if (m_rtvClears_[i].GetType() != ERTClearType::Color) {
+      if (m_rtvClears_[i].getType() != ERTClearType::Color) {
         continue;
       }
 
       commandBuffer->m_commandList_->ClearRenderTargetView(
-          m_rtvCPUHandles_[i], m_rtvClears_[i].GetCleraColor(), 0, nullptr);
+          m_rtvCPUHandles_[i], m_rtvClears_[i].getCleraColor(), 0, nullptr);
     }
 
-    if (m_dsvClear_.GetType() == ERTClearType::DepthStencil) {
+    if (m_dsvClear_.getType() == ERTClearType::DepthStencil) {
       if (m_dsvDepthClear_ || m_dsvStencilClear_) {
         D3D12_CLEAR_FLAGS DSVClearFlags = (D3D12_CLEAR_FLAGS)0;
         if (m_dsvDepthClear_) {
@@ -71,8 +71,8 @@ class RenderPassDx12 : public RenderPass {
         commandBuffer->m_commandList_->ClearDepthStencilView(
             m_dsvCPUDHandle_,
             DSVClearFlags,
-            m_dsvClear_.GetCleraDepth(),
-            (uint8_t)m_dsvClear_.GetCleraStencil(),
+            m_dsvClear_.getClearDepth(),
+            (uint8_t)m_dsvClear_.getClearStencil(),
             0,
             nullptr);
       }
@@ -81,14 +81,14 @@ class RenderPassDx12 : public RenderPass {
     return true;
   }
 
-  virtual void EndRenderPass() override;
+  virtual void endRenderPass() override;
 
-  const std::vector<DXGI_FORMAT>& GetRTVFormats() const { return m_rtvFormats_; }
+  const std::vector<DXGI_FORMAT>& getRTVFormats() const { return m_rtvFormats_; }
 
-  DXGI_FORMAT GetDSVFormat() const { return m_dsvFormat_; }
+  DXGI_FORMAT getDSVFormat() const { return m_dsvFormat_; }
 
   private:
-  void SetFinalLayoutToAttachment(const Attachment& attachment) const;
+  void setFinalLayoutToAttachment_(const Attachment& attachment) const;
 
   private:
   const CommandBufferDx12* m_commandBuffer_ = nullptr;

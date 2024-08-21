@@ -30,12 +30,12 @@ struct SamplerStateInfoVk : public SamplerStateInfo {
   SamplerStateInfoVk(const SamplerStateInfo& state)
       : SamplerStateInfo(state) {}
 
-  virtual ~SamplerStateInfoVk() { Release(); }
+  virtual ~SamplerStateInfoVk() { release(); }
 
-  virtual void Initialize() override;
-  void         Release();
+  virtual void initialize() override;
+  void         release();
 
-  virtual void* GetHandle() const { return m_samplerState_; }
+  virtual void* getHandle() const { return m_samplerState_; }
 
   VkSamplerCreateInfo m_samplerStateInfo_ = {};
   VkSampler           m_samplerState_     = nullptr;
@@ -49,7 +49,7 @@ struct RasterizationStateInfoVk : public RasterizationStateInfo {
 
   virtual ~RasterizationStateInfoVk() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   VkPipelineRasterizationStateCreateInfo m_rasterizationStateInfo_ = {};
   VkPipelineMultisampleStateCreateInfo   m_multisampleStateInfo_   = {};
@@ -63,7 +63,7 @@ struct StencilOpStateInfoVk : public StencilOpStateInfo {
 
   virtual ~StencilOpStateInfoVk() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   VkStencilOpState m_stencilOpStateInfo_ = {};
 };
@@ -76,7 +76,7 @@ struct DepthStencilStateInfoVk : public DepthStencilStateInfo {
 
   virtual ~DepthStencilStateInfoVk() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   VkPipelineDepthStencilStateCreateInfo m_depthStencilStateInfo_ = {};
 };
@@ -89,7 +89,7 @@ struct BlendingStateInfoVk : public BlendingStateInfo {
 
   virtual ~BlendingStateInfoVk() {}
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
   VkPipelineColorBlendAttachmentState m_colorBlendAttachmentInfo_ = {};
 };
@@ -120,23 +120,23 @@ struct PipelineStateInfoVk : public PipelineStateInfo {
   PipelineStateInfoVk(PipelineStateInfo&& pipelineState)
       : PipelineStateInfo(std::move(pipelineState)) {}
 
-  virtual ~PipelineStateInfoVk() { Release(); }
+  virtual ~PipelineStateInfoVk() { release(); }
 
-  void Release();
+  void release();
 
-  virtual void Initialize() override;
+  virtual void initialize() override;
 
-  virtual void* GetHandle() const override { return m_pipeline_; }
+  virtual void* getHandle() const override { return m_pipeline_; }
 
-  virtual void* GetPipelineLayoutHandle() const override {
+  virtual void* getPipelineLayoutHandle() const override {
     return m_pipelineLayout_;
   }
 
-  virtual void* CreateGraphicsPipelineState() override;
-  virtual void* CreateComputePipelineState() override;
+  virtual void* createGraphicsPipelineState() override;
+  virtual void* createComputePipelineState() override;
   // TODO: implement
-  //virtual void* CreateRaytracingPipelineState() override;
-  virtual void  Bind(const std::shared_ptr<RenderFrameContext>&
+  //virtual void* createRaytracingPipelineState() override;
+  virtual void  bind(const std::shared_ptr<RenderFrameContext>&
                          renderFrameContext) const override;
 
   VkPipeline       m_pipeline_ = nullptr;

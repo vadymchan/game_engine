@@ -14,7 +14,7 @@
 namespace game_engine {
 
 struct RenderTargetInfo {
-  size_t GetHash() const {
+  size_t getHash() const {
     return GETHASH_FROM_INSTANT_STRUCT(m_rype_,
                                        m_format_,
                                        m_extent_.width(),
@@ -22,7 +22,7 @@ struct RenderTargetInfo {
                                        m_layerCount_,
                                        m_isGenerateMipmap_,
                                        m_sampleCount_,
-                                       m_rtClearValue.GetHash(),
+                                       m_rtClearValue.getHash(),
                                        m_textureCreateFlag_,
                                        m_isUseAsSubpassInput_,
                                        m_isMemoryless_);
@@ -44,12 +44,12 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
   // Create render target from texture, It is useful to create render target
   // from swapchain texture
   template <typename T1, class... T2>
-  static std::shared_ptr<RenderTarget> CreateFromTexture(const T2&... args) {
+  static std::shared_ptr<RenderTarget> s_createFromTexture(const T2&... args) {
     const auto& T1Ptr = std::make_shared<T1>(args...);
     return std::make_shared<RenderTarget>(T1Ptr);
   }
 
-  static std::shared_ptr<RenderTarget> CreateFromTexture(
+  static std::shared_ptr<RenderTarget> s_createFromTexture(
       const std::shared_ptr<Texture>& texturePtr) {
     return std::make_shared<RenderTarget>(texturePtr);
   }
@@ -69,25 +69,26 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
 
   ~RenderTarget() {}
 
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
 
-    m_hash_ = m_info_.GetHash();
-    if (GetTexture()) {
-      m_hash_ = XXH64(reinterpret_cast<uint64_t>(GetTexture()->GetHandle()), m_hash_);
+    m_hash_ = m_info_.getHash();
+    if (getTexture()) {
+      m_hash_ = XXH64(reinterpret_cast<uint64_t>(getTexture()->getHandle()), m_hash_);
     }
     return m_hash_;
   }
 
-  void Return();
+  // TODO: consider renaming 
+  void returnRt();
 
-  EResourceLayout GetLayout() const {
-    return m_texturePtr_ ? m_texturePtr_->GetLayout() : EResourceLayout::UNDEFINED;
+  EResourceLayout getLayout() const {
+    return m_texturePtr_ ? m_texturePtr_->getLayout() : EResourceLayout::UNDEFINED;
   }
 
-  Texture* GetTexture() const { return m_texturePtr_.get(); }
+  Texture* getTexture() const { return m_texturePtr_.get(); }
 
   RenderTargetInfo         m_info_;
   std::shared_ptr<Texture> m_texturePtr_;
@@ -106,10 +107,10 @@ struct SceneRenderTarget {
   // Final rendered image, post-processed
   std::shared_ptr<RenderTarget> m_finalColorPtr_;
 
-  void Create(std::shared_ptr<Window> window,
+  void create(std::shared_ptr<Window> window,
               const SwapchainImage*   swapchain);
 
-  void Return();
+  void returnRt();
 };
 
 }  // namespace game_engine

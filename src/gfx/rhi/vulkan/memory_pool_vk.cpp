@@ -7,14 +7,14 @@
 namespace game_engine {
 
 // TODO: some mess with the order of parameters
-void SubMemoryAllocatorVk::Initialize(EVulkanBufferBits usage,
+void SubMemoryAllocatorVk::initialize(EVulkanBufferBits usage,
                                     EVulkanMemoryBits properties,
                                     uint64_t          size) {
   assert(m_subMemoryRange_.m_offset_ == 0 && m_subMemoryRange_.m_dataSize_ == 0);
   assert(0 == m_freeLists_.size());
 
   m_subMemoryRange_.m_offset_ = 0;
-  CreateBuffer_LowLevel(usage,
+  g_createBufferLowLevel(usage,
                         properties,
                         size,
                         m_buffer_,
@@ -40,7 +40,7 @@ void SubMemoryAllocatorVk::Initialize(EVulkanBufferBits usage,
 
 
 
-SubMemoryAllocator* MemoryPoolVk::CreateSubMemoryAllocator() const {
+SubMemoryAllocator* MemoryPoolVk::createSubMemoryAllocator() const {
   return new SubMemoryAllocatorVk();
 }
 

@@ -27,14 +27,14 @@ struct ResourceContainer {
     m_numOfData_ = data.m_numOfData_;
   }
 
-  void Add(T element) {
+  void add(T element) {
     assert(NumOfInlineData > m_numOfData_);
 
     m_data_[m_numOfData_] = element;
     ++m_numOfData_;
   }
 
-  void Add(void* elementAddress, int32_t count) {
+  void add(void* elementAddress, int32_t count) {
     assert(NumOfInlineData > (m_numOfData_ + count));
     assert(elementAddress);
     // TODO: remove (replaced memcpy to std::copy_n
@@ -50,13 +50,13 @@ struct ResourceContainer {
     m_numOfData_ += count;
   }
 
-  void PopBack() {
+  void popBack() {
     if (m_numOfData_ > 0) {
       --m_numOfData_;
     }
   }
 
-  const T& Back() {
+  const T& back() {
     if (m_numOfData_ > 0) {
       return m_data_[m_numOfData_ - 1];
     }
@@ -65,20 +65,20 @@ struct ResourceContainer {
   }
 
   template <typename T2>
-  static void GetHash(size_t& hash, int32_t index, const T2& data) {
-    hash ^= (data->GetHash() << index);
+  static void s_getHash(size_t& hash, int32_t index, const T2& data) {
+    hash ^= (data->getHash() << index);
   }
 
-  size_t GetHash() const {
-    size_t Hash = 0;
+  size_t getHash() const {
+    size_t hash = 0;
     for (int32_t i = 0; i < m_numOfData_; ++i) {
-      // Hash ^= (Data[i]->GetHash() << i);
-      GetHash(Hash, i, m_data_[i]);
+      // hash ^= (Data[i]->s_getHash() << i);
+      s_getHash(hash, i, m_data_[i]);
     }
-    return Hash;
+    return hash;
   }
 
-  void Reset() { m_numOfData_ = 0; }
+  void reset() { m_numOfData_ = 0; }
 
   ResourceContainer<T, NumOfInlineData>& operator=(
       const ResourceContainer<T, NumOfInlineData>& data) {

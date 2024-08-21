@@ -17,12 +17,12 @@
 //
 //   ~RenderTargetPoolVk() {}
 //
-//   static std::shared_ptr<RenderTargetVk> GetRenderTarget(
+//   static std::shared_ptr<RenderTargetVk> s_getRenderTarget(
 //       const RenderTargetInfoVk& info);
 //
-//   static void ReturnRenderTarget(RenderTargetVk* renderTarget);
+//   static void s_seturnRenderTarget(RenderTargetVk* renderTarget);
 //
-//   static void Release();
+//   static void release();
 //
 //   struct RenderTargetPoolResourceVk {
 //     bool                            IsUsing = false;

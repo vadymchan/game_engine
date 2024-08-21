@@ -5,7 +5,7 @@
 
 namespace game_engine {
 
-void RenderPassVk::Release() {
+void RenderPassVk::release() {
   if (m_frameBuffer_ != VK_NULL_HANDLE) {
     vkDestroyFramebuffer(g_rhi_vk->m_device_, m_frameBuffer_, nullptr);
     m_frameBuffer_ = VK_NULL_HANDLE;
@@ -16,14 +16,14 @@ void RenderPassVk::Release() {
   }
 }
 
-void RenderPassVk::SetFinalLayoutToAttachment(
+void RenderPassVk::setFinalLayoutToAttachment_(
     const Attachment& attachment) const {
   assert(attachment.m_renderTargetPtr_);
-  TextureVk* texture_vk = (TextureVk*)attachment.m_renderTargetPtr_->GetTexture();
+  TextureVk* texture_vk = (TextureVk*)attachment.m_renderTargetPtr_->getTexture();
   texture_vk->m_imageLayout_ = attachment.m_finalLayout_;
 }
 
-bool RenderPassVk::BeginRenderPass(const CommandBuffer* commandBuffer
+bool RenderPassVk::beginRenderPass(const CommandBuffer* commandBuffer
                                    /*, VkSubpassContents      subpassContents*/
                                    ) {
   assert(commandBuffer);
@@ -33,28 +33,28 @@ bool RenderPassVk::BeginRenderPass(const CommandBuffer* commandBuffer
   assert(m_frameBuffer_);
   m_renderPassBeginInfo_.framebuffer = m_frameBuffer_;
 
-  vkCmdBeginRenderPass((VkCommandBuffer)commandBuffer->GetNativeHandle(),
+  vkCmdBeginRenderPass((VkCommandBuffer)commandBuffer->getNativeHandle(),
                        &m_renderPassBeginInfo_,
                        /*subpassContents*/ VK_SUBPASS_CONTENTS_INLINE);
   return true;
 }
 
-void RenderPassVk::EndRenderPass() {
+void RenderPassVk::endRenderPass() {
   assert(m_commandBuffer_);
 
   // Finishing up
-  vkCmdEndRenderPass((VkCommandBuffer)m_commandBuffer_->GetNativeHandle());
+  vkCmdEndRenderPass((VkCommandBuffer)m_commandBuffer_->getNativeHandle());
 
   // Apply layout to attachments
   for (Attachment& iter : m_renderPassInfo_.m_attachments_) {
-    assert(iter.IsValid());
-    SetFinalLayoutToAttachment(iter);
+    assert(iter.isValid());
+    setFinalLayoutToAttachment_(iter);
   }
 
   m_commandBuffer_ = nullptr;
 }
 
-bool RenderPassVk::CreateRenderPass() {
+bool RenderPassVk::createRenderPass() {
   //  std::vector<VkAttachmentDescription> attachmentDescs;
   //  attachmentDescs.reserve(m_renderPassInfo_.Attachments.size());
 
@@ -96,27 +96,27 @@ bool RenderPassVk::CreateRenderPass() {
     AttachmentDescs.resize(m_renderPassInfo_.m_attachments_.size());
     for (int32_t i = 0; i < (int32_t)m_renderPassInfo_.m_attachments_.size(); ++i) {
       const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
-      assert(attachment.IsValid());
+      assert(attachment.isValid());
 
       const auto& RTInfo = attachment.m_renderTargetPtr_->m_info_;
 
       VkAttachmentDescription& attachmentDesc = AttachmentDescs[i];
-      attachmentDesc.format  = GetVulkanTextureFormat(RTInfo.m_format_);
+      attachmentDesc.format  = g_getVulkanTextureFormat(RTInfo.m_format_);
       attachmentDesc.samples = (VkSampleCountFlagBits)RTInfo.m_sampleCount_;
-      GetVulkanAttachmentLoadStoreOp(attachmentDesc.loadOp,
+      g_getVulkanAttachmentLoadStoreOp(attachmentDesc.loadOp,
                                      attachmentDesc.storeOp,
                                      attachment.m_loadStoreOp_);
-      GetVulkanAttachmentLoadStoreOp(attachmentDesc.stencilLoadOp,
+      g_getVulkanAttachmentLoadStoreOp(attachmentDesc.stencilLoadOp,
                                      attachmentDesc.stencilStoreOp,
                                      attachment.m_stencilLoadStoreOp_);
 
-      assert((attachment.IsResolveAttachment()
+      assert((attachment.isResolveAttachment()
               && ((int32_t)RTInfo.m_sampleCount_ > 1))
-          || (!attachment.IsResolveAttachment()
+          || (!attachment.isResolveAttachment()
               && (int32_t)RTInfo.m_sampleCount_ == 1));
       const bool IsInvalidSampleCountAndLayerCount
           = (SampleCount == 0) || (LayerCount == 0);
-      if (!attachment.IsDepthAttachment()
+      if (!attachment.isDepthAttachment()
           || IsInvalidSampleCountAndLayerCount) {
         assert(SampleCount == 0 || SampleCount == (int32_t)RTInfo.m_sampleCount_);
         assert(LayerCount == 0 || LayerCount == RTInfo.m_layerCount_);
@@ -124,14 +124,14 @@ bool RenderPassVk::CreateRenderPass() {
         LayerCount  = RTInfo.m_layerCount_;
       }
       attachmentDesc.initialLayout
-          = GetVulkanImageLayout(attachment.m_initialLayout_);
-      attachmentDesc.finalLayout = GetVulkanImageLayout(attachment.m_finalLayout_);
+          = g_getVulkanImageLayout(attachment.m_initialLayout_);
+      attachmentDesc.finalLayout = g_getVulkanImageLayout(attachment.m_finalLayout_);
 
-      const auto&  RTClearColor = attachment.m_rtClearValue.GetCleraColor();
+      const auto&  RTClearColor = attachment.m_rtClearValue.getCleraColor();
       VkClearValue clearValue   = {};
-      if (attachment.IsDepthAttachment()) {
-        clearValue.depthStencil = {attachment.m_rtClearValue.GetCleraDepth(),
-                                   attachment.m_rtClearValue.GetCleraStencil()};
+      if (attachment.isDepthAttachment()) {
+        clearValue.depthStencil = {attachment.m_rtClearValue.getClearDepth(),
+                                   attachment.m_rtClearValue.getClearStencil()};
       } else {
         clearValue.color = {
           RTClearColor[0], RTClearColor[1], RTClearColor[2], RTClearColor[3]};
@@ -157,8 +157,8 @@ bool RenderPassVk::CreateRenderPass() {
     std::vector<VkSubpassDependency> SubpassDependencies;
     SubpassDependencies.resize(m_renderPassInfo_.m_subpasses_.size() + 1);
 
-    const bool IsSubpassForExecuteInOrder
-        = m_renderPassInfo_.IsSubpassForExecuteInOrder();
+    const bool isSubpassForExecuteInOrder
+        = m_renderPassInfo_.isSubpassForExecuteInOrder();
 
     int32_t DependencyIndex                         = 0;
     SubpassDependencies[DependencyIndex].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -233,7 +233,7 @@ bool RenderPassVk::CreateRenderPass() {
 
       // This dependency transitions the input attachment from color
       // attachment to shader read
-      if (IsSubpassForExecuteInOrder) {
+      if (isSubpassForExecuteInOrder) {
         SubpassDependencies[DependencyIndex].srcSubpass = (uint32_t)(i);
         SubpassDependencies[DependencyIndex].dstSubpass = (uint32_t)(i + 1);
       } else {
@@ -243,9 +243,9 @@ bool RenderPassVk::CreateRenderPass() {
             = (uint32_t)subPass.m_destSubpassIndex_;
       }
       SubpassDependencies[DependencyIndex].srcStageMask
-          = GetPipelineStageMask(subPass.m_attachmentProducePipelineBit_);
+          = g_getPipelineStageMask(subPass.m_attachmentProducePipelineBit_);
       SubpassDependencies[DependencyIndex].dstStageMask
-          = GetPipelineStageMask(subPass.m_attachmentConsumePipelineBit_);
+          = g_getPipelineStageMask(subPass.m_attachmentConsumePipelineBit_);
       SubpassDependencies[DependencyIndex].srcAccessMask
           = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
       SubpassDependencies[DependencyIndex].dstAccessMask
@@ -305,12 +305,12 @@ bool RenderPassVk::CreateRenderPass() {
     std::vector<VkImageView> ImageViews;
 
     for (int32_t k = 0; k < m_renderPassInfo_.m_attachments_.size(); ++k) {
-      assert(m_renderPassInfo_.m_attachments_[k].IsValid());
+      assert(m_renderPassInfo_.m_attachments_[k].isValid());
 
       const auto* RT = m_renderPassInfo_.m_attachments_[k].m_renderTargetPtr_.get();
       assert(RT);
 
-      const TextureVk* texture_vk = (const TextureVk*)RT->GetTexture();
+      const TextureVk* texture_vk = (const TextureVk*)RT->getTexture();
       assert(texture_vk);
 
       ImageViews.push_back(texture_vk->m_imageView_);

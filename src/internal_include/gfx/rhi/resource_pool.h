@@ -12,8 +12,8 @@ template <typename T, typename LOCK_TYPE>
 class TResourcePool {
   public:
   template <typename TInitializer, typename T1 = T>
-  T* GetOrCreate(const TInitializer& initializer) {
-    const size_t hash = initializer.GetHash();
+  T* getOrCreate(const TInitializer& initializer) {
+    const size_t hash = initializer.getHash();
     {
       ScopeReadLock sr(&m_lock_);
       auto          it_find = m_pool_.find(hash);
@@ -32,15 +32,15 @@ class TResourcePool {
       }
 
       auto* newResource = new T1(initializer);
-      newResource->Initialize();
+      newResource->initialize();
       m_pool_[hash] = newResource;
       return newResource;
     }
   }
 
   template <typename TInitializer, typename T1 = T>
-  T* GetOrCreateMove(TInitializer&& initializer) {
-    const size_t hash = initializer.GetHash();
+  T* getOrCreateMove(TInitializer&& initializer) {
+    const size_t hash = initializer.getHash();
     {
       ScopeReadLock sr(&m_lock_);
       auto          it_find = m_pool_.find(hash);
@@ -59,16 +59,16 @@ class TResourcePool {
       }
 
       auto* newResource = new T1(std::move(initializer));
-      newResource->Initialize();
+      newResource->initialize();
       m_pool_[hash] = newResource;
       return newResource;
     }
   }
 
   template <typename TInitializer, typename T1 = T>
-  void Add(TInitializer&& initializer, T1* resource) {
+  void add(TInitializer&& initializer, T1* resource) {
     ScopeReadLock sr(&m_lock_);
-    const size_t  hash = initializer.GetHash();
+    const size_t  hash = initializer.getHash();
     assert(hash);
     assert(resource);
     if (resource) {
@@ -76,7 +76,7 @@ class TResourcePool {
     }
   }
 
-  void GetAllResource(std::vector<T*>& Out) {
+  void getAllResource(std::vector<T*>& Out) {
     Out.reserve(m_pool_.size());
     for (auto it : m_pool_) {
       Out.push_back(it.second);
@@ -84,11 +84,11 @@ class TResourcePool {
   }
 
   template <typename TInitializer>
-  void Release(const TInitializer& initializer) {
-    Release(initializer.GetHash());
+  void release(const TInitializer& initializer) {
+    release(initializer.getHash());
   }
 
-  void Release(size_t hash) {
+  void release(size_t hash) {
     ScopeReadLock sr(&m_lock_);
     auto          it_find = m_pool_.find(hash);
     if (m_pool_.end() != it_find) {
@@ -96,7 +96,7 @@ class TResourcePool {
     }
   }
 
-  void Release() {
+  void release() {
     ScopeWriteLock sw(&m_lock_);
     for (auto& iter : m_pool_) {
       static_assert(sizeof(T) > 0, "Cannot delete pointer of incomplete type");

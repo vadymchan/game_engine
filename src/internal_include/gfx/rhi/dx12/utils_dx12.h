@@ -16,37 +16,38 @@ struct TextureDx12;
 struct ImageSubResourceData;
 
 // TODO: why need anonymous namespace in header?
+// TODO: check whether these functions are used
 // namespace {
-size_t BitsPerPixel_(DXGI_FORMAT fmt);
+size_t g_bitsPerPixel(DXGI_FORMAT fmt);
 
-size_t BytesPerPixel_(DXGI_FORMAT fmt);
+size_t g_bytesPerPixel(DXGI_FORMAT fmt);
 
-const D3D12_HEAP_PROPERTIES& GetUploadHeap();
+const D3D12_HEAP_PROPERTIES& g_getUploadHeap();
 
-const D3D12_HEAP_PROPERTIES& GetDefaultHeap();
+const D3D12_HEAP_PROPERTIES& g_getDefaultHeap();
 
-const D3D12_RESOURCE_DESC& GetUploadResourceDesc(uint64_t size);
+const D3D12_RESOURCE_DESC& g_getUploadResourceDesc(uint64_t size);
 
-ComPtr<ID3D12Resource> CreateStagingBuffer(const void* initData,
+ComPtr<ID3D12Resource> g_createStagingBuffer(const void* initData,
                                            int64_t     size,
                                            uint64_t    alignment = 1);
 
-void UploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
+void g_uploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
                                 const void*             initData,
                                 uint64_t                size,
                                 uint64_t                alignment = 1);
 
-D3D12_RESOURCE_DESC GetDefaultResourceDesc(uint64_t alignedSize,
+D3D12_RESOURCE_DESC g_getDefaultResourceDesc(uint64_t alignedSize,
                                            bool     isAllowUAV);
 
-ComPtr<ID3D12Resource> CreateDefaultResource(
+ComPtr<ID3D12Resource> g_createDefaultResource(
     uint64_t              alignedSize,
     D3D12_RESOURCE_STATES initialState,
     bool                  isAllowUAV,
     bool                  isCPUAccessible,
     const wchar_t*        name = nullptr);
 
-void* CopyInitialData(ComPtr<ID3D12Resource>& dest,
+void* g_copyInitialData(ComPtr<ID3D12Resource>& dest,
                       const void*             initData,
                       uint64_t                size,
                       uint64_t                alignment,
@@ -54,14 +55,14 @@ void* CopyInitialData(ComPtr<ID3D12Resource>& dest,
 
 //}  // namespace
 
-std::shared_ptr<CreatedResource> CreateBufferInternal(
+std::shared_ptr<CreatedResource> g_createBufferInternal(
     uint64_t              size,
     uint64_t              alignment,
     EBufferCreateFlag     bufferCreateFlag,
     D3D12_RESOURCE_STATES initialResourceState,
     const wchar_t*        resourceName = nullptr);
 
-std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
+std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
                                            uint64_t          alignment,
                                            EBufferCreateFlag bufferCreateFlag,
                                            EResourceLayout   layout,
@@ -70,7 +71,7 @@ std::shared_ptr<BufferDx12> CreateBuffer(uint64_t          size,
                                            const wchar_t*    resourceName
                                            = nullptr);
 
-std::shared_ptr<CreatedResource> CreateTexturenternal(
+std::shared_ptr<CreatedResource> g_createTexturenternal(
     uint32_t                 witdh,
     uint32_t                 height,
     uint32_t                 arrayLayers,
@@ -83,7 +84,7 @@ std::shared_ptr<CreatedResource> CreateTexturenternal(
     D3D12_CLEAR_VALUE*       clearValue   = nullptr,
     const wchar_t*           resourceName = nullptr);
 
-std::shared_ptr<TextureDx12> CreateTexture(
+std::shared_ptr<TextureDx12> g_createTexture(
     uint32_t             witdh,
     uint32_t             height,
     uint32_t             arrayLayers,
@@ -96,72 +97,72 @@ std::shared_ptr<TextureDx12> CreateTexture(
     const RTClearValue& clearValue   = RTClearValue::s_kInvalid,
     const wchar_t*       resourceName = nullptr);
 
-std::shared_ptr<TextureDx12> CreateTexture(
+std::shared_ptr<TextureDx12> g_createTexture(
     const std::shared_ptr<CreatedResource>& texture,
     ETextureCreateFlag                       textureCreateFlag,
     EResourceLayout                          imageLayout,
     const RTClearValue&                     clearValue,
     const wchar_t*                           resourceName);
 
-uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
+uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
                              ID3D12Resource*             buffer,
                              uint64_t                    bufferOffset,
                              ID3D12Resource*             image,
                              int32_t imageSubresourceIndex = 0);
-uint64_t CopyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
+uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
                              ID3D12Resource*             buffer,
                              uint64_t                    bufferOffset,
                              ID3D12Resource*             image,
                              int32_t numOfImageSubresources,
                              int32_t startImageSubresources);
-void     CopyBufferToTexture(
+void     g_copyBufferToTexture(
         ID3D12GraphicsCommandList4*              commandBuffer,
         ID3D12Resource*                          buffer,
         ID3D12Resource*                          image,
         const std::vector<ImageSubResourceData>& subresourceData);
-void CopyBuffer(ID3D12GraphicsCommandList4* commandBuffer,
+void g_copyBuffer(ID3D12GraphicsCommandList4* commandBuffer,
                 ID3D12Resource*             srcBuffer,
                 ID3D12Resource*             dstBuffer,
                 uint64_t                    size,
                 uint64_t                    srcOffset,
                 uint64_t                    dstOffset);
-void CopyBuffer(ID3D12Resource* srcBuffer,
+void g_copyBuffer(ID3D12Resource* srcBuffer,
                 ID3D12Resource* dstBuffer,
                 uint64_t        size,
                 uint64_t        srcOffset,
                 uint64_t        dstOffset);
 
 // Create CBV
-void CreateConstantBufferView(BufferDx12* buffer);
+void g_createConstantBufferView(BufferDx12* buffer);
 
 // Create SRV for m_buffer
-void CreateShaderResourceView_StructuredBuffer(BufferDx12* buffer,
+void g_createShaderResourceViewStructuredBuffer(BufferDx12* buffer,
                                                uint32_t      stride,
                                                uint32_t      count);
-void CreateShaderResourceView_Raw(BufferDx12* buffer,
+void g_createShaderResourceViewRaw(BufferDx12* buffer,
                                   uint32_t      bufferSize);
-void CreateShaderResourceView_Formatted(BufferDx12*  buffer,
+void g_createShaderResourceViewFormatted(BufferDx12*  buffer,
                                         ETextureFormat format,
                                         uint32_t       bufferSize);
 
 // Create UAV for m_buffer
-void CreateUnorderedAccessView_StructuredBuffer(BufferDx12* buffer,
+void g_createUnorderedAccessViewStructuredBuffer(BufferDx12* buffer,
                                                 uint32_t      stride,
                                                 uint32_t      count);
-void CreateUnorderedAccessView_Raw(BufferDx12* buffer,
+void g_createUnorderedAccessViewRaw(BufferDx12* buffer,
                                    uint32_t      bufferSize);
-void CreateUnorderedAccessView_Formatted(BufferDx12*  buffer,
+void g_createUnorderedAccessViewFormatted(BufferDx12*  buffer,
                                          ETextureFormat format,
                                          uint32_t       bufferSize);
 
 // Create SRV for Texture
-void CreateShaderResourceView(TextureDx12* texture);
+void g_createShaderResourceView(TextureDx12* texture);
 
 // Create UAV for Texture
-void CreateUnorderedAccessView(TextureDx12* texture);
+void g_createUnorderedAccessView(TextureDx12* texture);
 
-void CreateDepthStencilView(TextureDx12* texture);
-void CreateRenderTargetView(TextureDx12* texture);
+void g_createDepthStencilView(TextureDx12* texture);
+void g_createRenderTargetView(TextureDx12* texture);
 
 }  // namespace game_engine
 

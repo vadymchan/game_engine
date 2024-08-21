@@ -54,309 +54,351 @@ class RHI {
   static TResourcePool<Shader, MutexRWLock> s_shaderPool;
 
   template <typename T = Shader>
-  T* CreateShader(const ShaderInfo& shaderInfo) const {
-    return (T*)s_shaderPool.GetOrCreate<ShaderInfo, T>(shaderInfo);
+  T* createShader(const ShaderInfo& shaderInfo) const {
+    return (T*)s_shaderPool.getOrCreate<ShaderInfo, T>(shaderInfo);
   }
 
-  void AddShader(const ShaderInfo& shaderInfo, Shader* shader) {
-    return s_shaderPool.Add(shaderInfo, shader);
+  void addShader(const ShaderInfo& shaderInfo, Shader* shader) {
+    return s_shaderPool.add(shaderInfo, shader);
   }
 
-  void ReleaseShader(const ShaderInfo& shaderInfo) {
-    s_shaderPool.Release(shaderInfo);
+  void releaseShader(const ShaderInfo& shaderInfo) {
+    s_shaderPool.release(shaderInfo);
   }
 
-  std::vector<Shader*> GetAllShaders() {
+  std::vector<Shader*> getAllShaders() {
     std::vector<Shader*> Out;
-    s_shaderPool.GetAllResource(Out);
+    s_shaderPool.getAllResource(Out);
     return Out;
   }
 
   // END: shader related functions and variables
   // =================================================================
 
-  virtual Name GetRHIName() { return Name::s_kInvalid; }
+  virtual Name getRHIName() { return Name::s_kInvalid; }
 
   virtual bool init(const std::shared_ptr<Window>& window);
-  virtual void OnInitRHI();
+  virtual void onInitRHI();
   virtual void release();
 
-  virtual void* GetWindow() const { return nullptr; }
+  virtual void* getWindow() const { return nullptr; }
 
-  virtual SamplerStateInfo* CreateSamplerState(
+  virtual SamplerStateInfo* createSamplerState(
       const SamplerStateInfo& info) const {
     return nullptr;
   }
 
-  virtual void ReleaseSamplerState(SamplerStateInfo* samplerState) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void releaseSamplerState(SamplerStateInfo* samplerState) const {}
 
-  virtual void BindSamplerState(std::int32_t            index,
+  // TODO: not used / overriden (consider remove)
+  virtual void bindSamplerState(std::int32_t            index,
                                 const SamplerStateInfo* samplerState) const {}
 
-  virtual void SetClear(ERenderBufferType typeBit) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setClear(ERenderBufferType typeBit) const {}
 
-  virtual void SetClearColor(float r, float g, float b, float a) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearColor(float r, float g, float b, float a) const {}
 
-  virtual void SetClearColor(math::Vector4Df rgba) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearColor(math::Vector4Df rgba) const {}
 
-  virtual void SetClearBuffer(ERenderBufferType typeBit,
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearBuffer(ERenderBufferType typeBit,
                               const float*      value,
                               std::int32_t      bufferIndex) const {}
 
-  virtual void SetClearBuffer(ERenderBufferType   typeBit,
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearBuffer(ERenderBufferType   typeBit,
                               const std::int32_t* value,
                               std::int32_t        bufferIndex) const {}
 
-  virtual void SetFrameBuffer(const FrameBuffer* rt,
+  // TODO: not used / overriden (consider remove)
+  virtual void setFrameBuffer(const FrameBuffer* rt,
                               std::int32_t       index = 0,
                               bool               mrt   = false) const {}
 
-  virtual void SetDrawBuffers(
+  // TODO: not used / overriden (consider remove)
+  virtual void setDrawBuffers(
       const std::initializer_list<EDrawBufferType>& list) const {}
 
-  virtual void SetTextureFilter(ETextureType         type,
+  virtual void setTextureFilter(ETextureType         type,
                                 std::int32_t         sampleCount,
                                 ETextureFilterTarget target,
                                 ETextureFilter       filter) const {}
 
-  virtual void SetTextureWrap(int flag) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setTextureWrap(int flag) const {}
 
-  virtual void SetTexture(std::int32_t index, const Texture* texture) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setTexture(std::int32_t index, const Texture* texture) const {}
 
-  virtual void DrawArrays(
+  virtual void drawArrays(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       std::int32_t                               vertStartIndex,
       std::int32_t                               vertCount) const {}
 
-  virtual void DrawArraysInstanced(
+  virtual void drawArraysInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       std::int32_t                               vertStartIndex,
       std::int32_t                               vertCount,
       std::int32_t                               instanceCount) const {}
 
-  virtual void DrawElements(
+  virtual void drawElements(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       std::int32_t                               elementSize,
       std::int32_t                               startIndex,
       std::int32_t                               indexCount) const {}
 
-  virtual void DrawElementsInstanced(
+  virtual void drawElementsInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       std::int32_t                               elementSize,
       std::int32_t                               startIndex,
       std::int32_t                               indexCount,
       std::int32_t                               instanceCount) const {}
 
-  virtual void DrawElementsBaseVertex(
+  virtual void drawElementsBaseVertex(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       std::int32_t                               elementSize,
       std::int32_t                               startIndex,
       std::int32_t                               indexCount,
       std::int32_t                               baseVertexIndex) const {}
 
-  virtual void DrawElementsInstancedBaseVertex(
+  virtual void drawElementsInstancedBaseVertex(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       std::int32_t                               elementSize,
       std::int32_t                               startIndex,
       std::int32_t                               indexCount,
       std::int32_t                               baseVertexIndex,
       std::int32_t                               instanceCount) const {}
 
-  virtual void DrawIndirect(
+  virtual void drawIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       Buffer*                                    buffer,
       std::int32_t                               startIndex,
       std::int32_t                               drawCount) const {}
 
-  virtual void DrawElementsIndirect(
+  virtual void drawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                              type,
+      // EPrimitiveType                          type,
       Buffer*                                    buffer,
       std::int32_t                               startIndex,
       std::int32_t                               drawCount) const {}
 
-  virtual void DispatchCompute(
+  virtual void dispatchCompute(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       std::uint32_t                              numGroupsX,
       std::uint32_t                              numGroupsY,
       std::uint32_t                              numGroupsZ) const {}
 
   // TODO: implement in future iterations
-  // virtual void DispatchRay(
+  // virtual void dispatchRay(
   //    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
   //    const RaytracingDispatchData&              dispatchData) const {}
 
-  virtual void EnableDepthBias(bool         enable,
+  // TODO: not used / overriden (consider remove)
+  virtual void enableDepthBias(bool         enable,
                                EPolygonMode polygonMode
                                = EPolygonMode::FILL) const {}
 
-  virtual void SetDepthBias(float constant, float slope) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setDepthBias(float constant, float slope) const {}
 
-  virtual bool CreateShaderInternal(Shader*           shader,
+  virtual bool createShaderInternal(Shader*           shader,
                                     const ShaderInfo& shaderInfo) const {
     return false;
   }
 
-  virtual void ReleaseShader(Shader* shader) const {}
+  virtual void releaseShader(Shader* shader) const {}
 
-  virtual void SetViewport(std::int32_t x,
+  // TODO: not used / overriden (consider remove)
+  virtual void setViewport(std::int32_t x,
                            std::int32_t y,
                            std::int32_t width,
                            std::int32_t height) const {}
 
-  virtual void SetViewport(const Viewport& viewport) const {}
+  // TODO: not used / overriden (consider remove)
+  virtual void setViewport(const Viewport& viewport) const {}
 
-  virtual void SetViewportIndexed(
+  // TODO: not used / overriden (consider remove)
+  virtual void setViewportIndexed(
       std::int32_t index, float x, float y, float width, float height) const {}
 
-  virtual void SetViewportIndexed(std::int32_t    index,
+  // TODO: not used / overriden (consider remove)
+  virtual void setViewportIndexed(std::int32_t    index,
                                   const Viewport& viewport) const {}
 
-  virtual void SetViewportIndexedArray(std::int32_t    startIndex,
+  // TODO: not used / overriden (consider remove)
+  virtual void setViewportIndexedArray(std::int32_t    startIndex,
                                        std::int32_t    count,
                                        const Viewport* viewports) const {}
 
-  virtual bool SetUniformbuffer(const Name&           name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&           name,
                                 const math::Matrix4d& data,
                                 const Shader*         shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&   name,
+  // TODO: seems not used (it's actually used but in dead code)and overriden
+  // (consider remove)
+  virtual bool setUniformbuffer(const Name&   name,
                                 const int     data,
                                 const Shader* shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&         name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&         name,
                                 const std::uint32_t data,
                                 const Shader*       shader) const {
     return false;
   }
 
-  inline virtual bool SetUniformbuffer(Name          name,
+  // TODO: not used / overriden (consider remove)
+  inline virtual bool setUniformbuffer(Name          name,
                                        const bool    data,
                                        const Shader* shader) const {
-    return SetUniformbuffer(name, (std::int32_t)data, shader);
+    return setUniformbuffer(name, (std::int32_t)data, shader);
   }
 
-  virtual bool SetUniformbuffer(const Name&   name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&   name,
                                 const float   data,
                                 const Shader* shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&            name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&            name,
                                 const math::Vector2Df& data,
                                 const Shader*          shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&              name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&              name,
                                 const math::VectorNf<1>& data,
                                 const Shader*            shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&            name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&            name,
                                 const math::Vector4Df& data,
                                 const Shader*          shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&            name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&            name,
                                 const math::Vector2Di& data,
                                 const Shader*          shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&            name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&            name,
                                 const math::Vector3Di& data,
                                 const Shader*          shader) const {
     return false;
   }
 
-  virtual bool SetUniformbuffer(const Name&            name,
+  // TODO: not used / overriden (consider remove)
+  virtual bool setUniformbuffer(const Name&            name,
                                 const math::Vector4Di& data,
                                 const Shader*          shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Matrix4d& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Matrix4d& result,
                                 const Name&     name,
                                 const Shader*   shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(int&          result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(int&          result,
                                 const Name&   name,
                                 const Shader* shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(std::uint32_t& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(std::uint32_t& result,
                                 const Name&    name,
                                 const Shader*  shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(float&        result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(float&        result,
                                 const Name&   name,
                                 const Shader* shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector2Df& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector2Df& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::VectorNf<1>& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::VectorNf<1>& result,
                                 const Name&        name,
                                 const Shader*      shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector4Df& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector4Df& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector2Di& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector2Di& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector3Di& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector3Di& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual bool GetUniformbuffer(math::Vector4Di& result,
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector4Di& result,
                                 const Name&      name,
                                 const Shader*    shader) const {
     return false;
   }
 
-  virtual Texture* CreateNullTexture() const { return nullptr; }
+  // TODO: not used / overriden (consider remove)
+  virtual Texture* createNullTexture() const { return nullptr; }
 
-  virtual std::shared_ptr<Texture> CreateTextureFromData(
+  virtual std::shared_ptr<Texture> createTextureFromData(
       const ImageData* imageData) const {
     return nullptr;
   }
 
-  virtual Texture* CreateCubeTextureFromData(std::vector<void*> faces,
+  // TODO: not used / overriden (consider remove)
+  virtual Texture* createCubeTextureFromData(std::vector<void*> faces,
                                              std::int32_t       width,
                                              std::int32_t       height,
                                              bool               sRGB,
@@ -366,124 +408,155 @@ class RHI {
     return nullptr;
   }
 
-  virtual FrameBuffer* CreateFrameBuffer(const FrameBufferInfo& info) const {
+  // TODO: not used / overriden (consider remove)
+  virtual FrameBuffer* createFrameBuffer(const FrameBufferInfo& info) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<RenderTarget> CreateRenderTarget(
+  // TODO: not used / overriden (consider remove)
+  virtual std::shared_ptr<RenderTarget> createRenderTarget(
       const RenderTargetInfo& info) const {
     return nullptr;
   }
 
-  virtual void EnableDepthTest(bool enable) const {}
+  // TODO: the following methods related to render setting configurations and they may be POC in future
 
-  virtual void EnableBlend(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableDepthTest(bool enable) const {}
 
-  virtual void SetBlendFunc(EBlendFactor src, EBlendFactor dest) const {}
+  // TODO: not used / overriden 
+  virtual void enableBlend(bool enable) const {}
 
-  virtual void SetBlendFuncRT(EBlendFactor src,
+  // TODO: not used / overriden 
+  virtual void setBlendFunc(EBlendFactor src, EBlendFactor dest) const {}
+
+  // TODO: not used / overriden 
+  virtual void setBlendFuncRT(EBlendFactor src,
                               EBlendFactor dest,
                               std::int32_t rtIndex = 0) const {}
 
-  virtual void SetBlendEquation(EBlendOp func) const {}
+  // TODO: not used / overriden 
+  virtual void setBlendEquation(EBlendOp func) const {}
 
-  virtual void SetBlendEquation(EBlendOp func, std::int32_t rtIndex) const {}
+  // TODO: not used / overriden 
+  virtual void setBlendEquation(EBlendOp func, std::int32_t rtIndex) const {}
 
-  virtual void SetBlendColor(float r, float g, float b, float a) const {}
+  // TODO: not used / overriden 
+  virtual void setBlendColor(float r, float g, float b, float a) const {}
 
-  virtual void EnableStencil(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableStencil(bool enable) const {}
 
-  virtual void SetStencilOpSeparate(EFace      face,
+  // TODO: not used / overriden 
+  virtual void setStencilOpSeparate(EFace      face,
                                     EStencilOp sFail,
                                     EStencilOp dpFail,
                                     EStencilOp dpPass) const {}
 
-  virtual void SetStencilFunc(ECompareOp    func,
+  // TODO: not used / overriden 
+  virtual void setStencilFunc(ECompareOp    func,
                               std::int32_t  ref,
                               std::uint32_t mask) const {}
 
-  virtual void SetDepthFunc(ECompareOp func) const {}
+  // TODO: not used / overriden 
+  virtual void setDepthFunc(ECompareOp func) const {}
 
-  virtual void SetDepthMask(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void setDepthMask(bool enable) const {}
 
-  virtual void SetColorMask(bool r, bool g, bool b, bool a) const {}
+  // TODO: not used / overriden 
+  virtual void setColorMask(bool r, bool g, bool b, bool a) const {}
 
-  virtual void EnableSRGB(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableSRGB(bool enable) const {}
 
-  virtual void EnableDepthClip(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableDepthClip(bool enable) const {}
 
-  virtual void BeginDebugEvent(const char* name) const {}
+  // TODO: either implement in future or remove
+  virtual void beginDebugEvent(const char* name) const {}
 
-  virtual void EndDebugEvent() const {}
+  // TODO: either implement in future or remove
+  virtual void endDebugEvent() const {}
 
-  // TODO: implement
-  // virtual void BeginDebugEvent(CommandBuffer*        commandBuffer,
+  // TODO: either implement in future or remove
+  // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
   //                             const char*            name,
   //                             const math::Vector4Df& color
-  //                             = math::ColorGreen) const {}
+  //                             = math::g_colorGreen) const {}
 
-  virtual void EndDebugEvent(CommandBuffer* commandBuffer) const {}
+  // TODO: either implement in future or remove
+  virtual void endDebugEvent(CommandBuffer* commandBuffer) const {}
 
-  virtual void GenerateMips(const Texture* texture) const {}
+  // TODO: not used / overriden 
+  virtual void generateMips(const Texture* texture) const {}
 
-  virtual void EnableWireframe(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableWireframe(bool enable) const {}
 
-  virtual void SetImageTexture(std::int32_t            index,
+  // TODO: not used / overriden 
+  virtual void setImageTexture(std::int32_t            index,
                                const Texture*          texture,
                                EImageTextureAccessType type) const {}
 
-  virtual void SetPolygonMode(EFace        face,
+  // TODO: not used / overriden 
+  virtual void setPolygonMode(EFace        face,
                               EPolygonMode mode = EPolygonMode::FILL) {}
 
-  virtual void EnableRasterizerDiscard(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableRasterizerDiscard(bool enable) const {}
 
-  virtual void SetTextureMipmapLevelLimit(ETextureType type,
+  // TODO: not used / overriden 
+  virtual void setTextureMipmapLevelLimit(ETextureType type,
                                           std::int32_t sampleCount,
                                           std::int32_t baseLevel,
                                           std::int32_t maxLevel) const {}
 
-  virtual void EnableMultisample(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void enableMultisample(bool enable) const {}
 
-  virtual void SetCubeMapSeamless(bool enable) const {}
+  // TODO: not used / overriden 
+  virtual void setCubeMapSeamless(bool enable) const {}
 
-  virtual void SetLineWidth(float width) const {}
+  // TODO: not used / overriden 
+  virtual void setLineWidth(float width) const {}
 
-  virtual void Flush() const {}
+  virtual void flush() const {}
 
-  virtual void Finish() const {}
+  virtual void finish() const {}
 
-  virtual std::shared_ptr<RenderFrameContext> BeginRenderFrame() {
+  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() {
     return nullptr;
   }
 
-  virtual void EndRenderFrame(
+  virtual void endRenderFrame(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {}
 
-  virtual void QueueSubmit(
+  virtual void queueSubmit(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
       class Semaphore*                           signalSemaphore) {}
 
-  virtual RasterizationStateInfo* CreateRasterizationState(
+  virtual RasterizationStateInfo* createRasterizationState(
       const RasterizationStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual StencilOpStateInfo* CreateStencilOpStateInfo(
+  virtual StencilOpStateInfo* createStencilOpStateInfo(
       const StencilOpStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual DepthStencilStateInfo* CreateDepthStencilState(
+  virtual DepthStencilStateInfo* createDepthStencilState(
       const DepthStencilStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual BlendingStateInfo* CreateBlendingState(
+  virtual BlendingStateInfo* createBlendingState(
       const BlendingStateInfo& initializer) const {
     return nullptr;
   }
 
-  virtual PipelineStateInfo* CreatePipelineStateInfo(
+  virtual PipelineStateInfo* createPipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
       const GraphicsPipelineShader    shader,
       const VertexBufferArray&        vertexBufferArray,
@@ -494,7 +567,7 @@ class RHI {
     return nullptr;
   }
 
-  virtual PipelineStateInfo* CreateComputePipelineStateInfo(
+  virtual PipelineStateInfo* createComputePipelineStateInfo(
       const Shader*                   shader,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const {
@@ -502,7 +575,7 @@ class RHI {
   }
 
   // TODO: implement
-  // virtual PipelineStateInfo* CreateRaytracingPipelineStateInfo(
+  // virtual PipelineStateInfo* createRaytracingPipelineStateInfo(
   //    const std::vector<RaytracingPipelineShader>& shaders,
   //    const RaytracingPipelineData&                raytracingData,
   //    const ShaderBindingLayoutArray&              shaderBindingArray,
@@ -510,15 +583,15 @@ class RHI {
   //  return nullptr;
   //}
 
-  virtual void RemovePipelineStateInfo(size_t hash) {}
+  virtual void removePipelineStateInfo(size_t hash) {}
 
-  virtual ShaderBindingLayout* CreateShaderBindings(
+  virtual ShaderBindingLayout* createShaderBindings(
       const ShaderBindingArray& shaderBindingArray) const {
     assert(0);
     return nullptr;
   }
 
-  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+  virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
       const ShaderBindingInstanceType type) const {
     assert(0);
@@ -526,7 +599,7 @@ class RHI {
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const math::Vector2Di&         offset,
       const math::Vector2Di&         extent) const {
@@ -534,7 +607,7 @@ class RHI {
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
       const math::Vector2Di&         offset,
@@ -543,7 +616,7 @@ class RHI {
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
       const Attachment&              colorResolveAttachment,
@@ -553,118 +626,120 @@ class RHI {
   }
 
   // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* GetOrCreateRenderPass(
+  virtual RenderPass* getOrCreateRenderPass(
       const RenderPassInfo&  renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const {
     return nullptr;
   }
 
-  virtual CommandBufferManager* GetCommandBufferManager() const {
+  virtual CommandBufferManager* getCommandBufferManager() const {
     return nullptr;
   }
 
-  virtual EMSAASamples GetSelectedMSAASamples() const {
+  virtual EMSAASamples getSelectedMSAASamples() const {
     return EMSAASamples::COUNT_1;
   }
 
   // ResourceBarrier
-  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
                                 Texture*        texture,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayoutImmediate(Texture*        texture,
+  virtual bool transitionLayoutImmediate(Texture*        texture,
                                          EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayout(CommandBuffer*  commandBuffer,
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
                                 Buffer*         buffer,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool TransitionLayoutImmediate(Buffer*         buffer,
+  virtual bool transitionLayoutImmediate(Buffer*         buffer,
                                          EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual void UAVBarrier(CommandBuffer* commandBuffer,
+  virtual void uavBarrier(CommandBuffer* commandBuffer,
                           Texture*       texture) const {}
 
-  virtual void UAVBarrierImmediate(Texture* texture) const {}
+  virtual void uavBarrierImmediate(Texture* texture) const {}
 
-  virtual void UAVBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {}
+  virtual void uavBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {}
 
-  virtual void UAVBarrierImmediate(Buffer* buffer) const {}
+  virtual void uavBarrierImmediate(Buffer* buffer) const {}
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual std::shared_ptr<Swapchain> GetSwapchain() const { return nullptr; }
+  virtual std::shared_ptr<Swapchain> getSwapchain() const { return nullptr; }
 
-  virtual class SwapchainImage* GetSwapchainImage(std::int32_t index) const {
+  virtual class SwapchainImage* getSwapchainImage(std::int32_t index) const {
     return nullptr;
   }
 
-  virtual void RecreateSwapChain() {}
+  virtual void recreateSwapChain() {}
 
-  virtual std::uint32_t GetMaxSwapchainCount() const { return 0; }
+  // TODO: not used / overriden 
+  virtual std::uint32_t getMaxSwapchainCount() const { return 0; }
 
-  virtual void BindShadingRateImage(CommandBuffer* commandBuffer,
+  virtual void bindShadingRateImage(CommandBuffer* commandBuffer,
                                     Texture*       vrstexture) const {}
 
-  virtual MemoryPool* GetMemoryPool() const { return nullptr; }
+  virtual MemoryPool* getMemoryPool() const { return nullptr; }
 
-  virtual void NextSubpass(const CommandBuffer* commandBuffer) const {}
+  virtual void nextSubpass(const CommandBuffer* commandBuffer) const {}
 
-  virtual void BindGraphicsShaderBindingInstances(
+  virtual void bindGraphicsShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const {}
 
-  virtual void BindComputeShaderBindingInstances(
+  virtual void bindComputeShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const {}
 
-  virtual void BindRaytracingShaderBindingInstances(
+  virtual void bindRaytracingShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const {}
 
-  virtual FenceManager* GetFenceManager() { return nullptr; }
+  virtual FenceManager* getFenceManager() { return nullptr; }
 
-  virtual SemaphoreManager* GetSemaphoreManager() { return nullptr; }
+  virtual SemaphoreManager* getSemaphoreManager() { return nullptr; }
 
-  virtual std::uint32_t GetCurrentFrameIndex() const { return 0; }
+  virtual std::uint32_t getCurrentFrameIndex() const { return 0; }
 
-  virtual std::uint32_t GetCurrentFrameNumber() const { return 0; }
+  virtual std::uint32_t getCurrentFrameNumber() const { return 0; }
 
-  virtual void IncrementFrameNumber() {}
+  virtual void incrementFrameNumber() {}
 
-  virtual bool IsSupportVSync() const { return false; }
+  // TODO: not implemented
+  virtual bool isSupportVSync() const { return false; }
 
-  virtual bool OnHandleResized(std::uint32_t witdh,
+  virtual bool onHandleResized(std::uint32_t witdh,
                                std::uint32_t height,
                                bool          isMinimized) {
     return false;
   }
 
-  // virtual RaytracingScene* CreateRaytracingScene() const { return nullptr; }
+  // virtual RaytracingScene* createRaytracingScene() const { return nullptr; }
 
-  virtual CommandBuffer* BeginSingleTimeCommands() const { return nullptr; }
+  virtual CommandBuffer* beginSingleTimeCommands() const { return nullptr; }
 
-  virtual void EndSingleTimeCommands(CommandBuffer* commandBuffer) const {}
+  virtual void endSingleTimeCommands(CommandBuffer* commandBuffer) const {}
 
   // RaytracingScene* raytracingScene = nullptr;
 
   // CreateBuffers
-  virtual std::shared_ptr<Buffer> CreateStructuredBuffer(
+  virtual std::shared_ptr<Buffer> createStructuredBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       std::uint64_t     stride,
@@ -675,7 +750,7 @@ class RHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<Buffer> CreateRawBuffer(
+  virtual std::shared_ptr<Buffer> createRawBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       EBufferCreateFlag bufferCreateFlag,
@@ -685,7 +760,7 @@ class RHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<Buffer> CreateFormattedBuffer(
+  virtual std::shared_ptr<Buffer> createFormattedBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       ETextureFormat    format,
@@ -696,23 +771,23 @@ class RHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<IUniformBufferBlock> CreateUniformBufferBlock(
+  virtual std::shared_ptr<IUniformBufferBlock> createUniformBufferBlock(
       Name name, LifeTimeType lifeTimeType, size_t size = 0) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(
+  virtual std::shared_ptr<VertexBuffer> createVertexBuffer(
       const std::shared_ptr<VertexStreamData>& streamData) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(
+  virtual std::shared_ptr<IndexBuffer> createIndexBuffer(
       const std::shared_ptr<IndexStreamData>& streamData) const {
     return nullptr;
   }
 
   template <typename T = Buffer>
-  inline std::shared_ptr<T> CreateStructuredBuffer(
+  inline std::shared_ptr<T> createStructuredBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       std::uint64_t     stride,
@@ -720,7 +795,7 @@ class RHI {
       EResourceLayout   initialState,
       const void*       data     = nullptr,
       std::uint64_t     dataSize = 0) const {
-    return std::static_pointer_cast<T>(CreateStructuredBuffer(size,
+    return std::static_pointer_cast<T>(createStructuredBuffer(size,
                                                               alignment,
                                                               stride,
                                                               bufferCreateFlag,
@@ -730,18 +805,18 @@ class RHI {
   }
 
   template <typename T = Buffer>
-  inline std::shared_ptr<T> CreateRawBuffer(std::uint64_t     size,
+  inline std::shared_ptr<T> createRawBuffer(std::uint64_t     size,
                                             std::uint64_t     alignment,
                                             EBufferCreateFlag bufferCreateFlag,
                                             EResourceLayout   initialState,
                                             const void*       data = nullptr,
                                             std::uint64_t dataSize = 0) const {
-    return std::static_pointer_cast<T>(CreateRawBuffer(
+    return std::static_pointer_cast<T>(createRawBuffer(
         size, alignment, bufferCreateFlag, initialState, data, dataSize));
   }
 
   template <typename T = Buffer>
-  inline std::shared_ptr<T> CreateFormattedBuffer(
+  inline std::shared_ptr<T> createFormattedBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       ETextureFormat    format,
@@ -749,7 +824,7 @@ class RHI {
       EResourceLayout   initialState,
       const void*       data     = nullptr,
       std::uint64_t     dataSize = 0) const {
-    return std::static_pointer_cast<T>(CreateFormattedBuffer(size,
+    return std::static_pointer_cast<T>(createFormattedBuffer(size,
                                                              alignment,
                                                              format,
                                                              bufferCreateFlag,
@@ -759,17 +834,17 @@ class RHI {
   }
 
   template <typename T = IUniformBufferBlock>
-  inline std::shared_ptr<T> CreateUniformBufferBlock(Name         name,
+  inline std::shared_ptr<T> createUniformBufferBlock(Name         name,
                                                      LifeTimeType lifeTimeType,
                                                      size_t size = 0) const {
     return std::static_pointer_cast<T>(
-        CreateUniformBufferBlock(name, lifeTimeType, size));
+        createUniformBufferBlock(name, lifeTimeType, size));
   }
 
   //////////////////////////////////////////////////////////////////////////
 
   // Create Images
-  virtual std::shared_ptr<Texture> Create2DTexture(
+  virtual std::shared_ptr<Texture> create2DTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
       std::uint32_t        arrayLayers,
@@ -779,11 +854,11 @@ class RHI {
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageBulkData = {},
       const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName    = nullptr) const {
+      const wchar_t*       resourceName  = nullptr) const {
     return nullptr;
   }
 
-  virtual std::shared_ptr<Texture> CreateCubeTexture(
+  virtual std::shared_ptr<Texture> createCubeTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
       std::uint32_t        mipLevels,
@@ -792,12 +867,12 @@ class RHI {
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageBulkData = {},
       const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName    = nullptr) const {
+      const wchar_t*       resourceName  = nullptr) const {
     return nullptr;
   }
 
   template <typename T>
-  std::shared_ptr<T> Create2DTexture(
+  std::shared_ptr<T> create2DTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
       std::uint32_t        arrayLayers,
@@ -807,8 +882,8 @@ class RHI {
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageCopyData = {},
       const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName    = nullptr) const {
-    return std::static_pointer_cast<T>(Create2DTexture(witdh,
+      const wchar_t*       resourceName  = nullptr) const {
+    return std::static_pointer_cast<T>(create2DTexture(witdh,
                                                        height,
                                                        arrayLayers,
                                                        mipLevels,
@@ -821,7 +896,7 @@ class RHI {
   }
 
   template <typename T>
-  std::shared_ptr<T> CreateCubeTexture(
+  std::shared_ptr<T> createCubeTexture(
       std::uint32_t        witdh,
       std::uint32_t        height,
       std::uint32_t        mipLevels,
@@ -830,8 +905,8 @@ class RHI {
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageCopyData = {},
       const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName    = nullptr) const {
-    return std::static_pointer_cast<T>(CreateCubeTexture(witdh,
+      const wchar_t*       resourceName  = nullptr) const {
+    return std::static_pointer_cast<T>(createCubeTexture(witdh,
                                                          height,
                                                          mipLevels,
                                                          format,
@@ -878,7 +953,7 @@ template <ETextureFilter         TMinification  = ETextureFilter::NEAREST,
           ETextureComparisonMode TTextureComparisonMode
           = ETextureComparisonMode::NONE>
 struct TSamplerStateInfo {
-  static SamplerStateInfo* Create(math::Vector4Df BorderColor
+  static SamplerStateInfo* s_create(math::Vector4Df BorderColor
                                   = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f)) {
     static SamplerStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
@@ -899,8 +974,8 @@ struct TSamplerStateInfo {
     initializer.m_borderColor_            = BorderColor;
     initializer.m_minLOD_                 = TMinLOD;
     initializer.m_maxLOD_                 = TMaxLOD;
-    initializer.GetHash();
-    cachedInfo = g_rhi->CreateSamplerState(initializer);
+    initializer.getHash();
+    cachedInfo = g_rhi->createSamplerState(initializer);
     return cachedInfo;
   }
 };
@@ -934,7 +1009,7 @@ struct TRasterizationStateInfo {
    * not necessary, pass EMSAASamples::COUNT_1 or any other appropriate
    * default value as the template argument.
    */
-  static RasterizationStateInfo* Create(
+  static RasterizationStateInfo* s_create(
       std::optional<EMSAASamples> sampleCountOpt = std::nullopt) {
     static RasterizationStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
@@ -953,15 +1028,15 @@ struct TRasterizationStateInfo {
     initializer.m_depthClampEnable_        = TDepthClampEnable;
     initializer.m_rasterizerDiscardEnable_ = TRasterizerDiscardEnable;
 
-    initializer.m_sampleCount_           = sampleCountOpt.value_or(TSampleCount);
-    initializer.m_sampleShadingEnable_   = TSampleShadingEnable;
-    initializer.m_minSampleShading_      = TMinSampleShading;
+    initializer.m_sampleCount_         = sampleCountOpt.value_or(TSampleCount);
+    initializer.m_sampleShadingEnable_ = TSampleShadingEnable;
+    initializer.m_minSampleShading_    = TMinSampleShading;
     initializer.m_alphaToCoverageEnable_ = TAlphaToCoverageEnable;
     initializer.m_alphaToOneEnable_      = TAlphaToOneEnable;
 
-    initializer.GetHash();
+    initializer.getHash();
     // TODO: problem (should be in cpp)
-    cachedInfo = g_rhi->CreateRasterizationState(initializer);
+    cachedInfo = g_rhi->createRasterizationState(initializer);
     return cachedInfo;
   }
 };
@@ -974,7 +1049,7 @@ template <bool       TDepthTestEnable       = false,
           float      TMinDepthBounds        = 0.0f,
           float      TMaxDepthBounds        = 1.0f>
 struct TDepthStencilStateInfo {
-  static DepthStencilStateInfo* Create(StencilOpStateInfo* Front = nullptr,
+  static DepthStencilStateInfo* s_create(StencilOpStateInfo* Front = nullptr,
                                        StencilOpStateInfo* Back  = nullptr) {
     static DepthStencilStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
@@ -991,8 +1066,8 @@ struct TDepthStencilStateInfo {
     initializer.m_back_                  = Back;
     initializer.m_minDepthBounds_        = TMinDepthBounds;
     initializer.m_maxDepthBounds_        = TMaxDepthBounds;
-    initializer.GetHash();
-    cachedInfo = g_rhi->CreateDepthStencilState(initializer);
+    initializer.getHash();
+    cachedInfo = g_rhi->createDepthStencilState(initializer);
     return cachedInfo;
   }
 };
@@ -1006,7 +1081,7 @@ template <bool         TBlendEnable    = false,
           EBlendOp     TAlphaBlendOp   = EBlendOp::ADD,
           EColorMask   TColorWriteMask = EColorMask::ALL>
 struct TBlendingStateInfo {
-  static BlendingStateInfo* Create() {
+  static BlendingStateInfo* s_create() {
     static BlendingStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
       return cachedInfo;
@@ -1021,8 +1096,8 @@ struct TBlendingStateInfo {
     initializer.m_destAlpha_      = TDestAlpha;
     initializer.m_alphaBlendOp_   = TAlphaBlendOp;
     initializer.m_colorWriteMask_ = TColorWriteMask;
-    initializer.GetHash();
-    cachedInfo = g_rhi->CreateBlendingState(initializer);
+    initializer.getHash();
+    cachedInfo = g_rhi->createBlendingState(initializer);
     return cachedInfo;
   }
 };

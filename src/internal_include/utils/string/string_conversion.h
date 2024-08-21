@@ -9,12 +9,12 @@
 namespace game_engine {
 
 // Converts a multi-byte character string to a wide character string
-std::wstring ConvertToWchar(const char* path, int32_t length);
+std::wstring g_convertToWchar(const char* path, int32_t length);
 
 // Overloaded function to convert jName type to wide character string
-inline std::wstring ConvertToWchar(Name name) {
-  assert(name.IsValid());
-  return ConvertToWchar(name.ToStr(), (int32_t)name.GetStringLength());
+inline std::wstring g_convertToWchar(Name name) {
+  assert(name.isValid());
+  return g_convertToWchar(name.toStr(), (int32_t)name.getStringLength());
 }
 
 }  // namespace game_engine

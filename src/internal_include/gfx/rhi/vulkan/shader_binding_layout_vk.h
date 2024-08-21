@@ -44,9 +44,9 @@ struct WriteDescriptorInfo {
 };
 
 struct WriteDescriptorSet {
-  void Reset();
+  void reset();
 
-  void SetWriteDescriptorInfo(int32_t               index,
+  void setWriteDescriptorInfo(int32_t               index,
                               const ShaderBinding* shaderBinding);
 
   bool                              m_isInitialized_ = false;
@@ -62,34 +62,34 @@ struct WriteDescriptorSet {
 struct ShaderBindingInstanceVk : public ShaderBindingInstance {
   virtual ~ShaderBindingInstanceVk() {}
 
-  const struct ShaderBindingLayoutVk* ShaderBindingsLayouts = nullptr;
+  const struct ShaderBindingLayoutVk* m_shaderBindingsLayouts_ = nullptr;
 
-  static void CreateWriteDescriptorSet(
+  static void s_createWriteDescriptorSet(
       WriteDescriptorSet&        descriptorWrites,
       const VkDescriptorSet      descriptorSet,
       const ShaderBindingArray& shaderBindingArray);
 
-  static void UpdateWriteDescriptorSet(
+  static void s_updateWriteDescriptorSet(
       WriteDescriptorSet&        descriptorWrites,
       const ShaderBindingArray& shaderBindingArray);
 
-  virtual void Initialize(
+  virtual void initialize(
       const ShaderBindingArray& shaderBindingArray) override;
 
-  virtual void UpdateShaderBindings(
+  virtual void updateShaderBindings(
       const ShaderBindingArray& shaderBindingArray) override;
 
-  virtual void* GetHandle() const override { return m_descriptorSet_; }
+  virtual void* getHandle() const override { return m_descriptorSet_; }
 
-  virtual const std::vector<uint32_t>* GetDynamicOffsets() const override {
+  virtual const std::vector<uint32_t>* getDynamicOffsets() const override {
     return &m_writeDescriptorSet_.m_dynamicOffsets_;
   }
 
-  virtual void Free() override;
+  virtual void free() override;
 
-  virtual ShaderBindingInstanceType GetType() const { return m_type_; }
+  virtual ShaderBindingInstanceType getType() const { return m_type_; }
 
-  virtual void SetType(const ShaderBindingInstanceType type) {
+  virtual void setType(const ShaderBindingInstanceType type) {
     m_type_ = type;
   }
 
@@ -106,26 +106,27 @@ struct ShaderBindingInstanceVk : public ShaderBindingInstance {
 struct ShaderBindingLayoutVk;
 
 struct ShaderBindingLayoutVk : public ShaderBindingLayout {
-  virtual ~ShaderBindingLayoutVk() { Release(); }
+  virtual ~ShaderBindingLayoutVk() { release(); }
 
-  virtual bool Initialize(
+  virtual bool initialize(
       const ShaderBindingArray& shaderBindingArray) override;
 
-  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+  virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
       const ShaderBindingInstanceType type) const override;
 
-  virtual size_t GetHash() const override;
+  virtual size_t getHash() const override;
 
-  virtual const ShaderBindingArray& GetShaderBindingsLayout() const {
+  virtual const ShaderBindingArray& getShaderBindingsLayout() const {
     return m_shaderBindingArray_;
   }
 
-  virtual void* GetHandle() const override { return m_descriptorSetLayout_; }
+  virtual void* getHandle() const override { return m_descriptorSetLayout_; }
 
-  void Release();
+  void release();
 
-  std::vector<VkDescriptorPoolSize> GetDescriptorPoolSizeArray(
+  // TODO: not used
+  std::vector<VkDescriptorPoolSize> getDescriptorPoolSizeArray(
       uint32_t maxAllocations) const;
 
   mutable size_t m_hash_ = 0;
@@ -134,14 +135,14 @@ struct ShaderBindingLayoutVk : public ShaderBindingLayout {
   ShaderBindingArray m_shaderBindingArray_;
 
   public:
-  static VkDescriptorSetLayout CreateDescriptorSetLayout(
+  static VkDescriptorSetLayout s_createDescriptorSetLayout(
       const ShaderBindingArray& shaderBindingArray);
 
-  static VkPipelineLayout CreatePipelineLayout(
+  static VkPipelineLayout s_createPipelineLayout(
       const ShaderBindingLayoutArray& shaderBindingLayoutArray,
       const PushConstant*             pushConstant);
 
-  static void ClearPipelineLayout();
+  static void s_clearPipelineLayout();
 
   VkDescriptorSetLayout m_descriptorSetLayout_ = nullptr;
 

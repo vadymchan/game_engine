@@ -7,22 +7,22 @@ namespace game_engine {
 
 // SwapchainImageVk
 // =============================================
-void SwapchainImageVk::ReleaseInternal() {
+void SwapchainImageVk::releaseInternal() {
   m_TexturePtr_ = nullptr;
   if (m_available_) {
-    g_rhi_vk->GetSemaphoreManager()->ReturnSemaphore(m_available_);
+    g_rhi_vk->getSemaphoreManager()->returnSemaphore(m_available_);
     m_available_ = nullptr;
   }
   if (m_renderFinished_) {
-    g_rhi_vk->GetSemaphoreManager()->ReturnSemaphore(m_renderFinished_);
+    g_rhi_vk->getSemaphoreManager()->returnSemaphore(m_renderFinished_);
     m_renderFinished_ = nullptr;
   }
   if (m_renderFinishedAfterShadow_) {
-    g_rhi_vk->GetSemaphoreManager()->ReturnSemaphore(m_renderFinishedAfterShadow_);
+    g_rhi_vk->getSemaphoreManager()->returnSemaphore(m_renderFinishedAfterShadow_);
     m_renderFinishedAfterShadow_ = nullptr;
   }
   if (m_renderFinishedAfterBasePass_) {
-    g_rhi_vk->GetSemaphoreManager()->ReturnSemaphore(
+    g_rhi_vk->getSemaphoreManager()->returnSemaphore(
         m_renderFinishedAfterBasePass_);
     m_renderFinishedAfterBasePass_ = nullptr;
   }
@@ -33,8 +33,8 @@ void SwapchainImageVk::ReleaseInternal() {
 // SwapchainVk
 // =============================================
 
-bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
-  SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(
+bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
+  SwapChainSupportDetails swapChainSupport = g_querySwapChainSupport(
       g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
 
   // Choose the surface format
@@ -55,7 +55,7 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
 
   // Choose the present mode
   VkPresentModeKHR presentMode
-      = ChooseSwapPresentMode(swapChainSupport.m_presentModes_, isVSyncEnabled);
+      = g_chooseSwapPresentMode(swapChainSupport.m_presentModes_, m_isVSyncEnabled_);
 
   // Determine the swap extent
   VkExtent2D extent = swapChainSupport.m_capabilities_.currentExtent;
@@ -107,7 +107,7 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
   QueueFamilyIndices indices
-      = FindQueueFamilies(g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
+      = g_findQueueFamilies(g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
   uint32_t queueFamilyIndices[]
       = {indices.m_graphicsFamily_.value(), indices.m_presentFamily_.value()};
   if (indices.m_graphicsFamily_ != indices.m_presentFamily_) {
@@ -156,7 +156,7 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
   vkGetSwapchainImagesKHR(
       g_rhi_vk->m_device_, m_swapChain_, &imageCount, swapChainImages.data());
 
-  m_format_ = GetVulkanTextureFormat(surfaceFormat.format);
+  m_format_ = g_getVulkanTextureFormat(surfaceFormat.format);
   m_extent_ = math::Dimension2Di((int)extent.width, (int)extent.height);
 
   // ImageView
@@ -168,13 +168,13 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
     } else {
       swapchainImage = new SwapchainImageVk();
       swapchainImage->m_available_
-          = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
+          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_renderFinished_
-          = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
+          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_renderFinishedAfterShadow_
-          = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
+          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_renderFinishedAfterBasePass_
-          = g_rhi_vk->GetSemaphoreManager()->GetOrCreateSemaphore();
+          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_commandBufferFence_ = nullptr;
 
       m_images_[i] = swapchainImage;
@@ -234,7 +234,7 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
 
     swapchainImage->m_TexturePtr_ = std::make_shared<TextureVk>(
         ETextureType::TEXTURE_2D,
-        GetVulkanTextureFormat(surfaceFormat.format),
+        g_getVulkanTextureFormat(surfaceFormat.format),
         math::Dimension2Di{static_cast<int>(extent.width),
                            static_cast<int>(extent.height)});
 
@@ -247,8 +247,8 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
     swapchainImageTextureVk->m_mipLevels_ = 1;  // TODO: temporal hot-fix
   }
 
-  g_rhi_vk->s_renderPassPool.Release();
-  g_rhi_vk->s_pipelineStatePool.Release();
+  g_rhi_vk->s_renderPassPool.release();
+  g_rhi_vk->s_pipelineStatePool.release();
 
   for (DescriptorPoolVk* pool : g_rhi_vk->m_descriptorPoolsSingleFrame_) {
     pool->m_pendingDescriptorSets_.clear();
@@ -267,10 +267,10 @@ bool SwapchainVk::Create(const std::shared_ptr<Window>& window) {
   // - Recreate graphics pipeline if necessary
   // - Re-record command buffers
   // - Recreate depth/stencil buffers if used
-  // - Update/recreate descriptor sets if they reference swap chain resources
+  // - update/recreate descriptor sets if they reference swap chain resources
 }
 
-void SwapchainVk::ReleaseInternal() {
+void SwapchainVk::releaseInternal() {
   vkDestroySwapchainKHR(g_rhi_vk->m_device_, m_swapChain_, nullptr);
 
   for (auto& iter : m_images_) {

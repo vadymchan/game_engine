@@ -4,7 +4,7 @@
 
 namespace game_engine {
 
-void RenderPassDx12::Release() {
+void RenderPassDx12::release() {
   // if (m_frameBuffer)
   //{
   //     vkDestroyFramebuffer(g_rhi_vk->Device, m_frameBuffer, nullptr);
@@ -18,7 +18,7 @@ void RenderPassDx12::Release() {
   // }
 }
 
-bool RenderPassDx12::BeginRenderPass(const CommandBuffer* commandBuffer) {
+bool RenderPassDx12::beginRenderPass(const CommandBuffer* commandBuffer) {
   bool isValidCommandBuffer = commandBuffer != nullptr;
   assert(isValidCommandBuffer);
 
@@ -41,15 +41,15 @@ bool RenderPassDx12::BeginRenderPass(const CommandBuffer* commandBuffer) {
   }
 
   for (int32_t i = 0; i < m_rtvClears_.size(); ++i) {
-    if (m_rtvClears_[i].GetType() != ERTClearType::Color) {
+    if (m_rtvClears_[i].getType() != ERTClearType::Color) {
       continue;
     }
 
     m_commandBuffer_->m_commandList_->ClearRenderTargetView(
-        m_rtvCPUHandles_[i], m_rtvClears_[i].GetCleraColor(), 0, nullptr);
+        m_rtvCPUHandles_[i], m_rtvClears_[i].getCleraColor(), 0, nullptr);
   }
 
-  if (m_dsvClear_.GetType() == ERTClearType::DepthStencil) {
+  if (m_dsvClear_.getType() == ERTClearType::DepthStencil) {
     if (m_dsvDepthClear_ || m_dsvStencilClear_) {
       D3D12_CLEAR_FLAGS DSVClearFlags = (D3D12_CLEAR_FLAGS)0;
       if (m_dsvDepthClear_) {
@@ -63,8 +63,8 @@ bool RenderPassDx12::BeginRenderPass(const CommandBuffer* commandBuffer) {
       m_commandBuffer_->m_commandList_->ClearDepthStencilView(
           m_dsvCPUDHandle_,
           DSVClearFlags,
-          m_dsvClear_.GetCleraDepth(),
-          (uint8_t)m_dsvClear_.GetCleraStencil(),
+          m_dsvClear_.getClearDepth(),
+          (uint8_t)m_dsvClear_.getClearStencil(),
           0,
           nullptr);
     }
@@ -73,40 +73,40 @@ bool RenderPassDx12::BeginRenderPass(const CommandBuffer* commandBuffer) {
   return true;
 }
 
-void RenderPassDx12::EndRenderPass() {
+void RenderPassDx12::endRenderPass() {
   // assert(m_commandBuffer);
 
   //// Finishing up
-  // vkCmdEndRenderPass((VkCommandBuffer)m_commandBuffer->GetHandle());
+  // vkCmdEndRenderPass((VkCommandBuffer)m_commandBuffer->getHandle());
 
   //// Apply layout to attachments
   // for(Attachment& iter : m_renderPassInfo_.Attachments)
   //{
-  //     check(iter.IsValid());
-  //     SetFinalLayoutToAttachment(iter);
+  //     check(iter.isValid());
+  //     setFinalLayoutToAttachment_(iter);
   // }
 
   // m_commandBuffer = nullptr;
 }
 
-void RenderPassDx12::SetFinalLayoutToAttachment(
+void RenderPassDx12::setFinalLayoutToAttachment_(
     const Attachment& attachment) const {
   // check(attachment.RenderTargetPtr);
   // TextureDx12* texture_vk =
-  // (TextureDx12*)attachment.RenderTargetPtr->GetTexture();
+  // (TextureDx12*)attachment.RenderTargetPtr->getTexture();
   // texture_vk->Layout = attachment.FinalLayout;
 }
 
-void RenderPassDx12::Initialize() {
-  CreateRenderPass();
+void RenderPassDx12::initialize() {
+  createRenderPass();
 }
 
-bool RenderPassDx12::CreateRenderPass() {
+bool RenderPassDx12::createRenderPass() {
   // Create m_renderPass
   {
     for (int32_t i = 0; i < (int32_t)m_renderPassInfo_.m_attachments_.size(); ++i) {
       const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
-      assert(attachment.IsValid());
+      assert(attachment.isValid());
 
       const auto& RTInfo = attachment.m_renderTargetPtr_->m_info_;
       const bool  HasClear
@@ -114,10 +114,10 @@ bool RenderPassDx12::CreateRenderPass() {
              || attachment.m_loadStoreOp_
                     == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
       TextureDx12* TextureDX12
-          = (TextureDx12*)attachment.m_renderTargetPtr_->GetTexture();
+          = (TextureDx12*)attachment.m_renderTargetPtr_->getTexture();
 
-      if (attachment.IsDepthAttachment()) {
-        m_dsvFormat_ = GetDX12TextureFormat(RTInfo.m_format_);
+      if (attachment.isDepthAttachment()) {
+        m_dsvFormat_ = g_getDX12TextureFormat(RTInfo.m_format_);
         m_dsvClear_  = attachment.m_rtClearValue;
 
         m_dsvDepthClear_   = HasClear;
@@ -134,7 +134,7 @@ bool RenderPassDx12::CreateRenderPass() {
           m_rtvClears_.push_back(RTClearValue::s_kInvalid);
         }
         m_rtvCPUHandles_.push_back(TextureDX12->m_rtv_.m_cpuHandle_);
-        m_rtvFormats_.push_back(GetDX12TextureFormat(RTInfo.m_format_));
+        m_rtvFormats_.push_back(g_getDX12TextureFormat(RTInfo.m_format_));
       }
     }
   }

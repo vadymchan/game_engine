@@ -66,8 +66,8 @@ class Engine {
     m_windowEventHandler_->subscribe(
         SDL_WINDOWEVENT_RESIZED, [this](const WindowEvent& event) {
           this->m_window_->onResize(event);
-          this->m_game_->Resize(event.data1, event.data2);  // TODO: refactor
-          g_rhi->OnHandleResized(
+          this->m_game_->resize(event.data1, event.data2);  // TODO: refactor
+          g_rhi->onHandleResized(
               event.data1, event.data2, false);             // TODO: refactor
         });
     m_windowEventManager_
@@ -84,9 +84,9 @@ class Engine {
 
     g_rhi = new RhiDx12();
     g_rhi->init(m_window_);
-    g_rhi->OnInitRHI();
+    g_rhi->onInitRHI();
 
-    m_game_->Setup();
+    m_game_->setup();
 
     return successfullyInited;
   }
@@ -100,19 +100,19 @@ class Engine {
       m_deltaTime_.reset();
 
       processEvents_();
-      m_game_->ProcessInput();  // TODO: consider remove
+      m_game_->processInput();  // TODO: consider remove
       update_(deltaTime);
-      m_game_->Draw();
+      m_game_->draw();
       // render();
     }
   }
 
   void release() {
     if (g_rhi_vk) {
-      g_rhi_vk->Flush();
+      g_rhi_vk->flush();
     }
 
-    m_game_->Release();
+    m_game_->release();
   }
 
   void onClose(const ApplicationEvent& event) { m_isRunning_ = false; }
@@ -128,9 +128,9 @@ class Engine {
   }
 
   void update_(float deltaTime) {
-    m_game_->Update(deltaTime);
+    m_game_->update(deltaTime);
 
-    Shader::StartAndRunCheckUpdateShaderThread();
+    Shader::s_startAndRunCheckUpdateShaderThread();
   }
 
   bool                           m_isRunning_{false};

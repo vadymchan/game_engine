@@ -4,14 +4,14 @@
 namespace game_engine {
 
 TextureDx12::~TextureDx12() {
-  Release();
+  release();
 }
 
-void TextureDx12::Release() {
-  m_srv_.Free();
-  m_uav_.Free();
-  m_rtv_.Free();
-  m_dsv_.Free();
+void TextureDx12::release() {
+  m_srv_.free();
+  m_uav_.free();
+  m_rtv_.free();
+  m_dsv_.free();
 }
 
 

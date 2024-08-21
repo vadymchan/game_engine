@@ -8,14 +8,14 @@
 
 namespace game_engine {
 
-void UniformBufferBlockVk::Init(size_t size) {
+void UniformBufferBlockVk::init(size_t size) {
   assert(size);
 
-  size = Align<uint64_t>(
+  size = g_align<uint64_t>(
       size,
       g_rhi_vk->m_deviceProperties_.limits.minUniformBufferOffsetAlignment);
 
-  if (IsUseRingBuffer()) {
+  if (isUseRingBuffer()) {
     m_buffer_.m_hasBufferOwnership_ = false;  // Prevent destroy the ring buffer
     m_buffer_.m_allocatedSize_      = size;
   } else {
@@ -24,12 +24,12 @@ void UniformBufferBlockVk::Init(size_t size) {
   }
 }
 
-void UniformBufferBlockVk::UpdateBufferData(const void* data, size_t size) {
+void UniformBufferBlockVk::updateBufferData(const void* data, size_t size) {
   assert(m_buffer_.m_allocatedSize_ >= size);
 
-  if (IsUseRingBuffer()) {
-    RingBufferVk* ringBuffer = g_rhi_vk->GetOneFrameUniformRingBuffer();
-    m_buffer_.m_offset_            = ringBuffer->Alloc(size);
+  if (isUseRingBuffer()) {
+    RingBufferVk* ringBuffer = g_rhi_vk->getOneFrameUniformRingBuffer();
+    m_buffer_.m_offset_            = ringBuffer->alloc(size);
     m_buffer_.m_allocatedSize_     = size;
     m_buffer_.m_buffer_          = ringBuffer->m_buffer_;
     m_buffer_.m_deviceMemory_          = ringBuffer->m_bufferMemory_;
@@ -46,7 +46,7 @@ void UniformBufferBlockVk::UpdateBufferData(const void* data, size_t size) {
   } else {
 #if USE_VK_MEMORY_POOL
     assert(m_buffer_.m_allocatedSize_);
-    AllocBufferFromGlobalMemory(m_buffer_.m_allocatedSize_);
+    allocBufferFromGlobalMemory(m_buffer_.m_allocatedSize_);
 
     if (m_buffer_.m_mappedPointer_) {
       uint8_t* startAddr = ((uint8_t*)m_buffer_.m_mappedPointer_) + m_buffer_.m_offset_;
@@ -76,10 +76,10 @@ void UniformBufferBlockVk::UpdateBufferData(const void* data, size_t size) {
   }
 }
 
-void UniformBufferBlockVk::ClearBuffer(int32_t clearValue) {
-  if (IsUseRingBuffer()) {
-    RingBufferVk* ringBuffer = g_rhi_vk->GetOneFrameUniformRingBuffer();
-    m_buffer_.m_offset_            = ringBuffer->Alloc(m_buffer_.m_allocatedSize_);
+void UniformBufferBlockVk::clearBuffer(int32_t clearValue) {
+  if (isUseRingBuffer()) {
+    RingBufferVk* ringBuffer = g_rhi_vk->getOneFrameUniformRingBuffer();
+    m_buffer_.m_offset_            = ringBuffer->alloc(m_buffer_.m_allocatedSize_);
     m_buffer_.m_allocatedSize_     = m_buffer_.m_allocatedSize_;
     m_buffer_.m_buffer_          = ringBuffer->m_buffer_;
     m_buffer_.m_deviceMemory_          = ringBuffer->m_bufferMemory_;
@@ -92,7 +92,7 @@ void UniformBufferBlockVk::ClearBuffer(int32_t clearValue) {
   } else {
 #if USE_VK_MEMORY_POOL
     assert(m_buffer_.m_allocatedSize_);
-    AllocBufferFromGlobalMemory(m_buffer_.m_allocatedSize_);
+    allocBufferFromGlobalMemory(m_buffer_.m_allocatedSize_);
 
     if (m_buffer_.m_mappedPointer_) {
       memset(((uint8_t*)m_buffer_.m_mappedPointer_) + m_buffer_.m_offset_,
@@ -115,16 +115,16 @@ void UniformBufferBlockVk::ClearBuffer(int32_t clearValue) {
   }
 }
 
-void UniformBufferBlockVk::AllocBufferFromGlobalMemory(size_t size) {
+void UniformBufferBlockVk::allocBufferFromGlobalMemory(size_t size) {
   // If we have allocated memory frame global memory, reallocate it again.
-  m_buffer_.Release();
-  m_buffer_.InitializeWithMemory(g_rhi_vk->GetMemoryPool()->Alloc(
+  m_buffer_.release();
+  m_buffer_.initializeWithMemory(g_rhi_vk->getMemoryPool()->alloc(
       EVulkanBufferBits::UNIFORM_BUFFER,
       EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
       VkDeviceSize(size)));
 
 
-  assert(m_buffer_.m_memory_.IsValid());
+  assert(m_buffer_.m_memory_.isValid());
 }
 
 }  // namespace game_engine  

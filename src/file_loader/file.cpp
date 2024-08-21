@@ -4,57 +4,57 @@
 
 namespace game_engine {
 
-uint64_t File::GetFileTimeStamp(const std::string& filename) {
+uint64_t File::s_getFileTimeStamp(const std::string& filename) {
   assert(!filename.empty());
   auto lastWriteTime = std::filesystem::last_write_time(filename);
   return static_cast<uint64_t>(lastWriteTime.time_since_epoch().count());
 }
 
 File::~File() {
-  CloseFile();
+  closeFile();
 }
 
-bool File::OpenFile(const std::string&  szFileName,
+bool File::openFile(const std::string&  szFileName,
                      FileType::Enum      fileType,
                      ReadWriteType::Enum readWriteType) {
   std::string option;
 
   switch (readWriteType) {
-    case ReadWriteType::READ:
+    case ReadWriteType::Read:
       option += "r";
       break;
-    case ReadWriteType::WRITE:
+    case ReadWriteType::Write:
       option += "w";
       break;
-    case ReadWriteType::APPEND:
+    case ReadWriteType::Append:
       option += "a";
       break;
-    case ReadWriteType::READ_UPDATE:
+    case ReadWriteType::ReadUpdate:
       option += "r+";
       break;
-    case ReadWriteType::WRITE_UPDATE:
+    case ReadWriteType::WriteUpdate:
       option += "w+";
       break;
-    case ReadWriteType::APPEND_UPDATE:
+    case ReadWriteType::AppendUpdate:
       option += "a+";
       break;
   }
 
   switch (fileType) {
-    case FileType::BINARY:
+    case FileType::Binary:
       option += "b";
       break;
-    case FileType::TEXT:
+    case FileType::Text:
       option += "t";
       break;
   }
 
-  CloseFile();
+  closeFile();
   m_fp_ = std::fopen(szFileName.c_str(), option.c_str());
   return m_fp_ != nullptr;
 }
 
-size_t File::ReadFileToBuffer(bool   appendToEndofBuffer,
+size_t File::readFileToBuffer(bool   appendToEndofBuffer,
                                size_t index,
                                size_t count) {
   size_t readSize = 0;
@@ -78,28 +78,28 @@ size_t File::ReadFileToBuffer(bool   appendToEndofBuffer,
 
     std::fseek(m_fp_, static_cast<long>(index), SEEK_SET);
     readSize = std::fread(
-        &m_buffer_[writeStartIndex], sizeof(ELEMENT_TYPE), count, m_fp_);
+        &m_buffer_[writeStartIndex], sizeof(ElementType), count, m_fp_);
     m_buffer_.resize(writeStartIndex + readSize);
   }
 
   return readSize;
 }
 
-void File::CloseFile() {
+void File::closeFile() {
   if (m_fp_) {
     std::fclose(m_fp_);
     m_fp_ = nullptr;
   }
 }
 
-const char* File::GetBuffer(size_t index, size_t count) const {
+const char* File::getBuffer(size_t index, size_t count) const {
   if (m_buffer_.empty()) {
     return nullptr;
   }
   return &m_buffer_[0];
 }
 
-bool File::GetBuffer(FILE_BUFFER&       buffer,
+bool File::getBuffer(FileBuffer&       buffer,
                       const std::string& startToken,
                       const std::string& endToken) {
   if (m_buffer_.empty()) {
@@ -120,7 +120,7 @@ bool File::GetBuffer(FILE_BUFFER&       buffer,
 
     if (count > 0) {
       buffer.resize(count);
-      std::memcpy(&buffer[0], startPos, count * sizeof(ELEMENT_TYPE));
+      std::memcpy(&buffer[0], startPos, count * sizeof(ElementType));
       return true;
     }
   }

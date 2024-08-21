@@ -9,29 +9,29 @@ class CommandBuffer {
   public:
   virtual ~CommandBuffer() {}
 
-  virtual void* GetNativeHandle() const { return nullptr; }
+  virtual void* getNativeHandle() const { return nullptr; }
 
-  virtual void* GetFenceHandle() const { return nullptr; }
+  virtual void* getFenceHandle() const { return nullptr; }
 
-  virtual void SetFence(void* fence) {}
+  virtual void setFence(void* fence) {}
 
-  virtual bool Begin() const { return false; }
+  virtual bool begin() const { return false; }
 
-  virtual bool End() const { return false; }
+  virtual bool end() const { return false; }
 
-  virtual void Reset() const {}
+  virtual void reset() const {}
 
-  virtual Fence* GetFence() const { return nullptr; }
+  virtual Fence* getFence() const { return nullptr; }
 };
 
 class CommandBufferManager {
   public:
   virtual ~CommandBufferManager() {}
 
-  virtual void Release() = 0;
+  virtual void release() = 0;
 
-  virtual CommandBuffer* GetOrCreateCommandBuffer()              = 0;
-  virtual void ReturnCommandBuffer(CommandBuffer* commandBuffer) = 0;
+  virtual CommandBuffer* getOrCreateCommandBuffer()              = 0;
+  virtual void returnCommandBuffer(CommandBuffer* commandBuffer) = 0;
 };
 
 }  // namespace game_engine

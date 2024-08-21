@@ -21,13 +21,13 @@ class SubMemoryAllocatorVk : public SubMemoryAllocator {
 
   virtual ~SubMemoryAllocatorVk() {}
 
-  virtual void Initialize(EVulkanBufferBits usage,
+  virtual void initialize(EVulkanBufferBits usage,
                           EVulkanMemoryBits properties,
                           uint64_t          size) override;
 
-  virtual void* GetBuffer() const { return m_buffer_; }
+  virtual void* getBuffer() const { return m_buffer_; }
 
-  virtual void* GetMemory() const { return m_deviceMemory_; }
+  virtual void* getMemory() const { return m_deviceMemory_; }
 
   VkBuffer       m_buffer_       = nullptr;
   VkDeviceMemory m_deviceMemory_ = nullptr;
@@ -37,7 +37,7 @@ class MemoryPoolVk : public MemoryPool {
   public:
   virtual ~MemoryPoolVk() {}
 
-  virtual SubMemoryAllocator* CreateSubMemoryAllocator() const override;
+  virtual SubMemoryAllocator* createSubMemoryAllocator() const override;
 
 };
 

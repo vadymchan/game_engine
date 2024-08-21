@@ -26,12 +26,12 @@ namespace game_engine {
 template <typename T1, typename T2>
 using ConversionTypePair = std::pair<T1, T2>;
 
-// Get the first type of Parameter Packs
+// get the first type of Parameter Packs
 template <typename T, typename... T1>
 using PacksType = T;
 
 template <typename... T1>
-constexpr auto GenerateConversionTypeArray(T1... args) {
+constexpr auto g_generateConversionTypeArray(T1... args) {
   // Obtain the second_type of the first type in a parameter pack made of
   // std::pairs
   using value_type = typename PacksType<T1...>::second_type;
@@ -46,7 +46,7 @@ constexpr auto GenerateConversionTypeArray(T1... args) {
 }
 
 template <typename... T1>
-constexpr auto GenerateConversionTypeMap(T1... args) {
+constexpr auto g_generateConversionTypeMap(T1... args) {
   // Obtain the first_type and second_type from the first type in a parameter
   // pack made of std::pairs
   using key_type   = typename PacksType<T1...>::first_type;
@@ -60,7 +60,7 @@ constexpr auto GenerateConversionTypeMap(T1... args) {
 }
 
 template <typename... T1>
-constexpr auto GenerateInverseConversionTypeMap(T1... args) {
+constexpr auto g_generateInverseConversionTypeMap(T1... args) {
   // Obtain the second_type as key and first_type as value from the first type
   // in a parameter pack made of std::pairs
   using key_type   = typename PacksType<T1...>::second_type;
@@ -82,7 +82,7 @@ constexpr auto GenerateInverseConversionTypeMap(T1... args) {
 // engine types is small and all integer values from 0 to N are used.
 #define GENERATE_STATIC_CONVERSION_ARRAY(...)                           \
   {                                                                     \
-    static auto _TypeArray_ = GenerateConversionTypeArray(__VA_ARGS__); \
+    static auto _TypeArray_ = g_generateConversionTypeArray(__VA_ARGS__); \
     return _TypeArray_[(int64_t)type];                                  \
   }
 
@@ -92,12 +92,12 @@ constexpr auto GenerateInverseConversionTypeMap(T1... args) {
 // waste.
 #define GENERATE_STATIC_CONVERSION_MAP(...)                         \
   {                                                                 \
-    static auto _TypeMap_ = GenerateConversionTypeMap(__VA_ARGS__); \
+    static auto _TypeMap_ = g_generateConversionTypeMap(__VA_ARGS__); \
     return _TypeMap_[type];                                         \
   }
 #define GENERATE_STATIC_INVERSECONVERSION_MAP(...)                         \
   {                                                                        \
-    static auto _TypeMap_ = GenerateInverseConversionTypeMap(__VA_ARGS__); \
+    static auto _TypeMap_ = g_generateInverseConversionTypeMap(__VA_ARGS__); \
     return _TypeMap_[type];                                                \
   }
 
@@ -144,7 +144,7 @@ std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
   };                                                                         \
   static std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1>     \
                      EnumType##Strings = split<EnumType>(#__VA_ARGS__, ','); \
-  inline const char* EnumToString(EnumType value) {                          \
+  inline const char* g_enumToString(EnumType value) {                          \
     return EnumType##Strings[static_cast<size_t>(value)].c_str();            \
   }
 //////////////////////////////////////////////////////////////////////////
@@ -247,7 +247,8 @@ DECLARE_ENUM_WITH_CONVERT_TO_STRING(ETextureFormat,
                                     BC7_UNORM,
                                     MAX, );
 
-static bool IsDepthFormat(ETextureFormat format) {
+// TODO: this is global function (maybe use g_ prefix?)
+static bool s_isDepthFormat(ETextureFormat format) {
   switch (format) {
     case ETextureFormat::D16:
     case ETextureFormat::D16_S8:
@@ -261,7 +262,7 @@ static bool IsDepthFormat(ETextureFormat format) {
   return false;
 }
 
-static bool IsDepthOnlyFormat(ETextureFormat format) {
+static bool s_isDepthOnlyFormat(ETextureFormat format) {
   switch (format) {
     case ETextureFormat::D16:
     case ETextureFormat::D24:
@@ -285,7 +286,8 @@ DECLARE_ENUM_WITH_CONVERT_TO_STRING(EFormatType,
 
 // clang-format off
 
-GENERATE_CONVERSION_FUNCTION(GetTexturePixelType,
+// TODO: not used
+GENERATE_CONVERSION_FUNCTION(g_getTexturePixelType,
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB8, EFormatType::UNSIGNED_BYTE),          // not support rgb8 -> rgba8
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB32F, EFormatType::HALF),                 // not support rgb32 -> rgba32
     CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB16F, EFormatType::HALF),                 // not support rgb16 -> rgba16
@@ -709,7 +711,7 @@ class RTClearValue {
     m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
   }
 
-  void SetColor(const math::Vector4Df& color) {
+  void setColor(const math::Vector4Df& color) {
     m_type_                   = ERTClearType::Color;
     m_clearValue_.m_color_[0] = color.x();
     m_clearValue_.m_color_[1] = color.y();
@@ -717,31 +719,31 @@ class RTClearValue {
     m_clearValue_.m_color_[3] = color.w();
   }
 
-  void SetDepthStencil(float depth, uint8_t stencil) {
+  void setDepthStencil(float depth, uint8_t stencil) {
     m_type_                                  = ERTClearType::DepthStencil;
     m_clearValue_.m_depthStencil_.m_depth_   = depth;
     m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
   }
 
-  const float* GetCleraColor() const { return &m_clearValue_.m_color_[0]; }
+  const float* getCleraColor() const { return &m_clearValue_.m_color_[0]; }
 
-  DepthStencilClearType GetCleraDepthStencil() const {
+  DepthStencilClearType getClearDepthStencil() const {
     return m_clearValue_.m_depthStencil_;
   }
 
-  float GetCleraDepth() const { return m_clearValue_.m_depthStencil_.m_depth_; }
+  float getClearDepth() const { return m_clearValue_.m_depthStencil_.m_depth_; }
 
-  uint32_t GetCleraStencil() const {
+  uint32_t getClearStencil() const {
     return m_clearValue_.m_depthStencil_.m_stencil_;
   }
 
-  ClearValueType GetClearValue() const { return m_clearValue_; }
+  ClearValueType getClearValue() const { return m_clearValue_; }
 
-  void ResetToNoneType() { m_type_ = ERTClearType::None; }
+  void resetToNoneType() { m_type_ = ERTClearType::None; }
 
-  ERTClearType GetType() const { return m_type_; }
+  ERTClearType getType() const { return m_type_; }
 
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_type_ == ERTClearType::Color) {
       return GETHASH_FROM_INSTANT_STRUCT(m_type_,
                                          m_clearValue_.m_color_[0],

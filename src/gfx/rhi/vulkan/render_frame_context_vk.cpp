@@ -7,18 +7,18 @@ namespace game_engine {
 
 
 
-void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
+void RenderFrameContextVk::submitCurrentActiveCommandBuffer(
     ECurrentRenderPass currentRenderPass) {
   SwapchainImageVk* swapchainImageVk
-      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_->GetSwapchainImage(m_frameIndex_);
+      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_->getSwapchainImage(m_frameIndex_);
 
   switch (currentRenderPass) {
     case RenderFrameContextVk::ShadowPass:
-      QueueSubmitCurrentActiveCommandBuffer(
+      queueSubmitCurrentActiveCommandBuffer(
           swapchainImageVk->m_renderFinishedAfterShadow_);
       break;
     case RenderFrameContextVk::BasePass:
-      QueueSubmitCurrentActiveCommandBuffer(
+      queueSubmitCurrentActiveCommandBuffer(
           swapchainImageVk->m_renderFinishedAfterBasePass_);
       break;
     default:
@@ -26,19 +26,19 @@ void RenderFrameContextVk::SubmitCurrentActiveCommandBuffer(
   }
 }
 
-void RenderFrameContextVk::QueueSubmitCurrentActiveCommandBuffer(
+void RenderFrameContextVk::queueSubmitCurrentActiveCommandBuffer(
     Semaphore* signalSemaphore) {
   if (m_commandBuffer_) {
     // TODO: temoporary removed
-    // m_commandBuffer->End();
+    // m_commandBuffer->end();
 
-    g_rhi_vk->QueueSubmit(shared_from_this(), signalSemaphore);
-    g_rhi_vk->GetCommandBufferManager()->ReturnCommandBuffer(m_commandBuffer_);
+    g_rhi_vk->queueSubmit(shared_from_this(), signalSemaphore);
+    g_rhi_vk->getCommandBufferManager()->returnCommandBuffer(m_commandBuffer_);
 
     // get new command buffer
-    m_commandBuffer_ = g_rhi_vk->m_commandBufferManager_->GetOrCreateCommandBuffer();
-    g_rhi_vk->m_swapchain_->GetSwapchainImage(m_frameIndex_)->m_commandBufferFence_
-        = (VkFence)m_commandBuffer_->GetFenceHandle();
+    m_commandBuffer_ = g_rhi_vk->m_commandBufferManager_->getOrCreateCommandBuffer();
+    g_rhi_vk->m_swapchain_->getSwapchainImage(m_frameIndex_)->m_commandBufferFence_
+        = (VkFence)m_commandBuffer_->getFenceHandle();
   }
 }
 

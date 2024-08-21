@@ -18,36 +18,36 @@ class RenderPassVk : public RenderPass {
   public:
   using RenderPass::RenderPass;
 
-  virtual ~RenderPassVk() { Release(); }
+  virtual ~RenderPassVk() { release(); }
 
-  void Release();
+  void release();
 
-  // bool Initialize(const RenderPassInfoVk& renderPassInfo) {
+  // bool initialize(const RenderPassInfoVk& renderPassInfo) {
   //   m_renderPassInfo_ = renderPassInfo;
-  //   if (!CreateRenderPass()) {
+  //   if (!createRenderPass()) {
   //     return false;
   //   }
-  //   return CreateFrameBuffer();
+  //   return createFrameBuffer();
   // }
 
-  void Initialize() { CreateRenderPass(); }
+  void initialize() { createRenderPass(); }
 
   // TODO: add subpassContents param
-  bool BeginRenderPass(const CommandBuffer* commandBuffer
+  bool beginRenderPass(const CommandBuffer* commandBuffer
                        /*, VkSubpassContents      subpassContents
                        = VK_SUBPASS_CONTENTS_INLINE*/) override;
 
-  void EndRenderPass() override;
+  void endRenderPass() override;
 
-  virtual void* GetRenderPass() const override { return m_renderPass_; }
+  virtual void* getRenderPass() const override { return m_renderPass_; }
 
-  virtual void* GetFrameBuffer() const override { return m_frameBuffer_; }
+  virtual void* getFrameBuffer() const override { return m_frameBuffer_; }
 
-  bool CreateRenderPass();
+  bool createRenderPass();
 
   // TODO: make private
 
-  void SetFinalLayoutToAttachment(const Attachment& attachment) const;
+  void setFinalLayoutToAttachment_(const Attachment& attachment) const;
 
   const CommandBuffer* m_commandBuffer_ = nullptr;
 

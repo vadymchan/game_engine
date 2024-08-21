@@ -12,7 +12,7 @@
 namespace game_engine {
 
 struct BoundBox {
-  static BoundBox GenerateBoundBox(const std::vector<float>& vertices) {
+  static BoundBox s_generateBoundBox(const std::vector<float>& vertices) {
     auto min = math::Vector3Df(FLT_MAX);
     auto max = math::Vector3Df(FLT_MIN);
     for (size_t i = 0; i < vertices.size() / 3; ++i) {
@@ -44,22 +44,22 @@ struct BoundBox {
     return {min, max};
   }
 
-  void CreateBoundBox(const std::vector<float>& vertices) {
-    *this = BoundBox::GenerateBoundBox(vertices);
+  void createBoundBox(const std::vector<float>& vertices) {
+    *this = BoundBox::s_generateBoundBox(vertices);
   }
 
-  math::Vector3Df GetExtent() const { return m_max_ - m_min_; }
+  math::Vector3Df getExtent() const { return m_max_ - m_min_; }
 
-  math::Vector3Df GetHalfExtent() const { return GetExtent() / 0.5f; }
+  math::Vector3Df getHalfExtent() const { return getExtent() / 0.5f; }
 
   math::Vector3Df m_min_;
   math::Vector3Df m_max_;
 };
 
 struct BoundSphere {
-  float Radius = 0.0f;
+  float m_radius_ = 0.0f;
 
-  static BoundSphere GenerateBoundSphere(const std::vector<float>& vertices) {
+  static BoundSphere s_generateBoundSphere(const std::vector<float>& vertices) {
     auto maxDist = FLT_MIN;
     for (size_t i = 0; i < vertices.size() / 3; ++i) {
       auto curIndex = i * 3;
@@ -76,8 +76,8 @@ struct BoundSphere {
     return {maxDist};
   }
 
-  void CreateBoundSphere(const std::vector<float>& vertices) {
-    *this = BoundSphere::GenerateBoundSphere(vertices);
+  void createBoundSphere(const std::vector<float>& vertices) {
+    *this = BoundSphere::s_generateBoundSphere(vertices);
   }
 };
 

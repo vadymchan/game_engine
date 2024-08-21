@@ -21,7 +21,7 @@ struct Name {
   public:
   static const Name s_kInvalid;
 
-  static uint32_t GenerateNameHash(const char* pName, size_t size) {
+  static uint32_t s_generateNameHash(const char* pName, size_t size) {
     return XXH64(pName, size);
   }
 
@@ -33,17 +33,17 @@ struct Name {
     m_nameStringLength_ = 0;
   }
 
-  explicit Name(const char* pName) { Set(pName, strlen(pName)); }
+  explicit Name(const char* pName) { set(pName, strlen(pName)); }
 
-  explicit Name(const char* pName, size_t size) { Set(pName, size); }
+  explicit Name(const char* pName, size_t size) { set(pName, size); }
 
-  explicit Name(const std::string& name) { Set(name.c_str(), name.length()); }
+  explicit Name(const std::string& name) { set(name.c_str(), name.length()); }
 
   Name(const Name& name) { *this = name; }
 
-  void Set(const char* pName, size_t size) {
+  void set(const char* pName, size_t size) {
     assert(pName);
-    const uint32_t NewNameHash = GenerateNameHash(pName, size);
+    const uint32_t NewNameHash = s_generateNameHash(pName, size);
 
     auto find_func = [&]() {
       const auto find_it = s_nameTable.find(NewNameHash);
@@ -72,7 +72,7 @@ struct Name {
       }
 
       const auto it_ret = s_nameTable.emplace(
-          NewNameHash, CreateNewName_Internal(pName, NewNameHash));
+          NewNameHash, s_createNewNameInternal(pName, NewNameHash));
       if (it_ret.second) {
         m_nameHash_         = NewNameHash;
         m_nameString_       = it_ret.first->second->c_str();
@@ -97,13 +97,13 @@ struct Name {
   }
 
   bool operator==(const Name& rhs) const {
-    return GetNameHash() == rhs.GetNameHash();
+    return getNameHash() == rhs.getNameHash();
   }
 
-  bool IsValid() const { return m_nameHash_ != -1; }
+  bool isValid() const { return m_nameHash_ != -1; }
 
-  const char* ToStr() const {
-    if (!IsValid()) {
+  const char* toStr() const {
+    if (!isValid()) {
       return nullptr;
     }
 
@@ -125,8 +125,8 @@ struct Name {
     }
   }
 
-  const size_t GetStringLength() const {
-    if (!IsValid()) {
+  const size_t getStringLength() const {
+    if (!isValid()) {
       return 0;
     }
 
@@ -148,10 +148,10 @@ struct Name {
     }
   }
 
-  uint32_t GetNameHash() const { return m_nameHash_; }
+  uint32_t getNameHash() const { return m_nameHash_; }
 
   private:
-  static std::shared_ptr<std::string> CreateNewName_Internal(
+  static std::shared_ptr<std::string> s_createNewNameInternal(
       const char* pName, uint32_t NameHash) {
     assert(pName);
 
@@ -165,7 +165,7 @@ struct Name {
 
 struct NameHashFunc {
   std::size_t operator()(const Name& name) const {
-    return static_cast<size_t>(name.GetNameHash());
+    return static_cast<size_t>(name.getNameHash());
   }
 };
 
@@ -180,6 +180,7 @@ struct PriorityName : public Name {
       : Name(pName)
       , m_priority_(priority) {}
 
+  // TODO: consider change the order of size and priority parameters (currently it's error-prone)
   explicit PriorityName(const char* pName, size_t size, uint32_t priority)
       : Name(pName, size)
       , m_priority_(priority) {}
@@ -197,7 +198,7 @@ struct PriorityName : public Name {
 
 struct PriorityNameHashFunc {
   std::size_t operator()(const PriorityName& name) const {
-    return name.GetNameHash();
+    return name.getNameHash();
   }
 };
 

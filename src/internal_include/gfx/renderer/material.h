@@ -21,7 +21,7 @@ class Material {
   };
 
   struct TextureData {
-    const Texture* GetTexture() const { return m_texture_; }
+    const Texture* getTexture() const { return m_texture_; }
 
     Name                m_name_;
     Name                m_filePath_;
@@ -30,30 +30,30 @@ class Material {
     ETextureAddressMode m_textureAddressModeV_ = ETextureAddressMode::REPEAT;
   };
 
-  bool HasAlbedoTexture() const {
+  bool hasAlbedoTexture() const {
     return m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_;
   }
 
-  bool IsUseSphericalMap() const { return m_useSphericalMap_; }
+  bool isUseSphericalMap() const { return m_useSphericalMap_; }
 
-  bool IsUseSRGBAlbedoTexture() const {
+  bool isUseSRGBAlbedoTexture() const {
     return m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_
              ? m_texData_[(int32_t)EMaterialTextureType::Albedo]
                    .m_texture_->m_sRGB_
              : false;
   }
 
-  Texture* GetTexture(EMaterialTextureType type) const;
+  Texture* getTexture(EMaterialTextureType type) const;
 
   template <typename T>
-  T* GetTexture(EMaterialTextureType type) const {
-    return (T*)(GetTexture(type));
+  T* getTexture(EMaterialTextureType type) const {
+    return (T*)(getTexture(type));
   }
 
   TextureData m_texData_[static_cast<int32_t>(EMaterialTextureType::Max)];
   bool        m_useSphericalMap_ = false;
 
-  const std::shared_ptr<ShaderBindingInstance>& CreateShaderBindingInstance();
+  const std::shared_ptr<ShaderBindingInstance>& createShaderBindingInstance();
 
   std::shared_ptr<ShaderBindingInstance> m_shaderBindingInstance_ = nullptr;
   mutable bool m_needToUpdateShaderBindingInstance_               = true;

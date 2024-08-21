@@ -4,13 +4,13 @@
 
 namespace game_engine {
 
-void RenderTarget::Return() {
+void RenderTarget::returnRt() {
   if (m_isCreatedFromRenderTargetPool_) {
-    RenderTargetPool::ReturnRenderTarget(this);
+    RenderTargetPool::s_seturnRenderTarget(this);
   }
 }
 
-void SceneRenderTarget::Create(std::shared_ptr<Window> window,
+void SceneRenderTarget::create(std::shared_ptr<Window> window,
                                const SwapchainImage*   swapchain) {
   constexpr EMSAASamples MsaaSamples         = EMSAASamples::COUNT_1;
   constexpr uint32_t     layerCount          = 1;
@@ -30,8 +30,8 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
     RTClearValue(0.0f, 0.0f, 0.0f, 1.0f)
     //, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT  // TODO: remove
   };
-  // ColorRTInfo.ResourceName = TEXT("ColorPtr");
-  m_colorPtr_ = RenderTargetPool::GetRenderTarget(ColorRTInfo);
+  // ColorRTInfo.ResourceName = Text("ColorPtr");
+  m_colorPtr_ = RenderTargetPool::s_getRenderTarget(ColorRTInfo);
 
   RenderTargetInfo DepthRTInfo = {
     ETextureType::TEXTURE_2D,
@@ -45,29 +45,29 @@ void SceneRenderTarget::Create(std::shared_ptr<Window> window,
     RTClearValue(1.0f, 0)
     //, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT  // TODO: remove
   };
-  // DepthRTInfo.ResourceName = TEXT("DepthPtr");
-  m_depthPtr_ = RenderTargetPool::GetRenderTarget(DepthRTInfo);
+  // DepthRTInfo.ResourceName = Text("DepthPtr");
+  m_depthPtr_ = RenderTargetPool::s_getRenderTarget(DepthRTInfo);
 
   if ((int32_t)MsaaSamples > 1) {
     assert(swapchain);
-    m_resolvePtr_ = RenderTarget::CreateFromTexture(swapchain->m_TexturePtr_);
+    m_resolvePtr_ = RenderTarget::s_createFromTexture(swapchain->m_TexturePtr_);
   }
 
   if (!m_finalColorPtr_) {
     m_finalColorPtr_
-        = RenderTarget::CreateFromTexture(swapchain->m_TexturePtr_);
+        = RenderTarget::s_createFromTexture(swapchain->m_TexturePtr_);
   }
 }
 
-void SceneRenderTarget::Return() {
+void SceneRenderTarget::returnRt() {
   if (m_colorPtr_) {
-    m_colorPtr_->Return();
+    m_colorPtr_->returnRt();
   }
   if (m_depthPtr_) {
-    m_depthPtr_->Return();
+    m_depthPtr_->returnRt();
   }
   if (m_resolvePtr_) {
-    m_resolvePtr_->Return();
+    m_resolvePtr_->returnRt();
   }
 }
 

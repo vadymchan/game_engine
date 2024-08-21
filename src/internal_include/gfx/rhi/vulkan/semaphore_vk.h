@@ -17,7 +17,7 @@ class SemaphoreVk : public Semaphore {
 
   virtual ~SemaphoreVk();
 
-  virtual void* GetHandle() const { return reinterpret_cast<void*>(m_semaphore_); }
+  virtual void* getHandle() const { return reinterpret_cast<void*>(m_semaphore_); }
 
   // TODO
   // private:
@@ -27,13 +27,13 @@ class SemaphoreVk : public Semaphore {
 
 class SemaphoreManagerVk : public SemaphoreManager {
   public:
-  ~SemaphoreManagerVk() { Release(); }
+  ~SemaphoreManagerVk() { release(); }
 
-  Semaphore* GetOrCreateSemaphore() override;
+  Semaphore* getOrCreateSemaphore() override;
 
-  void ReturnSemaphore(Semaphore* semaphore) override;
+  void returnSemaphore(Semaphore* semaphore) override;
 
-  void Release();
+  void release();
 
   private:
   std::unordered_set<Semaphore*> m_usingSemaphores_;

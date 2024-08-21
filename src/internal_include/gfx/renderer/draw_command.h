@@ -91,9 +91,9 @@ class DrawCommand {
     assert(m_renderObject_);
   }
 
-  void PrepareToDraw(bool isPositionOnly);
+  void prepareToDraw(bool isPositionOnly);
 
-  void Draw() const;
+  void draw() const;
 
   ShaderBindingInstanceArray    m_shaderBindingInstanceArray_;
   ShaderBindingInstanceCombiner m_shaderBindingInstanceCombiner_;
@@ -121,8 +121,8 @@ class DrawCommand {
 //  public:
 //  virtual ~DrawCommandGenerator() {}
 //
-//  virtual void Initialize(int32_t rtWidth, int32_t rtHeight) = 0;
-//  virtual void GenerateDrawCommand(
+//  virtual void initialize(int32_t rtWidth, int32_t rtHeight) = 0;
+//  virtual void generateDrawCommand(
 //      DrawCommand*                                 destDrawCommand,
 //      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
 //      const View*                                 view,

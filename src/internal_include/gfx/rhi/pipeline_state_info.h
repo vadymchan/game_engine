@@ -61,7 +61,7 @@ struct Viewport {
 
   mutable size_t m_hash_ = 0;
 
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -87,7 +87,7 @@ struct Scissor {
 
   mutable size_t m_hash_ = 0;
 
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -103,11 +103,11 @@ struct Scissor {
 struct SamplerStateInfo : public ShaderBindableResource {
   virtual ~SamplerStateInfo() {}
 
-  virtual void Initialize() { GetHash(); }
+  virtual void initialize() { getHash(); }
 
-  virtual void* GetHandle() const { return nullptr; }
+  virtual void* getHandle() const { return nullptr; }
 
-  virtual size_t GetHash() const {
+  virtual size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -128,26 +128,26 @@ struct SamplerStateInfo : public ShaderBindableResource {
     return m_hash_;
   }
 
-  std::string ToString() const {
+  std::string toString() const {
     std::string Result;
-    Result += EnumToString(m_minification_);
+    Result += g_enumToString(m_minification_);
     Result += ",";
-    Result += EnumToString(m_magnification_);
+    Result += g_enumToString(m_magnification_);
     Result += ",";
-    Result += EnumToString(m_addressU_);
+    Result += g_enumToString(m_addressU_);
     Result += ",";
-    Result += EnumToString(m_addressV_);
+    Result += g_enumToString(m_addressV_);
     Result += ",";
-    Result += EnumToString(m_addressW_);
+    Result += g_enumToString(m_addressW_);
     Result += std::to_string(m_mipLODBias_);
     Result += ",";
     Result += std::to_string(m_maxAnisotropy_);
     Result += ",";
-    Result += EnumToString(m_textureComparisonMode_);
+    Result += g_enumToString(m_textureComparisonMode_);
     Result += ",";
     Result += std::to_string(m_isEnableComparisonMode_);
     Result += ",";
-    Result += EnumToString(m_comparisonFunc_);
+    Result += g_enumToString(m_comparisonFunc_);
     Result += ",";
     Result += std::to_string(m_maxAnisotropy_);
     Result += ",";
@@ -196,9 +196,9 @@ struct SamplerStateInfo : public ShaderBindableResource {
 struct RasterizationStateInfo {
   virtual ~RasterizationStateInfo() {}
 
-  virtual void Initialize() { GetHash(); }
+  virtual void initialize() { getHash(); }
 
-  virtual size_t GetHash() const {
+  virtual size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -248,9 +248,9 @@ struct RasterizationStateInfo {
 struct StencilOpStateInfo {
   virtual ~StencilOpStateInfo() {}
 
-  virtual void Initialize() { GetHash(); }
+  virtual void initialize() { getHash(); }
 
-  virtual size_t GetHash() const {
+  virtual size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -282,9 +282,9 @@ struct StencilOpStateInfo {
 struct DepthStencilStateInfo {
   virtual ~DepthStencilStateInfo() {}
 
-  virtual void Initialize() { GetHash(); }
+  virtual void initialize() { getHash(); }
 
-  virtual size_t GetHash() const {
+  virtual size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -294,8 +294,8 @@ struct DepthStencilStateInfo {
                                           m_depthCompareOp_,
                                           m_depthBoundsTestEnable_,
                                           m_stencilTestEnable_,
-                                          (m_front_ ? m_front_->GetHash() : 0),
-                                          (m_back_ ? m_back_->GetHash() : 0),
+                                          (m_front_ ? m_front_->getHash() : 0),
+                                          (m_back_ ? m_back_->getHash() : 0),
                                           m_minDepthBounds_,
                                           m_maxDepthBounds_);
     return m_hash_;
@@ -322,9 +322,9 @@ struct DepthStencilStateInfo {
 struct BlendingStateInfo {
   virtual ~BlendingStateInfo() {}
 
-  virtual void Initialize() { GetHash(); }
+  virtual void initialize() { getHash(); }
 
-  virtual size_t GetHash() const {
+  virtual size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -377,7 +377,7 @@ struct PipelineStateFixedInfo {
       , m_viewports_(viewports)
       , m_scissors_(scissors)
       , m_isUseVRS_(isUseVRS) {
-    CreateHash();
+    createHash();
   }
 
   PipelineStateFixedInfo(RasterizationStateInfo* rasterizationState,
@@ -392,7 +392,7 @@ struct PipelineStateFixedInfo {
       , m_viewports_({viewport})
       , m_scissors_({scissor})
       , m_isUseVRS_(isUseVRS) {
-    CreateHash();
+    createHash();
   }
 
   PipelineStateFixedInfo(
@@ -406,21 +406,21 @@ struct PipelineStateFixedInfo {
       , m_blendingState_(blendingState)
       , m_dynamicStates_(dynamicStates)
       , m_isUseVRS_(isUseVRS) {
-    CreateHash();
+    createHash();
   }
 
-  size_t CreateHash() const {
+  size_t createHash() const {
     if (m_hash_) {
       return m_hash_;
     }
 
     m_hash_ = 0;
     for (int32_t i = 0; i < m_viewports_.size(); ++i) {
-      m_hash_ ^= (m_viewports_[i].GetHash() ^ (i + 1));
+      m_hash_ ^= (m_viewports_[i].getHash() ^ (i + 1));
     }
 
     for (int32_t i = 0; i < m_scissors_.size(); ++i) {
-      m_hash_ ^= (m_scissors_[i].GetHash() ^ (i + 1));
+      m_hash_ ^= (m_scissors_[i].getHash() ^ (i + 1));
     }
 
     if (m_dynamicStates_.size() > 0) {
@@ -430,9 +430,9 @@ struct PipelineStateFixedInfo {
     }
 
     // TODO: The contents below should also be able to generate a hash
-    m_hash_ ^= m_rasterizationState_->GetHash();
-    m_hash_ ^= m_depthStencilState_->GetHash();
-    m_hash_ ^= m_blendingState_->GetHash();
+    m_hash_ ^= m_rasterizationState_->getHash();
+    m_hash_ ^= m_depthStencilState_->getHash();
+    m_hash_ ^= m_blendingState_->getHash();
     m_hash_ ^= (uint64_t)m_isUseVRS_;
 
     return m_hash_;
@@ -486,9 +486,9 @@ struct PushConstant {
 
     m_usedSize_ = size;
     memcpy(m_data_, data, size);
-    m_pushConstantRanges_.Add(
+    m_pushConstantRanges_.add(
         PushConstantRange(shaderAccessStageFlag, 0, size));
-    GetHash();
+    getHash();
   }
 
   PushConstant(const char*              data,
@@ -498,8 +498,8 @@ struct PushConstant {
 
     m_usedSize_ = size;
     memcpy(m_data_, data, size);
-    m_pushConstantRanges_.Add(pushConstantRange);
-    GetHash();
+    m_pushConstantRanges_.add(pushConstantRange);
+    getHash();
   }
 
   PushConstant(const char*                                 data,
@@ -510,52 +510,52 @@ struct PushConstant {
 
     m_usedSize_ = size;
     memcpy(m_data_, data, size);
-    GetHash();
+    getHash();
   }
 
   template <typename T>
   PushConstant(const T& data, EShaderAccessStageFlag shaderAccessStageFlag) {
-    Set(data, PushConstantRange(shaderAccessStageFlag, 0, sizeof(T)));
+    set(data, PushConstantRange(shaderAccessStageFlag, 0, sizeof(T)));
   }
 
   template <typename T>
   PushConstant(const T& data, const PushConstantRange& pushConstantRange) {
-    Set(data, pushConstantRange);
+    set(data, pushConstantRange);
   }
 
   template <typename T>
   PushConstant(const T&                                    data,
                const ResourceContainer<PushConstantRange>& pushConstantRanges) {
-    Set(data, pushConstantRanges);
+    set(data, pushConstantRanges);
   }
 
   template <typename T>
-  void Set(const T& data, const PushConstantRange& pushConstantRange) {
+  void set(const T& data, const PushConstantRange& pushConstantRange) {
     assert(sizeof(T) < 256);
 
     m_usedSize_ = sizeof(T);
     memcpy(m_data_, &data, sizeof(T));
-    m_pushConstantRanges_.Add(pushConstantRange);
-    GetHash();
+    m_pushConstantRanges_.add(pushConstantRange);
+    getHash();
   }
 
   template <typename T>
-  void Set(const T&                                    data,
+  void set(const T&                                    data,
            const ResourceContainer<PushConstantRange>& pushConstantRanges) {
     assert(sizeof(T) < 256);
 
     m_usedSize_ = sizeof(T);
     memcpy(m_data_, &data, sizeof(T));
     m_pushConstantRanges_ = pushConstantRanges;
-    GetHash();
+    getHash();
   }
 
   template <typename T>
-  T& Get() const {
+  T& get() const {
     return *(T*)&m_data_[0];
   }
 
-  bool IsValid() const { return m_usedSize_ > 0; }
+  bool isValid() const { return m_usedSize_ > 0; }
 
   PushConstant& operator=(const PushConstant& pushConstant) {
     assert(pushConstant.m_usedSize_ < 256);
@@ -567,7 +567,7 @@ struct PushConstant {
     return *this;
   }
 
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -585,11 +585,11 @@ struct PushConstant {
     return m_hash_;
   }
 
-  const void* GetConstantData() const { return (void*)&m_data_[0]; }
+  const void* getConstantData() const { return (void*)&m_data_[0]; }
 
-  int32_t GetSize() const { return m_usedSize_; }
+  int32_t getSize() const { return m_usedSize_; }
 
-  const ResourceContainer<PushConstantRange>* GetPushConstantRanges() const {
+  const ResourceContainer<PushConstantRange>* getPushConstantRanges() const {
     return &m_pushConstantRanges_;
   }
 
@@ -692,7 +692,7 @@ struct PipelineStateInfo {
 
   virtual ~PipelineStateInfo() {}
 
-  size_t GetHash() const;
+  size_t getHash() const;
 
   mutable size_t m_hash_ = 0;
 
@@ -708,19 +708,20 @@ struct PipelineStateInfo {
   const PipelineStateFixedInfo* m_pipelineStateFixed_ = nullptr;
   int32_t                       m_subpassIndex_       = 0;
 
-  virtual void Initialize() { GetHash(); }
+  virtual void initialize() { getHash(); }
 
-  virtual void* GetHandle() const { return nullptr; }
+  virtual void* getHandle() const { return nullptr; }
 
-  virtual void* GetPipelineLayoutHandle() const { return nullptr; }
+  virtual void* getPipelineLayoutHandle() const { return nullptr; }
 
-  virtual void* CreateGraphicsPipelineState() { return nullptr; }
+  virtual void* createGraphicsPipelineState() { return nullptr; }
 
-  virtual void* CreateComputePipelineState() { return nullptr; }
+  virtual void* createComputePipelineState() { return nullptr; }
 
-  virtual void* CreateRaytracingPipelineState() { return nullptr; }
+  // TODO: implement in the future
+  //virtual void* createRaytracingPipelineState() { return nullptr; }
 
-  virtual void Bind(
+  virtual void bind(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
 };
 

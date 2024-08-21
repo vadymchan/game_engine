@@ -5,7 +5,7 @@
 
 namespace game_engine {
 
-std::wstring ConvertToWchar(const char* path, int32_t length) {
+std::wstring g_convertToWchar(const char* path, int32_t length) {
   assert(path);
 
   std::wstring result;

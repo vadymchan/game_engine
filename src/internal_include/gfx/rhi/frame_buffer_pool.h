@@ -15,11 +15,11 @@ class FrameBufferPool {
   FrameBufferPool();
   ~FrameBufferPool();
 
-  static std::shared_ptr<FrameBuffer> GetFrameBuffer(
+  static std::shared_ptr<FrameBuffer> s_getFrameBuffer(
       const FrameBufferInfo& info);
-  static void ReturnFrameBuffer(FrameBuffer* renderTarget);
+  static void s_returnFrameBuffer(FrameBuffer* renderTarget);
 
-  static void Release() {
+  static void release() {
     s_frameBufferResourceMap.clear();
     s_frameBufferHashVariableMap.clear();
   }

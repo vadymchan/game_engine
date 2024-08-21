@@ -15,22 +15,22 @@ struct CommandBufferDx12;
 struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
   virtual ~ShaderBindingInstanceDx12() {}
 
-  virtual void Initialize(
+  virtual void initialize(
       const ShaderBindingArray& shaderBindingArray) override;
-  virtual void UpdateShaderBindings(
+  virtual void updateShaderBindings(
       const ShaderBindingArray& shaderBindingArray) override;
-  virtual void* GetHandle() const override;
+  virtual void* getHandle() const override;
 
-  virtual const std::vector<uint32_t>* GetDynamicOffsets() const override {
+  virtual const std::vector<uint32_t>* getDynamicOffsets() const override {
     return 0;
   }
 
-  virtual void Free() override;
+  virtual void free() override;
 
-  void BindGraphics(CommandBufferDx12* commandList,
+  void bindGraphics(CommandBufferDx12* commandList,
                     std::int32_t&      startIndex) const;
-  void BindCompute(CommandBufferDx12* commandList, std::int32_t& startIndex);
-  void CopyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
+  void bindCompute(CommandBufferDx12* commandList, std::int32_t& startIndex);
+  void copyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
 
   // TODO: consider using only enum class
   struct InlineRootParamType {
@@ -55,7 +55,7 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
   };
 
   struct DescriptorData {
-    inline bool IsValid() const { return m_descriptor_.IsValid(); }
+    inline bool isValid() const { return m_descriptor_.isValid(); }
 
     DescriptorDx12 m_descriptor_;
 

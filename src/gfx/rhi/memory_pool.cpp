@@ -7,22 +7,22 @@
 
 namespace game_engine {
 
-void* Memory::GetMappedPointer() const {
-  return m_subMemoryAllocator->GetMappedPointer();
+void* Memory::getMappedPointer() const {
+  return m_subMemoryAllocator->getMappedPointer();
 }
 
-void* Memory::GetMemory() const {
-  return m_subMemoryAllocator->GetMemory();
+void* Memory::getMemory() const {
+  return m_subMemoryAllocator->getMemory();
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Memory
-void Memory::Free() {
-  g_rhi->GetMemoryPool()->Free(*this);
-  Reset();
+void Memory::free() {
+  g_rhi->getMemoryPool()->free(*this);
+  reset();
 }
 
-void Memory::Reset() {
+void Memory::reset() {
   m_buffer             = nullptr;
   m_range.m_offset_    = 0;
   m_range.m_dataSize_  = 0;
@@ -31,16 +31,16 @@ void Memory::Reset() {
 
 //////////////////////////////////////////////////////////////////////////
 // SubMemoryAllocator
-Memory SubMemoryAllocator::Alloc(uint64_t requstedSize) {
+Memory SubMemoryAllocator::alloc(uint64_t requstedSize) {
   ScopedLock s(&m_lock_);
 
   Memory         AllocMem;
   const uint64_t AlignedRequestedSize
-      = (m_alignment_ > 0) ? Align(requstedSize, m_alignment_) : requstedSize;
+      = (m_alignment_ > 0) ? g_align(requstedSize, m_alignment_) : requstedSize;
 
   for (int32_t i = 0; i < (int32_t)m_freeLists_.size(); ++i) {
     if (m_freeLists_[i].m_dataSize_ >= AlignedRequestedSize) {
-      AllocMem.m_buffer = GetBuffer();
+      AllocMem.m_buffer = getBuffer();
       assert(AllocMem.m_buffer);
 
       AllocMem.m_range.m_offset_    = m_freeLists_[i].m_offset_;
@@ -53,11 +53,11 @@ Memory SubMemoryAllocator::Alloc(uint64_t requstedSize) {
 
   if ((m_subMemoryRange_.m_offset_ + AlignedRequestedSize)
       <= m_subMemoryRange_.m_dataSize_) {
-    AllocMem.m_buffer = GetBuffer();
+    AllocMem.m_buffer = getBuffer();
     assert(AllocMem.m_buffer);
 
     AllocMem.m_range.m_offset_
-        = (m_alignment_ > 0) ? Align(m_subMemoryRange_.m_offset_, m_alignment_)
+        = (m_alignment_ > 0) ? g_align(m_subMemoryRange_.m_offset_, m_alignment_)
                              : m_subMemoryRange_.m_offset_;
     AllocMem.m_range.m_dataSize_  = AlignedRequestedSize;
     AllocMem.m_subMemoryAllocator = this;
@@ -71,27 +71,27 @@ Memory SubMemoryAllocator::Alloc(uint64_t requstedSize) {
   return AllocMem;
 }
 
-Memory MemoryPool::Alloc(EVulkanBufferBits usages,
+Memory MemoryPool::alloc(EVulkanBufferBits usages,
                          EVulkanMemoryBits properties,
                          uint64_t          size) {
   ScopedLock          s(&m_lock_);
-  const EPoolSizeType PoolSizeType = GetPoolSizeType(size);
+  const EPoolSizeType PoolSizeType = getPoolSizeType(size);
 
   std::vector<SubMemoryAllocator*>& SubMemoryAllocators
       = m_memoryPools_[(int32_t)PoolSizeType];
   for (auto& iter : SubMemoryAllocators) {
-    if (!iter->IsMatchType(usages, properties)) {
+    if (!iter->isMatchType(usages, properties)) {
       continue;
     }
 
-    const Memory& alloc = iter->Alloc(size);
-    if (alloc.IsValid()) {
+    const Memory& alloc = iter->alloc(size);
+    if (alloc.isValid()) {
       return alloc;
     }
   }
 
   // Add new memory
-  SubMemoryAllocator* NewSubMemoryAllocator = CreateSubMemoryAllocator();
+  SubMemoryAllocator* NewSubMemoryAllocator = createSubMemoryAllocator();
   SubMemoryAllocators.push_back(NewSubMemoryAllocator);
 
   // Use the entire SubMemoryAllocator that exceeds the maximum supported memory
@@ -101,18 +101,18 @@ Memory MemoryPool::Alloc(EVulkanBufferBits usages,
           ? size
           : s_kSubMemorySize[(uint64_t)PoolSizeType];
 
-  NewSubMemoryAllocator->Initialize(
+  NewSubMemoryAllocator->initialize(
       usages, properties, SubMemoryAllocatorSize);
-  const Memory& alloc = NewSubMemoryAllocator->Alloc(size);
-  assert(alloc.IsValid());
+  const Memory& alloc = NewSubMemoryAllocator->alloc(size);
+  assert(alloc.isValid());
 
   return alloc;
 }
 
-void MemoryPool::Free(const Memory& freeMemory) {
+void MemoryPool::free(const Memory& freeMemory) {
   ScopedLock s(&m_lock_);
 
-  const int32_t CurrentFrameNumber = g_rhi->GetCurrentFrameNumber();
+  const int32_t CurrentFrameNumber = g_rhi->getCurrentFrameNumber();
   const int32_t OldestFrameToKeep
       = CurrentFrameNumber - s_kNumOfFramesToWaitBeforeReleasing;
 
@@ -126,7 +126,7 @@ void MemoryPool::Free(const Memory& freeMemory) {
         PendingFreeMemory& pendingFreeMemory = m_pendingFree_[i];
         if (pendingFreeMemory.m_frameIndex_ < OldestFrameToKeep) {
           assert(pendingFreeMemory.m_memory_.m_subMemoryAllocator);
-          pendingFreeMemory.m_memory_.m_subMemoryAllocator->Free(
+          pendingFreeMemory.m_memory_.m_subMemoryAllocator->free_(
               pendingFreeMemory.m_memory_);
         } else {
           m_canReleasePendingFreeMemoryFrameNumber_

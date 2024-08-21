@@ -6,21 +6,21 @@
 
 namespace game_engine {
 
-void DrawCommand::PrepareToDraw(bool isPositionOnly) {
+void DrawCommand::prepareToDraw(bool isPositionOnly) {
   if (!m_test_) {
     // GetShaderBindings
     if (m_view_) {
-      m_view_->GetShaderBindingInstance(m_shaderBindingInstanceArray_,
+      m_view_->getShaderBindingInstance(m_shaderBindingInstanceArray_,
                                      m_renderFrameContextPtr_->m_useForwardRenderer_);
     }
 
     // GetShaderBindings
-    m_oneRenderObjectUniformBuffer_ = m_renderObject_->CreateShaderBindingInstance();
-    m_shaderBindingInstanceArray_.Add(m_oneRenderObjectUniformBuffer_.get());
+    m_oneRenderObjectUniformBuffer_ = m_renderObject_->createShaderBindingInstance();
+    m_shaderBindingInstanceArray_.add(m_oneRenderObjectUniformBuffer_.get());
 
     if (m_material_) {
-      m_shaderBindingInstanceArray_.Add(
-          m_material_->CreateShaderBindingInstance().get());
+      m_shaderBindingInstanceArray_.add(
+          m_material_->createShaderBindingInstance().get());
     }
   }
 
@@ -28,16 +28,16 @@ void DrawCommand::PrepareToDraw(bool isPositionOnly) {
   ShaderBindingLayoutArray shaderBindingLayoutArray;
   for (int32_t i = 0; i < m_shaderBindingInstanceArray_.m_numOfData_; ++i) {
     // Add DescriptorSetLayout data
-    shaderBindingLayoutArray.Add(
+    shaderBindingLayoutArray.add(
         m_shaderBindingInstanceArray_[i]->m_shaderBindingsLayouts_);
 
     // Add shaderBindingInstanceCombiner data : DescriptorSets, DynamicOffsets
-    m_shaderBindingInstanceCombiner_.m_descriptorSetHandles_.Add(
-        m_shaderBindingInstanceArray_[i]->GetHandle());
+    m_shaderBindingInstanceCombiner_.m_descriptorSetHandles_.add(
+        m_shaderBindingInstanceArray_[i]->getHandle());
     const std::vector<uint32_t>* pDynamicOffsetTest
-        = m_shaderBindingInstanceArray_[i]->GetDynamicOffsets();
+        = m_shaderBindingInstanceArray_[i]->getDynamicOffsets();
     if (pDynamicOffsetTest && pDynamicOffsetTest->size()) {
-      m_shaderBindingInstanceCombiner_.m_dynamicOffsets_.Add(
+      m_shaderBindingInstanceCombiner_.m_dynamicOffsets_.add(
           (void*)pDynamicOffsetTest->data(),
           (int32_t)pDynamicOffsetTest->size());
     }
@@ -48,20 +48,20 @@ void DrawCommand::PrepareToDraw(bool isPositionOnly) {
   const auto& RenderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
 
   VertexBufferArray vertexBufferArray;
-  vertexBufferArray.Add(
+  vertexBufferArray.add(
       isPositionOnly
           ? RenderObjectGeoDataPtr->m_vertexBufferPositionOnlyPtr_.get()
           : RenderObjectGeoDataPtr->m_vertexBufferPtr_.get());
   if (m_overrideInstanceData_) {
-    vertexBufferArray.Add(m_overrideInstanceData_);
+    vertexBufferArray.add(m_overrideInstanceData_);
   } else if (RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_) {
-    vertexBufferArray.Add(
+    vertexBufferArray.add(
         RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get());
   }
 
   // Create Pipeline
   m_currentPipelineStateInfo_
-      = (PipelineStateInfo*)g_rhi->CreatePipelineStateInfo(
+      = (PipelineStateInfo*)g_rhi->createPipelineStateInfo(
           m_pipelineStateFixed_,
           m_shader_,
           vertexBufferArray,
@@ -73,11 +73,11 @@ void DrawCommand::PrepareToDraw(bool isPositionOnly) {
   m_isPositionOnly_ = isPositionOnly;
 }
 
-void DrawCommand::Draw() const {
+void DrawCommand::draw() const {
   assert(m_renderFrameContextPtr_);
 
-  g_rhi->BindGraphicsShaderBindingInstances(
-      m_renderFrameContextPtr_->GetActiveCommandBuffer(),
+  g_rhi->bindGraphicsShaderBindingInstances(
+      m_renderFrameContextPtr_->getActiveCommandBuffer(),
       m_currentPipelineStateInfo_,
       m_shaderBindingInstanceCombiner_,
       0);
@@ -85,40 +85,40 @@ void DrawCommand::Draw() const {
   // Bind the image that contains the shading rate patterns
 #if USE_VARIABLE_SHADING_RATE_TIER2
   if (gOptions.UseVRS) {
-    g_rhi_vk->BindShadingRateImage(
-        RenderFrameContextPtr->GetActiveCommandBuffer(),
+    g_rhi_vk->bindShadingRateImage(
+        RenderFrameContextPtr->getActiveCommandBuffer(),
         g_rhi_vk->GetSampleVRSTexture());
   }
 #endif
 
   // Bind Pipeline
-  m_currentPipelineStateInfo_->Bind(m_renderFrameContextPtr_);
+  m_currentPipelineStateInfo_->bind(m_renderFrameContextPtr_);
 
   // this is only for Vulkan for now
   // TODO: add check to Vulkan
   bool isUseVulkan = false;
   if (isUseVulkan) {
-    if (m_pushConstant_ && m_pushConstant_->IsValid()) {
+    if (m_pushConstant_ && m_pushConstant_->isValid()) {
       const ResourceContainer<PushConstantRange>* pushConstantRanges
-          = m_pushConstant_->GetPushConstantRanges();
+          = m_pushConstant_->getPushConstantRanges();
       assert(pushConstantRanges);
       if (pushConstantRanges) {
         for (int32_t i = 0; i < pushConstantRanges->m_numOfData_; ++i) {
           const PushConstantRange& range = (*pushConstantRanges)[i];
           vkCmdPushConstants(
-              (VkCommandBuffer)m_renderFrameContextPtr_->GetActiveCommandBuffer()
-                  ->GetNativeHandle(),
+              (VkCommandBuffer)m_renderFrameContextPtr_->getActiveCommandBuffer()
+                  ->getNativeHandle(),
               ((PipelineStateInfoVk*)m_currentPipelineStateInfo_)
                   ->m_pipelineLayout_,
-              GetVulkanShaderAccessFlags(range.m_accessStageFlag_),
+              g_getVulkanShaderAccessFlags(range.m_accessStageFlag_),
               range.m_offset_,
               range.m_size_,
-              m_pushConstant_->GetConstantData());
+              m_pushConstant_->getConstantData());
         }
       }
     }
   }
-  m_renderObject_->BindBuffers(
+  m_renderObject_->bindBuffers(
       m_renderFrameContextPtr_, m_isPositionOnly_, m_overrideInstanceData_);
 
   // Draw
@@ -128,8 +128,8 @@ void DrawCommand::Draw() const {
           ? m_overrideInstanceData_
           : RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get();
   const int32_t InstanceCount
-      = InstanceData ? InstanceData->GetElementCount() : 1;
-  m_renderObject_->Draw(m_renderFrameContextPtr_, InstanceCount);
+      = InstanceData ? InstanceData->getElementCount() : 1;
+  m_renderObject_->draw(m_renderFrameContextPtr_, InstanceCount);
 }
 
 }  // namespace game_engine

@@ -17,16 +17,16 @@ class RenderTargetPool {
   RenderTargetPool();
   ~RenderTargetPool();
 
-  static std::shared_ptr<RenderTarget> GetRenderTarget(
+  static std::shared_ptr<RenderTarget> s_getRenderTarget(
       const RenderTargetInfo& info);
-  static void ReturnRenderTarget(RenderTarget* renderTarget);
+  static void s_seturnRenderTarget(RenderTarget* renderTarget);
 
-  static void ReleaseForRecreateSwapchain() {
+  static void s_releaseForRecreateSwapchain() {
     m_renderTargetResourceMap_.clear();
     m_renderTargetHashVariableMap_.clear();
   }
 
-  static void Release() {
+  static void s_release() {
     // if (g_EyeAdaptationARTPtr) {
     //   g_EyeAdaptationARTPtr->Return();
     //   g_EyeAdaptationARTPtr.reset();

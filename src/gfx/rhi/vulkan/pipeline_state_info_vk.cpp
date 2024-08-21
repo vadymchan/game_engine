@@ -9,15 +9,15 @@ namespace game_engine {
 // SamplerStateInfoVk
 // ======================================================================
 
-void SamplerStateInfoVk::Initialize() {
-  GetHash();
+void SamplerStateInfoVk::initialize() {
+  getHash();
   m_samplerStateInfo_.sType     = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  m_samplerStateInfo_.magFilter = GetVulkanTextureFilterType(m_magnification_);
-  m_samplerStateInfo_.minFilter = GetVulkanTextureFilterType(m_minification_);
+  m_samplerStateInfo_.magFilter = g_getVulkanTextureFilterType(m_magnification_);
+  m_samplerStateInfo_.minFilter = g_getVulkanTextureFilterType(m_minification_);
 
-  m_samplerStateInfo_.addressModeU = GetVulkanTextureAddressMode(m_addressU_);
-  m_samplerStateInfo_.addressModeV = GetVulkanTextureAddressMode(m_addressV_);
-  m_samplerStateInfo_.addressModeW = GetVulkanTextureAddressMode(m_addressW_);
+  m_samplerStateInfo_.addressModeU = g_getVulkanTextureAddressMode(m_addressU_);
+  m_samplerStateInfo_.addressModeV = g_getVulkanTextureAddressMode(m_addressV_);
+  m_samplerStateInfo_.addressModeW = g_getVulkanTextureAddressMode(m_addressW_);
 
   m_samplerStateInfo_.anisotropyEnable = (m_maxAnisotropy_ > 1);
   m_samplerStateInfo_.maxAnisotropy    = m_maxAnisotropy_;
@@ -25,7 +25,7 @@ void SamplerStateInfoVk::Initialize() {
   m_samplerStateInfo_.unnormalizedCoordinates = VK_FALSE;
 
   m_samplerStateInfo_.compareEnable = m_isEnableComparisonMode_;
-  m_samplerStateInfo_.compareOp     = GetVulkanCompareOp(m_comparisonFunc_);
+  m_samplerStateInfo_.compareOp     = g_getVulkanCompareOp(m_comparisonFunc_);
 
   m_samplerStateInfo_.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
   m_samplerStateInfo_.mipLodBias = 0.0f;    // Optional
@@ -48,10 +48,10 @@ void SamplerStateInfoVk::Initialize() {
     GlobalLogger::Log(LogLevel::Error, "Failed to create sampler");
   }
 
-  m_resourceName_ = Name(ToString().c_str());
+  m_resourceName_ = Name(toString().c_str());
 }
 
-void SamplerStateInfoVk::Release() {
+void SamplerStateInfoVk::release() {
   if (m_samplerState_) {
     vkDestroySampler(g_rhi_vk->m_device_, m_samplerState_, nullptr);
     m_samplerState_ = nullptr;
@@ -61,18 +61,18 @@ void SamplerStateInfoVk::Release() {
 // RasterizationStateInfoVk
 // ======================================================================
 
-void RasterizationStateInfoVk::Initialize() {
-  GetHash();
+void RasterizationStateInfoVk::initialize() {
+  getHash();
   m_rasterizationStateInfo_ = {};
   m_rasterizationStateInfo_.sType
       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   m_rasterizationStateInfo_.depthClampEnable        = m_depthClampEnable_;
   m_rasterizationStateInfo_.rasterizerDiscardEnable = m_rasterizerDiscardEnable_;
   m_rasterizationStateInfo_.polygonMode
-      = GetVulkanPolygonMode(m_polygonMode_);  // FILL, LINE, POINT
+      = g_getVulkanPolygonMode(m_polygonMode_);  // FILL, LINE, POINT
   m_rasterizationStateInfo_.lineWidth       = m_lineWidth_;
-  m_rasterizationStateInfo_.cullMode        = GetVulkanCullMode(m_cullMode_);
-  m_rasterizationStateInfo_.frontFace       = GetVulkanFrontFace(m_frontFace_);
+  m_rasterizationStateInfo_.cullMode        = g_getVulkanCullMode(m_cullMode_);
+  m_rasterizationStateInfo_.frontFace       = g_getVulkanFrontFace(m_frontFace_);
   m_rasterizationStateInfo_.depthBiasEnable = m_depthBiasEnable_;
   m_rasterizationStateInfo_.depthBiasConstantFactor
       = m_depthBiasConstantFactor_;                           // Optional
@@ -101,13 +101,13 @@ void RasterizationStateInfoVk::Initialize() {
 // StencilOpStateInfoVk
 // ======================================================================
 
-void StencilOpStateInfoVk::Initialize() {
-  GetHash();
+void StencilOpStateInfoVk::initialize() {
+  getHash();
   m_stencilOpStateInfo_             = {};
-  m_stencilOpStateInfo_.failOp      = GetVulkanStencilOp(m_failOp_);
-  m_stencilOpStateInfo_.passOp      = GetVulkanStencilOp(m_passOp_);
-  m_stencilOpStateInfo_.depthFailOp = GetVulkanStencilOp(m_depthFailOp_);
-  m_stencilOpStateInfo_.compareOp   = GetVulkanCompareOp(m_compareOp_);
+  m_stencilOpStateInfo_.failOp      = g_getVulkanStencilOp(m_failOp_);
+  m_stencilOpStateInfo_.passOp      = g_getVulkanStencilOp(m_passOp_);
+  m_stencilOpStateInfo_.depthFailOp = g_getVulkanStencilOp(m_depthFailOp_);
+  m_stencilOpStateInfo_.compareOp   = g_getVulkanCompareOp(m_compareOp_);
   m_stencilOpStateInfo_.compareMask = m_compareMask_;
   m_stencilOpStateInfo_.writeMask   = m_writeMask_;
   m_stencilOpStateInfo_.reference   = m_reference_;
@@ -116,14 +116,14 @@ void StencilOpStateInfoVk::Initialize() {
 // DepthStencilStateInfoVk
 // ======================================================================
 
-void DepthStencilStateInfoVk::Initialize() {
-  GetHash();
+void DepthStencilStateInfoVk::initialize() {
+  getHash();
   m_depthStencilStateInfo_ = {};
   m_depthStencilStateInfo_.sType
       = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   m_depthStencilStateInfo_.depthTestEnable  = m_depthTestEnable_;
   m_depthStencilStateInfo_.depthWriteEnable = m_depthWriteEnable_;
-  m_depthStencilStateInfo_.depthCompareOp   = GetVulkanCompareOp(m_depthCompareOp_);
+  m_depthStencilStateInfo_.depthCompareOp   = g_getVulkanCompareOp(m_depthCompareOp_);
   m_depthStencilStateInfo_.depthBoundsTestEnable = m_depthBoundsTestEnable_;
   m_depthStencilStateInfo_.minDepthBounds        = m_minDepthBounds_;  // Optional
   m_depthStencilStateInfo_.maxDepthBounds        = m_maxDepthBounds_;  // Optional
@@ -141,18 +141,18 @@ void DepthStencilStateInfoVk::Initialize() {
 // BlendingStateInfoVk
 // ======================================================================
 
-void BlendingStateInfoVk::Initialize() {
-  GetHash();
+void BlendingStateInfoVk::initialize() {
+  getHash();
   m_colorBlendAttachmentInfo_                     = {};
   m_colorBlendAttachmentInfo_.blendEnable         = m_blendEnable_;
-  m_colorBlendAttachmentInfo_.srcColorBlendFactor = GetVulkanBlendFactor(m_src_);
-  m_colorBlendAttachmentInfo_.dstColorBlendFactor = GetVulkanBlendFactor(m_dest_);
-  m_colorBlendAttachmentInfo_.colorBlendOp        = GetVulkanBlendOp(m_blendOp_);
-  m_colorBlendAttachmentInfo_.srcAlphaBlendFactor = GetVulkanBlendFactor(m_srcAlpha_);
+  m_colorBlendAttachmentInfo_.srcColorBlendFactor = g_getVulkanBlendFactor(m_src_);
+  m_colorBlendAttachmentInfo_.dstColorBlendFactor = g_getVulkanBlendFactor(m_dest_);
+  m_colorBlendAttachmentInfo_.colorBlendOp        = g_getVulkanBlendOp(m_blendOp_);
+  m_colorBlendAttachmentInfo_.srcAlphaBlendFactor = g_getVulkanBlendFactor(m_srcAlpha_);
   m_colorBlendAttachmentInfo_.dstAlphaBlendFactor
-      = GetVulkanBlendFactor(m_destAlpha_);
-  m_colorBlendAttachmentInfo_.alphaBlendOp   = GetVulkanBlendOp(m_alphaBlendOp_);
-  m_colorBlendAttachmentInfo_.colorWriteMask = GetVulkanColorMask(m_colorWriteMask_);
+      = g_getVulkanBlendFactor(m_destAlpha_);
+  m_colorBlendAttachmentInfo_.alphaBlendOp   = g_getVulkanBlendOp(m_alphaBlendOp_);
+  m_colorBlendAttachmentInfo_.colorWriteMask = g_getVulkanColorMask(m_colorWriteMask_);
 }
 
 // PipelineStateFixedInfoVk
@@ -178,9 +178,9 @@ void BlendingStateInfoVk::Initialize() {
 //
 //  UsedSize = size;
 //  memcpy(Data, data, size);
-//  PushConstantRanges.Add(
+//  PushConstantRanges.add(
 //      PushConstantRangeVk(shaderAccessStageFlag, 0, size));
-//  GetHash();
+//  s_getHash();
 //}
 //
 // PushConstantVk::PushConstantVk(const char*                data,
@@ -191,8 +191,8 @@ void BlendingStateInfoVk::Initialize() {
 //
 //  UsedSize = size;
 //  memcpy(Data, data, size);
-//  PushConstantRanges.Add(pushConstantRange);
-//  GetHash();
+//  PushConstantRanges.add(pushConstantRange);
+//  s_getHash();
 //}
 //
 // PushConstantVk::PushConstantVk(
@@ -204,7 +204,7 @@ void BlendingStateInfoVk::Initialize() {
 //
 //  UsedSize = size;
 //  memcpy(Data, data, size);
-//  GetHash();
+//  s_getHash();
 //}
 //
 // PushConstantVk& PushConstantVk::operator=(
@@ -218,7 +218,7 @@ void BlendingStateInfoVk::Initialize() {
 //  return *this;
 //}
 //
-// size_t PushConstantVk::GetHash() const {
+// size_t PushConstantVk::s_getHash() const {
 //  if (Hash) {
 //    return Hash;
 //  }
@@ -236,22 +236,22 @@ void BlendingStateInfoVk::Initialize() {
 // PipelineStateInfoVk
 // ======================================================================
 
-void PipelineStateInfoVk::Initialize() {
-  GetHash();
+void PipelineStateInfoVk::initialize() {
+  getHash();
   if (m_pipelineType_ == EPipelineType::Graphics) {
-    CreateGraphicsPipelineState();
+    createGraphicsPipelineState();
   } else if (m_pipelineType_ == EPipelineType::Compute) {
-    CreateComputePipelineState();
+    createComputePipelineState();
   } else if (m_pipelineType_ == EPipelineType::RayTracing) {
     // TODO:
-    // CreateRaytracingPipelineState();
+    // createRaytracingPipelineState();
     assert(0);
   } else {
     assert(0);
   }
 }
 
-void PipelineStateInfoVk::Release() {
+void PipelineStateInfoVk::release() {
   if (m_pipeline_) {
     vkDestroyPipeline(g_rhi_vk->m_device_, m_pipeline_, nullptr);
     m_pipeline_ = nullptr;
@@ -259,7 +259,7 @@ void PipelineStateInfoVk::Release() {
   m_pipelineLayout_ = nullptr;
 }
 
-void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
+void* PipelineStateInfoVk::createGraphicsPipelineState() {
   if (m_pipeline_) {
     return m_pipeline_;
   }
@@ -268,19 +268,19 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   assert(m_vertexBufferArray.m_numOfData_);
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo2
-      = ((VertexBufferVk*)m_vertexBufferArray[0])->CreateVertexInputState();
+      = ((VertexBufferVk*)m_vertexBufferArray[0])->createVertexInputState();
 
   std::vector<VkVertexInputBindingDescription>   bindingDescriptions;
   std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-  VertexBufferVk::CreateVertexInputState(vertexInputInfo,
+  VertexBufferVk::s_createVertexInputState(vertexInputInfo,
                                          bindingDescriptions,
                                          attributeDescriptions,
                                          m_vertexBufferArray);
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly
-      = ((VertexBufferVk*)m_vertexBufferArray[0])->CreateInputAssemblyState();
+      = ((VertexBufferVk*)m_vertexBufferArray[0])->createInputAssemblyState();
 
   const auto&             Viewports = m_pipelineStateFixed_->m_viewports_;
   std::vector<VkViewport> vkViewports;
@@ -340,9 +340,9 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
     const int32_t AttachmentIndex = SelectedSubpass.m_outputColorAttachments_[i];
     const bool    IsColorAttachment
         = !m_renderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
-               .IsDepthAttachment()
+               .isDepthAttachment()
        && !m_renderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
-               .IsResolveAttachment();
+               .isResolveAttachment();
     if (IsColorAttachment) {
       ++ColorAttachmentCountInSubpass;
     }
@@ -379,7 +379,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
     for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_dynamicStates_.size();
          ++i) {
       dynamicStates[i]
-          = GetVulkanPipelineDynamicState(m_pipelineStateFixed_->m_dynamicStates_[i]);
+          = g_getVulkanPipelineDynamicState(m_pipelineStateFixed_->m_dynamicStates_[i]);
     }
 
     dynamicState.dynamicStateCount = (uint32_t)dynamicStates.size();
@@ -387,7 +387,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   }
 
   // 10. Pipeline layout
-  m_pipelineLayout_ = ShaderBindingLayoutVk::CreatePipelineLayout(
+  m_pipelineLayout_ = ShaderBindingLayoutVk::s_createPipelineLayout(
       m_shaderBindingLayoutArray, m_pushConstant);
 
   VkGraphicsPipelineCreateInfo pipelineInfo = {};
@@ -398,7 +398,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   uint32_t                        ShaderStageIndex = 0;
   if (m_graphicsShader_.m_vertexShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)m_graphicsShader_.m_vertexShader_->GetCompiledShader())
+        = ((CompiledShaderVk*)m_graphicsShader_.m_vertexShader_->getCompiledShader())
               ->m_shaderStage_;
   }
   if (m_graphicsShader_.m_geometryShader_) {
@@ -408,7 +408,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   if (m_graphicsShader_.m_pixelShader_) {
     ShaderStages[ShaderStageIndex++]
         //= ((CompiledShaderVk*)GraphicsShader.m_pixelShader_)->m_shaderStage_;
-        = ((CompiledShaderVk*)m_graphicsShader_.m_pixelShader_->GetCompiledShader())
+        = ((CompiledShaderVk*)m_graphicsShader_.m_pixelShader_->getCompiledShader())
 			  ->m_shaderStage_;
   }
 
@@ -432,7 +432,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   pipelineInfo.pColorBlendState = &colorBlending;
   pipelineInfo.pDynamicState    = &dynamicState;
   pipelineInfo.layout           = m_pipelineLayout_;
-  pipelineInfo.renderPass       = (VkRenderPass)m_renderPass->GetRenderPass();
+  pipelineInfo.renderPass       = (VkRenderPass)m_renderPass->getRenderPass();
   pipelineInfo.subpass          = m_subpassIndex_;      // index of subpass
 
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;  // Optional
@@ -486,7 +486,7 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
     return nullptr;
   }
 
-  size_t hash = GetHash();
+  size_t hash = getHash();
   assert(hash);
   // TODO: real time shader update (WIP)
 
@@ -506,12 +506,12 @@ void* PipelineStateInfoVk::CreateGraphicsPipelineState() {
   return m_pipeline_;
 }
 
-void* PipelineStateInfoVk::CreateComputePipelineState() {
+void* PipelineStateInfoVk::createComputePipelineState() {
   if (m_pipeline_) {
     return m_pipeline_;
   }
 
-  m_pipelineLayout_ = ShaderBindingLayoutVk::CreatePipelineLayout(
+  m_pipelineLayout_ = ShaderBindingLayoutVk::s_createPipelineLayout(
       m_shaderBindingLayoutArray, m_pushConstant);
 
   VkComputePipelineCreateInfo computePipelineCreateInfo{};
@@ -520,7 +520,7 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
   computePipelineCreateInfo.layout = m_pipelineLayout_;
   computePipelineCreateInfo.flags  = 0;
   computePipelineCreateInfo.stage
-      = ((CompiledShaderVk*)m_computeShader_->GetCompiledShader())->m_shaderStage_;
+      = ((CompiledShaderVk*)m_computeShader_->getCompiledShader())->m_shaderStage_;
 
   if (vkCreateComputePipelines(g_rhi_vk->m_device_,
                                g_rhi_vk->m_pipelineCache_,
@@ -533,7 +533,7 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
     return nullptr;
   }
 
-  size_t hash = GetHash();
+  size_t hash = getHash();
   assert(hash);
 
   // TODO: real time shader update (WIP)
@@ -544,19 +544,19 @@ void* PipelineStateInfoVk::CreateComputePipelineState() {
   return m_pipeline_;
 }
 
-void PipelineStateInfoVk::Bind(
+void PipelineStateInfoVk::bind(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
   assert(m_pipeline_);
   if (m_pipelineType_ == EPipelineType::Graphics) {
     vkCmdBindPipeline(
-        (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
-            ->GetNativeHandle(),
+        (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
+            ->getNativeHandle(),
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         m_pipeline_);
   } else if (m_pipelineType_ == EPipelineType::Compute) {
     vkCmdBindPipeline(
-        (VkCommandBuffer)renderFrameContext->GetActiveCommandBuffer()
-            ->GetNativeHandle(),
+        (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
+            ->getNativeHandle(),
         VK_PIPELINE_BIND_POINT_COMPUTE,
         m_pipeline_);
   } else if (m_pipelineType_ == EPipelineType::RayTracing) {

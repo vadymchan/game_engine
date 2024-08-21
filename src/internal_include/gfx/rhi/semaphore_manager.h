@@ -7,15 +7,15 @@ class Semaphore {
   public:
   virtual ~Semaphore() {}
 
-  virtual void* GetHandle() const = 0;
+  virtual void* getHandle() const = 0;
 };
 
 class SemaphoreManager {
   public:
   virtual ~SemaphoreManager() {}
 
-  virtual Semaphore* GetOrCreateSemaphore()             = 0;
-  virtual void        ReturnSemaphore(Semaphore* fence) = 0;
+  virtual Semaphore* getOrCreateSemaphore()            = 0;
+  virtual void       returnSemaphore(Semaphore* fence) = 0;
 };
 
 }  // namespace game_engine

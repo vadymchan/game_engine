@@ -45,13 +45,13 @@ struct TextureDx12 : public Texture {
   DescriptorDx12                    m_dsv_;
   std::map<int32_t, DescriptorDx12> m_uavMipMap;
 
-  virtual void* GetHandle() const override { return m_texture->Get(); }
+  virtual void* getHandle() const override { return m_texture->get(); }
 
-  virtual void* GetSamplerStateHandle() const override { return nullptr; }
+  virtual void* getSamplerStateHandle() const override { return nullptr; }
 
-  virtual void Release() override;
+  virtual void release() override;
 
-  virtual EResourceLayout GetLayout() const override { return m_layout_; }
+  virtual EResourceLayout getLayout() const override { return m_layout_; }
 };
 
 }  // namespace game_engine

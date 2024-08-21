@@ -10,15 +10,15 @@
 //
 //// ==================== RenderTargetVk =====================
 //
-//void RenderTargetVk::Return() {
+//void RenderTargetVk::returnRt() {
 //  if (CreatedFromRenderTargetPool) {
-//    RenderTargetPoolVk::ReturnRenderTarget(this);
+//    RenderTargetPoolVk::s_seturnRenderTarget(this);
 //  }
 //}
 
 // ==================== SceneRenderTarget ( for Renderer) =====================
 
-//void SceneRenderTarget::Create(std::shared_ptr<Window> window,
+//void SceneRenderTarget::s_create(std::shared_ptr<Window> window,
 //                               const SwapchainImageVk* InSwapchain) {
 //  constexpr EMSAASamples MsaaSamples         = EMSAASamples::COUNT_1;
 //  constexpr uint32_t     layerCount          = 1;
@@ -38,8 +38,8 @@
 //    RTClearValueVk(0.0f, 0.0f, 0.0f, 1.0f)
 //    //, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT  // TODO: remove
 //  };
-//  // ColorRTInfo.ResourceName = TEXT("ColorPtr");
-//  ColorPtr = RenderTargetPoolVk::GetRenderTarget(ColorRTInfo);
+//  // ColorRTInfo.ResourceName = Text("ColorPtr");
+//  ColorPtr = RenderTargetPoolVk::s_getRenderTarget(ColorRTInfo);
 //
 //  RenderTargetInfoVk DepthRTInfo = {
 //    ETextureType::TEXTURE_2D,
@@ -53,28 +53,28 @@
 //    RTClearValueVk(1.0f, 0)
 //    //, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT  // TODO: remove
 //  };
-//  // DepthRTInfo.ResourceName = TEXT("DepthPtr");
-//  DepthPtr = RenderTargetPoolVk::GetRenderTarget(DepthRTInfo);
+//  // DepthRTInfo.ResourceName = Text("DepthPtr");
+//  DepthPtr = RenderTargetPoolVk::s_getRenderTarget(DepthRTInfo);
 //
 //  if ((int32_t)MsaaSamples > 1) {
 //    assert(InSwapchain);
-//    ResolvePtr = RenderTargetVk::CreateFromTexture(InSwapchain->m_texture_);
+//    ResolvePtr = RenderTargetVk::s_createFromTexture(InSwapchain->m_texture_);
 //  }
 //
 //  if (!FinalColorPtr) {
-//    FinalColorPtr = RenderTargetVk::CreateFromTexture(InSwapchain->m_texture_);
+//    FinalColorPtr = RenderTargetVk::s_createFromTexture(InSwapchain->m_texture_);
 //  }
 //}
 //
-//void SceneRenderTarget::Return() {
+//void SceneRenderTarget::returnRt() {
 //  if (ColorPtr) {
-//    ColorPtr->Return();
+//    ColorPtr->returnRt();
 //  }
 //  if (DepthPtr) {
-//    DepthPtr->Return();
+//    DepthPtr->returnRt();
 //  }
 //  if (ResolvePtr) {
-//    ResolvePtr->Return();
+//    ResolvePtr->returnRt();
 //  }
 //}
 

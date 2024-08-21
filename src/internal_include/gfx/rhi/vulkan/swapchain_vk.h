@@ -16,11 +16,11 @@ namespace game_engine {
 
 class SwapchainImageVk : public SwapchainImage {
   public:
-  virtual ~SwapchainImageVk() { ReleaseInternal(); }
+  virtual ~SwapchainImageVk() { releaseInternal(); }
 
-  virtual void Release() override { ReleaseInternal(); }
+  virtual void release() override { releaseInternal(); }
 
-  void ReleaseInternal();
+  void releaseInternal();
 
   VkFence m_commandBufferFence_ = nullptr;  // signal command buffer completion.
 
@@ -47,25 +47,25 @@ class SwapchainImageVk : public SwapchainImage {
 
 class SwapchainVk : public Swapchain {
   public:
-  bool Create(const std::shared_ptr<Window>& window) override;
+  bool create(const std::shared_ptr<Window>& window) override;
 
-  void Release() override { ReleaseInternal(); }
+  void release() override { releaseInternal(); }
 
-  void ReleaseInternal();
+  void releaseInternal();
 
-  void* GetHandle() const override { return m_swapChain_; }
+  void* getHandle() const override { return m_swapChain_; }
 
-  ETextureFormat GetFormat() const override { return m_format_; }
+  ETextureFormat getFormat() const override { return m_format_; }
 
-  const math::Dimension2Di& GetExtent() const override { return m_extent_; }
+  const math::Dimension2Di& getExtent() const override { return m_extent_; }
 
-  SwapchainImageVk* GetSwapchainImage(int32_t index) const override {
+  SwapchainImageVk* getSwapchainImage(int32_t index) const override {
     // Ensure index is within range
     assert(m_images_.size() > index);
     return m_images_[index];
   }
 
-  int32_t GetNumOfSwapchainImages() const override {
+  int32_t getNumOfSwapchainImages() const override {
     return static_cast<int32_t>(m_images_.size());
   }
 
@@ -75,7 +75,7 @@ class SwapchainVk : public Swapchain {
   math::Dimension2Di             m_extent_;
   std::vector<SwapchainImageVk*> m_images_;
 
-  bool isVSyncEnabled = {false};
+  bool m_isVSyncEnabled_ = {false};
 };
 }  // namespace game_engine
 

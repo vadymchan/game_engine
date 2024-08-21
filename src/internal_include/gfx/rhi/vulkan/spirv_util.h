@@ -18,12 +18,12 @@ namespace fs = std::filesystem;
 
 class SpirvUtil {
   public:
-  static std::vector<uint32_t> compileHlslFileToSpirv(
+  static std::vector<uint32_t> s_compileHlslFileToSpirv(
       const fs::path&     shaderFilePath,
       shaderc_shader_kind shaderKind,
       const std::string&  entryPoint) {
     // Read HLSL code from file
-    std::string hlslCode = ReadShaderFile(shaderFilePath);
+    std::string hlslCode = s_readShaderFile_(shaderFilePath);
 
     static shaderc::Compiler       compiler;
     static shaderc::CompileOptions options = []() {
@@ -49,7 +49,7 @@ class SpirvUtil {
     return {compilationResult.cbegin(), compilationResult.cend()};
   }
 
-  static std::vector<uint32_t> compileHlslCodeToSpirv(
+  static std::vector<uint32_t> s_compileHlslCodeToSpirv(
       const std::string&  hlslCode,
       shaderc_shader_kind shaderKind,
       const std::string&  entryPoint) {
@@ -74,7 +74,7 @@ class SpirvUtil {
     return {compilationResult.cbegin(), compilationResult.cend()};
   }
 
-  static shaderc_shader_kind getShadercShaderKind(EShaderAccessStageFlag flag) {
+  static shaderc_shader_kind s_getShadercShaderKind(EShaderAccessStageFlag flag) {
     switch (flag) {
       case EShaderAccessStageFlag::VERTEX:
         return shaderc_glsl_vertex_shader;
@@ -103,7 +103,7 @@ class SpirvUtil {
   }
 
   private:
-  static std::string ReadShaderFile(const fs::path& shaderFilePath) {
+  static std::string s_readShaderFile_(const fs::path& shaderFilePath) {
     std::ifstream shaderFile(shaderFilePath);
     if (!shaderFile) {
       GlobalLogger::Log(

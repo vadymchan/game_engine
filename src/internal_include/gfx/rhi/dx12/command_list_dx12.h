@@ -8,23 +8,23 @@ namespace game_engine {
 
 // TODO: consider renaming to command list
 struct CommandBufferDx12 : public CommandBuffer {
-  ID3D12GraphicsCommandList4* Get() { return m_commandList_.Get(); }
+  ID3D12GraphicsCommandList4* get() { return m_commandList_.Get(); }
 
-  bool IsValid() const { return m_commandList_.Get(); }
+  bool isValid() const { return m_commandList_.Get(); }
 
-  inline ComPtr<ID3D12GraphicsCommandList4>& GetRef() { return m_commandList_; }
+  inline ComPtr<ID3D12GraphicsCommandList4>& getRef() { return m_commandList_; }
 
-  virtual bool Begin() const override;
-  virtual bool End() const override;
-  virtual void Reset() const override;
+  virtual bool begin() const override;
+  virtual bool end() const override;
+  virtual void reset() const override;
 
-  virtual void* GetNativeHandle() const override { return m_commandList_.Get(); }
+  virtual void* getNativeHandle() const override { return m_commandList_.Get(); }
 
-  virtual void*  GetFenceHandle() const override;
-  virtual void   SetFence(void* fence) override;
-  virtual Fence* GetFence() const override;
+  virtual void*  getFenceHandle() const override;
+  virtual void   setFence(void* fence) override;
+  virtual Fence* getFence() const override;
 
-  bool IsCompleteForWaitFence();
+  bool isCompleteForWaitFence();
 
   ComPtr<ID3D12CommandAllocator>     m_commandAllocator_;
   ComPtr<ID3D12GraphicsCommandList4> m_commandList_;

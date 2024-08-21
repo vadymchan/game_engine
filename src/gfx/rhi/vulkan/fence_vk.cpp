@@ -14,12 +14,12 @@ FenceVk::~FenceVk() {
   }
 }
 
-void FenceVk::WaitForFence(uint64_t timeout) {
+void FenceVk::waitForFence(uint64_t timeout) {
   assert(m_fence_ != VK_NULL_HANDLE);
   vkWaitForFences(g_rhi_vk->m_device_, 1, &m_fence_, VK_TRUE, timeout);
 }
 
-void FenceVk::ResetFence() const {
+void FenceVk::resetFence() const {
   assert(m_fence_ != VK_NULL_HANDLE);
   vkResetFences(g_rhi_vk->m_device_, 1, &m_fence_);
 }
@@ -27,7 +27,7 @@ void FenceVk::ResetFence() const {
 // FenceManagerVk
 // ====================================================
 
-Fence* FenceManagerVk::GetOrCreateFence() {
+Fence* FenceManagerVk::getOrCreateFence() {
   if (!m_pendingFences_.empty()) {
     Fence* fence = *m_pendingFences_.begin();
     m_pendingFences_.erase(m_pendingFences_.begin());
@@ -51,12 +51,12 @@ Fence* FenceManagerVk::GetOrCreateFence() {
   return newFence;
 }
 
-void FenceManagerVk::ReturnFence(Fence* fence) {
+void FenceManagerVk::returnFence(Fence* fence) {
   m_usingFences_.erase(fence);
   m_pendingFences_.insert(fence);
 }
 
-void FenceManagerVk::Release() {
+void FenceManagerVk::release() {
   for (auto& fence : m_usingFences_) {
     delete fence;
   }

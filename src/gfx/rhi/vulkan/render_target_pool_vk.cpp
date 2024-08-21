@@ -11,9 +11,9 @@
 //std::map<RenderTargetVk*, uint64_t>
 //    RenderTargetPoolVk::RenderTargetHashVariableMap;
 //
-//std::shared_ptr<RenderTargetVk> RenderTargetPoolVk::GetRenderTarget(
+//std::shared_ptr<RenderTargetVk> RenderTargetPoolVk::s_getRenderTarget(
 //    const RenderTargetInfoVk& info) {
-//  auto hash = info.GetHash();
+//  auto hash = info.s_getHash();
 //
 //  auto it_find = RenderTargetResourceMap.find(hash);
 //  if (RenderTargetResourceMap.end() != it_find) {
@@ -26,7 +26,7 @@
 //    }
 //  }
 //
-//  auto renderTargetPtr = g_rhi_vk->CreateRenderTarget(info);
+//  auto renderTargetPtr = g_rhi_vk->createRenderTarget(info);
 //  if (renderTargetPtr) {
 //    renderTargetPtr->CreatedFromRenderTargetPool = true;
 //    RenderTargetResourceMap[hash].push_back({true, renderTargetPtr});
@@ -36,7 +36,7 @@
 //  return renderTargetPtr;
 //}
 //
-//void RenderTargetPoolVk::ReturnRenderTarget(RenderTargetVk* renderTarget) {
+//void RenderTargetPoolVk::s_seturnRenderTarget(RenderTargetVk* renderTarget) {
 //  auto it_find = RenderTargetHashVariableMap.find(renderTarget);
 //  if (RenderTargetHashVariableMap.end() == it_find) {
 //    return;
@@ -51,7 +51,7 @@
 //  }
 //}
 //
-//void RenderTargetPoolVk::Release() {
+//void RenderTargetPoolVk::release() {
 //  RenderTargetResourceMap.clear();
 //  RenderTargetHashVariableMap.clear();
 //}

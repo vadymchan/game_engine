@@ -18,10 +18,10 @@ struct RenderFrameContextVk : public RenderFrameContext {
 
   virtual ~RenderFrameContextVk() {}
 
-  virtual void SubmitCurrentActiveCommandBuffer(
+  virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) override;
 
-  virtual void QueueSubmitCurrentActiveCommandBuffer(
+  virtual void queueSubmitCurrentActiveCommandBuffer(
       Semaphore* signalSemaphore);
 
   public:

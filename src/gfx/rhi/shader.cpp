@@ -20,29 +20,29 @@ Shader::~Shader() {
   delete m_compiledShader;
 }
 
-void Shader::StartAndRunCheckUpdateShaderThread() {
+void Shader::s_startAndRunCheckUpdateShaderThread() {
   if (!g_useRealTimeShaderUpdate) {
     return;
   }
 
   static std::atomic_bool HasNewWaitForupdateShaders(false);
-  static MutexLock        Lock;
+  static MutexLock        lock;
   if (!s_checkUpdateShaderThread.joinable()) {
     s_isRunningCheckUpdateShaderThread = true;
     s_checkUpdateShaderThread          = std::thread([]() {
       while (s_isRunningCheckUpdateShaderThread) {
-        std::vector<Shader*> Shaders = g_rhi->GetAllShaders();
+        std::vector<Shader*> Shaders = g_rhi->getAllShaders();
 
         static int32_t CurrentIndex = 0;
         if (Shaders.size() > 0) {
-          ScopedLock s(&Lock);
+          ScopedLock s(&lock);
           for (int32_t i = 0; i < g_maxCheckCountForRealTimeShaderUpdate;
                ++i, ++CurrentIndex) {
             if (CurrentIndex >= (int32_t)Shaders.size()) {
               CurrentIndex = 0;
             }
 
-            if (Shaders[CurrentIndex]->UpdateShader()) {
+            if (Shaders[CurrentIndex]->updateShader()) {
               s_waitForUpdateShaders.push_back(Shaders[CurrentIndex]);
             }
           }
@@ -60,12 +60,12 @@ void Shader::StartAndRunCheckUpdateShaderThread() {
   }
 
   if (HasNewWaitForupdateShaders.load()) {
-    ScopedLock s(&Lock);
+    ScopedLock s(&lock);
 
     HasNewWaitForupdateShaders.store(false);
     assert(s_waitForUpdateShaders.size() > 0);
 
-    g_rhi->Flush();
+    g_rhi->flush();
 
     for (auto it = s_waitForUpdateShaders.begin();
          s_waitForUpdateShaders.end() != it;) {
@@ -78,26 +78,26 @@ void Shader::StartAndRunCheckUpdateShaderThread() {
 
       // Reset Shader
       shader->m_compiledShader = nullptr;
-      g_rhi->ReleaseShader(shader->m_shaderInfo_);
+      g_rhi->releaseShader(shader->m_shaderInfo_);
 
       // Try recreate shader
-      if (g_rhi->CreateShaderInternal(shader, shader->m_shaderInfo_)) {
+      if (g_rhi->createShaderInternal(shader, shader->m_shaderInfo_)) {
         // Remove Pipeline which is connected with this shader
         for (auto PipelineStateHash : PreviousPipelineStateHashes) {
-          g_rhi->RemovePipelineStateInfo(PipelineStateHash);
+          g_rhi->removePipelineStateInfo(PipelineStateHash);
         }
 
         // Release previous compiled shader
         delete PreviousCompiledShader;
 
-        g_rhi->AddShader(shader->m_shaderInfo_, shader);
+        g_rhi->addShader(shader->m_shaderInfo_, shader);
 
         it = s_waitForUpdateShaders.erase(it);
       } else {
         // Restore shader data
         shader->m_compiledShader             = PreviousCompiledShader;
         s_connectedPipelineStateHash[shader] = PreviousPipelineStateHashes;
-        g_rhi->AddShader(shader->m_shaderInfo_, shader);
+        g_rhi->addShader(shader->m_shaderInfo_, shader);
 
         ++it;
       }
@@ -105,27 +105,27 @@ void Shader::StartAndRunCheckUpdateShaderThread() {
   }
 }
 
-void Shader::ReleaseCheckUpdateShaderThread() {
+void Shader::s_releaseCheckUpdateShaderThread() {
   if (s_checkUpdateShaderThread.joinable()) {
     s_isRunningCheckUpdateShaderThread = false;
     s_checkUpdateShaderThread.join();
   }
 }
 
-bool Shader::UpdateShader() {
+bool Shader::updateShader() {
   auto checkTimeStampFunc = [this](const char* filename) -> uint64_t {
     if (filename) {
-      return File::GetFileTimeStamp(filename);
+      return File::s_getFileTimeStamp(filename);
     }
     return 0;
   };
 
   // Check the state of shader file or any include shader file
   uint64_t currentTimeStamp
-      = checkTimeStampFunc(m_shaderInfo_.GetShaderFilepath().ToStr());
-  for (auto Name : m_shaderInfo_.GetIncludeShaderFilePaths()) {
+      = checkTimeStampFunc(m_shaderInfo_.getShaderFilepath().toStr());
+  for (auto Name : m_shaderInfo_.getIncludeShaderFilePaths()) {
     currentTimeStamp
-        = std::max(checkTimeStampFunc(Name.ToStr()), currentTimeStamp);
+        = std::max(checkTimeStampFunc(Name.toStr()), currentTimeStamp);
   }
 
   if (currentTimeStamp <= 0) {
@@ -146,29 +146,30 @@ bool Shader::UpdateShader() {
   return true;
 }
 
-void Shader::Initialize() {
-  assert(g_rhi->CreateShaderInternal(this, m_shaderInfo_));
+void Shader::initialize() {
+  assert(g_rhi->createShaderInternal(this, m_shaderInfo_));
 }
 
 // GraphicsPipelineShader
-size_t GraphicsPipelineShader::GetHash() const {
+size_t GraphicsPipelineShader::getHash() const {
   size_t hash = 0;
 
   if (m_vertexShader_) {
-    hash ^= m_vertexShader_->m_shaderInfo_.GetHash();
+    hash ^= m_vertexShader_->m_shaderInfo_.getHash();
   }
 
   if (m_geometryShader_) {
-    hash ^= m_geometryShader_->m_shaderInfo_.GetHash();
+    hash ^= m_geometryShader_->m_shaderInfo_.getHash();
   }
 
   if (m_pixelShader_) {
-    hash ^= m_pixelShader_->m_shaderInfo_.GetHash();
+    hash ^= m_pixelShader_->m_shaderInfo_.getHash();
   }
 
   return hash;
 }
 
+// TODO: consider other approaches like templates (will give at least code highlight)
 #define IMPLEMENT_SHADER_WITH_PERMUTATION(ShaderClass,                         \
                                           name,                                \
                                           Filepath,                            \
@@ -183,8 +184,8 @@ size_t GraphicsPipelineShader::GetHash() const {
   ShaderClass* ShaderClass::CreateShader(                                      \
       const ShaderClass::ShaderPermutation& permutation) {                   \
     ShaderInfo TempShaderInfo = GShaderInfo;                                   \
-    TempShaderInfo.SetPermutationId(permutation.GetPermutationId());         \
-    ShaderClass* shader    = g_rhi->CreateShader<ShaderClass>(TempShaderInfo); \
+    TempShaderInfo.setPermutationId(permutation.getPermutationId());         \
+    ShaderClass* shader    = g_rhi->createShader<ShaderClass>(TempShaderInfo); \
     shader->m_permutation_ = permutation;                                    \
     return shader;                                                             \
   }

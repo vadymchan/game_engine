@@ -16,7 +16,7 @@
 namespace game_engine {
 class QuadPrimitive : public Object {
   public:
-  void SetPlane(const math::Plane& plane);
+  void setPlane(const math::Plane& plane);
 
   math::Plane m_plane_;
 };
@@ -39,7 +39,7 @@ class BillboardQuadPrimitive : public QuadPrimitive {
   public:
   Camera* m_camera_ = nullptr;
 
-  virtual void Update(float deltaTime) override;
+  virtual void update(float deltaTime) override;
 };
 
 class UIQuadPrimitive : public Object {
@@ -47,32 +47,32 @@ class UIQuadPrimitive : public Object {
   math::Vector2Df m_position_;
   math::Vector2Df m_size_;
 
-  // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
+  // virtual void draw(const std::shared_ptr<RenderFrameContext>&
   // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
-  void           SetTexture(const Texture* texture);
-  void           SetUniformParams(const Shader* shader) const;
-  const Texture* GetTexture() const;
+  void           setTexture(const Texture* texture);
+  void           setUniformParams(const Shader* shader) const;
+  const Texture* getTexture() const;
 };
 
 class FullscreenQuadPrimitive : public Object {
   public:
-  // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
+  // virtual void draw(const std::shared_ptr<RenderFrameContext>&
   // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
-  void SetUniformBuffer(const Shader* shader) const;
-  void SetTexture(int                     index,
+  void setUniformBuffer(const Shader* shader) const;
+  void setTexture(int                     index,
                   const Texture*          texture,
                   const SamplerStateInfo* samplerState);
 };
 
 class BoundBoxObject : public Object {
   public:
-  void SetUniformBuffer(const Shader* shader);
-  void UpdateBoundBox(const BoundBox& boundBox);
-  void UpdateBoundBox();
+  void setUniformBuffer(const Shader* shader);
+  void updateBoundBox(const BoundBox& boundBox);
+  void updateBoundBox();
 
   math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   BoundBox        m_boundBox_;
@@ -81,7 +81,7 @@ class BoundBoxObject : public Object {
 
 class BoundSphereObject : public Object {
   public:
-  void SetUniformBuffer(const Shader* shader);
+  void setUniformBuffer(const Shader* shader);
 
   math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   BoundSphere     m_boundSphere_;
@@ -90,19 +90,19 @@ class BoundSphereObject : public Object {
 
 class SegmentPrimitive : public Object {
   public:
-  math::Vector3Df GetCurrentEnd() const {
+  math::Vector3Df getCurrentEnd() const {
     float           t   = std::clamp(m_time_, 0.0f, 1.0f);
     math::Vector3Df end = (m_end_ - m_start_);
     return end * t + m_start_;
   }
 
-  math::Vector3Df GetDirectionNormalized() const {
+  math::Vector3Df getDirectionNormalized() const {
     auto result = (m_end_ - m_start_).normalized();
     return result;
   }
 
-  void UpdateSegment();
-  void UpdateSegment(const math::Vector3Df& start,
+  void updateSegment();
+  void updateSegment(const math::Vector3Df& start,
                      const math::Vector3Df& end,
                      const math::Vector4Df& color,
                      float                  time = 1.0f);
@@ -112,7 +112,7 @@ class SegmentPrimitive : public Object {
   math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   float           m_time_  = 0.0f;
 
-  virtual void Update(float deltaTime) override;
+  virtual void update(float deltaTime) override;
 };
 
 class ArrowSegmentPrimitive : public Object {
@@ -122,12 +122,12 @@ class ArrowSegmentPrimitive : public Object {
     delete m_coneObject_;
   }
 
-  virtual void Update(float deltaTime) override;
+  virtual void update(float deltaTime) override;
 
-  void SetPos(const math::Vector3Df& pos);
-  void SetStart(const math::Vector3Df& start);
-  void SetEnd(const math::Vector3Df& end);
-  void SetTime(float time);
+  void setPosition(const math::Vector3Df& pos);
+  void setStart(const math::Vector3Df& start);
+  void setEnd(const math::Vector3Df& end);
+  void setTime(float time);
 
   SegmentPrimitive* m_segmentObject_ = nullptr;
   ConePrimitive*    m_coneObject_    = nullptr;
@@ -136,46 +136,46 @@ class ArrowSegmentPrimitive : public Object {
 // class DirectionalLightPrimitive : public Object {
 //   public:
 //   virtual ~DirectionalLightPrimitive() {
-//     delete BillboardObject;
-//     delete ArrowSegementObject;
+//     delete m_billboardObject_;
+//     delete m_arrowSegementObject_;
 //   }
 //
-//   virtual void Update(float deltaTime) override;
+//   virtual void update(float deltaTime) override;
 //
-//   BillboardQuadPrimitive* BillboardObject     = nullptr;
-//   ArrowSegmentPrimitive*  ArrowSegementObject = nullptr;
-//   math::Vector3Df          m_position_                 = Vector(0.0f);
-//   DirectionalLight*       Light               = nullptr;
+//   BillboardQuadPrimitive* m_billboardObject_     = nullptr;
+//   ArrowSegmentPrimitive*  m_arrowSegementObject_ = nullptr;
+//   math::Vector3Df         m_position_            = Vector(0.0f);
+//   DirectionalLight*       m_light_               = nullptr;
 // };
 //
 // class PointLightPrimitive : public Object {
 //   public:
 //   virtual ~PointLightPrimitive() {
-//     delete BillboardObject;
-//     delete SphereObject;
+//     delete m_billboardObject_;
+//     delete m_sphereObject_;
 //   }
 //
-//   virtual void Update(float deltaTime) override;
+//   virtual void update(float deltaTime) override;
 //
-//   BillboardQuadPrimitive* BillboardObject = nullptr;
-//   Object*                  SphereObject    = nullptr;
-//   PointLight*             Light           = nullptr;
+//   BillboardQuadPrimitive* m_billboardObject_ = nullptr;
+//   Object*                 m_sphereObject_    = nullptr;
+//   PointLight*             m_light_           = nullptr;
 // };
 //
 // class SpotLightPrimitive : public Object {
 //   public:
 //   virtual ~SpotLightPrimitive() {
-//     delete BillboardObject;
-//     delete UmbraConeObject;
-//     delete PenumbraConeObject;
+//     delete m_billboardObject_;
+//     delete m_umbraConeObject_;
+//     delete m_penumbraConeObject_;
 //   }
 //
-//   virtual void Update(float deltaTime) override;
+//   virtual void update(float deltaTime) override;
 //
-//   BillboardQuadPrimitive* BillboardObject    = nullptr;
-//   ConePrimitive*          UmbraConeObject    = nullptr;
-//   ConePrimitive*          PenumbraConeObject = nullptr;
-//   SpotLight*              Light              = nullptr;
+//   BillboardQuadPrimitive* m_billboardObject_    = nullptr;
+//   ConePrimitive*          m_umbraConeObject_    = nullptr;
+//   ConePrimitive*          m_penumbraConeObject_ = nullptr;
+//   SpotLight*              m_light_              = nullptr;
 // };
 
 class FrustumPrimitive : public Object {
@@ -195,8 +195,8 @@ class FrustumPrimitive : public Object {
     }
   }
 
-  virtual void Update(float deltaTime) override;
-  // virtual void Draw(const std::shared_ptr<RenderFrameContext>&
+  virtual void update(float deltaTime) override;
+  // virtual void draw(const std::shared_ptr<RenderFrameContext>&
   // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
@@ -212,18 +212,18 @@ class FrustumPrimitive : public Object {
 
 class Graph2D : public Object {
   public:
-  virtual void Update(float deltaTime) override;
+  virtual void update(float deltaTime) override;
 
-  void SethPos(const math::Vector2Df& pos);
-  void SetPoints(const std::vector<math::Vector2Df>& points);
+  void sethPosition(const math::Vector2Df& pos);
+  void setPoints(const std::vector<math::Vector2Df>& points);
 
-  void SetGuardLineSize(const math::Vector2Df& size) {
+  void setGuardLineSize(const math::Vector2Df& size) {
     m_guardLineSize_ = size;
   }
 
-  void UpdateBuffer();
+  void updateBuffer();
 
-  int32_t GetMaxInstancCount() const {
+  int32_t getMaxInstancCount() const {
     return static_cast<int32_t>(m_resultMatrices_.size());
   }
 
@@ -235,78 +235,96 @@ class Graph2D : public Object {
   std::vector<math::Matrix4f>  m_resultMatrices_;
 };
 
-std::vector<float> GenerateColor(const math::Vector4Df& color,
-                                 int32_t                elementCount);
-BoundBox           GenerateBoundBox(const std::vector<float>& vertices);
-BoundSphere        GenerateBoundSphere(const std::vector<float>& vertices);
-void               CreateBoundObjects(const std::vector<float>& vertices,
-                                      Object*                   ownerObject);
-BoundBoxObject*    CreateBoundBox(BoundBox               boundBox,
-                                  Object*                ownerObject,
-                                  const math::Vector4Df& color
-                                  = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f));
-BoundSphereObject* CreateBoundSphere(BoundSphere            boundSphere,
-                                     Object*                ownerObject,
-                                     const math::Vector4Df& color
-                                     = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f));
+// TODO: consider moving this global functions
+std::vector<float> g_generateColor(const math::Vector4Df& color,
+                                   int32_t                elementCount);
 
-QuadPrimitive*           CreateQuad(const math::Vector3Df& pos,
-                                    const math::Vector3Df& size,
-                                    const math::Vector3Df& scale,
-                                    const math::Vector4Df& color);
-Object*                  CreateGizmo(const math::Vector3Df& pos,
-                                     const math::Vector3Df& rot,
-                                     const math::Vector3Df& scale);
-Object*                  CreateTriangle(const math::Vector3Df& pos,
-                                        const math::Vector3Df& size,
-                                        const math::Vector3Df& scale,
-                                        const math::Vector4Df& color);
-Object*                  CreateCube(const math::Vector3Df& pos,
-                                    const math::Vector3Df& size,
-                                    const math::Vector3Df& scale,
-                                    const math::Vector4Df& color);
-Object*                  CreateCapsule(const math::Vector3Df& pos,
-                                       float                  height,
-                                       float                  radius,
-                                       int32_t                slice,
-                                       const math::Vector3Df& scale,
-                                       const math::Vector4Df& color);
-ConePrimitive*           CreateCone(const math::Vector3Df& pos,
-                                    float                  height,
-                                    float                  radius,
-                                    int32_t                slice,
-                                    const math::Vector3Df& scale,
-                                    const math::Vector4Df& color,
-                                    bool                   isWireframe = false,
-                                    bool                   createBoundInfo = true);
-Object*                  CreateCylinder(const math::Vector3Df& pos,
-                                        float                  height,
-                                        float                  radius,
-                                        int32_t                slice,
-                                        const math::Vector3Df& scale,
-                                        const math::Vector4Df& color);
-Object*                  CreateSphere(const math::Vector3Df& pos,
-                                      float                  radius,
-                                      uint32_t               slices,
-                                      uint32_t               stacks,
-                                      const math::Vector3Df& scale,
-                                      const math::Vector4Df& color,
-                                      bool                   isWireframe = false,
-                                      bool                   createBoundInfo = true);
-BillboardQuadPrimitive*  CreateBillobardQuad(const math::Vector3Df& pos,
-                                             const math::Vector3Df& size,
-                                             const math::Vector3Df& scale,
-                                             const math::Vector4Df& color,
-                                             Camera*                camera);
-UIQuadPrimitive*         CreateUIQuad(const math::Vector2Df& pos,
-                                      const math::Vector2Df& size,
-                                      Texture*               texture);
-FullscreenQuadPrimitive* CreateFullscreenQuad(Texture* texture);
-SegmentPrimitive*        CreateSegment(const math::Vector3Df& start,
-                                       const math::Vector3Df& end,
-                                       float                  time,
-                                       const math::Vector4Df& color);
-ArrowSegmentPrimitive*   CreateArrowSegment(const math::Vector3Df& start,
+BoundBox g_generateBoundBox(const std::vector<float>& vertices);
+
+BoundSphere g_generateBoundSphere(const std::vector<float>& vertices);
+
+void g_createBoundObjects(const std::vector<float>& vertices,
+                          Object*                   ownerObject);
+
+BoundBoxObject* g_createBoundBox(BoundBox               boundBox,
+                                 Object*                ownerObject,
+                                 const math::Vector4Df& color
+                                 = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f));
+
+BoundSphereObject* g_createBoundSphere(
+    BoundSphere            boundSphere,
+    Object*                ownerObject,
+    const math::Vector4Df& color = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f));
+
+QuadPrimitive* g_createQuad(const math::Vector3Df& pos,
+                            const math::Vector3Df& size,
+                            const math::Vector3Df& scale,
+                            const math::Vector4Df& color);
+
+Object* g_createGizmo(const math::Vector3Df& pos,
+                      const math::Vector3Df& rot,
+                      const math::Vector3Df& scale);
+
+Object* g_createTriangle(const math::Vector3Df& pos,
+                         const math::Vector3Df& size,
+                         const math::Vector3Df& scale,
+                         const math::Vector4Df& color);
+
+Object* g_createCube(const math::Vector3Df& pos,
+                     const math::Vector3Df& size,
+                     const math::Vector3Df& scale,
+                     const math::Vector4Df& color);
+
+Object* g_createCapsule(const math::Vector3Df& pos,
+                        float                  height,
+                        float                  radius,
+                        int32_t                slice,
+                        const math::Vector3Df& scale,
+                        const math::Vector4Df& color);
+
+ConePrimitive* g_createCone(const math::Vector3Df& pos,
+                            float                  height,
+                            float                  radius,
+                            int32_t                slice,
+                            const math::Vector3Df& scale,
+                            const math::Vector4Df& color,
+                            bool                   isWireframe     = false,
+                            bool                   createBoundInfo = true);
+
+Object* g_createCylinder(const math::Vector3Df& pos,
+                         float                  height,
+                         float                  radius,
+                         int32_t                slice,
+                         const math::Vector3Df& scale,
+                         const math::Vector4Df& color);
+
+Object* g_createSphere(const math::Vector3Df& pos,
+                       float                  radius,
+                       uint32_t               slices,
+                       uint32_t               stacks,
+                       const math::Vector3Df& scale,
+                       const math::Vector4Df& color,
+                       bool                   isWireframe     = false,
+                       bool                   createBoundInfo = true);
+
+BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df& pos,
+                                              const math::Vector3Df& size,
+                                              const math::Vector3Df& scale,
+                                              const math::Vector4Df& color,
+                                              Camera*                camera);
+
+UIQuadPrimitive* g_createUIQuad(const math::Vector2Df& pos,
+                                const math::Vector2Df& size,
+                                Texture*               texture);
+
+FullscreenQuadPrimitive* g_createFullscreenQuad(Texture* texture);
+
+SegmentPrimitive* g_createSegment(const math::Vector3Df& start,
+                                  const math::Vector3Df& end,
+                                  float                  time,
+                                  const math::Vector4Df& color);
+
+ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
                                             const math::Vector3Df& end,
                                             float                  time,
                                             float                  coneHeight,
@@ -314,27 +332,30 @@ ArrowSegmentPrimitive*   CreateArrowSegment(const math::Vector3Df& start,
                                             const math::Vector4Df& color);
 
 //////////////////////////////////////////////////////////////////////////
-// DirectionalLightPrimitive* CreateDirectionalLightDebug(
+// DirectionalLightPrimitive* g_createDirectionalLightDebug(
 //     const math::Vector3Df& pos,
 //     const math::Vector3Df& scale,
 //     float                  length,
 //     Camera*               targetCamera,
 //     DirectionalLight*     light,
 //     const char*            textureFilename);
-// PointLightPrimitive* CreatePointLightDebug(const math::Vector3Df& scale,
+// 
+// PointLightPrimitive* g_createPointLightDebug(const math::Vector3Df& scale,
 //                                             Camera* targetCamera,
 //                                             PointLight*           light,
 //                                             const char* textureFilename);
-// SpotLightPrimitive*  CreateSpotLightDebug(const math::Vector3Df& scale,
+// 
+// SpotLightPrimitive*  g_createSpotLightDebug(const math::Vector3Df& scale,
 //                                            Camera* targetCamera, SpotLight*
 //                                            light, const char*
 //                                            textureFilename);
 //
 //////////////////////////////////////////////////////////////////////////
-FrustumPrimitive* CreateFrustumDebug(const Camera* targetCamera);
-Graph2D*          CreateGraph2D(const math::Vector2Df&              pos,
-                                const math::Vector2Df&              size,
-                                const std::vector<math::Vector2Df>& points);
+FrustumPrimitive* g_createFrustumDebug(const Camera* targetCamera);
+
+Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
+                         const math::Vector2Df&              size,
+                         const std::vector<math::Vector2Df>& points);
 
 }  // namespace game_engine
 

@@ -18,30 +18,30 @@ class FenceVk : public Fence {
 
   virtual ~FenceVk() override;
 
-  virtual void* GetHandle() const override {
+  virtual void* getHandle() const override {
     return reinterpret_cast<void*>(m_fence_);
   }
 
-  void WaitForFence(uint64_t timeout = UINT64_MAX) override;
+  void waitForFence(uint64_t timeout = UINT64_MAX) override;
 
   // TODO: not used
-  void ResetFence() const;
+  void resetFence() const;
 
   // TODO
   // private:
-
+  
   VkFence m_fence_;
 };
 
 class FenceManagerVk : public FenceManager {
   public:
-  ~FenceManagerVk() { Release(); }
+  ~FenceManagerVk() { release(); }
 
-  Fence* GetOrCreateFence() override;
+  Fence* getOrCreateFence() override;
 
-  void ReturnFence(Fence* fence) override;
+  void returnFence(Fence* fence) override;
 
-  void Release() override;
+  void release() override;
 
   private:
   std::unordered_set<Fence*> m_usingFences_;

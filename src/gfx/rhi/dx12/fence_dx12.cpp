@@ -18,20 +18,20 @@ FenceDx12::~FenceDx12() {
   }
 }
 
-bool FenceDx12::IsComplete() const {
+bool FenceDx12::isComplete() const {
   return m_fence_->GetCompletedValue() >= m_fenceValue_;
 }
 
-bool FenceDx12::IsComplete(uint64_t fenceValue) const {
+bool FenceDx12::isComplete(uint64_t fenceValue) const {
   return m_fence_->GetCompletedValue() >= fenceValue;
 }
 
 
-void FenceDx12::WaitForFence(uint64_t timeoutNanoSec) {
-  WaitForFenceValue(m_fenceValue_, timeoutNanoSec);
+void FenceDx12::waitForFence(uint64_t timeoutNanoSec) {
+  waitForFenceValue(m_fenceValue_, timeoutNanoSec);
 }
 
-void FenceDx12::WaitForFenceValue(uint64_t fenceValue,
+void FenceDx12::waitForFenceValue(uint64_t fenceValue,
                                     uint64_t timeoutNanoSec) {
   if (fenceValue == s_kInitialFenceValue) {
     return;
@@ -59,7 +59,7 @@ void FenceDx12::WaitForFenceValue(uint64_t fenceValue,
   }
 }
 
-uint64_t FenceDx12::SignalWithNextFenceValue(
+uint64_t FenceDx12::signalWithNextFenceValue(
     ID3D12CommandQueue* commandQueue, bool waitUntilExecuteComplete) {
   {
     ScopedLock s(&m_fenceValueLock_);
@@ -84,11 +84,11 @@ uint64_t FenceDx12::SignalWithNextFenceValue(
   return m_fenceValue_;
 }
 
-Fence* FenceManagerDx12::GetOrCreateFence() {
-  if (PendingFences.size() > 0) {
-    Fence* fence = *PendingFences.begin();
-    PendingFences.erase(PendingFences.begin());
-    UsingFences.insert(fence);
+Fence* FenceManagerDx12::getOrCreateFence() {
+  if (m_pendingFences_.size() > 0) {
+    Fence* fence = *m_pendingFences_.begin();
+    m_pendingFences_.erase(m_pendingFences_.begin());
+    m_usingFences_.insert(fence);
     return fence;
   }
 
@@ -104,7 +104,7 @@ Fence* FenceManagerDx12::GetOrCreateFence() {
   if (SUCCEEDED(hr)) {
     newFence->m_fenceEvent_ = ::CreateEvent(nullptr, false, false, nullptr);
     if (newFence->m_fenceEvent_) {
-      UsingFences.insert(newFence);
+      m_usingFences_.insert(newFence);
       return newFence;
     }
   }
@@ -115,16 +115,16 @@ Fence* FenceManagerDx12::GetOrCreateFence() {
   return nullptr;
 }
 
-void FenceManagerDx12::Release() {
-  for (auto& fence : UsingFences) {
+void FenceManagerDx12::release() {
+  for (auto& fence : m_usingFences_) {
     delete fence;
   }
-  UsingFences.clear();
+  m_usingFences_.clear();
 
-  for (auto& fence : PendingFences) {
+  for (auto& fence : m_pendingFences_) {
     delete fence;
   }
-  PendingFences.clear();
+  m_pendingFences_.clear();
 }
 
 }  // namespace game_engine

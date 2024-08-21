@@ -10,10 +10,10 @@ namespace game_engine {
 
 class SwapchainImageDx12 : public SwapchainImage {
   public:
-  virtual ~SwapchainImageDx12() { ReleaseInternal(); }
+  virtual ~SwapchainImageDx12() { releaseInternal(); }
 
-  void         ReleaseInternal();
-  virtual void Release() override;
+  void         releaseInternal();
+  virtual void release() override;
 
   uint64_t m_fenceValue_ = 0;
 };
@@ -21,38 +21,38 @@ class SwapchainImageDx12 : public SwapchainImage {
 // Swapchain
 class SwapchainDx12 : public Swapchain {
   public:
-  virtual ~SwapchainDx12() { ReleaseInternal(); }
+  virtual ~SwapchainDx12() { releaseInternal(); }
 
-  void ReleaseInternal();
+  void releaseInternal();
 
-  virtual bool Create(const std::shared_ptr<Window>& window) override;
-  virtual void Release() override;
+  virtual bool create(const std::shared_ptr<Window>& window) override;
+  virtual void release() override;
 
-  virtual void* GetHandle() const override { return m_swapChain_.Get(); }
+  virtual void* getHandle() const override { return m_swapChain_.Get(); }
 
-  virtual ETextureFormat GetFormat() const override { return m_format_; }
+  virtual ETextureFormat getFormat() const override { return m_format_; }
 
-  virtual const math::Dimension2Di& GetExtent() const override {
+  virtual const math::Dimension2Di& getExtent() const override {
     return m_extent_;
   }
 
-  virtual SwapchainImage* GetSwapchainImage(int32_t index) const override {
+  virtual SwapchainImage* getSwapchainImage(int32_t index) const override {
     assert(m_images_.size() > index);
     return m_images_[index];
   }
 
-  virtual int32_t GetNumOfSwapchainImages() const override {
+  virtual int32_t getNumOfSwapchainImages() const override {
     return (int32_t)m_images_.size();
   }
 
-  bool Resize(int32_t witdh, int32_t height);
+  bool resize(int32_t witdh, int32_t height);
 
-  uint32_t GetCurrentBackBufferIndex() const {
+  uint32_t getCurrentBackBufferIndex() const {
     return m_swapChain_->GetCurrentBackBufferIndex();
   }
 
-  SwapchainImage* GetCurrentSwapchainImage() const {
-    return m_images_[GetCurrentBackBufferIndex()];
+  SwapchainImage* getCurrentSwapchainImage() const {
+    return m_images_[getCurrentBackBufferIndex()];
   }
 
   ComPtr<IDXGISwapChain3>          m_swapChain_;

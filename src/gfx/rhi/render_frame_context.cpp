@@ -7,30 +7,30 @@
 namespace game_engine {
 
 RenderFrameContext::~RenderFrameContext() {
-  Destroy();
+  destroy();
 }
 
-bool RenderFrameContext::BeginActiveCommandBuffer() {
+bool RenderFrameContext::beginActiveCommandBuffer() {
   assert(!m_isBeginActiveCommandbuffer_);
   m_isBeginActiveCommandbuffer_ = true;
-  return m_commandBuffer_->Begin();
+  return m_commandBuffer_->begin();
 }
 
-bool RenderFrameContext::EndActiveCommandBuffer() {
+bool RenderFrameContext::endActiveCommandBuffer() {
   assert(m_isBeginActiveCommandbuffer_);
   m_isBeginActiveCommandbuffer_ = false;
-  return m_commandBuffer_->End();
+  return m_commandBuffer_->end();
 }
 
-void RenderFrameContext::Destroy() {
+void RenderFrameContext::destroy() {
   if (m_sceneRenderTargetPtr_) {
-    m_sceneRenderTargetPtr_->Return();
+    m_sceneRenderTargetPtr_->returnRt();
     m_sceneRenderTargetPtr_.reset();
   }
 
   if (m_commandBuffer_) {
-    assert(g_rhi->GetCommandBufferManager());
-    g_rhi->GetCommandBufferManager()->ReturnCommandBuffer(m_commandBuffer_);
+    assert(g_rhi->getCommandBufferManager());
+    g_rhi->getCommandBufferManager()->returnCommandBuffer(m_commandBuffer_);
     m_commandBuffer_ = nullptr;
   }
 

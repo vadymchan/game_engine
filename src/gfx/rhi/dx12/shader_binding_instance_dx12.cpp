@@ -7,12 +7,12 @@
 
 namespace game_engine {
 
-void ShaderBindingInstanceDx12::Initialize(
+void ShaderBindingInstanceDx12::initialize(
     const ShaderBindingArray& shaderBindingArray) {
-  UpdateShaderBindings(shaderBindingArray);
+  updateShaderBindings(shaderBindingArray);
 }
 
-void ShaderBindingInstanceDx12::UpdateShaderBindings(
+void ShaderBindingInstanceDx12::updateShaderBindings(
     const ShaderBindingArray& shaderBindingArray) {
   // Let's copy the descriptors to the online descriptor set.
   // CopySimpleDescriptor
@@ -21,7 +21,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
   // Let's think about this part.
 
   assert(m_shaderBindingsLayouts_);
-  assert(m_shaderBindingsLayouts_->GetShaderBindingsLayout().m_numOfData_
+  assert(m_shaderBindingsLayouts_->getShaderBindingsLayout().m_numOfData_
          == shaderBindingArray.m_numOfData_);
 
   m_descriptors_.clear();
@@ -33,7 +33,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
     assert(shaderBinding);
     assert(shaderBinding->m_resource_);
     assert(shaderBinding->m_isBindless_
-           == shaderBinding->m_resource_->IsBindless());
+           == shaderBinding->m_resource_->isBindless());
 
     const bool IsBindless = shaderBinding->m_isBindless_;
     assert((IsBindless && !shaderBinding->m_isInline_)
@@ -51,27 +51,27 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
             UniformBufferBlockDx12* UniformBuffer
                 = (UniformBufferBlockDx12*)Resource;
             m_descriptors_.push_back(
-                {.m_descriptor_   = UniformBuffer->GetCBV(),
+                {.m_descriptor_   = UniformBuffer->getCBV(),
                  .m_resourceName_ = UniformBuffer->m_resourceName_,
                  .m_resource_     = UniformBuffer});
           }
         } else {
           UniformBufferBlockDx12* UniformBuffer
               = (UniformBufferBlockDx12*)
-                    shaderBinding->m_resource_->GetResource();
-          assert(UniformBuffer->GetLowLevelResource());
-          // assert(!m_uniformBuffer_->IsUseRingBuffer() ||
-          // (m_uniformBuffer_->IsUseRingBuffer() &&
+                    shaderBinding->m_resource_->getResource();
+          assert(UniformBuffer->getLowLevelResource());
+          // assert(!m_uniformBuffer_->isUseRingBuffer() ||
+          // (m_uniformBuffer_->isUseRingBuffer() &&
           // shaderBinding->m_isInline_));
           if (shaderBinding->m_isInline_) {
             m_rootParameterInlines_.push_back(
                 {.m_type_              = InlineRootParamType::CBV,
-                 .m_gpuVirtualAddress_ = UniformBuffer->GetGPUAddress(),
+                 .m_gpuVirtualAddress_ = UniformBuffer->getGPUAddress(),
                  .m_resourceName_      = UniformBuffer->m_resourceName_,
                  .m_resource_          = UniformBuffer});
           } else {
             m_descriptors_.push_back(
-                {.m_descriptor_   = UniformBuffer->GetCBV(),
+                {.m_descriptor_   = UniformBuffer->getCBV(),
                  .m_resourceName_ = UniformBuffer->m_resourceName_,
                  .m_resource_     = UniformBuffer});
           }
@@ -109,7 +109,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
                                     ETextureAddressMode::REPEAT,
                                     ETextureAddressMode::REPEAT,
                                     0.0f,
-                                    16.0f>::Create();
+                                    16.0f>::s_create();
               assert(SamplerDX12);
               m_samplerDescriptors_.push_back(
                   {.m_descriptor_   = SamplerDX12->m_samplerSRV_,
@@ -148,7 +148,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
                                     ETextureAddressMode::REPEAT,
                                     ETextureAddressMode::REPEAT,
                                     0.0f,
-                                    16.0f>::Create();
+                                    16.0f>::s_create();
               assert(SamplerDX12);
               m_samplerDescriptors_.push_back(
                   {.m_descriptor_   = SamplerDX12->m_samplerSRV_,
@@ -172,7 +172,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
           }
         } else {
           TextureDx12* Tex
-              = (TextureDx12*)shaderBinding->m_resource_->GetResource();
+              = (TextureDx12*)shaderBinding->m_resource_->getResource();
           m_descriptors_.push_back({.m_descriptor_   = Tex->m_srv_,
                                     .m_resourceName_ = Tex->m_resourceName_,
                                     .m_resource_     = Tex});
@@ -196,8 +196,8 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
           }
         } else {
           TextureDx12** Tex
-              = (TextureDx12**)shaderBinding->m_resource_->GetResource();
-          for (int32_t i = 0; i < shaderBinding->m_resource_->NumOfResource();
+              = (TextureDx12**)shaderBinding->m_resource_->getResource();
+          for (int32_t i = 0; i < shaderBinding->m_resource_->numOfResource();
                ++i) {
             assert(Tex[i]);
             m_descriptors_.push_back(
@@ -222,13 +222,13 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
           }
         } else {
           BufferDx12* Buf
-              = (BufferDx12*)shaderBinding->m_resource_->GetResource();
+              = (BufferDx12*)shaderBinding->m_resource_->getResource();
           assert(Buf->m_buffer->m_resource_);
 
           if (shaderBinding->m_isInline_) {
             m_rootParameterInlines_.push_back(
                 {.m_type_              = InlineRootParamType::SRV,
-                 .m_gpuVirtualAddress_ = Buf->GetGPUAddress(),
+                 .m_gpuVirtualAddress_ = Buf->getGPUAddress(),
                  .m_resourceName_      = Buf->m_resourceName_,
                  .m_resource_          = Buf});
           } else {
@@ -253,7 +253,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
             } else {
               auto it_find = Tex->m_uavMipMap.find(Resource.m_mipLevel_);
               if (it_find != Tex->m_uavMipMap.end()
-                  && it_find->second.IsValid()) {
+                  && it_find->second.isValid()) {
                 m_descriptors_.push_back(
                     {.m_descriptor_   = it_find->second,
                      .m_resourceName_ = Tex->m_resourceName_,
@@ -268,7 +268,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
           }
         } else {
           TextureDx12* Tex
-              = (TextureDx12*)shaderBinding->m_resource_->GetResource();
+              = (TextureDx12*)shaderBinding->m_resource_->getResource();
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
                   shaderBinding->m_resource_);
@@ -279,7 +279,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
           } else {
             auto it_find = Tex->m_uavMipMap.find(tbor->m_mipLevel_);
             if (it_find != Tex->m_uavMipMap.end()
-                && it_find->second.IsValid()) {
+                && it_find->second.isValid()) {
               m_descriptors_.push_back({.m_descriptor_   = it_find->second,
                                         .m_resourceName_ = Tex->m_resourceName_,
                                         .m_resource_     = Tex});
@@ -306,12 +306,12 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
           }
         } else {
           BufferDx12* Buf
-              = (BufferDx12*)shaderBinding->m_resource_->GetResource();
+              = (BufferDx12*)shaderBinding->m_resource_->getResource();
           assert(Buf->m_buffer->m_resource_);
           if (shaderBinding->m_isInline_) {
             m_rootParameterInlines_.push_back(
                 {.m_type_              = InlineRootParamType::UAV,
-                 .m_gpuVirtualAddress_ = Buf->GetGPUAddress(),
+                 .m_gpuVirtualAddress_ = Buf->getGPUAddress(),
                  .m_resourceName_      = Buf->m_resourceName_,
                  .m_resource_          = Buf});
           } else {
@@ -337,7 +337,7 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
         } else {
           SamplerStateInfoDx12* Sampler
               = (SamplerStateInfoDx12*)
-                    shaderBinding->m_resource_->GetResource();
+                    shaderBinding->m_resource_->getResource();
           assert(Sampler);
           m_samplerDescriptors_.push_back(
               {.m_descriptor_   = Sampler->m_samplerSRV_,
@@ -357,28 +357,28 @@ void ShaderBindingInstanceDx12::UpdateShaderBindings(
 #if _DEBUG
   // validation
   for (int32_t i = 0; i < (int32_t)m_descriptors_.size(); ++i) {
-    assert(m_descriptors_[i].IsValid());
+    assert(m_descriptors_[i].isValid());
   }
 #endif
 }
 
-void* ShaderBindingInstanceDx12::GetHandle() const {
-  return m_shaderBindingsLayouts_->GetHandle();
+void* ShaderBindingInstanceDx12::getHandle() const {
+  return m_shaderBindingsLayouts_->getHandle();
 }
 
-void ShaderBindingInstanceDx12::Free() {
-  if (GetType() == ShaderBindingInstanceType::MultiFrame) {
+void ShaderBindingInstanceDx12::free() {
+  if (getType() == ShaderBindingInstanceType::MultiFrame) {
     ScopedLock s(&g_rhi_dx12->m_multiFrameShaderBindingInstanceLock_);
-    g_rhi_dx12->m_deallocatorMultiFrameShaderBindingInstance_.Free(
+    g_rhi_dx12->m_deallocatorMultiFrameShaderBindingInstance_.free(
         shared_from_this());
   }
 }
 
-void ShaderBindingInstanceDx12::BindGraphics(CommandBufferDx12* commandList,
+void ShaderBindingInstanceDx12::bindGraphics(CommandBufferDx12* commandList,
                                              int32_t& outStartIndex) const {
   assert(commandList);
 
-  auto CommandList = commandList->Get();
+  auto CommandList = commandList->get();
   assert(CommandList);
 
   int32_t index = 0;
@@ -405,11 +405,11 @@ void ShaderBindingInstanceDx12::BindGraphics(CommandBufferDx12* commandList,
   }
 }
 
-void ShaderBindingInstanceDx12::BindCompute(CommandBufferDx12* commandList,
+void ShaderBindingInstanceDx12::bindCompute(CommandBufferDx12* commandList,
                                             int32_t& outStartIndex) {
   assert(commandList);
 
-  auto CommandList = commandList->Get();
+  auto CommandList = commandList->get();
   assert(CommandList);
 
   int32_t index = 0;
@@ -436,7 +436,7 @@ void ShaderBindingInstanceDx12::BindCompute(CommandBufferDx12* commandList,
   }
 }
 
-void ShaderBindingInstanceDx12::CopyToOnlineDescriptorHeap(
+void ShaderBindingInstanceDx12::copyToOnlineDescriptorHeap(
     CommandBufferDx12* commandList) {
   assert(g_rhi_dx12);
   assert(g_rhi_dx12->m_device_);
@@ -447,11 +447,11 @@ void ShaderBindingInstanceDx12::CopyToOnlineDescriptorHeap(
     ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> SrcDescriptor;
 
     for (int32_t i = 0; i < m_descriptors_.size(); ++i) {
-      SrcDescriptor.Add(m_descriptors_[i].m_descriptor_.m_cpuHandle_);
+      SrcDescriptor.add(m_descriptors_[i].m_descriptor_.m_cpuHandle_);
 
-      DescriptorDx12 Descriptor = commandList->m_onlineDescriptorHeap_->Alloc();
-      assert(Descriptor.IsValid());
-      DestDescriptor.Add(Descriptor.m_cpuHandle_);
+      DescriptorDx12 Descriptor = commandList->m_onlineDescriptorHeap_->alloc();
+      assert(Descriptor.isValid());
+      DestDescriptor.add(Descriptor.m_cpuHandle_);
     }
 
     g_rhi_dx12->m_device_->CopyDescriptors(
@@ -470,13 +470,13 @@ void ShaderBindingInstanceDx12::CopyToOnlineDescriptorHeap(
     ResourceContainer<D3D12_CPU_DESCRIPTOR_HANDLE, 1000> SrcSamplerDescriptor;
 
     for (int32_t i = 0; i < m_samplerDescriptors_.size(); ++i) {
-      SrcSamplerDescriptor.Add(
+      SrcSamplerDescriptor.add(
           m_samplerDescriptors_[i].m_descriptor_.m_cpuHandle_);
 
       DescriptorDx12 Descriptor
-          = commandList->m_onlineSamplerDescriptorHeap_->Alloc();
-      assert(Descriptor.IsValid());
-      DestSamplerDescriptor.Add(Descriptor.m_cpuHandle_);
+          = commandList->m_onlineSamplerDescriptorHeap_->alloc();
+      assert(Descriptor.isValid());
+      DestSamplerDescriptor.add(Descriptor.m_cpuHandle_);
     }
 
     g_rhi_dx12->m_device_->CopyDescriptors(

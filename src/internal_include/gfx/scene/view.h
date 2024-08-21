@@ -27,14 +27,14 @@ class View {
     }*/
   }
 
-  void PrepareViewUniformBufferShaderBindingInstance();
+  void prepareViewUniformBufferShaderBindingInstance();
 
-  void GetShaderBindingInstance(
+  void getShaderBindingInstance(
       ShaderBindingInstanceArray& shaderBindingInstanceArray,
       bool                        isForwardRenderer = false) const;
 
   // TODO: currently not used
-  void GetShaderBindingLayout(
+  void getShaderBindingLayout(
       ShaderBindingLayoutArray& shaderBindingsLayoutArray,
       bool                      isForwardRenderer = false) const;
 

@@ -19,12 +19,20 @@ namespace game_engine {
 // TODO: consider renaming class (e.g. Application)
 class Game {
   public:
+  enum class ESpawnedType {
+    None = 0,
+    TestPrimitive,
+    CubePrimitive,
+    InstancingPrimitive,
+    IndirectDrawPrimitive,
+  };
+
   Game(std::shared_ptr<Window> window)
       : m_window_(std::move(window)) {}
 
   ~Game() {}
 
-  void ProcessInput(/*float deltaTime*/) {
+  void processInput(/*float deltaTime*/) {
     // TODO: implement
     // static float MoveDistancePerSecond = 200.0f;
     //// static float MoveDistancePerSecond = 10.0f;
@@ -32,22 +40,22 @@ class Game {
 
     //// Process Key Event
     // if (g_KeyState['a'] || g_KeyState['A']) {
-    //   MainCamera->MoveShift(-CurrentDistance);
+    //   m_mainCamera_->moveShift(-CurrentDistance);
     // }
     // if (g_KeyState['d'] || g_KeyState['D']) {
-    //   MainCamera->MoveShift(CurrentDistance);
+    //   m_mainCamera_->moveShift(CurrentDistance);
     // }
-    //// if (g_KeyState['1']) MainCamera->RotateForwardAxis(-0.1f);
-    //// if (g_KeyState['2']) MainCamera->RotateForwardAxis(0.1f);
-    //// if (g_KeyState['3']) MainCamera->RotateUpAxis(-0.1f);
-    //// if (g_KeyState['4']) MainCamera->RotateUpAxis(0.1f);
-    //// if (g_KeyState['5']) MainCamera->RotateRightAxis(-0.1f);
-    //// if (g_KeyState['6']) MainCamera->RotateRightAxis(0.1f);
+    //// if (g_KeyState['1']) m_mainCamera_->rotateForwardAxis(-0.1f);
+    //// if (g_KeyState['2']) m_mainCamera_->rotateForwardAxis(0.1f);
+    //// if (g_KeyState['3']) m_mainCamera_->rotateUpAxis(-0.1f);
+    //// if (g_KeyState['4']) m_mainCamera_->rotateUpAxis(0.1f);
+    //// if (g_KeyState['5']) m_mainCamera_->rotateRightAxis(-0.1f);
+    //// if (g_KeyState['6']) m_mainCamera_->rotateRightAxis(0.1f);
     // if (g_KeyState['w'] || g_KeyState['W']) {
-    //   MainCamera->MoveForward(CurrentDistance);
+    //   m_mainCamera_->moveForward(CurrentDistance);
     // }
     // if (g_KeyState['s'] || g_KeyState['S']) {
-    //   MainCamera->MoveForward(-CurrentDistance);
+    //   m_mainCamera_->moveForward(-CurrentDistance);
     // }
     // if (g_KeyState['+']) {
     //   MoveDistancePerSecond = Max(MoveDistancePerSecond + 10.0f, 0.0f);
@@ -57,53 +65,51 @@ class Game {
     // }
   }
 
-  void Setup();
+  void setup();
 
-  enum class ESpawnedType {
-    None = 0,
-    TestPrimitive,
-    CubePrimitive,
-    InstancingPrimitive,
-    IndirectDrawPrimitive,
-  };
+  void spawnObjects(ESpawnedType spawnType);
 
-  void SpawnObjects(ESpawnedType spawnType);
+  void removeSpawnedObjects();
 
-  void RemoveSpawnedObjects();
+  void spawnTestPrimitives();
 
-  void SpawnTestPrimitives();
+  void spawnGraphTestFunc();
 
-  void SpawnGraphTestFunc();
+  void spawnCubePrimitives();
 
-  void SapwnCubePrimitives();
+  void spawnInstancingPrimitives();
 
-  void SpawnInstancingPrimitives();
+  void spawnIndirectDrawPrimitives();
 
-  void SpawnIndirectDrawPrimitives();
+  void update(float deltaTime);
 
-  ESpawnedType SpawnedType = ESpawnedType::None;
+  void draw();
 
-  void Update(float deltaTime);
+  // TODO: not used
+  void onMouseButton() {}
 
-  void Draw();
+  // TODO: not used
+  void onMouseMove(int32_t xOffset, int32_t yOffset);
 
-  void OnMouseButton() {}
+  void resize(int32_t width, int32_t height);
 
-  void OnMouseMove(int32_t xOffset, int32_t yOffset);
+  void release();
 
-  void Resize(int32_t width, int32_t height);
+  Camera* m_mainCamera_ = nullptr;
 
-  void Release();
+  std::vector<Object*> m_spawnedObjects_;
 
-  Camera* MainCamera = nullptr;
-
-  std::vector<Object*> SpawnedObjects;
+  ESpawnedType m_spawnedType_ = ESpawnedType::None;
 
   std::shared_ptr<Window> m_window_;
 
-  std::future<void>    ResourceLoadCompleteEvent;
-  std::vector<Object*> CompletedAsyncLoadObjects;
-  MutexLock            AsyncLoadLock;
+  // TODO: not used
+  std::future<void>    m_resourceLoadCompleteEvent_;
+  // TODO: not used
+  std::vector<Object*> m_completedAsyncLoadObjects_;
+
+  // TODO: not used
+  MutexLock m_asyncLoadLock_;
 };
 
 }  // namespace game_engine

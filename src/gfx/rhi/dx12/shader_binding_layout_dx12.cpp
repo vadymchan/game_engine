@@ -14,7 +14,7 @@ MutexRWLock ShaderBindingLayoutDx12::s_rootSignatureLock;
 #define FORCE_USE_D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND \
   (1 && !FORCE_USE_DESCRIPTOR_OFFSET_BY_USING_AUTO_CALCULATION_FOR_BINDLESS)
 
-void RootParameterExtractor::Extract(
+void RootParameterExtractor::extract_(
     int32_t&                  outDescriptorOffset,
     int32_t&                  outSamplerDescriptorOffset,
     const ShaderBindingArray& shaderBindingArray,
@@ -248,7 +248,7 @@ void RootParameterExtractor::Extract(
   }
 }
 
-void RootParameterExtractor::Extract(
+void RootParameterExtractor::extract(
     const ShaderBindingLayoutArray& bindingLayoutArray,
     int32_t                         registerSpace /*= 0*/) {
   int32_t descriptorOffset        = 0;
@@ -258,9 +258,9 @@ void RootParameterExtractor::Extract(
         = (ShaderBindingLayoutDx12*)bindingLayoutArray[i];
     assert(Layout);
 
-    Extract(descriptorOffset,
+    extract_(descriptorOffset,
             samplerDescriptorOffset,
-            Layout->GetShaderBindingsLayout(),
+            Layout->getShaderBindingsLayout(),
             i);
   }
 
@@ -287,7 +287,7 @@ void RootParameterExtractor::Extract(
   }
 }
 
-void RootParameterExtractor::Extract(
+void RootParameterExtractor::extract(
     const ShaderBindingInstanceArray& bindingInstanceArray,
     int32_t                           registerSpace /*= 0*/) {
   int32_t descriptorOffset        = 0;
@@ -301,9 +301,9 @@ void RootParameterExtractor::Extract(
     ShaderBindingLayoutDx12* Layout
         = (ShaderBindingLayoutDx12*)Instance->m_shaderBindingsLayouts_;
     assert(Layout);
-    Extract(descriptorOffset,
+    extract_(descriptorOffset,
             samplerDescriptorOffset,
-            Layout->GetShaderBindingsLayout(),
+            Layout->getShaderBindingsLayout(),
             i);
   }
 
@@ -330,26 +330,26 @@ void RootParameterExtractor::Extract(
   }
 }
 
-bool ShaderBindingLayoutDx12::Initialize(
+bool ShaderBindingLayoutDx12::initialize(
     const ShaderBindingArray& shaderBindingArray) {
-  shaderBindingArray.CloneWithoutResource(m_shaderBindingArray_);
+  shaderBindingArray.cloneWithoutResource(m_shaderBindingArray_);
 
   return true;
 }
 
 std::shared_ptr<ShaderBindingInstance>
-    ShaderBindingLayoutDx12::CreateShaderBindingInstance(
+    ShaderBindingLayoutDx12::createShaderBindingInstance(
         const ShaderBindingArray&       shaderBindingArray,
         const ShaderBindingInstanceType type) const {
   auto shaderBindingInstance = new ShaderBindingInstanceDx12();
   shaderBindingInstance->m_shaderBindingsLayouts_ = this;
-  shaderBindingInstance->Initialize(shaderBindingArray);
-  shaderBindingInstance->SetType(type);
+  shaderBindingInstance->initialize(shaderBindingArray);
+  shaderBindingInstance->setType(type);
 
   return std::shared_ptr<ShaderBindingInstance>(shaderBindingInstance);
 }
 
-ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
+ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignatureInternal(
     size_t hash, FuncGetRootParameterExtractor func) {
   {
     ScopeReadLock sr(&s_rootSignatureLock);
@@ -420,7 +420,7 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignatureInternal(
   }
 }
 
-ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
+ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignature(
     const ShaderBindingInstanceArray& bindingInstanceArray) {
   if (bindingInstanceArray.m_numOfData_ <= 0) {
     return nullptr;
@@ -428,31 +428,31 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
 
   size_t hash = 0;
   for (int32_t i = 0; i < bindingInstanceArray.m_numOfData_; ++i) {
-    ShaderBindingLayoutArray::GetHash(
+    ShaderBindingLayoutArray::s_getHash(
         hash, i, bindingInstanceArray[i]->m_shaderBindingsLayouts_);
   }
 
-  return CreateRootSignatureInternal(
+  return s_createRootSignatureInternal(
       hash,
       [&bindingInstanceArray](
           RootParameterExtractor& rootParameterExtractor) {
-        rootParameterExtractor.Extract(bindingInstanceArray);
+        rootParameterExtractor.extract(bindingInstanceArray);
       });
 }
 
-ID3D12RootSignature* ShaderBindingLayoutDx12::CreateRootSignature(
+ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignature(
     const ShaderBindingLayoutArray& bindingLayoutArray) {
   if (bindingLayoutArray.m_numOfData_ <= 0) {
     return nullptr;
   }
 
-  const size_t hash = bindingLayoutArray.GetHash();
+  const size_t hash = bindingLayoutArray.getHash();
 
-  return CreateRootSignatureInternal(
+  return s_createRootSignatureInternal(
       hash,
       [&bindingLayoutArray](
           RootParameterExtractor& rootParameterExtractor) {
-        rootParameterExtractor.Extract(bindingLayoutArray);
+        rootParameterExtractor.extract(bindingLayoutArray);
       });
 }
 

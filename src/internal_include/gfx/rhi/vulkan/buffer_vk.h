@@ -38,23 +38,23 @@ class BufferVk : public Buffer {
            EVulkanMemoryBits properties,
            EResourceLayout   imageLayout);
 
-  BufferVk(const Memory& memory) { InitializeWithMemory(memory); }
+  BufferVk(const Memory& memory) { initializeWithMemory(memory); }
 
-  ~BufferVk() { Release(); }
+  ~BufferVk() { release(); }
 
-  void InitializeWithMemory(const Memory& memory);
+  void initializeWithMemory(const Memory& memory);
 
-  virtual void Release() override;
+  virtual void release() override;
 
-  virtual void* Map(uint64_t offset, uint64_t size) override;
+  virtual void* map(uint64_t offset, uint64_t size) override;
 
-  virtual void* Map() override;
+  virtual void* map() override;
 
-  virtual void Unmap() override;
+  virtual void unmap() override;
 
-  virtual void* GetMappedPointer() const override { return m_mappedPointer_; }
+  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
 
-  virtual void UpdateBuffer(const void* data, uint64_t size) override;
+  virtual void updateBuffer(const void* data, uint64_t size) override;
 
   // private:
   // TODO: consider remove it
@@ -108,15 +108,15 @@ class BufferVk : public Buffer {
   // TODO: log error
   //}
 
-  virtual void* GetHandle() const override { return m_buffer_; }
+  virtual void* getHandle() const override { return m_buffer_; }
 
-  virtual uint64_t GetAllocatedSize() const override { return m_allocatedSize_; }
+  virtual uint64_t getAllocatedSize() const override { return m_allocatedSize_; }
 
-  virtual uint64_t GetOffset() const override { return m_offset_; }
+  virtual uint64_t getOffset() const override { return m_offset_; }
 
-  virtual uint64_t GetBufferSize() const override { return m_realBufferSize_; }
+  virtual uint64_t getBufferSize() const override { return m_realBufferSize_; }
 
-  virtual EResourceLayout GetLayout() const override { return m_layout_; }
+  virtual EResourceLayout getLayout() const override { return m_layout_; }
 
   // TODO: consider descriptive names for Memory and VkDeviceMemory
   Memory          m_memory_;
@@ -151,11 +151,11 @@ struct VertexBufferArrayVk;
 
 struct VertexBufferVk : public VertexBuffer {
   struct BindInfo {
-    void Reset();
+    void reset();
 
-    VkPipelineVertexInputStateCreateInfo CreateVertexInputState() const;
+    VkPipelineVertexInputStateCreateInfo createVertexInputState() const;
 
-    size_t GetHash() const {
+    size_t getHash() const {
       size_t result = 0;
       for (int32_t i = 0; i < (int32_t)m_inputBindingDescriptions_.size(); ++i) {
         result = XXH64(m_inputBindingDescriptions_[i].binding, result);
@@ -183,45 +183,45 @@ struct VertexBufferVk : public VertexBuffer {
     int32_t m_startBindingIndex_ = 0;
   };
 
-  VkPipelineVertexInputStateCreateInfo CreateVertexInputState() const {
-    return m_bindInfos_.CreateVertexInputState();
+  VkPipelineVertexInputStateCreateInfo createVertexInputState() const {
+    return m_bindInfos_.createVertexInputState();
   }
 
-  VkPipelineInputAssemblyStateCreateInfo CreateInputAssemblyState() const;
+  VkPipelineInputAssemblyStateCreateInfo createInputAssemblyState() const;
 
-  static void CreateVertexInputState(
+  static void s_createVertexInputState(
       VkPipelineVertexInputStateCreateInfo&           vertexInputInfo,
       std::vector<VkVertexInputBindingDescription>&   bindingDescriptions,
       std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
       const VertexBufferArray&                        vertexBufferArray);
 
-  virtual int32_t GetElementCount() const {
+  virtual int32_t getElementCount() const {
     return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
   }
 
-  virtual size_t GetHash() const override {
+  virtual size_t getHash() const override {
     if (m_hash_) {
       return m_hash_;
     }
 
-    m_hash_ = GetVertexInputStateHash() ^ GetInputAssemblyStateHash();
+    m_hash_ = getVertexInputStateHash() ^ getInputAssemblyStateHash();
     return m_hash_;
   }
 
-  size_t GetVertexInputStateHash() const { return m_bindInfos_.GetHash(); }
+  size_t getVertexInputStateHash() const { return m_bindInfos_.getHash(); }
 
-  size_t GetInputAssemblyStateHash() const {
-    VkPipelineInputAssemblyStateCreateInfo state = CreateInputAssemblyState();
+  size_t getInputAssemblyStateHash() const {
+    VkPipelineInputAssemblyStateCreateInfo state = createInputAssemblyState();
     return GETHASH_FROM_INSTANT_STRUCT(state);
   }
 
-  virtual void Bind(const std::shared_ptr<RenderFrameContext>&
+  virtual void bind(const std::shared_ptr<RenderFrameContext>&
                         renderFrameContext) const override;
 
-  virtual bool Initialize(
+  virtual bool initialize(
       const std::shared_ptr<VertexStreamData>& streamData) override;
 
-  Buffer* GetBuffer(int32_t streamIndex) const override {
+  Buffer* getBuffer(int32_t streamIndex) const override {
     assert(m_streams_.size() > streamIndex);
     return m_streams_[streamIndex].m_bufferPtr_.get();
   }
@@ -232,7 +232,7 @@ struct VertexBufferVk : public VertexBuffer {
 };
 
 struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
-  size_t GetHash() const {
+  size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
     }
@@ -240,7 +240,7 @@ struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
     m_hash_ = 0;
 
     for (int32_t i = 0; i < m_numOfData_; ++i) {
-      m_hash_ ^= (m_data_[i]->GetHash() << i);
+      m_hash_ ^= (m_data_[i]->getHash() << i);
     }
     return m_hash_;
   }
@@ -253,21 +253,21 @@ struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
 
 struct IndexBufferVk : public IndexBuffer {
 
-  virtual int32_t GetElementCount() const {
+  virtual int32_t getElementCount() const {
     return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
   }
 
-  virtual void Bind(const std::shared_ptr<RenderFrameContext>&
+  virtual void bind(const std::shared_ptr<RenderFrameContext>&
                         renderFrameContext) const override;
-  virtual bool Initialize(
+  virtual bool initialize(
       const std::shared_ptr<IndexStreamData>& streamData) override;
 
-  virtual BufferVk* GetBuffer() const override { return m_bufferPtr_.get(); }
+  virtual BufferVk* getBuffer() const override { return m_bufferPtr_.get(); }
 
-  uint32_t GetIndexCount() const { return m_indexStreamData_->m_elementCount_; }
+  uint32_t getIndexCount() const { return m_indexStreamData_->m_elementCount_; }
 
-  VkIndexType GetVulkanIndexFormat(EBufferElementType IndexType) const;
-  uint32_t    GetVulkanIndexStride(EBufferElementType IndexType) const;
+  VkIndexType getVulkanIndexFormat(EBufferElementType IndexType) const;
+  uint32_t    getVulkanIndexStride(EBufferElementType IndexType) const;
 
   std::shared_ptr<BufferVk> m_bufferPtr_;
 };

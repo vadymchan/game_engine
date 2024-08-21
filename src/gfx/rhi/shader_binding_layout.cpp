@@ -3,8 +3,8 @@
 
 namespace game_engine {
 
-uint32_t test::GetCurrentFrameNumber() {
-  return g_rhi->GetCurrentFrameNumber();
+uint32_t test::g_getCurrentFrameNumber() {
+  return g_rhi->getCurrentFrameNumber();
 }
 
 

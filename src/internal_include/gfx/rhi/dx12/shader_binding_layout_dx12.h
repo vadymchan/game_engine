@@ -16,13 +16,13 @@ struct RootParameterExtractor {
   std::vector<D3D12_DESCRIPTOR_RANGE1> m_descriptors_;
   std::vector<D3D12_DESCRIPTOR_RANGE1> m_samplerDescriptors_;
 
-  void Extract(const ShaderBindingLayoutArray& bindingLayoutArray,
+  void extract(const ShaderBindingLayoutArray& bindingLayoutArray,
                int32_t                         registerSpace = 0);
-  void Extract(const ShaderBindingInstanceArray& bindingLayoutArray,
+  void extract(const ShaderBindingInstanceArray& bindingLayoutArray,
                int32_t                           registerSpace = 0);
 
   protected:
-  void Extract(int32_t&                  descriptorOffset,
+  void extract_(int32_t&                  descriptorOffset,
                int32_t&                  samplerDescriptorOffset,
                const ShaderBindingArray& shaderBindingArray,
                int32_t                   registerSpace = 0);
@@ -34,24 +34,24 @@ struct RootParameterExtractor {
 struct ShaderBindingLayoutDx12 : public ShaderBindingLayout {
   virtual ~ShaderBindingLayoutDx12() {}
 
-  virtual bool Initialize(
+  virtual bool initialize(
       const ShaderBindingArray& shaderBindingArray) override;
-  virtual std::shared_ptr<ShaderBindingInstance> CreateShaderBindingInstance(
+  virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
       const ShaderBindingInstanceType type) const override;
 
-  virtual void* GetHandle() const { return nullptr; }
+  virtual void* getHandle() const { return nullptr; }
 
   //////////////////////////////////////////////////////////////////////////
   // RootSignature extractor utility
   using FuncGetRootParameterExtractor
       = std::function<void(RootParameterExtractor&)>;
 
-  static ID3D12RootSignature* CreateRootSignatureInternal(
+  static ID3D12RootSignature* s_createRootSignatureInternal(
       size_t hash, FuncGetRootParameterExtractor func);
-  static ID3D12RootSignature* CreateRootSignature(
+  static ID3D12RootSignature* s_createRootSignature(
       const ShaderBindingInstanceArray& bindingInstanceArray);
-  static ID3D12RootSignature* CreateRootSignature(
+  static ID3D12RootSignature* s_createRootSignature(
       const ShaderBindingLayoutArray& bindingLayoutArray);
 
   // TODO: seems unused
