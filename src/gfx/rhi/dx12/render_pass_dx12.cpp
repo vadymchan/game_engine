@@ -7,13 +7,13 @@ namespace game_engine {
 void RenderPassDx12::release() {
   // if (m_frameBuffer)
   //{
-  //     vkDestroyFramebuffer(g_rhi_vk->Device, m_frameBuffer, nullptr);
+  //     vkDestroyFramebuffer(g_rhiVk->Device, m_frameBuffer, nullptr);
   //     m_frameBuffer = nullptr;
   // }
 
   // if (m_renderPass)
   //{
-  //     vkDestroyRenderPass(g_rhi_vk->Device, m_renderPass, nullptr);
+  //     vkDestroyRenderPass(g_rhiVk->Device, m_renderPass, nullptr);
   //     m_renderPass = nullptr;
   // }
 }
