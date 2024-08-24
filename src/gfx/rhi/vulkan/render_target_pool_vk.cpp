@@ -26,7 +26,7 @@
 //    }
 //  }
 //
-//  auto renderTargetPtr = g_rhi_vk->createRenderTarget(info);
+//  auto renderTargetPtr = g_rhiVk->createRenderTarget(info);
 //  if (renderTargetPtr) {
 //    renderTargetPtr->CreatedFromRenderTargetPool = true;
 //    RenderTargetResourceMap[hash].push_back({true, renderTargetPtr});
