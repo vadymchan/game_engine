@@ -7,12 +7,12 @@ namespace game_engine {
 void CreatedResource::free() {
   if (m_resource_) {
     if (m_resourceType_ == CreatedResource::EType::Standalone) {
-      if (g_rhi_dx12) {
-        g_rhi_dx12->m_deallocatorMultiFrameStandaloneResource_.free(m_resource_);
+      if (g_rhiDx12) {
+        g_rhiDx12->m_deallocatorMultiFrameStandaloneResource_.free(m_resource_);
       }
     } else if (m_resourceType_ == CreatedResource::EType::ResourcePool) {
-      if (g_rhi_dx12) {
-        g_rhi_dx12->m_deallocatorMultiFramePlacedResource_.free(m_resource_);
+      if (g_rhiDx12) {
+        g_rhiDx12->m_deallocatorMultiFramePlacedResource_.free(m_resource_);
       }
     } else if (m_resourceType_ == CreatedResource::EType::Swapchain) {
       // Nothing to do
