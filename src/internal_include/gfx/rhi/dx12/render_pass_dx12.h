@@ -59,18 +59,18 @@ class RenderPassDx12 : public RenderPass {
 
     if (m_dsvClear_.getType() == ERTClearType::DepthStencil) {
       if (m_dsvDepthClear_ || m_dsvStencilClear_) {
-        D3D12_CLEAR_FLAGS DSVClearFlags = (D3D12_CLEAR_FLAGS)0;
+        D3D12_CLEAR_FLAGS dsvClearFlags = (D3D12_CLEAR_FLAGS)0;
         if (m_dsvDepthClear_) {
-          DSVClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
+          dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
         }
 
         if (m_dsvStencilClear_) {
-          DSVClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
+          dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
         }
 
         commandBuffer->m_commandList_->ClearDepthStencilView(
             m_dsvCPUDHandle_,
-            DSVClearFlags,
+            dsvClearFlags,
             m_dsvClear_.getClearDepth(),
             (uint8_t)m_dsvClear_.getClearStencil(),
             0,
