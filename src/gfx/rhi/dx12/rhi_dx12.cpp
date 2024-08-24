@@ -1589,7 +1589,7 @@ bool RhiDx12::transitionLayoutImmediate(IBuffer*         buffer,
 // void RhiDx12::beginDebugEvent(
 //     CommandBuffer* commandBuffer,
 //     const char*     name,
-//     const Vector4&  color /*= Vector4::g_colorGreen*/) const {
+//     const Vector4&  color /*= Vector4::g_kColorGreen*/) const {
 //   CommandBufferDx12* CommandList = (CommandBufferDx12*)commandBuffer;
 //   assert(CommandList);
 //   assert(!CommandList->IsClosed);
