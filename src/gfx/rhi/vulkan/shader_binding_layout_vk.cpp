@@ -617,7 +617,7 @@ void ShaderBindingInstanceVk::initialize(
   //}
 
   vkUpdateDescriptorSets(
-      g_rhi_vk->m_device_,
+      g_rhiVk->m_device_,
       static_cast<uint32_t>(m_writeDescriptorSet_.m_descriptorWrites_.size()),
       m_writeDescriptorSet_.m_descriptorWrites_.data(),
       0,
@@ -638,7 +638,7 @@ void ShaderBindingInstanceVk::updateShaderBindings(
   }
 
   vkUpdateDescriptorSets(
-      g_rhi_vk->m_device_,
+      g_rhiVk->m_device_,
       static_cast<uint32_t>(m_writeDescriptorSet_.m_descriptorWrites_.size()),
       m_writeDescriptorSet_.m_descriptorWrites_.data(),
       0,
@@ -647,7 +647,7 @@ void ShaderBindingInstanceVk::updateShaderBindings(
 
 void ShaderBindingInstanceVk::free() {
   if (getType() == ShaderBindingInstanceType::MultiFrame) {
-    g_rhi_vk->getDescriptorPoolMultiFrame()->free(shared_from_this());
+    g_rhiVk->getDescriptorPoolMultiFrame()->free(shared_from_this());
   }
 }
 
@@ -671,10 +671,10 @@ std::shared_ptr<ShaderBindingInstance>
   DescriptorPoolVk* DescriptorPool = nullptr;
   switch (type) {
     case ShaderBindingInstanceType::SingleFrame:
-      DescriptorPool = g_rhi_vk->getDescriptorPoolForSingleFrame();
+      DescriptorPool = g_rhiVk->getDescriptorPoolForSingleFrame();
       break;
     case ShaderBindingInstanceType::MultiFrame:
-      DescriptorPool = g_rhi_vk->getDescriptorPoolMultiFrame();
+      DescriptorPool = g_rhiVk->getDescriptorPoolMultiFrame();
       break;
     case ShaderBindingInstanceType::Max:
     default:
@@ -711,7 +711,7 @@ size_t ShaderBindingLayoutVk::getHash() const {
 void ShaderBindingLayoutVk::release() {
   if (m_descriptorSetLayout_) {
     vkDestroyDescriptorSetLayout(
-        g_rhi_vk->m_device_, m_descriptorSetLayout_, nullptr);
+        g_rhiVk->m_device_, m_descriptorSetLayout_, nullptr);
     m_descriptorSetLayout_ = nullptr;
   }
 }
@@ -816,7 +816,7 @@ VkDescriptorSetLayout ShaderBindingLayoutVk::s_createDescriptorSetLayout(
     }
 
     if (vkCreateDescriptorSetLayout(
-            g_rhi_vk->m_device_, &layoutInfo, nullptr, &DescriptorSetLayout)
+            g_rhiVk->m_device_, &layoutInfo, nullptr, &DescriptorSetLayout)
         != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error,
                         "Failed to create descriptor set layout");
@@ -903,8 +903,8 @@ VkPipelineLayout ShaderBindingLayoutVk::s_createPipelineLayout(
           = (int32_t)PushConstantRanges.size();
       pipelineLayoutInfo.pPushConstantRanges = PushConstantRanges.data();
     }
-    assert(g_rhi_vk->m_device_);
-    if (vkCreatePipelineLayout(g_rhi_vk->m_device_,
+    assert(g_rhiVk->m_device_);
+    if (vkCreatePipelineLayout(g_rhiVk->m_device_,
                                &pipelineLayoutInfo,
                                nullptr,
                                &vkPipelineLayout)
@@ -920,11 +920,11 @@ VkPipelineLayout ShaderBindingLayoutVk::s_createPipelineLayout(
 }
 
 void ShaderBindingLayoutVk::s_clearPipelineLayout() {
-  assert(g_rhi_vk);
+  assert(g_rhiVk);
   {
     ScopeWriteLock s(&s_pipelineLayoutPoolLock);
     for (auto& iter : s_pipelineLayoutPool) {
-      vkDestroyPipelineLayout(g_rhi_vk->m_device_, iter.second, nullptr);
+      vkDestroyPipelineLayout(g_rhiVk->m_device_, iter.second, nullptr);
     }
     s_pipelineLayoutPool.clear();
   }
