@@ -272,7 +272,7 @@ class RenderPass {
 
   void setAttachemnt(const std::vector<Attachment>& colorAttachments) {
     // Add output color attachment
-    const int32_t startColorIndex
+    const int32_t kStartColorIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
     m_renderPassInfo_.m_attachments_.insert(
         m_renderPassInfo_.m_attachments_.end(),
@@ -285,14 +285,14 @@ class RenderPass {
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
       m_renderPassInfo_.m_subpasses_[0].m_outputColorAttachments_.push_back(
-          startColorIndex + i);
+          kStartColorIndex + i);
     }
   }
 
   void setAttachemnt(const std::vector<Attachment>& colorAttachments,
                      const Attachment&              depthAttachment) {
     // Add output color attachment
-    const int32_t startColorIndex
+    const int32_t kStartColorIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
     m_renderPassInfo_.m_attachments_.insert(
         m_renderPassInfo_.m_attachments_.end(),
@@ -305,16 +305,16 @@ class RenderPass {
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
       m_renderPassInfo_.m_subpasses_[0].m_outputColorAttachments_.push_back(
-          startColorIndex + i);
+          kStartColorIndex + i);
     }
 
     // Add output depth attachment
-    const int32_t startDepthIndex
+    const int32_t kStartDepthIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
     m_renderPassInfo_.m_attachments_.push_back(depthAttachment);
 
     m_renderPassInfo_.m_subpasses_[0].m_outputDepthAttachment_
-        = startDepthIndex;
+        = kStartDepthIndex;
   }
 
   // TODO: consider using  std::optional and std::nullopt
@@ -322,7 +322,7 @@ class RenderPass {
                      const Attachment&              depthAttachment,
                      const Attachment&              colorResolveAttachment) {
     // Add output color attachment
-    const int32_t startColorIndex
+    const int32_t kStartColorIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
     m_renderPassInfo_.m_attachments_.insert(
         m_renderPassInfo_.m_attachments_.end(),
@@ -335,24 +335,24 @@ class RenderPass {
 
     for (int32_t i = 0; i < (int32_t)colorAttachments.size(); ++i) {
       m_renderPassInfo_.m_subpasses_[0].m_outputColorAttachments_.push_back(
-          startColorIndex + i);
+          kStartColorIndex + i);
     }
 
     // Add output depth attachment
-    const int32_t startDepthIndex
+    const int32_t kStartDepthIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
     m_renderPassInfo_.m_attachments_.push_back(depthAttachment);
 
     m_renderPassInfo_.m_subpasses_[0].m_outputDepthAttachment_
-        = startDepthIndex;
+        = kStartDepthIndex;
 
     // Add output resolve attachment
-    const int32_t startResolveIndex
+    const int32_t kStartResolveIndex
         = (int32_t)m_renderPassInfo_.m_attachments_.size();
     m_renderPassInfo_.m_attachments_.push_back(colorResolveAttachment);
 
     m_renderPassInfo_.m_subpasses_[0].m_outputResolveAttachment_
-        = startResolveIndex;
+        = kStartResolveIndex;
   }
 
   void setRenderArea(const math::Vector2Di& offset,
