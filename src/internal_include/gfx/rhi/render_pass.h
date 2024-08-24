@@ -135,31 +135,31 @@ struct Subpass {
   }
 
   size_t getHash() const {
-    size_t Hash = 0;
+    size_t hash = 0;
     if (m_inputAttachments_.size() > 0) {
-      Hash = ::XXH64(m_inputAttachments_.data(),
+      hash = ::XXH64(m_inputAttachments_.data(),
                      m_inputAttachments_.size() * sizeof(int32_t),
-                     Hash);
+                     hash);
     }
     if (m_outputColorAttachments_.size() > 0) {
-      Hash = ::XXH64(m_outputColorAttachments_.data(),
+      hash = ::XXH64(m_outputColorAttachments_.data(),
                      m_outputColorAttachments_.size() * sizeof(int32_t),
-                     Hash);
+                     hash);
     }
     if (m_outputDepthAttachment_) {
-      Hash = ::XXH64(&m_outputDepthAttachment_.value(), sizeof(int32_t), Hash);
+      hash = ::XXH64(&m_outputDepthAttachment_.value(), sizeof(int32_t), hash);
     }
     if (m_outputResolveAttachment_) {
-      Hash
-          = ::XXH64(&m_outputResolveAttachment_.value(), sizeof(int32_t), Hash);
+      hash
+          = ::XXH64(&m_outputResolveAttachment_.value(), sizeof(int32_t), hash);
     }
-    Hash = ::XXH64(&m_sourceSubpassIndex_, sizeof(int32_t), Hash);
-    Hash = ::XXH64(&m_destSubpassIndex_, sizeof(int32_t), Hash);
-    Hash = ::XXH64(
-        &m_attachmentProducePipelineBit_, sizeof(EPipelineStageMask), Hash);
-    Hash = ::XXH64(
-        &m_attachmentConsumePipelineBit_, sizeof(EPipelineStageMask), Hash);
-    return Hash;
+    hash = ::XXH64(&m_sourceSubpassIndex_, sizeof(int32_t), hash);
+    hash = ::XXH64(&m_destSubpassIndex_, sizeof(int32_t), hash);
+    hash = ::XXH64(
+        &m_attachmentProducePipelineBit_, sizeof(EPipelineStageMask), hash);
+    hash = ::XXH64(
+        &m_attachmentConsumePipelineBit_, sizeof(EPipelineStageMask), hash);
+    return hash;
   }
 };
 
@@ -175,14 +175,14 @@ struct RenderPassInfo {
   }
 
   size_t getHash() const {
-    int64_t Hash = 0;
+    int64_t hash = 0;
     for (const auto& iter : m_attachments_) {
-      Hash = XXH64(iter.getHash(), Hash);
+      hash = XXH64(iter.getHash(), hash);
     }
     for (const auto& iter : m_subpasses_) {
-      Hash = XXH64(iter.getHash(), Hash);
+      hash = XXH64(iter.getHash(), hash);
     }
-    return Hash;
+    return hash;
   }
 
   // If both SourceSubpass and DstSubpass of all subpasses are -1, subpasses
