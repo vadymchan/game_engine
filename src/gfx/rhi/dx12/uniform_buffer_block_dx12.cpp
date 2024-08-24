@@ -15,7 +15,7 @@ void UniformBufferBlockDx12::init(size_t size) {
 
   size = g_align<uint64_t>(size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 
-  if (LifeTimeType::MultiFrame == m_LifeType_) {
+  if (LifeTimeType::MultiFrame == kLifeType) {
     m_bufferPtr_ = g_createBuffer(size,
                              D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT,
                              EBufferCreateFlag::CPUAccess,
@@ -32,7 +32,7 @@ void UniformBufferBlockDx12::release() {
 
 void UniformBufferBlockDx12::updateBufferData(const void* data,
                                                 size_t      size) {
-  if (LifeTimeType::MultiFrame == m_LifeType_) {
+  if (LifeTimeType::MultiFrame == kLifeType) {
     assert(m_bufferPtr_);
     assert(m_bufferPtr_->getAllocatedSize() >= size);
 
@@ -69,22 +69,22 @@ void UniformBufferBlockDx12::clearBuffer(int32_t clearValue) {
 }
 
 void* UniformBufferBlockDx12::getLowLevelResource() const {
-  return (LifeTimeType::MultiFrame == m_LifeType_) ? m_bufferPtr_->getHandle()
+  return (LifeTimeType::MultiFrame == kLifeType) ? m_bufferPtr_->getHandle()
                                                 : m_ringBuffer_->getHandle();
 }
 
 void* UniformBufferBlockDx12::getLowLevelMemory() const {
-  return (LifeTimeType::MultiFrame == m_LifeType_) ? m_bufferPtr_->m_cpuAddress_
+  return (LifeTimeType::MultiFrame == kLifeType) ? m_bufferPtr_->m_cpuAddress_
                                                 : m_ringBufferDestAddress_;
 }
 
 size_t UniformBufferBlockDx12::getBufferSize() const {
-  return (LifeTimeType::MultiFrame == m_LifeType_) ? m_bufferPtr_->m_size_
+  return (LifeTimeType::MultiFrame == kLifeType) ? m_bufferPtr_->m_size_
                                                 : m_ringBufferAllocatedSize_;
 }
 
 const DescriptorDx12& UniformBufferBlockDx12::getCBV() const {
-  if (LifeTimeType::MultiFrame == m_LifeType_) {
+  if (LifeTimeType::MultiFrame == kLifeType) {
     return m_bufferPtr_->m_cbv_;
   }
 
@@ -92,7 +92,7 @@ const DescriptorDx12& UniformBufferBlockDx12::getCBV() const {
 }
 
 uint64_t UniformBufferBlockDx12::getGPUAddress() const {
-  return (LifeTimeType::MultiFrame == m_LifeType_)
+  return (LifeTimeType::MultiFrame == kLifeType)
            ? m_bufferPtr_->getGPUAddress()
            : (m_ringBuffer_->getGPUAddress() + m_ringBufferOffset_);
 }
