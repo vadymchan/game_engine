@@ -129,11 +129,11 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
-  assert(m_vertexBufferArray.m_numOfData_ > 0);
+  assert(m_vertexBufferArray_.m_numOfData_ > 0);
 
   std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
   VertexBufferDx12::s_createVertexInputState(inputElementDescs,
-                                           m_vertexBufferArray);
+                                           m_vertexBufferArray_);
   psoDesc.InputLayout.pInputElementDescs = inputElementDescs.data();
   psoDesc.InputLayout.NumElements        = (uint32_t)inputElementDescs.size();
 
@@ -141,32 +141,32 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
   // whether to use one or multiple.
   ComPtr<ID3D12RootSignature> RootSignature
       = ShaderBindingLayoutDx12::s_createRootSignature(
-          m_shaderBindingLayoutArray);
+          m_shaderBindingLayoutArray_);
   psoDesc.pRootSignature = RootSignature.Get();
 
-  if (m_graphicsShader_.m_vertexShader_) {
+  if (kGraphicsShader.m_vertexShader_) {
     // TODO: rename
     auto VS_Compiled
         = (CompiledShaderDx12*)
-              m_graphicsShader_.m_vertexShader_->getCompiledShader();
+              kGraphicsShader.m_vertexShader_->getCompiledShader();
     assert(VS_Compiled);
     psoDesc.VS
         = {.pShaderBytecode = VS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = VS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
-  if (m_graphicsShader_.m_geometryShader_) {
+  if (kGraphicsShader.m_geometryShader_) {
     auto GS_Compiled
         = (CompiledShaderDx12*)
-              m_graphicsShader_.m_geometryShader_->getCompiledShader();
+              kGraphicsShader.m_geometryShader_->getCompiledShader();
     assert(GS_Compiled);
     psoDesc.GS
         = {.pShaderBytecode = GS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = GS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
-  if (m_graphicsShader_.m_pixelShader_) {
+  if (kGraphicsShader.m_pixelShader_) {
     auto PS_Compiled
         = (CompiledShaderDx12*)
-              m_graphicsShader_.m_pixelShader_->getCompiledShader();
+              kGraphicsShader.m_pixelShader_->getCompiledShader();
     assert(PS_Compiled);
     psoDesc.PS
         = {.pShaderBytecode = PS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -174,29 +174,29 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
   }
 
   psoDesc.RasterizerState = ((RasterizationStateInfoDx12*)
-                                 m_pipelineStateFixed_->m_rasterizationState_)
+                                 kPipelineStateFixed->m_rasterizationState_)
                                 ->m_rasterizeDesc_;
   psoDesc.SampleDesc.Count = ((RasterizationStateInfoDx12*)
-                                  m_pipelineStateFixed_->m_rasterizationState_)
+                                  kPipelineStateFixed->m_rasterizationState_)
                                  ->m_multiSampleDesc_.Count;
 
-  RenderPassDx12* RenderPassDX12 = (RenderPassDx12*)m_renderPass;
+  RenderPassDx12* RenderPassDX12 = (RenderPassDx12*)kRenderPass;
 
   // Should we specify the blending operation separately? Let's check the
   // current support of RenderPass.
   for (int32_t i = 0; i < (int32_t)RenderPassDX12->getRTVFormats().size();
        ++i) {
     psoDesc.BlendState.RenderTarget[i]
-        = ((BlendingStateInfoDx12*)m_pipelineStateFixed_->m_blendingState_)
+        = ((BlendingStateInfoDx12*)kPipelineStateFixed->m_blendingState_)
               ->m_blendDesc_;
   }
   psoDesc.DepthStencilState
-      = ((DepthStencilStateInfoDx12*)(m_pipelineStateFixed_
+      = ((DepthStencilStateInfoDx12*)(kPipelineStateFixed
                                           ->m_depthStencilState_))
             ->m_depthStencilStateDesc_;
   psoDesc.SampleMask = UINT_MAX;
   psoDesc.PrimitiveTopologyType
-      = ((VertexBufferDx12*)m_vertexBufferArray[0])->getTopologyTypeOnly();
+      = ((VertexBufferDx12*)m_vertexBufferArray_[0])->getTopologyTypeOnly();
   psoDesc.NumRenderTargets = (uint32_t)RenderPassDX12->getRTVFormats().size();
 
   const int32_t NumOfRTVs
@@ -218,10 +218,10 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
     return nullptr;
   }
 
-  m_viewports_.resize(m_pipelineStateFixed_->m_viewports_.size());
-  for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_viewports_.size();
+  m_viewports_.resize(kPipelineStateFixed->m_viewports_.size());
+  for (int32_t i = 0; i < (int32_t)kPipelineStateFixed->m_viewports_.size();
        ++i) {
-    const Viewport& Src = m_pipelineStateFixed_->m_viewports_[i];
+    const Viewport& Src = kPipelineStateFixed->m_viewports_[i];
     D3D12_VIEWPORT& Dst = m_viewports_[i];
     Dst.TopLeftX        = Src.m_x_;
     Dst.TopLeftY        = Src.m_y_;
@@ -231,10 +231,10 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
     Dst.MaxDepth        = Src.m_maxDepth_;
   }
 
-  m_scissors_.resize(m_pipelineStateFixed_->m_scissors_.size());
-  for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_scissors_.size();
+  m_scissors_.resize(kPipelineStateFixed->m_scissors_.size());
+  for (int32_t i = 0; i < (int32_t)kPipelineStateFixed->m_scissors_.size();
        ++i) {
-    const Scissor& Src = m_pipelineStateFixed_->m_scissors_[i];
+    const Scissor& Src = kPipelineStateFixed->m_scissors_[i];
     D3D12_RECT&    Dst = m_scissors_[i];
     Dst.left           = Src.m_offset_.x();
     Dst.right          = Src.m_offset_.x() + Src.m_extent_.width();
@@ -245,16 +245,16 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
   size_t hash = getHash();
   assert(hash);
   if (hash) {
-    if (m_graphicsShader_.m_vertexShader_) {
-      Shader::s_connectedPipelineStateHash[m_graphicsShader_.m_vertexShader_]
+    if (kGraphicsShader.m_vertexShader_) {
+      Shader::s_connectedPipelineStateHash[kGraphicsShader.m_vertexShader_]
           .push_back(hash);
     }
-    if (m_graphicsShader_.m_geometryShader_) {
-      Shader::s_connectedPipelineStateHash[m_graphicsShader_.m_geometryShader_]
+    if (kGraphicsShader.m_geometryShader_) {
+      Shader::s_connectedPipelineStateHash[kGraphicsShader.m_geometryShader_]
           .push_back(hash);
     }
-    if (m_graphicsShader_.m_pixelShader_) {
-      Shader::s_connectedPipelineStateHash[m_graphicsShader_.m_pixelShader_]
+    if (kGraphicsShader.m_pixelShader_) {
+      Shader::s_connectedPipelineStateHash[kGraphicsShader.m_pixelShader_]
           .push_back(hash);
     }
   }
@@ -268,11 +268,11 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
   D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
   ComPtr<ID3D12RootSignature>       RootSignature
       = ShaderBindingLayoutDx12::s_createRootSignature(
-          m_shaderBindingLayoutArray);
+          m_shaderBindingLayoutArray_);
   psoDesc.pRootSignature = RootSignature.Get();
-  if (m_computeShader_) {
+  if (kComputeShader) {
     auto CS_Compiled
-        = (CompiledShaderDx12*)m_computeShader_->getCompiledShader();
+        = (CompiledShaderDx12*)kComputeShader->getCompiledShader();
     assert(CS_Compiled);
     psoDesc.CS
         = {.pShaderBytecode = CS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -292,8 +292,8 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
   size_t hash = getHash();
   assert(hash);
   if (hash) {
-    if (m_computeShader_) {
-      Shader::s_connectedPipelineStateHash[m_computeShader_].push_back(hash);
+    if (kComputeShader) {
+      Shader::s_connectedPipelineStateHash[kComputeShader].push_back(hash);
     }
   }
 
