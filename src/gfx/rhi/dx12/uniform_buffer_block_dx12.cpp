@@ -49,7 +49,7 @@ void UniformBufferBlockDx12::updateBufferData(const void* data,
       m_bufferPtr_->unmap();
     }
   } else {
-    m_ringBuffer_ = g_rhi_dx12->getOneFrameUniformRingBuffer();
+    m_ringBuffer_ = g_rhiDx12->getOneFrameUniformRingBuffer();
     m_ringBufferAllocatedSize_
         = g_align(size, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
     m_ringBufferOffset_ = m_ringBuffer_->alloc(m_ringBufferAllocatedSize_);
