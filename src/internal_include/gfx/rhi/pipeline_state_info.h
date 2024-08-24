@@ -625,12 +625,12 @@ struct PipelineStateInfo {
                     const ShaderBindingLayoutArray& shaderBindingLayoutArray,
                     const PushConstant*             pushConstant = nullptr,
                     int32_t                         subpassIndex = 0)
-      : m_pipelineStateFixed_(pipelineStateFixed)
-      , m_graphicsShader_(shader)
-      , m_vertexBufferArray(vertexBufferArray)
-      , m_renderPass(renderPass)
-      , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
-      , m_pushConstant(pushConstant)
+      : kPipelineStateFixed(pipelineStateFixed)
+      , kGraphicsShader(shader)
+      , m_vertexBufferArray_(vertexBufferArray)
+      , kRenderPass(renderPass)
+      , m_shaderBindingLayoutArray_(shaderBindingLayoutArray)
+      , kPushConstant(pushConstant)
       , m_subpassIndex_(subpassIndex) {
     m_pipelineType_ = EPipelineType::Graphics;
   }
@@ -639,9 +639,9 @@ struct PipelineStateInfo {
                     const ShaderBindingLayoutArray& shaderBindingLayoutArray,
                     const PushConstant*             pushConstant = nullptr,
                     int32_t                         subpassIndex = 0)
-      : m_computeShader_(computeShader)
-      , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
-      , m_pushConstant(pushConstant)
+      : kComputeShader(computeShader)
+      , m_shaderBindingLayoutArray_(shaderBindingLayoutArray)
+      , kPushConstant(pushConstant)
       , m_subpassIndex_(subpassIndex) {
     m_pipelineType_ = EPipelineType::Compute;
   }
@@ -654,37 +654,37 @@ struct PipelineStateInfo {
   //     int32_t                                       subpassIndex = 0)
   //     : m_raytracingShaders_(shader)
   //     , m_raytracingPipelineData_(raytracingPipelineData)
-  //     , m_shaderBindingLayoutArray(shaderBindingLayoutArray)
-  //     , m_pushConstant(pushConstant)
+  //     , m_shaderBindingLayoutArray_(shaderBindingLayoutArray)
+  //     , kPushConstant(pushConstant)
   //     , SubpassIndex(subpassIndex) {
   //   PipelineType = EPipelineType::RayTracing;
   // }
 
   PipelineStateInfo(const PipelineStateInfo& pipelineState)
-      : m_pipelineStateFixed_(pipelineState.m_pipelineStateFixed_)
-      , m_graphicsShader_(pipelineState.m_graphicsShader_)
-      , m_computeShader_(pipelineState.m_computeShader_)
+      : kPipelineStateFixed(pipelineState.kPipelineStateFixed)
+      , kGraphicsShader(pipelineState.kGraphicsShader)
+      , kComputeShader(pipelineState.kComputeShader)
       //, m_raytracingShaders_(pipelineState.m_raytracingShaders_)
       , m_pipelineType_(pipelineState.m_pipelineType_)
-      , m_vertexBufferArray(pipelineState.m_vertexBufferArray)
-      , m_renderPass(pipelineState.m_renderPass)
-      , m_shaderBindingLayoutArray(pipelineState.m_shaderBindingLayoutArray)
-      , m_pushConstant(pipelineState.m_pushConstant)
+      , m_vertexBufferArray_(pipelineState.m_vertexBufferArray_)
+      , kRenderPass(pipelineState.kRenderPass)
+      , m_shaderBindingLayoutArray_(pipelineState.m_shaderBindingLayoutArray_)
+      , kPushConstant(pipelineState.kPushConstant)
       , m_hash_(pipelineState.m_hash_)
       , m_subpassIndex_(pipelineState.m_subpassIndex_)
   //, m_raytracingPipelineData_(pipelineState.m_raytracingPipelineData_)
   {}
 
   PipelineStateInfo(PipelineStateInfo&& pipelineState) noexcept
-      : m_pipelineStateFixed_(pipelineState.m_pipelineStateFixed_)
-      , m_graphicsShader_(pipelineState.m_graphicsShader_)
-      , m_computeShader_(pipelineState.m_computeShader_)
+      : kPipelineStateFixed(pipelineState.kPipelineStateFixed)
+      , kGraphicsShader(pipelineState.kGraphicsShader)
+      , kComputeShader(pipelineState.kComputeShader)
       //, m_raytracingShaders_(pipelineState.m_raytracingShaders_)
       , m_pipelineType_(pipelineState.m_pipelineType_)
-      , m_vertexBufferArray(pipelineState.m_vertexBufferArray)
-      , m_renderPass(pipelineState.m_renderPass)
-      , m_shaderBindingLayoutArray(pipelineState.m_shaderBindingLayoutArray)
-      , m_pushConstant(pipelineState.m_pushConstant)
+      , m_vertexBufferArray_(pipelineState.m_vertexBufferArray_)
+      , kRenderPass(pipelineState.kRenderPass)
+      , m_shaderBindingLayoutArray_(pipelineState.m_shaderBindingLayoutArray_)
+      , kPushConstant(pipelineState.kPushConstant)
       , m_hash_(pipelineState.m_hash_)
       , m_subpassIndex_(pipelineState.m_subpassIndex_)
   //, m_raytracingPipelineData_(pipelineState.m_raytracingPipelineData_)
@@ -697,15 +697,15 @@ struct PipelineStateInfo {
   mutable size_t m_hash_ = 0;
 
   EPipelineType                 m_pipelineType_ = EPipelineType::Graphics;
-  const GraphicsPipelineShader  m_graphicsShader_;
-  const Shader*                 m_computeShader_ = nullptr;
+  const GraphicsPipelineShader  kGraphicsShader;
+  const Shader*                 kComputeShader = nullptr;
   // std::vector<RaytracingPipelineShader> m_raytracingShaders_;
   // RaytracingPipelineData                m_raytracingPipelineData_;
-  const RenderPass*             m_renderPass = nullptr;
-  VertexBufferArray             m_vertexBufferArray;
-  ShaderBindingLayoutArray      m_shaderBindingLayoutArray;
-  const PushConstant*           m_pushConstant;
-  const PipelineStateFixedInfo* m_pipelineStateFixed_ = nullptr;
+  const RenderPass*             kRenderPass = nullptr;
+  VertexBufferArray             m_vertexBufferArray_;
+  ShaderBindingLayoutArray      m_shaderBindingLayoutArray_;
+  const PushConstant*           kPushConstant;
+  const PipelineStateFixedInfo* kPipelineStateFixed = nullptr;
   int32_t                       m_subpassIndex_       = 0;
 
   virtual void initialize() { getHash(); }
