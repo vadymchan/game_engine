@@ -33,11 +33,11 @@ void SamplerStateInfoDx12::initialize() {
   assert(sizeof(samplerDesc.BorderColor) == sizeof(m_borderColor_));
   memcpy(samplerDesc.BorderColor, &m_borderColor_, sizeof(m_borderColor_));
 
-  m_samplerSRV_ = g_rhi_dx12->m_samplerDescriptorHeaps_.alloc();
+  m_samplerSRV_ = g_rhiDx12->m_samplerDescriptorHeaps_.alloc();
 
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
-  g_rhi_dx12->m_device_->CreateSampler(&samplerDesc,
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
+  g_rhiDx12->m_device_->CreateSampler(&samplerDesc,
                                        m_samplerSRV_.m_cpuHandle_);
 
   m_resourceName_ = Name(toString().c_str());
@@ -207,10 +207,10 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
   }
   psoDesc.DSVFormat = RenderPassDX12->getDSVFormat();
 
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
-  HRESULT hr = g_rhi_dx12->m_device_->CreateGraphicsPipelineState(
+  HRESULT hr = g_rhiDx12->m_device_->CreateGraphicsPipelineState(
       &psoDesc, IID_PPV_ARGS(&m_pipelineState_));
   assert(SUCCEEDED(hr));
 
@@ -278,10 +278,10 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
         = {.pShaderBytecode = CS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = CS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
-  HRESULT hr = g_rhi_dx12->m_device_->CreateComputePipelineState(
+  HRESULT hr = g_rhiDx12->m_device_->CreateComputePipelineState(
       &psoDesc, IID_PPV_ARGS(&m_pipelineState_));
   assert(SUCCEEDED(hr));
 
