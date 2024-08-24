@@ -3,6 +3,7 @@
 # Ignore build directory
 build/
 
+git_automation.txt
 
 #ignore the third_party (the folder third_party stays)
 /third_party/*
