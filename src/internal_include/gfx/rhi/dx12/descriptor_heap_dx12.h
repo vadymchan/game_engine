@@ -44,24 +44,24 @@ class DescriptorHeapDx12
       return DescriptorDx12();
     }
 
-    DescriptorDx12 Descriptor;
-    Descriptor.m_index_ = *m_pools_.begin();
+    DescriptorDx12 descriptor;
+    descriptor.m_index_ = *m_pools_.begin();
     m_pools_.erase(m_pools_.begin());
 
-    Descriptor.m_cpuHandle_      = m_cpuHandleStart_;
-    Descriptor.m_cpuHandle_.ptr += Descriptor.m_index_ * m_descriptorSize_;
+    descriptor.m_cpuHandle_      = m_cpuHandleStart_;
+    descriptor.m_cpuHandle_.ptr += descriptor.m_index_ * m_descriptorSize_;
 
-    Descriptor.m_gpuHandle_      = m_gpuHandleStart_;
-    Descriptor.m_gpuHandle_.ptr += Descriptor.m_index_ * m_descriptorSize_;
+    descriptor.m_gpuHandle_      = m_gpuHandleStart_;
+    descriptor.m_gpuHandle_.ptr += descriptor.m_index_ * m_descriptorSize_;
 
-    Descriptor.m_descriptorHeap_ = shared_from_this();
-    return Descriptor;
+    descriptor.m_descriptorHeap_ = shared_from_this();
+    return descriptor;
   }
 
   DescriptorDx12 oneFrameAlloc() {
-    DescriptorDx12 NewAlloc = alloc();
-    free(NewAlloc.m_index_, s_kNumOfFramesToWaitBeforeReleasing);
-    return NewAlloc;
+    DescriptorDx12 newAlloc = alloc();
+    free(newAlloc.m_index_, s_kNumOfFramesToWaitBeforeReleasing);
+    return newAlloc;
   }
 
   void free(uint32_t index) {
@@ -74,7 +74,7 @@ class DescriptorHeapDx12
   void free(uint32_t index, uint32_t delayFrames);
   void processPendingDescriptorPoolFree();
 
-  // Create a Descriptor that will be used only for this frame
+  // Create a descriptor that will be used only for this frame
   // DescriptorDx12 OneFrameCreateConstantBufferView(RingBufferDx12*
   // buffer, uint64_t offset, uint32_t size, ETextureFormat format =
   // ETextureFormat::MAX); DescriptorDx12
@@ -224,37 +224,37 @@ class OnlineDescriptorHeapDx12 {
 };
 
 // Manages the OnlineDescriptorHeapBlock and allocates additional
-// DescriptorHeapBlocks when needed.
+// descriptorHeapBlocks when needed.
 class OnlineDescriptorManager {
   public:
   OnlineDescriptorHeapDx12* alloc(EDescriptorHeapTypeDX12 type) {
-    std::vector<OnlineDescriptorHeapBlocksDx12*>& DescriptorHeapBlocks
+    std::vector<OnlineDescriptorHeapBlocksDx12*>& descriptorHeapBlocks
         = m_onlineDescriptorHeapBlocks_[(int32_t)type];
 
     // Check if allocation is possible from an existing HeapBlock
-    for (int32_t i = 0; i < static_cast<int32_t>(DescriptorHeapBlocks.size());
+    for (int32_t i = 0; i < static_cast<int32_t>(descriptorHeapBlocks.size());
          ++i) {
-      assert(DescriptorHeapBlocks[i]);
-      OnlineDescriptorHeapDx12* AllocatedBlocks
-          = DescriptorHeapBlocks[i]->alloc();
-      if (AllocatedBlocks) {
-        return AllocatedBlocks;
+      assert(descriptorHeapBlocks[i]);
+      OnlineDescriptorHeapDx12* allocatedBlocks
+          = descriptorHeapBlocks[i]->alloc();
+      if (allocatedBlocks) {
+        return allocatedBlocks;
       }
     }
 
     // If all existing HeapBlocks are full, add a new HeapBlock
-    auto SelectedHeapBlocks = new OnlineDescriptorHeapBlocksDx12();
+    auto selectedHeapBlocks = new OnlineDescriptorHeapBlocksDx12();
 
     switch (type) {
       case EDescriptorHeapTypeDX12::CBV_SRV_UAV: {
-        SelectedHeapBlocks->initialize(
+        selectedHeapBlocks->initialize(
             EDescriptorHeapTypeDX12::CBV_SRV_UAV,
             OnlineDescriptorHeapBlocksDx12::s_kTotalHeapSize,
             OnlineDescriptorHeapBlocksDx12::s_kDescriptorsInBlock);
         break;
       }
       case EDescriptorHeapTypeDX12::SAMPLER: {
-        SelectedHeapBlocks->initialize(
+        selectedHeapBlocks->initialize(
             EDescriptorHeapTypeDX12::SAMPLER,
             OnlineDescriptorHeapBlocksDx12::s_kSamplerTotalHeapSize,
             OnlineDescriptorHeapBlocksDx12::s_kSamplerDescriptorsInBlock);
@@ -266,20 +266,20 @@ class OnlineDescriptorManager {
     }
 
     // Add the new HeapBlock to the list
-    DescriptorHeapBlocks.push_back(SelectedHeapBlocks);
+    descriptorHeapBlocks.push_back(selectedHeapBlocks);
 
     // Sort HeapBlocks so that the ones with the most available allocations are
     // first
-    std::sort(DescriptorHeapBlocks.begin(),
-              DescriptorHeapBlocks.end(),
+    std::sort(descriptorHeapBlocks.begin(),
+              descriptorHeapBlocks.end(),
               [](OnlineDescriptorHeapBlocksDx12* a,
                  OnlineDescriptorHeapBlocksDx12* b) {
                 return a->m_freeLists_.size() > b->m_freeLists_.size();
               });
 
-    OnlineDescriptorHeapDx12* AllocatedBlocks = SelectedHeapBlocks->alloc();
-    assert(AllocatedBlocks);
-    return AllocatedBlocks;
+    OnlineDescriptorHeapDx12* allocatedBlocks = selectedHeapBlocks->alloc();
+    assert(allocatedBlocks);
+    return allocatedBlocks;
   }
 
   void free(OnlineDescriptorHeapDx12* descriptorHeap) {
@@ -321,8 +321,8 @@ class OfflineDescriptorHeapDx12 {
       assert(m_currentHeap_);
     }
 
-    DescriptorDx12 NewDescriptor = m_currentHeap_->alloc();
-    if (!NewDescriptor.isValid()) {
+    DescriptorDx12 newDescriptor = m_currentHeap_->alloc();
+    if (!newDescriptor.isValid()) {
       if (m_heap_.size() > 0) {
         // Reorder the Heap to place those with more available allocations at
         // the front
@@ -336,20 +336,20 @@ class OfflineDescriptorHeapDx12 {
         if (m_heap_[0]->m_pools_.size() > 0) {
           m_currentHeap_ = m_heap_[0];
 
-          NewDescriptor = m_currentHeap_->alloc();
-          assert(NewDescriptor.isValid());
-          return NewDescriptor;
+          newDescriptor = m_currentHeap_->alloc();
+          assert(newDescriptor.isValid());
+          return newDescriptor;
         }
       }
 
       m_currentHeap_ = createDescriptorHeap_();
       assert(m_currentHeap_);
 
-      NewDescriptor = m_currentHeap_->alloc();
-      assert(NewDescriptor.isValid());
+      newDescriptor = m_currentHeap_->alloc();
+      assert(newDescriptor.isValid());
     }
 
-    return NewDescriptor;
+    return newDescriptor;
   }
 
   void free(const DescriptorDx12& descriptor) {
@@ -368,13 +368,13 @@ class OfflineDescriptorHeapDx12 {
 
   private:
   std::shared_ptr<DescriptorHeapDx12> createDescriptorHeap_() {
-    auto DescriptorHeap = std::make_shared<DescriptorHeapDx12>();
-    assert(DescriptorHeap);
+    auto descriptorHeap = std::make_shared<DescriptorHeapDx12>();
+    assert(descriptorHeap);
 
-    DescriptorHeap->initialize(m_heapType_, false);
+    descriptorHeap->initialize(m_heapType_, false);
 
-    m_heap_.push_back(DescriptorHeap);
-    return DescriptorHeap;
+    m_heap_.push_back(descriptorHeap);
+    return descriptorHeap;
   }
 
   bool                    m_isInitialized_ = false;
