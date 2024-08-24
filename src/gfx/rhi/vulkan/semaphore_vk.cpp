@@ -9,7 +9,7 @@ namespace game_engine {
 
 SemaphoreVk ::~SemaphoreVk() {
   if (m_semaphore_ != VK_NULL_HANDLE) {
-    vkDestroySemaphore(g_rhi_vk->m_device_, m_semaphore_, nullptr);
+    vkDestroySemaphore(g_rhiVk->m_device_, m_semaphore_, nullptr);
   }
 }
 
@@ -27,7 +27,7 @@ ISemaphore* SemaphoreManagerVk::getOrCreateSemaphore() {
   auto*                 newSemaphore  = new SemaphoreVk();
   VkSemaphoreCreateInfo semaphoreInfo = {};
   semaphoreInfo.sType                 = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  if (vkCreateSemaphore(g_rhi_vk->m_device_,
+  if (vkCreateSemaphore(g_rhiVk->m_device_,
                         &semaphoreInfo,
                         nullptr,
                         &newSemaphore->m_semaphore_)
