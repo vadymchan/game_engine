@@ -17,9 +17,9 @@ class RenderPassDx12 : public RenderPass {
   bool createRenderPass();
   void release();
 
-  // virtual void* getRenderPass() const override { return m_renderPass; }
+  // virtual void* getRenderPass() const override { return kRenderPass; }
   // inline const VkRenderPass& GetRenderPassRaw() const { return
-  // m_renderPass; } virtual void* getFrameBuffer() const override { return
+  // kRenderPass; } virtual void* getFrameBuffer() const override { return
   // m_frameBuffer; }
 
   virtual bool beginRenderPass(const CommandBuffer* commandBuffer) override;
