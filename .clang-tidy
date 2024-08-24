@@ -100,7 +100,7 @@ CheckOptions:
   - key: readability-identifier-naming.TypedefCase
     value: CamelCase
 
-  # static constant member variables: camelCase with s_k prefix
+  # static constant member variables: CamelCase with s_k prefix
   - key: readability-identifier-naming.StaticConstantCase
     value: CamelCase
   - key: readability-identifier-naming.StaticConstantPrefix
@@ -112,7 +112,14 @@ CheckOptions:
   - key: readability-identifier-naming.ClassConstantPrefix
     value: "s_k"
 
-  # constants: CamelCase with k prefix
+  # constant member variables: CamelCase with k prefix
+  # TODO: if possible, change to the same as public / protected / private member variables
+  - key: readability-identifier-naming.ConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantPrefix
+    value: "k"
+
+  # constants (probably in general): CamelCase with k prefix
   - key: readability-identifier-naming.ConstantCase
     value: CamelCase
   - key: readability-identifier-naming.ConstantPrefix
@@ -162,14 +169,24 @@ CheckOptions:
   - key: readability-identifier-naming.ParameterCase
     value: camelBack
 
-  # constant parameters: CamelCase with k prefix
+  # constant parameters: camelCase
   - key: readability-identifier-naming.ConstantParameterCase
-    value: CamelCase
-  - key: readability-identifier-naming.ConstantParameterPrefix
-    value: "k"
+    value: camelBack
 
   # local variables: camelCase
   - key: readability-identifier-naming.LocalVariableCase
     value: camelBack
+
+  # local constant variables: CamelCase with k prefix
+  - key: readability-identifier-naming.LocalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.LocalConstantPrefix
+    value: "k"
+
+  # local constant pointer variables: CamelCase with k prefix
+  - key: readability-identifier-naming.LocalConstantPointerCase
+    value: CamelCase
+  - key: readability-identifier-naming.LocalConstantPointerPrefix
+    value: "k"
 #END:name convention
 #----------------------------------
