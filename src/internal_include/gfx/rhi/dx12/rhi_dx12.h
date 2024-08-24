@@ -661,7 +661,7 @@ class RhiDx12 : public RHI {
   std::shared_ptr<Window> m_window_;
 };
 
-extern RhiDx12* g_rhi_dx12;
+extern RhiDx12* g_rhiDx12;
 
 }  // namespace game_engine
 
