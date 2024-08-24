@@ -85,9 +85,9 @@ void DrawCommand::draw() const {
   // Bind the image that contains the shading rate patterns
 #if USE_VARIABLE_SHADING_RATE_TIER2
   if (gOptions.UseVRS) {
-    g_rhi_vk->bindShadingRateImage(
+    g_rhiVk->bindShadingRateImage(
         RenderFrameContextPtr->getActiveCommandBuffer(),
-        g_rhi_vk->GetSampleVRSTexture());
+        g_rhiVk->GetSampleVRSTexture());
   }
 #endif
 
