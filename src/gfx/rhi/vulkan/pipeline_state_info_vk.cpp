@@ -43,7 +43,7 @@ void SamplerStateInfoVk::initialize() {
   m_samplerStateInfo_.pNext = &CustomBorderColor;
 
   if (vkCreateSampler(
-          g_rhi_vk->m_device_, &m_samplerStateInfo_, nullptr, &m_samplerState_)
+          g_rhiVk->m_device_, &m_samplerStateInfo_, nullptr, &m_samplerState_)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create sampler");
   }
@@ -53,7 +53,7 @@ void SamplerStateInfoVk::initialize() {
 
 void SamplerStateInfoVk::release() {
   if (m_samplerState_) {
-    vkDestroySampler(g_rhi_vk->m_device_, m_samplerState_, nullptr);
+    vkDestroySampler(g_rhiVk->m_device_, m_samplerState_, nullptr);
     m_samplerState_ = nullptr;
   }
 }
@@ -253,7 +253,7 @@ void PipelineStateInfoVk::initialize() {
 
 void PipelineStateInfoVk::release() {
   if (m_pipeline_) {
-    vkDestroyPipeline(g_rhi_vk->m_device_, m_pipeline_, nullptr);
+    vkDestroyPipeline(g_rhiVk->m_device_, m_pipeline_, nullptr);
     m_pipeline_ = nullptr;
   }
   m_pipelineLayout_ = nullptr;
@@ -289,7 +289,7 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
     vkViewports[i].x     = Viewports[i].m_x_;
     vkViewports[i].width = Viewports[i].m_width_;
 
-    if (kUseVulkanNdcYFlip) {
+    if (g_kUseVulkanNdcYFlip) {
       // vkViewports[i].y      = Viewports[i].Height - Viewports[i].Y; //
       // previous soulution
       vkViewports[i].y
@@ -475,8 +475,8 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
     viewportState.pNext = &pipelineViewportShadingRateImageStateCI;
   }
 
-  if (vkCreateGraphicsPipelines(g_rhi_vk->m_device_,
-                                g_rhi_vk->m_pipelineCache_,
+  if (vkCreateGraphicsPipelines(g_rhiVk->m_device_,
+                                g_rhiVk->m_pipelineCache_,
                                 1,
                                 &pipelineInfo,
                                 nullptr,
@@ -522,8 +522,8 @@ void* PipelineStateInfoVk::createComputePipelineState() {
   computePipelineCreateInfo.stage
       = ((CompiledShaderVk*)m_computeShader_->getCompiledShader())->m_shaderStage_;
 
-  if (vkCreateComputePipelines(g_rhi_vk->m_device_,
-                               g_rhi_vk->m_pipelineCache_,
+  if (vkCreateComputePipelines(g_rhiVk->m_device_,
+                               g_rhiVk->m_pipelineCache_,
                                1,
                                &computePipelineCreateInfo,
                                nullptr,
