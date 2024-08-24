@@ -2407,8 +2407,8 @@ bool RhiVk::checkDeviceExtensionSupport(VkPhysicalDevice device) {
   vkEnumerateDeviceExtensionProperties(
       device, nullptr, &extensionCount, availableExtensions.data());
 
-  std::set<std::string> requiredExtensions(m_deviceExtensions_.begin(),
-                                           m_deviceExtensions_.end());
+  std::set<std::string> requiredExtensions(kDeviceExtensions.begin(),
+                                           kDeviceExtensions.end());
   for (const auto& extension : availableExtensions) {
     requiredExtensions.erase(extension.extensionName);
   }
