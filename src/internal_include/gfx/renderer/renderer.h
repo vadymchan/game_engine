@@ -622,7 +622,7 @@ class Renderer {
   int32_t m_frameIndex_ = 0;
 
   // Thread per task for PassSetup
-  const int32_t m_maxPassSetupTaskPerThreadCount_ = 100;
+  const int32_t kMaxPassSetupTaskPerThreadCount = 100;
 
   std::shared_ptr<Window> m_window_;
 };
