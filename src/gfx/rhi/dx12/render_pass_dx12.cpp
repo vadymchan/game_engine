@@ -11,10 +11,10 @@ void RenderPassDx12::release() {
   //     m_frameBuffer = nullptr;
   // }
 
-  // if (m_renderPass)
+  // if (kRenderPass)
   //{
-  //     vkDestroyRenderPass(g_rhiVk->Device, m_renderPass, nullptr);
-  //     m_renderPass = nullptr;
+  //     vkDestroyRenderPass(g_rhiVk->Device, kRenderPass, nullptr);
+  //     kRenderPass = nullptr;
   // }
 }
 
@@ -102,7 +102,7 @@ void RenderPassDx12::initialize() {
 }
 
 bool RenderPassDx12::createRenderPass() {
-  // Create m_renderPass
+  // Create kRenderPass
   {
     for (int32_t i = 0; i < (int32_t)m_renderPassInfo_.m_attachments_.size(); ++i) {
       const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
