@@ -264,11 +264,11 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
     return m_pipeline_;
   }
 
-  assert(m_pipelineStateFixed_);
-  assert(m_vertexBufferArray.m_numOfData_);
+  assert(kPipelineStateFixed);
+  assert(m_vertexBufferArray_.m_numOfData_);
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo2
-      = ((VertexBufferVk*)m_vertexBufferArray[0])->createVertexInputState();
+      = ((VertexBufferVk*)m_vertexBufferArray_[0])->createVertexInputState();
 
   std::vector<VkVertexInputBindingDescription>   bindingDescriptions;
   std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
@@ -277,12 +277,12 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   VertexBufferVk::s_createVertexInputState(vertexInputInfo,
                                          bindingDescriptions,
                                          attributeDescriptions,
-                                         m_vertexBufferArray);
+                                         m_vertexBufferArray_);
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly
-      = ((VertexBufferVk*)m_vertexBufferArray[0])->createInputAssemblyState();
+      = ((VertexBufferVk*)m_vertexBufferArray_[0])->createInputAssemblyState();
 
-  const auto&             Viewports = m_pipelineStateFixed_->m_viewports_;
+  const auto&             Viewports = kPipelineStateFixed->m_viewports_;
   std::vector<VkViewport> vkViewports;
   vkViewports.resize(Viewports.size());
   for (int32_t i = 0; i < vkViewports.size(); ++i) {
@@ -305,7 +305,7 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
     vkViewports[i].maxDepth = Viewports[i].m_maxDepth_;
   }
 
-  const auto&           Scissors = m_pipelineStateFixed_->m_scissors_;
+  const auto&           Scissors = kPipelineStateFixed->m_scissors_;
   std::vector<VkRect2D> vkScissor;
   vkScissor.resize(Scissors.size());
   for (int32_t i = 0; i < vkScissor.size(); ++i) {
@@ -331,17 +331,17 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   colorBlending.logicOp       = VK_LOGIC_OP_COPY;  // Optional
 
   int32_t ColorAttachmentCountInSubpass = 0;
-  assert(m_renderPass->m_renderPassInfo_.m_subpasses_.size() > m_subpassIndex_);
+  assert(kRenderPass->m_renderPassInfo_.m_subpasses_.size() > m_subpassIndex_);
   const Subpass& SelectedSubpass
-      = m_renderPass->m_renderPassInfo_.m_subpasses_[m_subpassIndex_];
+      = kRenderPass->m_renderPassInfo_.m_subpasses_[m_subpassIndex_];
   for (int32_t i = 0;
        i < (int32_t)SelectedSubpass.m_outputColorAttachments_.size();
        ++i) {
     const int32_t AttachmentIndex = SelectedSubpass.m_outputColorAttachments_[i];
     const bool    IsColorAttachment
-        = !m_renderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
+        = !kRenderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
                .isDepthAttachment()
-       && !m_renderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
+       && !kRenderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
                .isResolveAttachment();
     if (IsColorAttachment) {
       ++ColorAttachmentCountInSubpass;
@@ -352,14 +352,14 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   if (ColorAttachmentCountInSubpass > 1) {
     ColorBlendAttachmentStates.resize(
         ColorAttachmentCountInSubpass,
-        ((BlendingStateInfoVk*)m_pipelineStateFixed_->m_blendingState_)
+        ((BlendingStateInfoVk*)kPipelineStateFixed->m_blendingState_)
             ->m_colorBlendAttachmentInfo_);
     colorBlending.attachmentCount = ColorAttachmentCountInSubpass;
     colorBlending.pAttachments    = &ColorBlendAttachmentStates[0];
   } else {
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments
-        = &((BlendingStateInfoVk*)m_pipelineStateFixed_->m_blendingState_)
+        = &((BlendingStateInfoVk*)kPipelineStateFixed->m_blendingState_)
                ->m_colorBlendAttachmentInfo_;
   }
 
@@ -373,13 +373,13 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
   std::vector<VkDynamicState> dynamicStates;
-  if (m_pipelineStateFixed_->m_dynamicStates_.size() > 0) {
-    dynamicStates.resize(m_pipelineStateFixed_->m_dynamicStates_.size());
+  if (kPipelineStateFixed->m_dynamicStates_.size() > 0) {
+    dynamicStates.resize(kPipelineStateFixed->m_dynamicStates_.size());
 
-    for (int32_t i = 0; i < (int32_t)m_pipelineStateFixed_->m_dynamicStates_.size();
+    for (int32_t i = 0; i < (int32_t)kPipelineStateFixed->m_dynamicStates_.size();
          ++i) {
       dynamicStates[i]
-          = g_getVulkanPipelineDynamicState(m_pipelineStateFixed_->m_dynamicStates_[i]);
+          = g_getVulkanPipelineDynamicState(kPipelineStateFixed->m_dynamicStates_[i]);
     }
 
     dynamicState.dynamicStateCount = (uint32_t)dynamicStates.size();
@@ -388,7 +388,7 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
 
   // 10. Pipeline layout
   m_pipelineLayout_ = ShaderBindingLayoutVk::s_createPipelineLayout(
-      m_shaderBindingLayoutArray, m_pushConstant);
+      m_shaderBindingLayoutArray_, kPushConstant);
 
   VkGraphicsPipelineCreateInfo pipelineInfo = {};
   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -396,19 +396,19 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   // Shader stage
   VkPipelineShaderStageCreateInfo ShaderStages[5];
   uint32_t                        ShaderStageIndex = 0;
-  if (m_graphicsShader_.m_vertexShader_) {
+  if (kGraphicsShader.m_vertexShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)m_graphicsShader_.m_vertexShader_->getCompiledShader())
+        = ((CompiledShaderVk*)kGraphicsShader.m_vertexShader_->getCompiledShader())
               ->m_shaderStage_;
   }
-  if (m_graphicsShader_.m_geometryShader_) {
+  if (kGraphicsShader.m_geometryShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)m_graphicsShader_.m_geometryShader_)->m_shaderStage_;
+        = ((CompiledShaderVk*)kGraphicsShader.m_geometryShader_)->m_shaderStage_;
   }
-  if (m_graphicsShader_.m_pixelShader_) {
+  if (kGraphicsShader.m_pixelShader_) {
     ShaderStages[ShaderStageIndex++]
         //= ((CompiledShaderVk*)GraphicsShader.m_pixelShader_)->m_shaderStage_;
-        = ((CompiledShaderVk*)m_graphicsShader_.m_pixelShader_->getCompiledShader())
+        = ((CompiledShaderVk*)kGraphicsShader.m_pixelShader_->getCompiledShader())
 			  ->m_shaderStage_;
   }
 
@@ -421,18 +421,18 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   pipelineInfo.pInputAssemblyState = &inputAssembly;
   pipelineInfo.pViewportState      = &viewportState;
   pipelineInfo.pRasterizationState
-      = &((RasterizationStateInfoVk*)m_pipelineStateFixed_->m_rasterizationState_)
+      = &((RasterizationStateInfoVk*)kPipelineStateFixed->m_rasterizationState_)
              ->m_rasterizationStateInfo_;
   pipelineInfo.pMultisampleState
-      = &((RasterizationStateInfoVk*)m_pipelineStateFixed_->m_rasterizationState_)
+      = &((RasterizationStateInfoVk*)kPipelineStateFixed->m_rasterizationState_)
              ->m_multisampleStateInfo_;
   pipelineInfo.pDepthStencilState
-      = &((DepthStencilStateInfoVk*)m_pipelineStateFixed_->m_depthStencilState_)
+      = &((DepthStencilStateInfoVk*)kPipelineStateFixed->m_depthStencilState_)
              ->m_depthStencilStateInfo_;
   pipelineInfo.pColorBlendState = &colorBlending;
   pipelineInfo.pDynamicState    = &dynamicState;
   pipelineInfo.layout           = m_pipelineLayout_;
-  pipelineInfo.renderPass       = (VkRenderPass)m_renderPass->getRenderPass();
+  pipelineInfo.renderPass       = (VkRenderPass)kRenderPass->getRenderPass();
   pipelineInfo.subpass          = m_subpassIndex_;      // index of subpass
 
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;  // Optional
@@ -458,7 +458,7 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
         VK_SHADING_RATE_PALETTE_ENTRY_1_INVOCATION_PER_4X4_PIXELS_NV,
       };
 
-  if (m_pipelineStateFixed_->m_isUseVRS_) {
+  if (kPipelineStateFixed->m_isUseVRS_) {
     // Shading Rate Palette
     shadingRatePalette.shadingRatePaletteEntryCount
         = static_cast<uint32_t>(shadingRatePaletteEntries.size());
@@ -512,7 +512,7 @@ void* PipelineStateInfoVk::createComputePipelineState() {
   }
 
   m_pipelineLayout_ = ShaderBindingLayoutVk::s_createPipelineLayout(
-      m_shaderBindingLayoutArray, m_pushConstant);
+      m_shaderBindingLayoutArray_, kPushConstant);
 
   VkComputePipelineCreateInfo computePipelineCreateInfo{};
   computePipelineCreateInfo.sType
@@ -520,7 +520,7 @@ void* PipelineStateInfoVk::createComputePipelineState() {
   computePipelineCreateInfo.layout = m_pipelineLayout_;
   computePipelineCreateInfo.flags  = 0;
   computePipelineCreateInfo.stage
-      = ((CompiledShaderVk*)m_computeShader_->getCompiledShader())->m_shaderStage_;
+      = ((CompiledShaderVk*)kComputeShader->getCompiledShader())->m_shaderStage_;
 
   if (vkCreateComputePipelines(g_rhiVk->m_device_,
                                g_rhiVk->m_pipelineCache_,
