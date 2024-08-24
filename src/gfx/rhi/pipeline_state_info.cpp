@@ -11,14 +11,14 @@ size_t PipelineStateInfo::getHash() const {
 
   m_hash_ = 0;
   if (m_pipelineType_ == EPipelineType::Graphics) {
-    assert(m_pipelineStateFixed_);
-    m_hash_ ^= m_pipelineStateFixed_->createHash();
-    m_hash_ ^= m_vertexBufferArray.getHash();
-    m_hash_ ^= m_renderPass->getHash();
-    m_hash_ ^= m_graphicsShader_.getHash();
+    assert(kPipelineStateFixed);
+    m_hash_ ^= kPipelineStateFixed->createHash();
+    m_hash_ ^= m_vertexBufferArray_.getHash();
+    m_hash_ ^= kRenderPass->getHash();
+    m_hash_ ^= kGraphicsShader.getHash();
   } else if (m_pipelineType_ == EPipelineType::Compute) {
-    assert(m_computeShader_);
-    m_hash_ ^= m_computeShader_->m_shaderInfo_.getHash();
+    assert(kComputeShader);
+    m_hash_ ^= kComputeShader->m_shaderInfo_.getHash();
   } else if (m_pipelineType_ == EPipelineType::RayTracing) {
     // TODO: implement
     assert(0);
@@ -30,10 +30,10 @@ size_t PipelineStateInfo::getHash() const {
     assert(0);
   }
 
-  m_hash_ ^= m_shaderBindingLayoutArray.getHash();
+  m_hash_ ^= m_shaderBindingLayoutArray_.getHash();
 
-  if (m_pushConstant) {
-    m_hash_ ^= m_pushConstant->getHash();
+  if (kPushConstant) {
+    m_hash_ ^= kPushConstant->getHash();
   }
   m_hash_ ^= m_subpassIndex_;
 
