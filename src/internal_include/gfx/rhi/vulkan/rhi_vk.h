@@ -109,33 +109,33 @@ class RhiVk : public RHI {
       const ShaderBindingArray& shaderBindingArray) const override;
 
   virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
-      const ShaderBindingArray&      shaderBindingArray,
+      const ShaderBindingArray&       shaderBindingArray,
       const ShaderBindingInstanceType type) const override;
 
   virtual PipelineStateInfo* createPipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
-      const GraphicsPipelineShader     shader,
-      const VertexBufferArray&         vertexBufferArray,
-      const RenderPass*                renderPass,
+      const GraphicsPipelineShader    shader,
+      const VertexBufferArray&        vertexBufferArray,
+      const RenderPass*               renderPass,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant,
-      std::int32_t                     subpassIndex) const override {
+      std::int32_t                    subpassIndex) const override {
     return s_pipelineStatePool.getOrCreateMove(
         std::move(PipelineStateInfo(pipelineStateFixed,
-                                     shader,
-                                     vertexBufferArray,
-                                     renderPass,
-                                     shaderBindingArray,
-                                     pushConstant,
-                                     subpassIndex)));
+                                    shader,
+                                    vertexBufferArray,
+                                    renderPass,
+                                    shaderBindingArray,
+                                    pushConstant,
+                                    subpassIndex)));
   }
 
   virtual PipelineStateInfo* createComputePipelineStateInfo(
-      const Shader*                    shader,
+      const Shader*                   shader,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const override {
-    return s_pipelineStatePool.getOrCreateMove(std::move(
-        PipelineStateInfo(shader, shaderBindingArray, pushConstant)));
+    return s_pipelineStatePool.getOrCreateMove(
+        std::move(PipelineStateInfo(shader, shaderBindingArray, pushConstant)));
   }
 
   // Create m_buffers
@@ -156,12 +156,8 @@ class RhiVk : public RHI {
       EResourceLayout   initialState,
       const void*       data     = nullptr,
       std::uint64_t     dataSize = 0) const override {
-    return createBufferInternal(size,
-                                alignment,
-                                bufferCreateFlag,
-                                initialState,
-                                data,
-                                dataSize);
+    return createBufferInternal(
+        size, alignment, bufferCreateFlag, initialState, data, dataSize);
   }
 
   virtual std::shared_ptr<IBuffer> createRawBuffer(
@@ -171,12 +167,8 @@ class RhiVk : public RHI {
       EResourceLayout   initialState,
       const void*       data     = nullptr,
       std::uint64_t     dataSize = 0) const override {
-    return createBufferInternal(size,
-                                alignment,
-                                bufferCreateFlag,
-                                initialState,
-                                data,
-                                dataSize);
+    return createBufferInternal(
+        size, alignment, bufferCreateFlag, initialState, data, dataSize);
   }
 
   virtual std::shared_ptr<IBuffer> createFormattedBuffer(
@@ -187,18 +179,12 @@ class RhiVk : public RHI {
       EResourceLayout   initialState,
       const void*       data     = nullptr,
       std::uint64_t     dataSize = 0) const override {
-    return createBufferInternal(size,
-                                alignment,
-                                bufferCreateFlag,
-                                initialState,
-                                data,
-                                dataSize);
+    return createBufferInternal(
+        size, alignment, bufferCreateFlag, initialState, data, dataSize);
   }
 
   virtual std::shared_ptr<IUniformBufferBlock> createUniformBufferBlock(
-      Name         name,
-      LifeTimeType lifeTimeType,
-      size_t       size = 0) const override;
+      Name name, LifeTimeType lifeTimeType, size_t size = 0) const override;
 
   // Create Images
   VkImageUsageFlags getImageUsageFlags(
@@ -236,8 +222,8 @@ class RhiVk : public RHI {
 
   virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const override {
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
     return s_renderPassPool.getOrCreate(
         RenderPassVk(colorAttachments, offset, extent));
   }
@@ -245,8 +231,8 @@ class RhiVk : public RHI {
   virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const override {
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
     return s_renderPassPool.getOrCreate(
         RenderPassVk(colorAttachments, depthAttachment, offset, extent));
   }
@@ -255,17 +241,17 @@ class RhiVk : public RHI {
       const std::vector<Attachment>& colorAttachments,
       const Attachment&              depthAttachment,
       const Attachment&              colorResolveAttachment,
-      const math::Vector2Di&          offset,
-      const math::Vector2Di&          extent) const override {
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
     return s_renderPassPool.getOrCreate(RenderPassVk(colorAttachments,
-                                                   depthAttachment,
-                                                   colorResolveAttachment,
-                                                   offset,
-                                                   extent));
+                                                     depthAttachment,
+                                                     colorResolveAttachment,
+                                                     offset,
+                                                     extent));
   }
 
   virtual RenderPass* getOrCreateRenderPass(
-      const RenderPassInfo& renderPassInfo,
+      const RenderPassInfo&  renderPassInfo,
       const math::Vector2Di& offset,
       const math::Vector2Di& extent) const override {
     return s_renderPassPool.getOrCreate(
@@ -327,12 +313,11 @@ class RhiVk : public RHI {
 
   virtual void incrementFrameNumber() { ++m_currentFrameNumber_; }
 
-  void drawArrays(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      int32_t                                    vertStartIndex,
-      int32_t                                    vertCount) const override;
+  void drawArrays(const std::shared_ptr<RenderFrameContext>& renderFrameContext,
+                  /*EPrimitiveType                               type, -
+                     deprecated (used in previous rendering api)*/
+                  int32_t                                    vertStartIndex,
+                  int32_t vertCount) const override;
 
   void drawArraysInstanced(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
@@ -382,23 +367,23 @@ class RhiVk : public RHI {
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      IBuffer*                                     buffer,
-      int32_t                                     startIndex,
-      int32_t                                     drawCount) const override;
+      IBuffer*                                   buffer,
+      int32_t                                    startIndex,
+      int32_t                                    drawCount) const override;
 
   void drawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      IBuffer*                                     buffer,
-      int32_t                                     startIndex,
-      int32_t                                     drawCount) const override;
+      IBuffer*                                   buffer,
+      int32_t                                    startIndex,
+      int32_t                                    drawCount) const override;
 
   void dispatchCompute(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      uint32_t                                    numGroupsX,
-      uint32_t                                    numGroupsY,
-      uint32_t                                    numGroupsZ) const override;
+      uint32_t                                   numGroupsX,
+      uint32_t                                   numGroupsY,
+      uint32_t                                   numGroupsZ) const override;
 
   void flush() const override;
 
@@ -413,7 +398,7 @@ class RhiVk : public RHI {
 
   void queueSubmit(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      ISemaphore*                                  signalSemaphore) override;
+      ISemaphore*                                signalSemaphore) override;
 
   virtual CommandBufferVk* beginSingleTimeCommands() const override;
 
@@ -421,7 +406,7 @@ class RhiVk : public RHI {
 
   virtual void bindGraphicsShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
-      const PipelineStateInfo*            piplineState,
+      const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const override;
 
@@ -441,7 +426,7 @@ class RhiVk : public RHI {
 
   virtual void bindComputeShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
-      const PipelineStateInfo*            piplineState,
+      const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const override;
 
@@ -450,7 +435,7 @@ class RhiVk : public RHI {
 
   // TODO: uncomment
   // private:
-  const std::vector<const char*> m_deviceExtensions_
+  const std::vector<const char*> kDeviceExtensions
       = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
   void populateDebugMessengerCreateInfo(
@@ -512,7 +497,7 @@ class RhiVk : public RHI {
       s_rasterizationStatePool;
   static TResourcePool<StencilOpStateInfoVk, MutexRWLock> s_stencilOpStatePool;
   static TResourcePool<DepthStencilStateInfoVk, MutexRWLock>
-                                                         s_depthStencilStatePool;
+      s_depthStencilStatePool;
   static TResourcePool<BlendingStateInfoVk, MutexRWLock> s_blendingStatePool;
   static TResourcePool<PipelineStateInfoVk, MutexRWLock> s_pipelineStatePool;
   static TResourcePool<RenderPassVk, MutexRWLock>        s_renderPassPool;
@@ -523,7 +508,6 @@ class RhiVk : public RHI {
 };
 
 extern RhiVk* g_rhiVk;
-
 
 }  // namespace game_engine
 
