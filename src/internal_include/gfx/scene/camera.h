@@ -106,17 +106,18 @@ class Camera {
       const math::Vector3Df& eulerAngle) {
     forward = math::g_getDirectionFromEulerAngle(eulerAngle).normalized();
 
-    const bool isInvert = (eulerAngle.x() < 0 || math::g_kPi < eulerAngle.x());
+    const bool kIsInvert = (eulerAngle.x() < 0 || math::g_kPi < eulerAngle.x());
 
-    const math::Vector3Df upVector = (isInvert ? math::g_downVector<float, 3>()
-                                               : math::g_upVector<float, 3>());
-    right                          = (isInvert ? math::g_downVector<float, 3>()
-                                               : math::g_upVector<float, 3>())
+    const math::Vector3Df kUpVector
+        = (kIsInvert ? math::g_downVector<float, 3>()
+                     : math::g_upVector<float, 3>());
+    right = (kIsInvert ? math::g_downVector<float, 3>()
+                       : math::g_upVector<float, 3>())
                 .cross(forward)
                 .normalized();
     if (math::g_isNearlyZero(right.magnitudeSquared())) {
-      right = (isInvert ? math::g_backwardVector<float, 3>()
-                        : math::g_forwardVector<float, 3>())
+      right = (kIsInvert ? math::g_backwardVector<float, 3>()
+                         : math::g_forwardVector<float, 3>())
                   .cross(forward)
                   .normalized();
     }
@@ -134,12 +135,12 @@ class Camera {
                           float                  height,
                           bool                   isPerspectiveProjection,
                           float                  distance = 300.0f) {
-    const auto toTarget = (target - pos);
-    camera->m_position_ = pos;
-    camera->m_target_   = target;
-    camera->m_up_       = up;
-    camera->m_distance_ = distance;
-    camera->setEulerAngle(math::g_getEulerAngleFrom(toTarget));
+    const auto kToTarget = (target - pos);
+    camera->m_position_  = pos;
+    camera->m_target_    = target;
+    camera->m_up_        = up;
+    camera->m_distance_  = distance;
+    camera->setEulerAngle(math::g_getEulerAngleFrom(kToTarget));
 
     camera->m_FOVRad_                  = fovRad;
     camera->m_Near_                    = nearDist;
@@ -155,13 +156,13 @@ class Camera {
   }
 
   virtual math::Matrix4f createProjection() const {
-    const auto ratio
+    const auto kRatio
         = static_cast<float>(m_width_) / static_cast<float>(m_height_);
     if (m_isPerspectiveProjection_) {
       if (m_isInfinityFar_) {
-        return math::g_perspectiveLhZoInf(m_FOVRad_, ratio, m_Near_);
+        return math::g_perspectiveLhZoInf(m_FOVRad_, kRatio, m_Near_);
       }
-      return math::g_perspectiveLhZo(m_FOVRad_, ratio, m_Near_, m_far_);
+      return math::g_perspectiveLhZo(m_FOVRad_, kRatio, m_Near_, m_far_);
     }
     return math::g_orthoLhZo(
         (float)m_width_, (float)m_height_, m_Near_, m_far_);
@@ -180,9 +181,9 @@ class Camera {
 
   void updateCameraFrustum() {
     auto       toTarget = (m_target_ - m_position_).normalized();
-    const auto length   = tanf(m_FOVRad_) * m_far_;
-    auto       toRight  = getRightVector() * length;
-    auto       toUp     = getUpVector() * length;
+    const auto kLength  = tanf(m_FOVRad_) * m_far_;
+    auto       toRight  = getRightVector() * kLength;
+    auto       toUp     = getUpVector() * kLength;
 
     auto rightUp   = (toTarget * m_far_ + toRight + toUp).normalized();
     auto leftUp    = (toTarget * m_far_ - toRight + toUp).normalized();
@@ -276,12 +277,12 @@ class Camera {
   }
 
   void rotateCameraAxis(const math::Vector3Df& axis, float radian) {
-    const auto transformMatrix = math::g_translate(m_position_)
-                               * math::g_rotateLh(axis, radian)
-                               * math::g_translate(-m_position_);
-    m_position_ = math::g_transformPoint(m_position_, transformMatrix);
-    m_target_   = math::g_transformPoint(m_target_, transformMatrix);
-    m_up_       = math::g_transformPoint(m_up_, transformMatrix);
+    const auto kTransformMatrix = math::g_translate(m_position_)
+                                * math::g_rotateLh(axis, radian)
+                                * math::g_translate(-m_position_);
+    m_position_ = math::g_transformPoint(m_position_, kTransformMatrix);
+    m_target_   = math::g_transformPoint(m_target_, kTransformMatrix);
+    m_up_       = math::g_transformPoint(m_up_, kTransformMatrix);
   }
 
   void rotateForwardAxis(float radian) {
@@ -314,8 +315,9 @@ class Camera {
 
   bool isInFrustum(const math::Vector3Df& pos, float radius) {
     for (auto& iter : m_frustum_.m_planes_) {
-      const float d = pos.dot(iter.m_n_) - iter.m_d_ + radius;
-      if (d < 0.0f) {
+      // TODO: consider better naming
+      const float kD = pos.dot(iter.m_n_) - iter.m_d_ + radius;
+      if (kD < 0.0f) {
         return false;
       }
     }
@@ -326,8 +328,8 @@ class Camera {
                                 const math::Vector3Df& dir,
                                 float                  radius) const {
     for (auto& iter : m_frustum_.m_planes_) {
-      const float d = pos.dot(iter.m_n_) - iter.m_d_ + radius;
-      if (d < 0.0f) {
+      const float kD = pos.dot(iter.m_n_) - iter.m_d_ + radius;
+      if (kD < 0.0f) {
         if (dir.dot(iter.m_n_) <= 0) {
           return false;
         }
@@ -353,49 +355,58 @@ class Camera {
     math::Vector3Df nearLb;
     math::Vector3Df nearRb;
 
-    const auto  origin = m_position_;
-    const float n      = m_Near_;
-    const float f      = m_far_;
+    // TODO: consider better naming convention
+    const auto  kOrigin = m_position_;
+    const float kNear   = m_Near_;
+    const float kFar    = m_far_;
 
     if (m_isPerspectiveProjection_) {
-      const float     invAspect = ((float)m_width_ / (float)m_height_);
-      const float     length    = tanf(m_FOVRad_ * 0.5f);
-      math::Vector3Df targetVec = getForwardVector().normalized();
+      const float     kInvAspect = ((float)m_width_ / (float)m_height_);
+      const float     kLength    = tanf(m_FOVRad_ * 0.5f);
+      math::Vector3Df targetVec  = getForwardVector().normalized();
       math::Vector3Df rightVec
-          = getRightVector().normalized() * length * invAspect;
-      math::Vector3Df upVec = getUpVector().normalized() * length;
+          = getRightVector().normalized() * kLength * kInvAspect;
+      math::Vector3Df upVec = getUpVector().normalized() * kLength;
 
       math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
       math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
       math::Vector3Df rightDown = (targetVec + rightVec - upVec);
       math::Vector3Df leftDown  = (targetVec - rightVec - upVec);
 
-      farLt = origin + leftUp * f;
-      farRt = origin + rightUp * f;
-      farLb = origin + leftDown * f;
-      farRb = origin + rightDown * f;
+      farLt = kOrigin + leftUp * kFar;
+      farRt = kOrigin + rightUp * kFar;
+      farLb = kOrigin + leftDown * kFar;
+      farRb = kOrigin + rightDown * kFar;
 
-      nearLt = origin + leftUp * n;
-      nearRt = origin + rightUp * n;
-      nearLb = origin + leftDown * n;
-      nearRb = origin + rightDown * n;
+      nearLt = kOrigin + leftUp * kNear;
+      nearRt = kOrigin + rightUp * kNear;
+      nearLb = kOrigin + leftDown * kNear;
+      nearRb = kOrigin + rightDown * kNear;
     } else {
-      const float w = (float)m_width_;
-      const float h = (float)m_height_;
+      const float kWidth = (float)m_width_;
+      const float kHeight = (float)m_height_;
 
       math::Vector3Df targetVec = getForwardVector().normalized();
       math::Vector3Df rightVec  = getRightVector().normalized();
       math::Vector3Df upVec     = getUpVector().normalized();
 
-      farLt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
-      farRt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
-      farLb = origin + targetVec * f - rightVec * w * 0.5f - upVec * h * 0.5f;
-      farRb = origin + targetVec * f + rightVec * w * 0.5f - upVec * h * 0.5f;
+      farLt
+          = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
+      farRt
+          = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
+      farLb
+          = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
+      farRb
+          = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
 
-      nearLt = origin + targetVec * n - rightVec * w * 0.5f + upVec * h * 0.5f;
-      nearRt = origin + targetVec * n + rightVec * w * 0.5f + upVec * h * 0.5f;
-      nearLb = origin + targetVec * n - rightVec * w * 0.5f - upVec * h * 0.5f;
-      nearRb = origin + targetVec * n + rightVec * w * 0.5f - upVec * h * 0.5f;
+      nearLt = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
+             + upVec * kHeight * 0.5f;
+      nearRt = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
+             + upVec * kHeight * 0.5f;
+      nearLb = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
+             - upVec * kHeight * 0.5f;
+      nearRb = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
+             - upVec * kHeight * 0.5f;
     }
 
     // Transform to NDC space
@@ -461,49 +472,49 @@ class Camera {
     math::Vector3Df nearLb;
     math::Vector3Df nearRb;
 
-    const auto  origin = m_position_;
-    const float n      = m_Near_;
-    const float f      = m_far_;
+    const auto  kOrigin = m_position_;
+    const float kNear      = m_Near_;
+    const float kFar      = m_far_;
 
     if (m_isPerspectiveProjection_) {
-      const float     InvAspect = ((float)m_width_ / (float)m_height_);
-      const float     length    = tanf(m_FOVRad_ * 0.5f);
+      const float     kInvAspect = ((float)m_width_ / (float)m_height_);
+      const float     kLength    = tanf(m_FOVRad_ * 0.5f);
       math::Vector3Df targetVec = getForwardVector().normalized();
       math::Vector3Df rightVec
-          = getRightVector().normalized() * length * InvAspect;
-      math::Vector3Df upVec = getUpVector().normalized() * length;
+          = getRightVector().normalized() * kLength * kInvAspect;
+      math::Vector3Df upVec = getUpVector().normalized() * kLength;
 
       math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
       math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
       math::Vector3Df rightDown = (targetVec + rightVec - upVec);
       math::Vector3Df leftDown  = (targetVec - rightVec - upVec);
 
-      farLt = origin + leftUp * f;
-      farRt = origin + rightUp * f;
-      farLb = origin + leftDown * f;
-      farRb = origin + rightDown * f;
+      farLt = kOrigin + leftUp * kFar;
+      farRt = kOrigin + rightUp * kFar;
+      farLb = kOrigin + leftDown * kFar;
+      farRb = kOrigin + rightDown * kFar;
 
-      nearLt = origin + leftUp * n;
-      nearRt = origin + rightUp * n;
-      nearLb = origin + leftDown * n;
-      nearRb = origin + rightDown * n;
+      nearLt = kOrigin + leftUp * kNear;
+      nearRt = kOrigin + rightUp * kNear;
+      nearLb = kOrigin + leftDown * kNear;
+      nearRb = kOrigin + rightDown * kNear;
     } else {
-      const float w = (float)m_width_;
-      const float h = (float)m_height_;
+      const float kWidth = (float)m_width_;
+      const float kHeight = (float)m_height_;
 
       math::Vector3Df targetVec = getForwardVector().normalized();
       math::Vector3Df rightVec  = getRightVector().normalized();
       math::Vector3Df upVec     = getUpVector().normalized();
 
-      farLt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
-      farRt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
-      farLb = origin + targetVec * f - rightVec * w * 0.5f - upVec * h * 0.5f;
-      farRb = origin + targetVec * f + rightVec * w * 0.5f - upVec * h * 0.5f;
+      farLt = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
+      farRt = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
+      farLb = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
+      farRb = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
 
-      nearLt = origin + targetVec * n - rightVec * w * 0.5f + upVec * h * 0.5f;
-      nearRt = origin + targetVec * n + rightVec * w * 0.5f + upVec * h * 0.5f;
-      nearLb = origin + targetVec * n - rightVec * w * 0.5f - upVec * h * 0.5f;
-      nearRb = origin + targetVec * n + rightVec * w * 0.5f - upVec * h * 0.5f;
+      nearLt = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
+      nearRt = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
+      nearLb = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
+      nearRb = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
     }
 
     vertexArray[0] = farLt;
@@ -625,12 +636,12 @@ class OrthographicCamera : public Camera {
                           float                  nearDist,
                           float                  farDist,
                           float                  distance = 300.0f) {
-    const auto toTarget = (target - pos);
+    const auto kToTarget = (target - pos);
     camera->m_position_ = pos;
     camera->m_target_   = target;
     camera->m_up_       = up;
     camera->m_distance_ = distance;
-    camera->setEulerAngle(math::g_getEulerAngleFrom(toTarget));
+    camera->setEulerAngle(math::g_getEulerAngleFrom(kToTarget));
 
     camera->m_Near_                    = nearDist;
     camera->m_far_                     = farDist;
