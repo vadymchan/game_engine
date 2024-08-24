@@ -6,7 +6,7 @@
 
 namespace game_engine {
 
-RhiVk* g_rhi_vk = nullptr;
+RhiVk* g_rhiVk = nullptr;
 
 TResourcePool<RenderPassVk, MutexRWLock>        RhiVk::s_renderPassPool;
 TResourcePool<PipelineStateInfoVk, MutexRWLock> RhiVk::s_pipelineStatePool;
@@ -30,7 +30,7 @@ struct FrameBufferVk : public FrameBuffer {
 };
 
 RhiVk::RhiVk() {
-  g_rhi_vk = this;
+  g_rhiVk = this;
 }
 
 bool RhiVk::init(const std::shared_ptr<Window>& window) {
@@ -737,7 +737,7 @@ bool RhiVk::createShaderInternal(Shader*           shader,
 
       assert(VK_SUCCESS
              != vkCreateShaderModule(
-                 g_rhi_vk->m_device_, &moduleCreateInfo, NULL, &shaderModule));
+                 g_rhiVk->m_device_, &moduleCreateInfo, NULL, &shaderModule));
       delete[] shaderCode;
 
       return shaderModule;
@@ -1916,7 +1916,7 @@ std::shared_ptr<RenderFrameContext> RhiVk::beginRenderFrame() {
 
   CommandBufferVk* commandBuffer
       = (CommandBufferVk*)
-            g_rhi_vk->m_commandBufferManager_->getOrCreateCommandBuffer();
+            g_rhiVk->m_commandBufferManager_->getOrCreateCommandBuffer();
 
   if (lastCommandBufferFence != VK_NULL_HANDLE) {
     vkWaitForFences(m_device_, 1, &lastCommandBufferFence, VK_TRUE, UINT64_MAX);
