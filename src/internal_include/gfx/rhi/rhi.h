@@ -67,9 +67,9 @@ class RHI {
   }
 
   std::vector<Shader*> getAllShaders() {
-    std::vector<Shader*> Out;
-    s_shaderPool.getAllResource(Out);
-    return Out;
+    std::vector<Shader*> output;
+    s_shaderPool.getAllResource(output);
+    return output;
   }
 
   // END: shader related functions and variables
