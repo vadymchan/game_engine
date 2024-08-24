@@ -81,7 +81,7 @@ bool CommandBufferManagerDx12::initialize(ComPtr<ID3D12Device>    device,
     }
   }
 
-  m_fence = (FenceDx12*)g_rhi_dx12->m_fenceManager_.getOrCreateFence();
+  m_fence = (FenceDx12*)g_rhiDx12->m_fenceManager_.getOrCreateFence();
 
   return true;
 }
@@ -120,10 +120,10 @@ CommandBufferDx12* CommandBufferManagerDx12::createCommandList_() const {
 
   if (D3D12_COMMAND_LIST_TYPE_COPY != m_commandListType_) {
     commandBuffer->m_onlineDescriptorHeap_
-        = g_rhi_dx12->m_onlineDescriptorHeapManager_.alloc(
+        = g_rhiDx12->m_onlineDescriptorHeapManager_.alloc(
             EDescriptorHeapTypeDX12::CBV_SRV_UAV);
     commandBuffer->m_onlineSamplerDescriptorHeap_
-        = g_rhi_dx12->m_onlineDescriptorHeapManager_.alloc(
+        = g_rhiDx12->m_onlineDescriptorHeapManager_.alloc(
             EDescriptorHeapTypeDX12::SAMPLER);
 
     assert(commandBuffer->m_onlineDescriptorHeap_);
