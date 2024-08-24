@@ -52,15 +52,15 @@ bool SwapchainDx12::create(const std::shared_ptr<Window>& window) {
                       | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
                       | DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
-  assert(g_rhi_dx12);
-  assert(!!g_rhi_dx12->m_hWnd);
-  assert(g_rhi_dx12->m_factory_);
-  assert(g_rhi_dx12->m_commandBufferManager_);
+  assert(g_rhiDx12);
+  assert(!!g_rhiDx12->m_hWnd);
+  assert(g_rhiDx12->m_factory_);
+  assert(g_rhiDx12->m_commandBufferManager_);
 
   ComPtr<IDXGISwapChain1> swapChainTemp;
-  HRESULT                 hr = g_rhi_dx12->m_factory_->CreateSwapChainForHwnd(
-      g_rhi_dx12->m_commandBufferManager_->getCommandQueue().Get(),
-      g_rhi_dx12->m_hWnd,
+  HRESULT                 hr = g_rhiDx12->m_factory_->CreateSwapChainForHwnd(
+      g_rhiDx12->m_commandBufferManager_->getCommandQueue().Get(),
+      g_rhiDx12->m_hWnd,
       &swapChainDesc,
       nullptr,
       nullptr,
@@ -125,7 +125,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
   assert(isSwapChainValid);
 
   if (isSwapChainValid) {
-    for (int32_t i = 0; i < g_rhi_dx12->s_kMaxFrameCount; ++i) {
+    for (int32_t i = 0; i < g_rhiDx12->s_kMaxFrameCount; ++i) {
       ISwapchainImage* swapchainImage = m_images_[i];
       auto TexDX12 = (TextureDx12*)swapchainImage->m_TexturePtr_.get();
       TexDX12->m_texture->m_resource_.get()->Reset();
@@ -133,7 +133,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
 
     m_swapChain_->SetFullscreenState(false, nullptr);
     HRESULT hr = m_swapChain_->ResizeBuffers(
-        g_rhi_dx12->s_kMaxFrameCount,
+        g_rhiDx12->s_kMaxFrameCount,
         witdh,
         height,
         DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -147,7 +147,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
       sprintf_s(buff,
                 "Device Lost on ResizeBuffers: Reason code 0x%08X\n",
                 (hr == DXGI_ERROR_DEVICE_REMOVED)
-                    ? g_rhi_dx12->m_device_->GetDeviceRemovedReason()
+                    ? g_rhiDx12->m_device_->GetDeviceRemovedReason()
                     : hr);
       OutputDebugStringA(buff);
 #endif
@@ -161,7 +161,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
     }
   }
 
-  for (int32_t i = 0; i < g_rhi_dx12->s_kMaxFrameCount; ++i) {
+  for (int32_t i = 0; i < g_rhiDx12->s_kMaxFrameCount; ++i) {
     ISwapchainImage* swapchainImage = m_images_[i];
 
     ComPtr<ID3D12Resource> NewResource;
@@ -192,8 +192,8 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
     g_createRenderTargetView((TextureDx12*)swapchainImage->m_TexturePtr_.get());
   }
 
-  g_rhi_dx12->s_renderPassPool.release();
-  g_rhi_dx12->s_pipelineStatePool.release();
+  g_rhiDx12->s_renderPassPool.release();
+  g_rhiDx12->s_pipelineStatePool.release();
   return true;
 }
 
