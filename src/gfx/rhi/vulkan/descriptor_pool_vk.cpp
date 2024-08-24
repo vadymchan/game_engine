@@ -31,7 +31,7 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   m_maxDescriptorSets_ = maxDescriptorSets;
   
   // TODO: remove (old version)
-  // constexpr int32_t    NumOfPoolSize = std::size(g_defaultPoolSizes);
+  // constexpr int32_t    NumOfPoolSize = std::size(g_kDefaultPoolSizes);
   // VkDescriptorPoolSize Types[NumOfPoolSize];
   // memset(Types, 0, sizeof(Types));
 
@@ -41,15 +41,15 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   //      = static_cast<EShaderBindingType>(VK_DESCRIPTOR_TYPE_SAMPLER + i);
 
   //  PoolSizes[i] = static_cast<uint32_t>(
-  //      std::max(g_defaultPoolSizes[i] * maxDescriptorSets, 4.0f));
+  //      std::max(g_kDefaultPoolSizes[i] * maxDescriptorSets, 4.0f));
 
   //  Types[i].type            = GetVulkanShaderBindingType(DescriptorType);
   //  Types[i].descriptorCount = PoolSizes[i];
   //}
 
-  std::vector<VkDescriptorPoolSize> Types(g_defaultPoolSizes.size());
+  std::vector<VkDescriptorPoolSize> Types(g_kDefaultPoolSizes.size());
 
-  for (uint32_t i = 0; const auto& descriptorTypePair : g_defaultPoolSizes) {
+  for (uint32_t i = 0; const auto& descriptorTypePair : g_kDefaultPoolSizes) {
     uint32_t poolSize = static_cast<uint32_t>(
         std::max(descriptorTypePair.second * maxDescriptorSets, 4.0f));
 

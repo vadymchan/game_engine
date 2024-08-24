@@ -15,7 +15,7 @@
 namespace game_engine {
 
 // TODO: check whether it works correctly
-// const float g_defaultPoolSizes[] = {
+// const float g_kDefaultPoolSizes[] = {
 //  2,        // VK_DESCRIPTOR_TYPE_SAMPLER
 //  2,        // VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
 //  2,        // VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
@@ -31,7 +31,7 @@ namespace game_engine {
 //  1 / 8.0,  // VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
 //};
 
-const std::unordered_map<VkDescriptorType, float> g_defaultPoolSizes = {
+const std::unordered_map<VkDescriptorType, float> g_kDefaultPoolSizes = {
   {               VK_DESCRIPTOR_TYPE_SAMPLER,       2},
   {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,       2},
   {         VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,       2},
@@ -75,7 +75,7 @@ struct DescriptorPoolVk {
 
   uint32_t         m_maxDescriptorSets_ = 128;
   // TODO: check that std::size works as _countof
-  // uint32_t         PoolSizes[std::size(g_defaultPoolSizes)];
+  // uint32_t         PoolSizes[std::size(g_kDefaultPoolSizes)];
   VkDescriptorPool m_descriptorPool_ = nullptr;
   ;
   mutable MutexLock m_descriptorPoolLock_;
