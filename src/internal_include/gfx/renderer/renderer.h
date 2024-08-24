@@ -169,14 +169,14 @@ class Renderer {
         break;
     }
 
-    auto DepthStencilState = TDepthStencilStateInfo<true,
+    auto depthStencilState = TDepthStencilStateInfo<true,
                                                     true,
                                                     ECompareOp::LESS,
                                                     false,
                                                     false,
                                                     0.0f,
                                                     1.0f>::s_create();
-    auto BlendingState     = TBlendingStateInfo<false,
+    auto blendingState     = TBlendingStateInfo<false,
                                             EBlendFactor::ONE,
                                             EBlendFactor::ZERO,
                                             EBlendOp::ADD,
@@ -185,10 +185,10 @@ class Renderer {
                                             EBlendOp::ADD,
                                             EColorMask::ALL>::s_create();
 
-    PipelineStateFixedInfo BasePassPipelineStateFixed = PipelineStateFixedInfo(
+    PipelineStateFixedInfo basePassPipelineStateFixed = PipelineStateFixedInfo(
         rasterizationState,
-        DepthStencilState,
-        BlendingState,
+        depthStencilState,
+        blendingState,
         Viewport(0.0f, 0.0f, (float)screenWidth, (float)screenHeight),
         Scissor(0, 0, screenWidth, screenWidth),
         false /*gOptions.UseVRS*/);
@@ -207,21 +207,21 @@ class Renderer {
     // PipelineStateFixedInfo TranslucentPassPipelineStateFixed
     //    = PipelineStateFixedInfo(
     //        rasterizationState,
-    //        DepthStencilState,
+    //        depthStencilState,
     //        TranslucentBlendingState,
     //        Viewport(0.0f, 0.0f, (float)screenWidth, (float)screenHeight),
     //        Scissor(0, 0, screenWidth, screenHeight),
     //        gOptions.UseVRS);
     // -----------------------------------------------------
 
-    const RTClearValue ClearColor = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
-    const RTClearValue ClearDepth = RTClearValue(1.0f, 0);
+    const RTClearValue kClearColor = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+    const RTClearValue kClearDepth = RTClearValue(1.0f, 0);
 
     Attachment depth = Attachment(
         m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_,
         EAttachmentLoadStoreOp::CLEAR_STORE,
         EAttachmentLoadStoreOp::CLEAR_STORE,
-        ClearDepth,
+        kClearDepth,
         EResourceLayout::UNDEFINED,
         EResourceLayout::DEPTH_STENCIL_ATTACHMENT);
     Attachment resolve;
@@ -232,7 +232,7 @@ class Renderer {
             m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_resolvePtr_,
             EAttachmentLoadStoreOp::DONTCARE_STORE,
             EAttachmentLoadStoreOp::DONTCARE_DONTCARE,
-            ClearColor,
+            kClearColor,
             EResourceLayout::UNDEFINED,
             EResourceLayout::COLOR_ATTACHMENT,
             true);
@@ -250,14 +250,14 @@ class Renderer {
           RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i],
           EAttachmentLoadStoreOp::CLEAR_STORE,
           EAttachmentLoadStoreOp::DONTCARE_DONTCARE,
-          ClearColor,
+          kClearColor,
           EResourceLayout::UNDEFINED,
           EResourceLayout::COLOR_ATTACHMENT);
       renderPassInfo.Attachments.push_back(color);
     }*/
     }
 
-    const int32_t LightPassAttachmentIndex
+    const int32_t kLightPassAttachmentIndex
         = (int32_t)renderPassInfo.m_attachments_.size();
 
     // TODO: pay attention to UseSubpass
@@ -268,18 +268,18 @@ class Renderer {
                            ->m_finalColorPtr_,
                        EAttachmentLoadStoreOp::CLEAR_STORE,
                        EAttachmentLoadStoreOp::DONTCARE_DONTCARE,
-                       ClearColor,
+                       kClearColor,
                        EResourceLayout::UNDEFINED,
                        // EResourceLayout::COLOR_ATTACHMENT);
                        EResourceLayout::PRESENT_SRC);
       renderPassInfo.m_attachments_.push_back(color);
     }
 
-    const int32_t DepthAttachmentIndex
+    const int32_t kDepthAttachmentIndex
         = (int32_t)renderPassInfo.m_attachments_.size();
     renderPassInfo.m_attachments_.push_back(depth);
 
-    const int32_t ResolveAttachemntIndex
+    const int32_t kResolveAttachemntIndex
         = (int32_t)renderPassInfo.m_attachments_.size();
     if (m_useForwardRenderer_) {
       if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
@@ -300,22 +300,22 @@ class Renderer {
       if (m_useForwardRenderer_) {
         subpass.m_outputColorAttachments_.push_back(0);
       } else {
-        const int32_t GBufferCount = LightPassAttachmentIndex;
-        for (int32_t i = 0; i < GBufferCount; ++i) {
+        const int32_t kGBufferCount = kLightPassAttachmentIndex;
+        for (int32_t i = 0; i < kGBufferCount; ++i) {
           subpass.m_outputColorAttachments_.push_back(i);
         }
       }
 
-      subpass.m_outputDepthAttachment_ = DepthAttachmentIndex;
+      subpass.m_outputDepthAttachment_ = kDepthAttachmentIndex;
       if (m_useForwardRenderer_) {
         if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
-          subpass.m_outputResolveAttachment_ = ResolveAttachemntIndex;
+          subpass.m_outputResolveAttachment_ = kResolveAttachemntIndex;
         }
       }
       renderPassInfo.m_subpasses_.push_back(subpass);
     }
     // TODO: not used for now
-    // if (!UseForwardRenderer && gOptions.UseSubpass) {
+    // if (!useForwardRenderer && gOptions.UseSubpass) {
     //   // Second subpass, Lighting pass
     //   Subpass subpass;
     //   subpass.initialize(1,
@@ -323,16 +323,16 @@ class Renderer {
     //                      EPipelineStageMask::COLOR_ATTACHMENT_OUTPUT_BIT,
     //                      EPipelineStageMask::FRAGMENT_SHADER_BIT);
 
-    //  const int32_t GBufferCount = LightPassAttachmentIndex;
-    //  for (int32_t i = 0; i < GBufferCount; ++i) {
+    //  const int32_t kGBufferCount = kLightPassAttachmentIndex;
+    //  for (int32_t i = 0; i < kGBufferCount; ++i) {
     //    subpass.InputAttachments.push_back(i);
     //  }
 
-    //  subpass.OutputColorAttachments.push_back(LightPassAttachmentIndex);
-    //  subpass.OutputDepthAttachment = DepthAttachmentIndex;
+    //  subpass.OutputColorAttachments.push_back(kLightPassAttachmentIndex);
+    //  subpass.OutputDepthAttachment = kDepthAttachmentIndex;
 
     //  if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
-    //    subpass.OutputResolveAttachment = ResolveAttachemntIndex;
+    //    subpass.OutputResolveAttachment = kResolveAttachemntIndex;
     //  }
 
     //  renderPassInfo.Subpasses.push_back(subpass);
@@ -341,98 +341,99 @@ class Renderer {
     m_baseRenderPass_ = (RenderPass*)g_rhi->getOrCreateRenderPass(
         renderPassInfo, {0, 0}, {screenWidth, screenHeight});
 
-    auto GetOrCreateShaderFunc = [UseForwardRenderer
+    auto getOrCreateShaderFunc = [useForwardRenderer
                                   = this->m_useForwardRenderer_](
                                      const RenderObject* renderObject) {
-      GraphicsPipelineShader Shaders;
+      GraphicsPipelineShader shaders;
       ShaderInfo             shaderInfo;
 
       if (renderObject->hasInstancing()) {
-        assert(UseForwardRenderer);
+        assert(useForwardRenderer);
 
         ShaderInfo shaderInfo;
         shaderInfo.setName(NameStatic("default_instancing_testVS"));
         shaderInfo.setShaderFilepath(NameStatic(
             "assets/shaders/forward_rendering/shader_instancing.vs.hlsl"));
         shaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
-        Shaders.m_vertexShader_ = g_rhi->createShader(shaderInfo);
+        shaders.m_vertexShader_ = g_rhi->createShader(shaderInfo);
 
         shaderInfo.setName(NameStatic("default_instancing_testPS"));
         shaderInfo.setShaderFilepath(
             NameStatic("assets/shaders/forward_rendering/shader.ps.hlsl"));
         shaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
-        Shaders.m_pixelShader_ = g_rhi->createShader(shaderInfo);
-        return Shaders;
+        shaders.m_pixelShader_ = g_rhi->createShader(shaderInfo);
+        return shaders;
       }
 
-      if (UseForwardRenderer) {
+      if (useForwardRenderer) {
         shaderInfo.setName(NameStatic("default_testVS"));
         shaderInfo.setShaderFilepath(
             // NameStatic("assets/shaders/forward_rendering/shader.vs.hlsl"));
             NameStatic("assets/shaders/demo/first_triangle.vs.hlsl"));
         shaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
-        Shaders.m_vertexShader_ = g_rhi->createShader(shaderInfo);
+        shaders.m_vertexShader_ = g_rhi->createShader(shaderInfo);
 
-        ShaderForwardPixelShader::ShaderPermutation ShaderPermutation;
-        /*ShaderPermutation
+        ShaderForwardPixelShader::ShaderPermutation shaderPermutation;
+        /*shaderPermutation
             .setIndex<ShaderForwardPixelShader::USE_VARIABLE_SHADING_RATE>(
                 USE_VARIABLE_SHADING_RATE_TIER2);*/
-        ShaderPermutation.setIndex<ShaderForwardPixelShader::USE_REVERSEZ>(
+        shaderPermutation.setIndex<ShaderForwardPixelShader::USE_REVERSEZ>(
             USE_REVERSEZ_PERSPECTIVE_SHADOW);
-        Shaders.m_pixelShader_
-            = ShaderForwardPixelShader::CreateShader(ShaderPermutation);
+        shaders.m_pixelShader_
+            = ShaderForwardPixelShader::CreateShader(shaderPermutation);
       } else {
-        const bool IsUseSphericalMap
+        const bool kIsUseSphericalMap
             = renderObject->m_materialPtr_
            && renderObject->m_materialPtr_->isUseSphericalMap();
-        const bool hasAlbedoTexture
+        const bool kHasAlbedoTexture
             = renderObject->m_materialPtr_
            && renderObject->m_materialPtr_->hasAlbedoTexture();
-        const bool isUseSRGBAlbedoTexture
+        const bool kIsUseSRGBAlbedoTexture
             = renderObject->m_materialPtr_
            && renderObject->m_materialPtr_->isUseSRGBAlbedoTexture();
-        const bool HasVertexColor
+        const bool kHasVertexColor
             = renderObject->m_geometryDataPtr_
            && renderObject->m_geometryDataPtr_->hasVertexColor();
-        const bool HasVertexBiTangent
+        const bool kHasVertexBiTangent
             = renderObject->m_geometryDataPtr_
            && renderObject->m_geometryDataPtr_->hasVertexBiTangent();
 
-        ShaderGBufferVertexShader::ShaderPermutation ShaderPermutationVS;
-        ShaderPermutationVS
+        // TODO: consider whether postfix 'Vs' is clearly describes 'vertex'
+        ShaderGBufferVertexShader::ShaderPermutation shaderPermutationVs;
+        shaderPermutationVs
             .setIndex<ShaderGBufferVertexShader::USE_VERTEX_COLOR>(
-                HasVertexColor);
-        ShaderPermutationVS
+                kHasVertexColor);
+        shaderPermutationVs
             .setIndex<ShaderGBufferVertexShader::USE_VERTEX_BITANGENT>(
-                HasVertexBiTangent);
-        ShaderPermutationVS
+                kHasVertexBiTangent);
+        shaderPermutationVs
             .setIndex<ShaderGBufferVertexShader::USE_ALBEDO_TEXTURE>(
-                hasAlbedoTexture);
-        ShaderPermutationVS
+                kHasAlbedoTexture);
+        shaderPermutationVs
             .setIndex<ShaderGBufferVertexShader::USE_SPHERICAL_MAP>(
-                IsUseSphericalMap);
-        Shaders.m_vertexShader_
-            = ShaderGBufferVertexShader::CreateShader(ShaderPermutationVS);
+                kIsUseSphericalMap);
+        shaders.m_vertexShader_
+            = ShaderGBufferVertexShader::CreateShader(shaderPermutationVs);
 
-        ShaderGBufferPixelShader::ShaderPermutation ShaderPermutationPS;
-        ShaderPermutationPS
+        ShaderGBufferPixelShader::ShaderPermutation shaderPermutationPs;
+        shaderPermutationPs
             .setIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
-                HasVertexColor);
-        ShaderPermutationPS
+                kHasVertexColor);
+        shaderPermutationPs
             .setIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
-                hasAlbedoTexture);
-        ShaderPermutationPS
+                kHasAlbedoTexture);
+        shaderPermutationPs
             .setIndex<ShaderGBufferPixelShader::USE_SRGB_ALBEDO_TEXTURE>(
-                isUseSRGBAlbedoTexture);
-        // ShaderPermutationPS
+                kIsUseSRGBAlbedoTexture);
+        // shaderPermutationPs
         //     .setIndex<ShaderGBufferPixelShader::USE_VARIABLE_SHADING_RATE>(
         //         USE_VARIABLE_SHADING_RATE_TIER2);
-        ShaderPermutationPS.setIndex<ShaderGBufferPixelShader::USE_PBR>(
+        shaderPermutationPs.setIndex<ShaderGBufferPixelShader::USE_PBR>(
             ENABLE_PBR);
-        Shaders.m_pixelShader_
-            = ShaderGBufferPixelShader::CreateShader(ShaderPermutationPS);
+        shaders.m_pixelShader_
+            = ShaderGBufferPixelShader::CreateShader(shaderPermutationPs);
       }
-      return Shaders;
+      return shaders;
     };
 
     // TODO: remove (not used)
@@ -447,24 +448,24 @@ class Renderer {
     //  TranslucentPassShader.m_vertexShader_ = g_rhi->createShader(shaderInfo);
 
     //  ShaderGBufferPixelShader::ShaderPermutation ShaderPermutation;
-    //  ShaderPermutation.setIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
+    //  shaderPermutation.setIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
     //      0);
-    //  ShaderPermutation.setIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
+    //  shaderPermutation.setIndex<ShaderGBufferPixelShader::USE_ALBEDO_TEXTURE>(
     //      1);
-    //  //ShaderPermutation
+    //  //shaderPermutation
     //  //    .setIndex<ShaderGBufferPixelShader::USE_VARIABLE_SHADING_RATE>(
     //  //        USE_VARIABLE_SHADING_RATE_TIER2);
     //  TranslucentPassShader.m_pixelShader_
-    //      = ShaderGBufferPixelShader::CreateShader(ShaderPermutation);
+    //      = ShaderGBufferPixelShader::CreateShader(shaderPermutation);
     //}
 
-    SimplePushConstant SimplePushConstantData;
-    // SimplePushConstantData.ShowVRSArea = gOptions.ShowVRSArea;
-    // SimplePushConstantData.ShowGrid    = gOptions.ShowGrid;
+    SimplePushConstant simplePushConstantData;
+    // simplePushConstantData.ShowVRSArea = gOptions.ShowVRSArea;
+    // simplePushConstantData.ShowGrid    = gOptions.ShowGrid;
 
-    PushConstant* SimplePushConstant
+    PushConstant* simplePushConstant
         = new (MemStack::get()->alloc<PushConstant>()) PushConstant(
-            SimplePushConstantData, EShaderAccessStageFlag::FRAGMENT);
+            simplePushConstantData, EShaderAccessStageFlag::FRAGMENT);
 
 #if PARALLELFOR_WITH_PASSSETUP
     BasePasses.resize(Object::GetStaticRenderObject().size());
@@ -486,11 +487,11 @@ class Renderer {
                           &view,
                           renderObject,
                           BaseRenderPass,
-                          GetOrCreateShaderFunc(renderObject),
-                          &BasePassPipelineStateFixed,
+                          getOrCreateShaderFunc(renderObject),
+                          &basePassPipelineStateFixed,
                           material,
                           {},
-                          SimplePushConstant);
+                          simplePushConstant);
           BasePasses[index].prepareToDraw(false);
         });
 #else
@@ -510,11 +511,11 @@ class Renderer {
                                        &m_view_,
                                        iter,
                                        m_baseRenderPass_,
-                                       GetOrCreateShaderFunc(iter),
-                                       &BasePassPipelineStateFixed,
+                                       getOrCreateShaderFunc(iter),
+                                       &basePassPipelineStateFixed,
                                        material,
                                        {},
-                                       SimplePushConstant);
+                                       simplePushConstant);
       m_basePasses_[i].prepareToDraw(false);
       ++i;
     }
@@ -554,7 +555,7 @@ class Renderer {
       }
 
       {
-        auto NewLayout
+        auto newLayout
             = m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
                       ->getTexture()
                       ->isDepthOnlyFormat()
@@ -564,7 +565,7 @@ class Renderer {
             m_renderFrameContextPtr_->getActiveCommandBuffer(),
             m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
                 ->getTexture(),
-            NewLayout);
+            newLayout);
       }
 
       // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->getActiveCommandBuffer());
@@ -578,7 +579,7 @@ class Renderer {
 
         // TODO: not used for now
         // Draw Light : subpass 1
-        /*if (!UseForwardRenderer && gOptions.UseSubpass) {
+        /*if (!useForwardRenderer && gOptions.UseSubpass) {
           g_rhi->nextSubpass(
               RenderFrameContextPtr->getActiveCommandBuffer());
           DeferredLightPass_TodoRefactoring(BaseRenderPass);
