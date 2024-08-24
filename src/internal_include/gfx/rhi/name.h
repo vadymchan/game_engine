@@ -43,14 +43,15 @@ struct Name {
 
   void set(const char* pName, size_t size) {
     assert(pName);
-    const uint32_t NewNameHash = s_generateNameHash(pName, size);
+    const uint32_t kNewNameHash = s_generateNameHash(pName, size);
 
-    auto find_func = [&]() {
-      const auto find_it = s_nameTable.find(NewNameHash);
-      if (s_nameTable.end() != find_it) {
-        m_nameHash_         = NewNameHash;
-        m_nameString_       = find_it->second->c_str();
-        m_nameStringLength_ = find_it->second->size();
+    auto findFunc = [&]() {
+      // TODO: consider rename to kFindIterator
+      const auto kFindIt = s_nameTable.find(kNewNameHash);
+      if (s_nameTable.end() != kFindIt) {
+        m_nameHash_         = kNewNameHash;
+        m_nameString_       = kFindIt->second->c_str();
+        m_nameStringLength_ = kFindIt->second->size();
         return true;
       }
       return false;
@@ -58,7 +59,7 @@ struct Name {
 
     {
       ScopeReadLock sr(&s_lock);
-      if (find_func()) {
+      if (findFunc()) {
         return;
       }
     }
@@ -67,16 +68,17 @@ struct Name {
       ScopeWriteLock sw(&s_lock);
 
       // Try again, to avoid entering creation section simultaneously.
-      if (find_func()) {
+      if (findFunc()) {
         return;
       }
 
-      const auto it_ret = s_nameTable.emplace(
-          NewNameHash, s_createNewNameInternal(pName, NewNameHash));
-      if (it_ret.second) {
-        m_nameHash_         = NewNameHash;
-        m_nameString_       = it_ret.first->second->c_str();
-        m_nameStringLength_ = it_ret.first->second->size();
+      // TODO: consider rename to more meaningful name like kIteratorReturn
+      const auto kItRet = s_nameTable.emplace(
+          kNewNameHash, s_createNewNameInternal(pName, kNewNameHash));
+      if (kItRet.second) {
+        m_nameHash_         = kNewNameHash;
+        m_nameString_       = kItRet.first->second->c_str();
+        m_nameStringLength_ = kItRet.first->second->size();
         return;
       }
     }
@@ -113,15 +115,17 @@ struct Name {
 
     {
       ScopeReadLock s(&s_lock);
-      const auto    it_find = s_nameTable.find(m_nameHash_);
-      if (it_find == s_nameTable.end()) {
+      // TODO: consider rename to kIteratorFind (+ the code is inconsistent -
+      // sometimes it's kItFind, sometimes kFindIt)
+      const auto    kItFind = s_nameTable.find(m_nameHash_);
+      if (kItFind == s_nameTable.end()) {
         return nullptr;
       }
 
-      m_nameString_       = it_find->second->c_str();
-      m_nameStringLength_ = it_find->second->size();
+      m_nameString_       = kItFind->second->c_str();
+      m_nameStringLength_ = kItFind->second->size();
 
-      return it_find->second->c_str();
+      return kItFind->second->c_str();
     }
   }
 
@@ -136,13 +140,14 @@ struct Name {
 
     {
       ScopeReadLock s(&s_lock);
-      const auto    it_find = s_nameTable.find(m_nameHash_);
-      if (it_find == s_nameTable.end()) {
+      // TODO: consider rename to kIteratorFind
+      const auto    kItFind = s_nameTable.find(m_nameHash_);
+      if (kItFind == s_nameTable.end()) {
         return 0;
       }
 
-      m_nameString_       = it_find->second->c_str();
-      m_nameStringLength_ = it_find->second->size();
+      m_nameString_       = kItFind->second->c_str();
+      m_nameStringLength_ = kItFind->second->size();
 
       return m_nameStringLength_;
     }
@@ -180,7 +185,8 @@ struct PriorityName : public Name {
       : Name(pName)
       , m_priority_(priority) {}
 
-  // TODO: consider change the order of size and priority parameters (currently it's error-prone)
+  // TODO: consider change the order of size and priority parameters (currently
+  // it's error-prone)
   explicit PriorityName(const char* pName, size_t size, uint32_t priority)
       : Name(pName, size)
       , m_priority_(priority) {}
