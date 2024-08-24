@@ -121,10 +121,10 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
                   shaderBinding->m_resource_);
-          assert(tbor && tbor->m_texture);
+          assert(tbor && tbor->kTexture);
 
-          if (tbor && tbor->m_texture) {
-            TextureDx12* TexDX12 = (TextureDx12*)tbor->m_texture;
+          if (tbor && tbor->kTexture) {
+            TextureDx12* TexDX12 = (TextureDx12*)tbor->kTexture;
             m_descriptors_.push_back(
                 {.m_descriptor_   = TexDX12->m_srv_,
                  .m_resourceName_ = TexDX12->m_resourceName_,
@@ -272,12 +272,12 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
                   shaderBinding->m_resource_);
-          if (tbor->m_mipLevel_ == 0) {
+          if (tbor->kMipLevel == 0) {
             m_descriptors_.push_back({.m_descriptor_   = Tex->m_uav_,
                                       .m_resourceName_ = Tex->m_resourceName_,
                                       .m_resource_     = Tex});
           } else {
-            auto it_find = Tex->m_uavMipMap.find(tbor->m_mipLevel_);
+            auto it_find = Tex->m_uavMipMap.find(tbor->kMipLevel);
             if (it_find != Tex->m_uavMipMap.end()
                 && it_find->second.isValid()) {
               m_descriptors_.push_back({.m_descriptor_   = it_find->second,
