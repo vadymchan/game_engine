@@ -368,8 +368,8 @@ void* ShaderBindingInstanceDx12::getHandle() const {
 
 void ShaderBindingInstanceDx12::free() {
   if (getType() == ShaderBindingInstanceType::MultiFrame) {
-    ScopedLock s(&g_rhi_dx12->m_multiFrameShaderBindingInstanceLock_);
-    g_rhi_dx12->m_deallocatorMultiFrameShaderBindingInstance_.free(
+    ScopedLock s(&g_rhiDx12->m_multiFrameShaderBindingInstanceLock_);
+    g_rhiDx12->m_deallocatorMultiFrameShaderBindingInstance_.free(
         shared_from_this());
   }
 }
@@ -438,8 +438,8 @@ void ShaderBindingInstanceDx12::bindCompute(CommandBufferDx12* commandList,
 
 void ShaderBindingInstanceDx12::copyToOnlineDescriptorHeap(
     CommandBufferDx12* commandList) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   if (m_descriptors_.size() > 0) {
     assert(m_descriptors_.size() <= 1000);
@@ -454,7 +454,7 @@ void ShaderBindingInstanceDx12::copyToOnlineDescriptorHeap(
       DestDescriptor.add(Descriptor.m_cpuHandle_);
     }
 
-    g_rhi_dx12->m_device_->CopyDescriptors(
+    g_rhiDx12->m_device_->CopyDescriptors(
         (uint32_t)DestDescriptor.m_numOfData_,
         &DestDescriptor[0],
         nullptr,
@@ -479,7 +479,7 @@ void ShaderBindingInstanceDx12::copyToOnlineDescriptorHeap(
       DestSamplerDescriptor.add(Descriptor.m_cpuHandle_);
     }
 
-    g_rhi_dx12->m_device_->CopyDescriptors(
+    g_rhiDx12->m_device_->CopyDescriptors(
         (uint32_t)DestSamplerDescriptor.m_numOfData_,
         &DestSamplerDescriptor[0],
         nullptr,
