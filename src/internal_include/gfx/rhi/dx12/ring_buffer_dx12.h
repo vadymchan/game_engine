@@ -28,10 +28,10 @@ struct RingBufferDx12 : public IBuffer {
   virtual uint64_t alloc(uint64_t allocSize) {
     ScopedLock s(&m_lock_);
 
-    const uint64_t allocOffset = g_align<uint64_t>(m_ringBufferOffset_, m_alignment_);
-    if (allocOffset + allocSize <= m_ringBufferSize_) {
-      m_ringBufferOffset_ = allocOffset + allocSize;
-      return allocOffset;
+    const uint64_t kAllocOffset = g_align<uint64_t>(m_ringBufferOffset_, m_alignment_);
+    if (kAllocOffset + allocSize <= m_ringBufferSize_) {
+      m_ringBufferOffset_ = kAllocOffset + allocSize;
+      return kAllocOffset;
     }
 
     assert(0);
@@ -48,10 +48,10 @@ struct RingBufferDx12 : public IBuffer {
     assert(offset + size <= m_ringBufferSize_);
     assert(!m_mappedPointer_);
 
-    const D3D12_RANGE readRange = {.Begin = offset, .End = offset + size};
+    const D3D12_RANGE kReadRange = {.Begin = offset, .End = offset + size};
 
     HRESULT hr = m_buffer_->m_resource_.get()->Get()->Map(
-        0, &readRange, reinterpret_cast<void**>(&m_mappedPointer_));
+        0, &kReadRange, reinterpret_cast<void**>(&m_mappedPointer_));
     assert(SUCCEEDED(hr));
 
     if (FAILED(hr)) {
