@@ -20,12 +20,12 @@ struct IUniformBufferBlock : public ShaderBindableResource {
 
   IUniformBufferBlock(const Name& name, LifeTimeType lifeType)
       : ShaderBindableResource(name)
-      , m_LifeType_(lifeType) {}
+      , kLifeType(lifeType) {}
 
   virtual ~IUniformBufferBlock() {}
 
   virtual bool isUseRingBuffer() const {
-    return m_LifeType_ == LifeTimeType::OneFrame;
+    return kLifeType == LifeTimeType::OneFrame;
   }
 
   virtual size_t getBufferSize() const { return 0; }
@@ -44,7 +44,7 @@ struct IUniformBufferBlock : public ShaderBindableResource {
 
   virtual void* getLowLevelMemory() const { return nullptr; }  // Vulkan only
 
-  const LifeTimeType m_LifeType_ = LifeTimeType::MultiFrame;
+  const LifeTimeType kLifeType = LifeTimeType::MultiFrame;
 };
 
 }  // namespace game_engine
