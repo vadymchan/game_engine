@@ -500,7 +500,7 @@ BoundSphereObject* g_createBoundSphere(BoundSphere            boundSphere,
 //////////////////////////////////////////////////////////////////////////
 // Primitive Generation
 
-RenderObject* CreateQuad_Internal(const math::Vector3Df& pos,
+RenderObject* g_createQuadInternal(const math::Vector3Df& pos,
                                   const math::Vector3Df& size,
                                   const math::Vector3Df& scale,
                                   const math::Vector4Df& color) {
@@ -647,7 +647,7 @@ QuadPrimitive* g_createQuad(const math::Vector3Df& pos,
                           const math::Vector3Df& scale,
                           const math::Vector4Df& color) {
   auto object       = new QuadPrimitive();
-  auto RenderObject = CreateQuad_Internal(pos, size, scale, color);
+  auto RenderObject = g_createQuadInternal(pos, size, scale, color);
   object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
   object->m_renderObjects_.push_back(RenderObject);
   RenderObject->m_isTwoSided_ = true;
@@ -1894,7 +1894,7 @@ BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df& pos,
                                             const math::Vector4Df& color,
                                             Camera*                camera) {
   auto object       = new BillboardQuadPrimitive();
-  auto RenderObject = CreateQuad_Internal(pos, size, scale, color);
+  auto RenderObject = g_createQuadInternal(pos, size, scale, color);
   object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
   object->m_renderObjects_.push_back(RenderObject);
   object->m_camera_           = camera;
@@ -1916,7 +1916,7 @@ UIQuadPrimitive* g_createUIQuad(const math::Vector2Df& pos,
     0.0f,
   };
 
-  if (kUseVulkanNdcYFlip) {
+  if (g_kUseVulkanNdcYFlip) {
     int32_t SrcIdx = 1;
     int32_t DstIdx = 2;
     std::swap(vertices[SrcIdx * 2], vertices[DstIdx * 2]);
