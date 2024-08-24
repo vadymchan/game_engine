@@ -483,7 +483,7 @@ class RHI {
   // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
   //                             const char*            name,
   //                             const math::Vector4Df& color
-  //                             = math::g_colorGreen) const {}
+  //                             = math::g_kColorGreen) const {}
 
   // TODO: either implement in future or remove
   virtual void endDebugEvent(CommandBuffer* commandBuffer) const {}
