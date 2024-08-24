@@ -67,14 +67,14 @@ class BufferVk : public IBuffer {
   //  bufferInfo.usage = usage;
   //  // TODO: consider remove hard code for Multi-Queue Families support
   //  bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  //  if (vkCreateBuffer(g_rhi_vk->m_device_, &bufferInfo, nullptr, &m_buffer)
+  //  if (vkCreateBuffer(g_rhiVk->m_device_, &bufferInfo, nullptr, &m_buffer)
   //      != VK_SUCCESS) {
   //    // TODO: log error
   //  }
 
   //  VkMemoryRequirements memRequirements;
   //  vkGetBufferMemoryRequirements(
-  //      g_rhi_vk->m_device_, m_buffer, &memRequirements);
+  //      g_rhiVk->m_device_, m_buffer, &memRequirements);
 
   //  VkMemoryAllocateInfo allocInfo{};
   //  allocInfo.sType          = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -82,13 +82,13 @@ class BufferVk : public IBuffer {
   //  allocInfo.memoryTypeIndex
   //      = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-  //  if (vkAllocateMemory(g_rhi_vk->m_device_, &allocInfo, nullptr,
+  //  if (vkAllocateMemory(g_rhiVk->m_device_, &allocInfo, nullptr,
   //  &m_deviceMemory)
   //      != VK_SUCCESS) {
   //    // TODO: log error
   //  }
 
-  //  vkBindBufferMemory(g_rhi_vk->m_device_, m_buffer, m_deviceMemory, 0);
+  //  vkBindBufferMemory(g_rhiVk->m_device_, m_buffer, m_deviceMemory, 0);
   //}
 
   // TODO: consider remove it
