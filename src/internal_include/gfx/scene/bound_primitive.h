@@ -68,9 +68,10 @@ struct BoundSphere {
       auto z        = vertices[curIndex + 2];
 
       auto       currentPos = math::Vector3Df(x, y, z);
-      const auto dist       = currentPos.magnitude();
-      if (maxDist < dist) {
-        maxDist = dist;
+      // TODO: consider better naming
+      const auto kDist       = currentPos.magnitude();
+      if (maxDist < kDist) {
+        maxDist = kDist;
       }
     }
     return {maxDist};
