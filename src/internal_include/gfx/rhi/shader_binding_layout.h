@@ -361,9 +361,9 @@ struct ShaderBindingArray {
            sizeof(ShaderBinding) * m_numOfData_);
 
     for (int32_t i = 0; i < m_numOfData_; ++i) {
-      ShaderBinding* SrcAddress = (ShaderBinding*)&m_data_[i];
-      ShaderBinding* DstAddress = (ShaderBinding*)&result.m_data_[i];
-      SrcAddress->cloneWithoutResource(*DstAddress);
+      ShaderBinding* srcAddress = (ShaderBinding*)&m_data_[i];
+      ShaderBinding* dstAddress = (ShaderBinding*)&result.m_data_[i];
+      srcAddress->cloneWithoutResource(*dstAddress);
     }
     result.m_numOfData_ = m_numOfData_;
   }
