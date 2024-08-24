@@ -14,7 +14,7 @@
 
 namespace game_engine {
 
-class SwapchainImageVk : public SwapchainImage {
+class SwapchainImageVk : public ISwapchainImage {
   public:
   virtual ~SwapchainImageVk() { releaseInternal(); }
 
@@ -28,16 +28,16 @@ class SwapchainImageVk : public SwapchainImage {
   // to be created simultaneously.
   // Semaphores are designed for synchronizing commands within a command queue
   // or between queues.
-  Semaphore* m_available_
+  ISemaphore* m_available_
       = nullptr;  // This is signaled (lock is released) when an image is
                   // acquired and rendering preparation is complete.
-  Semaphore* m_renderFinished_
+  ISemaphore* m_renderFinished_
       = nullptr;  // This is signaled when rendering is finished and the image
                   // is ready for presentation.
-  Semaphore* m_renderFinishedAfterShadow_
+  ISemaphore* m_renderFinishedAfterShadow_
       = nullptr;  // This is signaled when rendering is finished after the
                   // shadow pass and the image is ready for presentation.
-  Semaphore* m_renderFinishedAfterBasePass_
+  ISemaphore* m_renderFinishedAfterBasePass_
       = nullptr;  // This is signaled when rendering is finished after the base
                   // pass and the image is ready for presentation.
 
@@ -45,7 +45,7 @@ class SwapchainImageVk : public SwapchainImage {
   /*std::shared_ptr<TextureVk> m_texture_;*/
 };
 
-class SwapchainVk : public Swapchain {
+class SwapchainVk : public ISwapchain {
   public:
   bool create(const std::shared_ptr<Window>& window) override;
 

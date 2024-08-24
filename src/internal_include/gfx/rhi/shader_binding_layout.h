@@ -46,14 +46,14 @@ struct UniformBufferResource : public ShaderBindingResource {
 struct BufferResource : public ShaderBindingResource {
   BufferResource() = default;
 
-  BufferResource(const Buffer* buffer)
+  BufferResource(const IBuffer* buffer)
       : m_buffer(buffer) {}
 
   virtual ~BufferResource() {}
 
   virtual const void* getResource() const override { return m_buffer; }
 
-  const Buffer* m_buffer = nullptr;
+  const IBuffer* m_buffer = nullptr;
 };
 
 struct SamplerResource : public ShaderBindingResource {
@@ -133,7 +133,7 @@ struct UniformBufferResourceBindless : public ShaderBindingResource {
 struct BufferResourceBindless : public ShaderBindingResource {
   BufferResourceBindless() = default;
 
-  BufferResourceBindless(const std::vector<const Buffer*>& buffers)
+  BufferResourceBindless(const std::vector<const IBuffer*>& buffers)
       : m_buffers(buffers) {}
 
   virtual ~BufferResourceBindless() {}
@@ -144,7 +144,7 @@ struct BufferResourceBindless : public ShaderBindingResource {
 
   virtual bool isBindless() const { return true; }
 
-  std::vector<const Buffer*> m_buffers;
+  std::vector<const IBuffer*> m_buffers;
 };
 
 struct SamplerResourceBindless : public ShaderBindingResource {

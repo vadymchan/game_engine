@@ -16,9 +16,9 @@ SemaphoreVk ::~SemaphoreVk() {
 // SemaphoreManagerVk
 // ====================================================
 
-Semaphore* SemaphoreManagerVk::getOrCreateSemaphore() {
+ISemaphore* SemaphoreManagerVk::getOrCreateSemaphore() {
   if (!m_pendingSemaphores_.empty()) {
-    Semaphore* semaphore = *m_pendingSemaphores_.begin();
+    ISemaphore* semaphore = *m_pendingSemaphores_.begin();
     m_pendingSemaphores_.erase(m_pendingSemaphores_.begin());
     m_usingSemaphores_.insert(semaphore);
     return semaphore;
@@ -42,7 +42,7 @@ Semaphore* SemaphoreManagerVk::getOrCreateSemaphore() {
   return newSemaphore;
 }
 
-void SemaphoreManagerVk::returnSemaphore(Semaphore* semaphore) {
+void SemaphoreManagerVk::returnSemaphore(ISemaphore* semaphore) {
   m_usingSemaphores_.erase(semaphore);
   m_pendingSemaphores_.insert(semaphore);
 }

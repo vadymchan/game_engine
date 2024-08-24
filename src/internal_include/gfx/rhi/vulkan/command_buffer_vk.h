@@ -32,12 +32,12 @@ class CommandBufferVk : public CommandBuffer {
     return m_fence_ ? m_fence_->getHandle() : nullptr;
   }
 
-  virtual Fence* getFence() const override { return m_fence_; }
+  virtual IFence* getFence() const override { return m_fence_; }
 
-  virtual void setFence(Fence* fence) { m_fence_ = fence; }
+  virtual void setFence(IFence* fence) { m_fence_ = fence; }
 
   private:
-  Fence*         m_fence_         = nullptr;
+  IFence*         m_fence_         = nullptr;
   VkCommandBuffer m_commandBuffer_ = nullptr;
 };
 

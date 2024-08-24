@@ -9,7 +9,7 @@
 
 namespace game_engine {
 
-class FenceDx12 : public Fence {
+class FenceDx12 : public IFence {
   public:
   static constexpr uint64_t s_kInitialFenceValue = uint64_t(0);
 
@@ -37,19 +37,19 @@ class FenceDx12 : public Fence {
   uint64_t  m_fenceValue_ = s_kInitialFenceValue;
 };
 
-class FenceManagerDx12 : public FenceManager {
+class FenceManagerDx12 : public IFenceManager {
   public:
-  virtual Fence* getOrCreateFence() override;
+  virtual IFence* getOrCreateFence() override;
 
-  virtual void returnFence(Fence* fence) override {
+  virtual void returnFence(IFence* fence) override {
     m_usingFences_.erase(fence);
     m_pendingFences_.insert(fence);
   }
 
   virtual void release() override;
 
-  std::unordered_set<Fence*> m_usingFences_;
-  std::unordered_set<Fence*> m_pendingFences_;
+  std::unordered_set<IFence*> m_usingFences_;
+  std::unordered_set<IFence*> m_pendingFences_;
 };
 
 }  // namespace game_engine

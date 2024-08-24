@@ -15,7 +15,7 @@ namespace game_engine {
 
 struct CommandBufferDx12;
 
-struct BufferDx12 : public Buffer {
+struct BufferDx12 : public IBuffer {
   BufferDx12() = default;
 
   BufferDx12(std::shared_ptr<CreatedResource> buffer,
@@ -229,7 +229,7 @@ struct VertexBufferDx12 : public VertexBuffer {
   virtual void    bind(const std::shared_ptr<RenderFrameContext>&
                            renderFrameContext) const override;
   virtual void    bind(CommandBufferDx12* commandList) const;
-  virtual Buffer* getBuffer(int32_t streamIndex) const override;
+  virtual IBuffer* getBuffer(int32_t streamIndex) const override;
 
   BindInfo                              m_bindInfos_;
   std::vector<VertexStreamDx12>         m_streams_;

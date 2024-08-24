@@ -108,7 +108,7 @@ struct SceneRenderTarget {
   std::shared_ptr<RenderTarget> m_finalColorPtr_;
 
   void create(std::shared_ptr<Window> window,
-              const SwapchainImage*   swapchain);
+              const ISwapchainImage*   swapchain);
 
   void returnRt();
 };

@@ -84,9 +84,9 @@ uint64_t FenceDx12::signalWithNextFenceValue(
   return m_fenceValue_;
 }
 
-Fence* FenceManagerDx12::getOrCreateFence() {
+IFence* FenceManagerDx12::getOrCreateFence() {
   if (m_pendingFences_.size() > 0) {
-    Fence* fence = *m_pendingFences_.begin();
+    IFence* fence = *m_pendingFences_.begin();
     m_pendingFences_.erase(m_pendingFences_.begin());
     m_usingFences_.insert(fence);
     return fence;

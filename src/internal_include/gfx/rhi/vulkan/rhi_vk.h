@@ -139,7 +139,7 @@ class RhiVk : public RHI {
   }
 
   // Create m_buffers
-  std::shared_ptr<Buffer> createBufferInternal(
+  std::shared_ptr<IBuffer> createBufferInternal(
       std::uint64_t     size,
       std::uint64_t     alignment,
       EBufferCreateFlag bufferCreateFlag,
@@ -148,7 +148,7 @@ class RhiVk : public RHI {
       std::uint64_t     dataSize = 0
       /*, const wchar_t*    resourceName = nullptr*/) const;
 
-  virtual std::shared_ptr<Buffer> createStructuredBuffer(
+  virtual std::shared_ptr<IBuffer> createStructuredBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       std::uint64_t     stride,
@@ -164,7 +164,7 @@ class RhiVk : public RHI {
                                 dataSize);
   }
 
-  virtual std::shared_ptr<Buffer> createRawBuffer(
+  virtual std::shared_ptr<IBuffer> createRawBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       EBufferCreateFlag bufferCreateFlag,
@@ -179,7 +179,7 @@ class RhiVk : public RHI {
                                 dataSize);
   }
 
-  virtual std::shared_ptr<Buffer> createFormattedBuffer(
+  virtual std::shared_ptr<IBuffer> createFormattedBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       ETextureFormat    format,
@@ -296,7 +296,7 @@ class RhiVk : public RHI {
 
   virtual FenceManagerVk* getFenceManager() override { return m_fenceManager_; }
 
-  virtual std::shared_ptr<Swapchain> getSwapchain() const override {
+  virtual std::shared_ptr<ISwapchain> getSwapchain() const override {
     return m_swapchain_;
   }
 
@@ -382,7 +382,7 @@ class RhiVk : public RHI {
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      Buffer*                                     buffer,
+      IBuffer*                                     buffer,
       int32_t                                     startIndex,
       int32_t                                     drawCount) const override;
 
@@ -390,7 +390,7 @@ class RhiVk : public RHI {
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       /*EPrimitiveType                               type, - deprecated (used in
          previous rendering api)*/
-      Buffer*                                     buffer,
+      IBuffer*                                     buffer,
       int32_t                                     startIndex,
       int32_t                                     drawCount) const override;
 
@@ -413,7 +413,7 @@ class RhiVk : public RHI {
 
   void queueSubmit(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      Semaphore*                                  signalSemaphore) override;
+      ISemaphore*                                  signalSemaphore) override;
 
   virtual CommandBufferVk* beginSingleTimeCommands() const override;
 

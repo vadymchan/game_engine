@@ -12,7 +12,7 @@
 
 namespace game_engine {
 
-struct RingBufferDx12 : public Buffer {
+struct RingBufferDx12 : public IBuffer {
   RingBufferDx12() = default;
 
   virtual ~RingBufferDx12() { release(); }

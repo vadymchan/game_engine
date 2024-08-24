@@ -8,7 +8,7 @@
 
 namespace game_engine {
 
-class SwapchainImageDx12 : public SwapchainImage {
+class SwapchainImageDx12 : public ISwapchainImage {
   public:
   virtual ~SwapchainImageDx12() { releaseInternal(); }
 
@@ -19,7 +19,7 @@ class SwapchainImageDx12 : public SwapchainImage {
 };
 
 // Swapchain
-class SwapchainDx12 : public Swapchain {
+class SwapchainDx12 : public ISwapchain {
   public:
   virtual ~SwapchainDx12() { releaseInternal(); }
 
@@ -36,7 +36,7 @@ class SwapchainDx12 : public Swapchain {
     return m_extent_;
   }
 
-  virtual SwapchainImage* getSwapchainImage(int32_t index) const override {
+  virtual ISwapchainImage* getSwapchainImage(int32_t index) const override {
     assert(m_images_.size() > index);
     return m_images_[index];
   }
@@ -51,7 +51,7 @@ class SwapchainDx12 : public Swapchain {
     return m_swapChain_->GetCurrentBackBufferIndex();
   }
 
-  SwapchainImage* getCurrentSwapchainImage() const {
+  ISwapchainImage* getCurrentSwapchainImage() const {
     return m_images_[getCurrentBackBufferIndex()];
   }
 

@@ -21,7 +21,7 @@ namespace game_engine {
 
 // ================================================================================
 
-class BufferVk : public Buffer {
+class BufferVk : public IBuffer {
   public:
   BufferVk()
       : m_buffer_(VK_NULL_HANDLE)
@@ -221,7 +221,7 @@ struct VertexBufferVk : public VertexBuffer {
   virtual bool initialize(
       const std::shared_ptr<VertexStreamData>& streamData) override;
 
-  Buffer* getBuffer(int32_t streamIndex) const override {
+  IBuffer* getBuffer(int32_t streamIndex) const override {
     assert(m_streams_.size() > streamIndex);
     return m_streams_[streamIndex].m_bufferPtr_.get();
   }

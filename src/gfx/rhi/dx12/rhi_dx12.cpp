@@ -1354,7 +1354,7 @@ void RhiDx12::drawElementsInstancedBaseVertex(
 void RhiDx12::drawIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
-    Buffer*                                    buffer,
+    IBuffer*                                    buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   auto commandBufferDx12
@@ -1367,7 +1367,7 @@ void RhiDx12::drawIndirect(
 void RhiDx12::drawElementsIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
-    Buffer*                                    buffer,
+    IBuffer*                                    buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   auto commandBufferDx12
@@ -1507,7 +1507,7 @@ void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
   commandBufferDx12->m_commandList_->ResourceBarrier(1, &uavBarrier);
 }
 
-void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {
+void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, IBuffer* buffer) const {
   assert(commandBuffer);
   auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
   auto buffer_dx12       = (BufferDx12*)buffer;
@@ -1530,7 +1530,7 @@ void RhiDx12::uavBarrierImmediate(Texture* texture) const {
   }
 }
 
-void RhiDx12::uavBarrierImmediate(Buffer* buffer) const {
+void RhiDx12::uavBarrierImmediate(IBuffer* buffer) const {
   CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
   assert(commandBuffer);
 
@@ -1541,7 +1541,7 @@ void RhiDx12::uavBarrierImmediate(Buffer* buffer) const {
 }
 
 bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
-                               Buffer*         buffer,
+                               IBuffer*         buffer,
                                EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(buffer);
@@ -1559,7 +1559,7 @@ bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
       commandBuffer, bufferDx12->m_buffer->get(), SrcLayout, DstLayout);
 }
 
-bool RhiDx12::transitionLayoutImmediate(Buffer*         buffer,
+bool RhiDx12::transitionLayoutImmediate(IBuffer*         buffer,
                                         EResourceLayout newLayout) const {
   assert(buffer);
   if (buffer->getLayout() != newLayout) {
@@ -1617,7 +1617,7 @@ void RhiDx12::finish() const {
   waitForGPU();
 }
 
-std::shared_ptr<Buffer> RhiDx12::createStructuredBuffer(
+std::shared_ptr<IBuffer> RhiDx12::createStructuredBuffer(
     uint64_t          size,
     uint64_t          alignment,
     uint64_t          stride,
@@ -1644,10 +1644,10 @@ std::shared_ptr<Buffer> RhiDx12::createStructuredBuffer(
         BufferPtr.get(), (uint32_t)stride, (uint32_t)(size / stride));
   }
 
-  return std::shared_ptr<Buffer>(BufferPtr);
+  return std::shared_ptr<IBuffer>(BufferPtr);
 }
 
-std::shared_ptr<Buffer> RhiDx12::createRawBuffer(
+std::shared_ptr<IBuffer> RhiDx12::createRawBuffer(
     uint64_t          size,
     uint64_t          alignment,
     EBufferCreateFlag bufferCreateFlag,
@@ -1672,7 +1672,7 @@ std::shared_ptr<Buffer> RhiDx12::createRawBuffer(
   return BufferPtr;
 }
 
-std::shared_ptr<Buffer> RhiDx12::createFormattedBuffer(
+std::shared_ptr<IBuffer> RhiDx12::createFormattedBuffer(
     uint64_t          size,
     uint64_t          alignment,
     ETextureFormat    format,

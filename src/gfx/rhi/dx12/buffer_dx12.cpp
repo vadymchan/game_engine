@@ -230,7 +230,7 @@ void VertexBufferDx12::bind(CommandBufferDx12* commandList) const {
       m_bindInfos_.m_startBindingIndex_, (uint32_t)m_VBView_.size(), &m_VBView_[0]);
 }
 
-Buffer* VertexBufferDx12::getBuffer(int32_t streamIndex) const {
+IBuffer* VertexBufferDx12::getBuffer(int32_t streamIndex) const {
   assert(m_streams_.size() > streamIndex);
   return m_streams_[streamIndex].m_bufferPtr_.get();
 }

@@ -10,7 +10,7 @@
 
 namespace game_engine {
 
-class SemaphoreVk : public Semaphore {
+class SemaphoreVk : public ISemaphore {
   public:
   SemaphoreVk()
       : m_semaphore_(VK_NULL_HANDLE) {}
@@ -25,19 +25,19 @@ class SemaphoreVk : public Semaphore {
   VkSemaphore m_semaphore_;
 };
 
-class SemaphoreManagerVk : public SemaphoreManager {
+class SemaphoreManagerVk : public ISemaphoreManager {
   public:
   ~SemaphoreManagerVk() { release(); }
 
-  Semaphore* getOrCreateSemaphore() override;
+  ISemaphore* getOrCreateSemaphore() override;
 
-  void returnSemaphore(Semaphore* semaphore) override;
+  void returnSemaphore(ISemaphore* semaphore) override;
 
   void release();
 
   private:
-  std::unordered_set<Semaphore*> m_usingSemaphores_;
-  std::unordered_set<Semaphore*> m_pendingSemaphores_;
+  std::unordered_set<ISemaphore*> m_usingSemaphores_;
+  std::unordered_set<ISemaphore*> m_pendingSemaphores_;
 };
 
 }  // namespace game_engine

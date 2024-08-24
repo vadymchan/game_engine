@@ -82,7 +82,7 @@ class RenderObjectGeometryData {
   std::shared_ptr<IndexBuffer>  m_indexBufferPtr_;
 
   // IndirectCommand buffer
-  std::shared_ptr<Buffer> m_indirectCommandBufferPtr_;
+  std::shared_ptr<IBuffer> m_indirectCommandBufferPtr_;
 
   bool m_hasVertexColor_     = true;
   bool m_hasVertexBiTangent_ = false;
@@ -149,9 +149,9 @@ class RenderObject {
   std::shared_ptr<RenderObjectGeometryData> m_geometryDataPtr_;
 
   // TODO: seems it not used, consider removing
-  std::shared_ptr<Buffer> m_bottomLevelASBuffer_;
-  std::shared_ptr<Buffer> m_scratchASBuffer_;
-  std::shared_ptr<Buffer> m_vertexAndIndexOffsetBuffer_;
+  std::shared_ptr<IBuffer> m_bottomLevelASBuffer_;
+  std::shared_ptr<IBuffer> m_scratchASBuffer_;
+  std::shared_ptr<IBuffer> m_vertexAndIndexOffsetBuffer_;
 
 
   // TODO: seems it not used, consider removing
@@ -215,7 +215,7 @@ class RenderObject {
 
   std::shared_ptr<Material> m_materialPtr_;
   // TODO: consider removing
-  std::shared_ptr<Buffer>   m_testUniformBuffer_;
+  std::shared_ptr<IBuffer>   m_testUniformBuffer_;
 
   private:
   enum EDirty : int8_t {

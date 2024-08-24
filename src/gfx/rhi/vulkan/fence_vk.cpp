@@ -27,9 +27,9 @@ void FenceVk::resetFence() const {
 // FenceManagerVk
 // ====================================================
 
-Fence* FenceManagerVk::getOrCreateFence() {
+IFence* FenceManagerVk::getOrCreateFence() {
   if (!m_pendingFences_.empty()) {
-    Fence* fence = *m_pendingFences_.begin();
+    IFence* fence = *m_pendingFences_.begin();
     m_pendingFences_.erase(m_pendingFences_.begin());
     m_usingFences_.insert(fence);
     return fence;
@@ -51,7 +51,7 @@ Fence* FenceManagerVk::getOrCreateFence() {
   return newFence;
 }
 
-void FenceManagerVk::returnFence(Fence* fence) {
+void FenceManagerVk::returnFence(IFence* fence) {
   m_usingFences_.erase(fence);
   m_pendingFences_.insert(fence);
 }

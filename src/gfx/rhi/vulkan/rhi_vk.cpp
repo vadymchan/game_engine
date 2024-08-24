@@ -1371,7 +1371,7 @@ std::shared_ptr<ShaderBindingInstance> RhiVk::createShaderBindingInstance(
                                                            type);
 }
 
-std::shared_ptr<Buffer> RhiVk::createBufferInternal(
+std::shared_ptr<IBuffer> RhiVk::createBufferInternal(
     uint64_t          size,
     uint64_t          alignment,
     EBufferCreateFlag bufferCreateFlag,
@@ -1785,7 +1785,7 @@ void RhiVk::drawIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    Buffer*                                    buffer,
+    IBuffer*                                    buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   assert(renderFrameContext);
@@ -1803,7 +1803,7 @@ void RhiVk::drawElementsIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     /*EPrimitiveType                               type, - deprecated (used in
        previous rendering api)*/
-    Buffer*                                    buffer,
+    IBuffer*                                    buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   assert(renderFrameContext);
@@ -1983,7 +1983,7 @@ void RhiVk::endRenderFrame(
 
 void RhiVk::queueSubmit(
     const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-    Semaphore*                                 signalSemaphore) {
+    ISemaphore*                                 signalSemaphore) {
   auto renderFrameContext = (RenderFrameContextVk*)renderFrameContextPtr.get();
   assert(renderFrameContext);
 

@@ -11,7 +11,7 @@
 namespace game_engine {
 
 // TODO: override IsComplete methods
-class FenceVk : public Fence {
+class FenceVk : public IFence {
   public:
   FenceVk()
       : m_fence_(VK_NULL_HANDLE) {}
@@ -33,19 +33,19 @@ class FenceVk : public Fence {
   VkFence m_fence_;
 };
 
-class FenceManagerVk : public FenceManager {
+class FenceManagerVk : public IFenceManager {
   public:
   ~FenceManagerVk() { release(); }
 
-  Fence* getOrCreateFence() override;
+  IFence* getOrCreateFence() override;
 
-  void returnFence(Fence* fence) override;
+  void returnFence(IFence* fence) override;
 
   void release() override;
 
   private:
-  std::unordered_set<Fence*> m_usingFences_;
-  std::unordered_set<Fence*> m_pendingFences_;
+  std::unordered_set<IFence*> m_usingFences_;
+  std::unordered_set<IFence*> m_pendingFences_;
 };
 
 }  // namespace game_engine

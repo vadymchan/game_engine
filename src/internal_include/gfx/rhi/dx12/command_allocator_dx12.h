@@ -11,7 +11,7 @@
 
 namespace game_engine {
 // TODO: consider renaming this class to CommandAllocatorDx12
-class CommandBufferManagerDx12 : public CommandBufferManager {
+class CommandBufferManagerDx12 : public ICommandBufferManager {
   public:
   CommandBufferManagerDx12()
       : m_commandListType_(D3D12_COMMAND_LIST_TYPE_DIRECT)

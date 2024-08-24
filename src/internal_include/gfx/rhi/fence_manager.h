@@ -5,9 +5,9 @@
 
 namespace game_engine {
 
-class Fence {
+class IFence {
   public:
-  virtual ~Fence() {}
+  virtual ~IFence() {}
 
   virtual void* getHandle() const = 0;
   // virtual void  release()                                          = 0;
@@ -21,12 +21,12 @@ class Fence {
   virtual bool isComplete() const { return false; }
 };
 
-class FenceManager {
+class IFenceManager {
   public:
-  virtual ~FenceManager() {}
+  virtual ~IFenceManager() {}
 
-  virtual Fence* getOrCreateFence()        = 0;
-  virtual void   returnFence(Fence* fence) = 0;
+  virtual IFence* getOrCreateFence()        = 0;
+  virtual void   returnFence(IFence* fence) = 0;
   virtual void   release()                 = 0;
 };
 

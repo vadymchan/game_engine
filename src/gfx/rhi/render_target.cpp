@@ -11,7 +11,7 @@ void RenderTarget::returnRt() {
 }
 
 void SceneRenderTarget::create(std::shared_ptr<Window> window,
-                               const SwapchainImage*   swapchain) {
+                               const ISwapchainImage*   swapchain) {
   constexpr EMSAASamples MsaaSamples         = EMSAASamples::COUNT_1;
   constexpr uint32_t     layerCount          = 1;
   constexpr bool         IsGenerateMipmap    = false;

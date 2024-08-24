@@ -12,9 +12,9 @@
 
 namespace game_engine {
 
-class SwapchainImage {
+class ISwapchainImage {
   public:
-  virtual ~SwapchainImage() {}
+  virtual ~ISwapchainImage() {}
 
   virtual void release() = 0;
 
@@ -25,16 +25,16 @@ class SwapchainImage {
   std::shared_ptr<Texture> m_TexturePtr_;
 };
 
-class Swapchain {
+class ISwapchain {
   public:
-  virtual ~Swapchain() {}
+  virtual ~ISwapchain() {}
 
   virtual bool           create(const std::shared_ptr<Window>& window)     = 0;
   virtual void           release()                                         = 0;
   virtual void*          getHandle() const                                 = 0;
   virtual ETextureFormat getFormat() const                                 = 0;
   virtual const math::Dimension2Di& getExtent() const                      = 0;
-  virtual SwapchainImage*           getSwapchainImage(int32_t index) const = 0;
+  virtual ISwapchainImage*           getSwapchainImage(int32_t index) const = 0;
   virtual int32_t                   getNumOfSwapchainImages() const        = 0;
 };
 

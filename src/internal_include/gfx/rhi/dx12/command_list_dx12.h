@@ -22,7 +22,7 @@ struct CommandBufferDx12 : public CommandBuffer {
 
   virtual void*  getFenceHandle() const override;
   virtual void   setFence(void* fence) override;
-  virtual Fence* getFence() const override;
+  virtual IFence* getFence() const override;
 
   bool isCompleteForWaitFence();
 

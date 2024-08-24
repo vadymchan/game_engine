@@ -105,10 +105,10 @@ class BufferAttributeStream : public IBufferAttribute {
   std::vector<T> m_data_;
 };
 
-struct Buffer
+struct IBuffer
     : public ShaderBindableResource
-    , public std::enable_shared_from_this<Buffer> {
-  virtual ~Buffer() {}
+    , public std::enable_shared_from_this<IBuffer> {
+  virtual ~IBuffer() {}
 
   virtual void release() = 0;
 
@@ -171,7 +171,7 @@ struct VertexBuffer {
 
   // virtual bool IsSupportRaytracing() const { return false; }
 
-  virtual Buffer* getBuffer(int32_t streamIndex) const { return nullptr; }
+  virtual IBuffer* getBuffer(int32_t streamIndex) const { return nullptr; }
 
   std::shared_ptr<VertexStreamData> m_vertexStreamData_;
 };
@@ -203,7 +203,7 @@ struct IndexBuffer {
     return false;
   }
 
-  virtual Buffer* getBuffer() const { return nullptr; }
+  virtual IBuffer* getBuffer() const { return nullptr; }
 };
 
 struct VertexBufferArray : public ResourceContainer<const VertexBuffer*> {

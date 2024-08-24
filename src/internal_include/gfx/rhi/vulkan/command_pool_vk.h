@@ -13,7 +13,7 @@
 namespace game_engine {
 
 // TODO: consider name CommandPoolVk
-class CommandBufferManagerVk : public CommandBufferManager {
+class CommandBufferManagerVk : public ICommandBufferManager {
   public:
   virtual ~CommandBufferManagerVk() { releaseInternal(); }
 

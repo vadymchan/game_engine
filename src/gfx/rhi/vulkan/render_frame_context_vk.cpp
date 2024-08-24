@@ -27,7 +27,7 @@ void RenderFrameContextVk::submitCurrentActiveCommandBuffer(
 }
 
 void RenderFrameContextVk::queueSubmitCurrentActiveCommandBuffer(
-    Semaphore* signalSemaphore) {
+    ISemaphore* signalSemaphore) {
   if (m_commandBuffer_) {
     // TODO: temoporary removed
     // m_commandBuffer->end();

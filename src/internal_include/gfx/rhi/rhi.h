@@ -182,14 +182,14 @@ class RHI {
   virtual void drawIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
-      Buffer*                                    buffer,
+      IBuffer*                                    buffer,
       std::int32_t                               startIndex,
       std::int32_t                               drawCount) const {}
 
   virtual void drawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
-      Buffer*                                    buffer,
+      IBuffer*                                    buffer,
       std::int32_t                               startIndex,
       std::int32_t                               drawCount) const {}
 
@@ -534,7 +534,7 @@ class RHI {
 
   virtual void queueSubmit(
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      class Semaphore*                           signalSemaphore) {}
+      class ISemaphore*                           signalSemaphore) {}
 
   virtual RasterizationStateInfo* createRasterizationState(
       const RasterizationStateInfo& initializer) const {
@@ -633,7 +633,7 @@ class RHI {
     return nullptr;
   }
 
-  virtual CommandBufferManager* getCommandBufferManager() const {
+  virtual ICommandBufferManager* getCommandBufferManager() const {
     return nullptr;
   }
 
@@ -654,12 +654,12 @@ class RHI {
   }
 
   virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                Buffer*         buffer,
+                                IBuffer*         buffer,
                                 EResourceLayout newLayout) const {
     return true;
   }
 
-  virtual bool transitionLayoutImmediate(Buffer*         buffer,
+  virtual bool transitionLayoutImmediate(IBuffer*         buffer,
                                          EResourceLayout newLayout) const {
     return true;
   }
@@ -669,15 +669,15 @@ class RHI {
 
   virtual void uavBarrierImmediate(Texture* texture) const {}
 
-  virtual void uavBarrier(CommandBuffer* commandBuffer, Buffer* buffer) const {}
+  virtual void uavBarrier(CommandBuffer* commandBuffer, IBuffer* buffer) const {}
 
-  virtual void uavBarrierImmediate(Buffer* buffer) const {}
+  virtual void uavBarrierImmediate(IBuffer* buffer) const {}
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual std::shared_ptr<Swapchain> getSwapchain() const { return nullptr; }
+  virtual std::shared_ptr<ISwapchain> getSwapchain() const { return nullptr; }
 
-  virtual class SwapchainImage* getSwapchainImage(std::int32_t index) const {
+  virtual class ISwapchainImage* getSwapchainImage(std::int32_t index) const {
     return nullptr;
   }
 
@@ -711,9 +711,9 @@ class RHI {
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const {}
 
-  virtual FenceManager* getFenceManager() { return nullptr; }
+  virtual IFenceManager* getFenceManager() { return nullptr; }
 
-  virtual SemaphoreManager* getSemaphoreManager() { return nullptr; }
+  virtual ISemaphoreManager* getSemaphoreManager() { return nullptr; }
 
   virtual std::uint32_t getCurrentFrameIndex() const { return 0; }
 
@@ -739,7 +739,7 @@ class RHI {
   // RaytracingScene* raytracingScene = nullptr;
 
   // CreateBuffers
-  virtual std::shared_ptr<Buffer> createStructuredBuffer(
+  virtual std::shared_ptr<IBuffer> createStructuredBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       std::uint64_t     stride,
@@ -750,7 +750,7 @@ class RHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<Buffer> createRawBuffer(
+  virtual std::shared_ptr<IBuffer> createRawBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       EBufferCreateFlag bufferCreateFlag,
@@ -760,7 +760,7 @@ class RHI {
     return nullptr;
   }
 
-  virtual std::shared_ptr<Buffer> createFormattedBuffer(
+  virtual std::shared_ptr<IBuffer> createFormattedBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
       ETextureFormat    format,
@@ -786,7 +786,7 @@ class RHI {
     return nullptr;
   }
 
-  template <typename T = Buffer>
+  template <typename T = IBuffer>
   inline std::shared_ptr<T> createStructuredBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
@@ -804,7 +804,7 @@ class RHI {
                                                               dataSize));
   }
 
-  template <typename T = Buffer>
+  template <typename T = IBuffer>
   inline std::shared_ptr<T> createRawBuffer(std::uint64_t     size,
                                             std::uint64_t     alignment,
                                             EBufferCreateFlag bufferCreateFlag,
@@ -815,7 +815,7 @@ class RHI {
         size, alignment, bufferCreateFlag, initialState, data, dataSize));
   }
 
-  template <typename T = Buffer>
+  template <typename T = IBuffer>
   inline std::shared_ptr<T> createFormattedBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,

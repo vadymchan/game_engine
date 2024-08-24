@@ -62,7 +62,7 @@ void CommandBufferDx12::setFence(void* fence) {
   assert(0);
 }
 
-Fence* CommandBufferDx12::getFence() const {
+IFence* CommandBufferDx12::getFence() const {
   return m_owner_->m_fence;
 }
 

@@ -126,7 +126,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
 
   if (isSwapChainValid) {
     for (int32_t i = 0; i < g_rhi_dx12->s_kMaxFrameCount; ++i) {
-      SwapchainImage* swapchainImage = m_images_[i];
+      ISwapchainImage* swapchainImage = m_images_[i];
       auto TexDX12 = (TextureDx12*)swapchainImage->m_TexturePtr_.get();
       TexDX12->m_texture->m_resource_.get()->Reset();
     }
@@ -162,7 +162,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
   }
 
   for (int32_t i = 0; i < g_rhi_dx12->s_kMaxFrameCount; ++i) {
-    SwapchainImage* swapchainImage = m_images_[i];
+    ISwapchainImage* swapchainImage = m_images_[i];
 
     ComPtr<ID3D12Resource> NewResource;
     HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&NewResource));

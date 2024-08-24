@@ -295,7 +295,7 @@ class RhiDx12 : public RHI {
   virtual std::shared_ptr<Texture> createTextureFromData(
       const ImageData* imageData) const override;
 
-  virtual FenceManager* getFenceManager() override { return &m_fenceManager_; }
+  virtual IFenceManager* getFenceManager() override { return &m_fenceManager_; }
 
   RingBufferDx12* getOneFrameUniformRingBuffer() const {
     return m_oneFrameUniformRingBuffers_[m_currentFrameIndex_];
@@ -435,13 +435,13 @@ class RhiDx12 : public RHI {
   virtual void drawIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
-      Buffer*                                    buffer,
+      IBuffer*                                    buffer,
       int32_t                                    startIndex,
       int32_t                                    drawCount) const override;
   virtual void drawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
-      Buffer*                                    buffer,
+      IBuffer*                                    buffer,
       int32_t                                    startIndex,
       int32_t                                    drawCount) const override;
   virtual void dispatchCompute(
@@ -466,25 +466,25 @@ class RhiDx12 : public RHI {
   virtual bool transitionLayoutImmediate(
       Texture* texture, EResourceLayout newLayout) const override;
   virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                Buffer*         buffer,
+                                IBuffer*         buffer,
                                 EResourceLayout newLayout) const override;
   virtual bool transitionLayoutImmediate(
-      Buffer* buffer, EResourceLayout newLayout) const override;
+      IBuffer* buffer, EResourceLayout newLayout) const override;
 
   virtual void uavBarrier(CommandBuffer* commandBuffer,
                           Texture*       texture) const override;
   virtual void uavBarrierImmediate(Texture* texture) const override;
   virtual void uavBarrier(CommandBuffer* commandBuffer,
-                          Buffer*        buffer) const override;
-  virtual void uavBarrierImmediate(Buffer* buffer) const override;
+                          IBuffer*        buffer) const override;
+  virtual void uavBarrierImmediate(IBuffer* buffer) const override;
 
   //////////////////////////////////////////////////////////////////////////
 
-  virtual std::shared_ptr<Swapchain> getSwapchain() const override {
+  virtual std::shared_ptr<ISwapchain> getSwapchain() const override {
     return m_swapchain_;
   }
 
-  virtual SwapchainImage* getSwapchainImage(int32_t index) const override {
+  virtual ISwapchainImage* getSwapchainImage(int32_t index) const override {
     return m_swapchain_->getSwapchainImage(index);
   }
 
@@ -500,7 +500,7 @@ class RhiDx12 : public RHI {
   virtual void finish() const override;
 
   // Create m_buffers
-  virtual std::shared_ptr<Buffer> createStructuredBuffer(
+  virtual std::shared_ptr<IBuffer> createStructuredBuffer(
       uint64_t          size,
       uint64_t          alignment,
       uint64_t          stride,
@@ -510,7 +510,7 @@ class RhiDx12 : public RHI {
       uint64_t          dataSize = 0
       /*, const wchar_t*    resourceName = nullptr*/) const override;
 
-  virtual std::shared_ptr<Buffer> createRawBuffer(
+  virtual std::shared_ptr<IBuffer> createRawBuffer(
       uint64_t          size,
       uint64_t          alignment,
       EBufferCreateFlag bufferCreateFlag,
@@ -519,7 +519,7 @@ class RhiDx12 : public RHI {
       uint64_t          dataSize = 0
       /*, const wchar_t*    resourceName = nullptr*/) const override;
 
-  virtual std::shared_ptr<Buffer> createFormattedBuffer(
+  virtual std::shared_ptr<IBuffer> createFormattedBuffer(
       uint64_t          size,
       uint64_t          alignment,
       ETextureFormat    format,

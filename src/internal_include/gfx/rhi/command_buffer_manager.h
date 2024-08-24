@@ -21,12 +21,12 @@ class CommandBuffer {
 
   virtual void reset() const {}
 
-  virtual Fence* getFence() const { return nullptr; }
+  virtual IFence* getFence() const { return nullptr; }
 };
 
-class CommandBufferManager {
+class ICommandBufferManager {
   public:
-  virtual ~CommandBufferManager() {}
+  virtual ~ICommandBufferManager() {}
 
   virtual void release() = 0;
 
