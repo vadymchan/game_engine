@@ -92,11 +92,11 @@ IFence* FenceManagerDx12::getOrCreateFence() {
     return fence;
   }
 
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   FenceDx12* newFence = new FenceDx12();
-  HRESULT hr = g_rhi_dx12->m_device_->CreateFence(FenceDx12::s_kInitialFenceValue,
+  HRESULT hr = g_rhiDx12->m_device_->CreateFence(FenceDx12::s_kInitialFenceValue,
                                                D3D12_FENCE_FLAG_NONE,
                                                IID_PPV_ARGS(&newFence->m_fence_));
   assert(SUCCEEDED(hr));
