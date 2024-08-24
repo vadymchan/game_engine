@@ -129,46 +129,46 @@ struct SamplerStateInfo : public ShaderBindableResource {
   }
 
   std::string toString() const {
-    std::string Result;
-    Result += g_enumToString(m_minification_);
-    Result += ",";
-    Result += g_enumToString(m_magnification_);
-    Result += ",";
-    Result += g_enumToString(m_addressU_);
-    Result += ",";
-    Result += g_enumToString(m_addressV_);
-    Result += ",";
-    Result += g_enumToString(m_addressW_);
-    Result += std::to_string(m_mipLODBias_);
-    Result += ",";
-    Result += std::to_string(m_maxAnisotropy_);
-    Result += ",";
-    Result += g_enumToString(m_textureComparisonMode_);
-    Result += ",";
-    Result += std::to_string(m_isEnableComparisonMode_);
-    Result += ",";
-    Result += g_enumToString(m_comparisonFunc_);
-    Result += ",";
-    Result += std::to_string(m_maxAnisotropy_);
-    Result += ",";
+    std::string result;
+    result += g_enumToString(m_minification_);
+    result += ",";
+    result += g_enumToString(m_magnification_);
+    result += ",";
+    result += g_enumToString(m_addressU_);
+    result += ",";
+    result += g_enumToString(m_addressV_);
+    result += ",";
+    result += g_enumToString(m_addressW_);
+    result += std::to_string(m_mipLODBias_);
+    result += ",";
+    result += std::to_string(m_maxAnisotropy_);
+    result += ",";
+    result += g_enumToString(m_textureComparisonMode_);
+    result += ",";
+    result += std::to_string(m_isEnableComparisonMode_);
+    result += ",";
+    result += g_enumToString(m_comparisonFunc_);
+    result += ",";
+    result += std::to_string(m_maxAnisotropy_);
+    result += ",";
 
-    Result += "(";
-    Result += std::to_string(m_borderColor_.x());
-    Result += ",";
-    Result += std::to_string(m_borderColor_.y());
-    Result += ",";
-    Result += std::to_string(m_borderColor_.z());
-    Result += ",";
-    Result += std::to_string(m_borderColor_.w());
-    Result += ")";
-    Result += ",";
+    result += "(";
+    result += std::to_string(m_borderColor_.x());
+    result += ",";
+    result += std::to_string(m_borderColor_.y());
+    result += ",";
+    result += std::to_string(m_borderColor_.z());
+    result += ",";
+    result += std::to_string(m_borderColor_.w());
+    result += ")";
+    result += ",";
 
-    Result += std::to_string(m_minLOD_);
-    Result += ",";
-    Result += std::to_string(m_minLOD_);
-    Result += ",";
+    result += std::to_string(m_minLOD_);
+    result += ",";
+    result += std::to_string(m_minLOD_);
+    result += ",";
 
-    return Result;
+    return result;
   }
 
   mutable size_t m_hash_ = 0;
