@@ -15,8 +15,8 @@ File::~File() {
 }
 
 bool File::openFile(const std::string&  szFileName,
-                     FileType::Enum      fileType,
-                     ReadWriteType::Enum readWriteType) {
+                    FileType::Enum      fileType,
+                    ReadWriteType::Enum readWriteType) {
   std::string option;
 
   switch (readWriteType) {
@@ -55,8 +55,8 @@ bool File::openFile(const std::string&  szFileName,
 }
 
 size_t File::readFileToBuffer(bool   appendToEndofBuffer,
-                               size_t index,
-                               size_t count) {
+                              size_t index,
+                              size_t count) {
   size_t readSize = 0;
 
   if (m_fp_) {
@@ -99,9 +99,9 @@ const char* File::getBuffer(size_t index, size_t count) const {
   return &m_buffer_[0];
 }
 
-bool File::getBuffer(FileBuffer&       buffer,
-                      const std::string& startToken,
-                      const std::string& endToken) {
+bool File::getBuffer(FileBuffer&        buffer,
+                     const std::string& startToken,
+                     const std::string& endToken) {
   if (m_buffer_.empty()) {
     return false;
   }
