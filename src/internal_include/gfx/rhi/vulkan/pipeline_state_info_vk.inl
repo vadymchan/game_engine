@@ -47,7 +47,7 @@
 //  initializer.MinLOD                 = TMinLOD;
 //  initializer.MaxLOD                 = TMaxLOD;
 //  initializer.s_getHash();
-//  CachedInfo = g_rhi_vk->createSamplerState(initializer);
+//  CachedInfo = g_rhiVk->createSamplerState(initializer);
 //  return CachedInfo;
 //}
 //
@@ -107,7 +107,7 @@
 //
 //  initializer.s_getHash();
 //  // TODO: problem (should be in cpp)
-//  CachedInfo = g_rhi_vk->createRasterizationState(initializer);
+//  CachedInfo = g_rhiVk->createRasterizationState(initializer);
 //  return CachedInfo;
 //}
 //
@@ -143,7 +143,7 @@
 //  initializer.MinDepthBounds        = TMinDepthBounds;
 //  initializer.MaxDepthBounds        = TMaxDepthBounds;
 //  initializer.s_getHash();
-//  CachedInfo = g_rhi_vk->createDepthStencilState(initializer);
+//  CachedInfo = g_rhiVk->createDepthStencilState(initializer);
 //  return CachedInfo;
 //}
 //
@@ -178,7 +178,7 @@
 //  initializer.AlphaBlendOp   = TAlphaBlendOp;
 //  initializer.ColorWriteMask = TColorWriteMask;
 //  initializer.s_getHash();
-//  CachedInfo = g_rhi_vk->createBlendingState(initializer);
+//  CachedInfo = g_rhiVk->createBlendingState(initializer);
 //  return CachedInfo;
 //}
 //
