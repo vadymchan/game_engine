@@ -26,8 +26,8 @@ void RingBufferDx12::create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
   desc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   desc.Alignment           = 0;
 
-  assert(g_rhi_dx12);
-  m_buffer_ = g_rhi_dx12->createUploadResource(&desc,
+  assert(g_rhiDx12);
+  m_buffer_ = g_rhiDx12->createUploadResource(&desc,
                                             D3D12_RESOURCE_STATE_GENERIC_READ);
 
   // TODO: refactor
@@ -40,13 +40,13 @@ void RingBufferDx12::create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
 
   {
     assert(!m_cbv_.isValid());
-    m_cbv_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+    m_cbv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC Desc;
     Desc.BufferLocation = m_buffer_->getGPUVirtualAddress();
     Desc.SizeInBytes    = (uint32_t)m_ringBufferSize_;
 
-    g_rhi_dx12->m_device_->CreateConstantBufferView(&Desc, m_cbv_.m_cpuHandle_);
+    g_rhiDx12->m_device_->CreateConstantBufferView(&Desc, m_cbv_.m_cpuHandle_);
   }
 
   D3D12_RANGE readRange = {};
