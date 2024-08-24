@@ -13,7 +13,7 @@ void UniformBufferBlockVk::init(size_t size) {
 
   size = g_align<uint64_t>(
       size,
-      g_rhi_vk->m_deviceProperties_.limits.minUniformBufferOffsetAlignment);
+      g_rhiVk->m_deviceProperties_.limits.minUniformBufferOffsetAlignment);
 
   if (isUseRingBuffer()) {
     m_buffer_.m_hasBufferOwnership_ = false;  // Prevent destroy the ring buffer
@@ -28,7 +28,7 @@ void UniformBufferBlockVk::updateBufferData(const void* data, size_t size) {
   assert(m_buffer_.m_allocatedSize_ >= size);
 
   if (isUseRingBuffer()) {
-    RingBufferVk* ringBuffer = g_rhi_vk->getOneFrameUniformRingBuffer();
+    RingBufferVk* ringBuffer = g_rhiVk->getOneFrameUniformRingBuffer();
     m_buffer_.m_offset_            = ringBuffer->alloc(size);
     m_buffer_.m_allocatedSize_     = size;
     m_buffer_.m_buffer_          = ringBuffer->m_buffer_;
@@ -59,7 +59,7 @@ void UniformBufferBlockVk::updateBufferData(const void* data, size_t size) {
 #else
     if (m_buffer.m_buffer && m_buffer.m_deviceMemory) {
       void* data = nullptr;
-      vkMapMemory(g_rhi_vk->m_device_,
+      vkMapMemory(g_rhiVk->m_device_,
                   m_buffer.m_deviceMemory,
                   m_buffer.Offset,
                   m_buffer.AllocatedSize,
@@ -70,7 +70,7 @@ void UniformBufferBlockVk::updateBufferData(const void* data, size_t size) {
       } else {
         memset(data, 0, size);
       }
-      vkUnmapMemory(g_rhi_vk->m_device_, m_buffer.m_deviceMemory);
+      vkUnmapMemory(g_rhiVk->m_device_, m_buffer.m_deviceMemory);
     }
 #endif
   }
@@ -78,7 +78,7 @@ void UniformBufferBlockVk::updateBufferData(const void* data, size_t size) {
 
 void UniformBufferBlockVk::clearBuffer(int32_t clearValue) {
   if (isUseRingBuffer()) {
-    RingBufferVk* ringBuffer = g_rhi_vk->getOneFrameUniformRingBuffer();
+    RingBufferVk* ringBuffer = g_rhiVk->getOneFrameUniformRingBuffer();
     m_buffer_.m_offset_            = ringBuffer->alloc(m_buffer_.m_allocatedSize_);
     m_buffer_.m_allocatedSize_     = m_buffer_.m_allocatedSize_;
     m_buffer_.m_buffer_          = ringBuffer->m_buffer_;
@@ -102,14 +102,14 @@ void UniformBufferBlockVk::clearBuffer(int32_t clearValue) {
 #else
     if (m_buffer.m_buffer && m_buffer.m_deviceMemory) {
       void* data = nullptr;
-      vkMapMemory(g_rhi_vk->m_device_,
+      vkMapMemory(g_rhiVk->m_device_,
                   m_buffer.m_deviceMemory,
                   m_buffer.Offset,
                   m_buffer.AllocatedSize,
                   0,
                   &data);
       memset(data, clearValue, m_buffer.AllocatedSize);
-      vkUnmapMemory(g_rhi_vk->m_device_, m_buffer.m_deviceMemory);
+      vkUnmapMemory(g_rhiVk->m_device_, m_buffer.m_deviceMemory);
     }
 #endif
   }
@@ -118,7 +118,7 @@ void UniformBufferBlockVk::clearBuffer(int32_t clearValue) {
 void UniformBufferBlockVk::allocBufferFromGlobalMemory(size_t size) {
   // If we have allocated memory frame global memory, reallocate it again.
   m_buffer_.release();
-  m_buffer_.initializeWithMemory(g_rhi_vk->getMemoryPool()->alloc(
+  m_buffer_.initializeWithMemory(g_rhiVk->getMemoryPool()->alloc(
       EVulkanBufferBits::UNIFORM_BUFFER,
       EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
       VkDeviceSize(size)));
