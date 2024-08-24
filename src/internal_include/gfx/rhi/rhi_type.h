@@ -124,9 +124,9 @@ std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
   std::stringstream                                               ss(s);
   std::string                                                     item;
 
-  int32_t Count = 0;
+  int32_t count = 0;
   while (getline(ss, item, delim)) {
-    result[Count++] = item;
+    result[count++] = item;
   }
 
   return result;
