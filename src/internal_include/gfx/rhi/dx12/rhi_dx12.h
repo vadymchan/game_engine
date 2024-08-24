@@ -492,7 +492,7 @@ class RhiDx12 : public RHI {
   // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
   //                             const char*            name,
   //                             const math::Vector4Df& color
-  //                             = math::g_colorGreen) const override;
+  //                             = math::g_kColorGreen) const override;
 
   // virtual void endDebugEvent(CommandBuffer* commandBuffer) const override;
 
