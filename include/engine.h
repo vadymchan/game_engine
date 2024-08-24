@@ -108,8 +108,8 @@ class Engine {
   }
 
   void release() {
-    if (g_rhi_vk) {
-      g_rhi_vk->flush();
+    if (g_rhiVk) {
+      g_rhiVk->flush();
     }
 
     m_game_->release();
