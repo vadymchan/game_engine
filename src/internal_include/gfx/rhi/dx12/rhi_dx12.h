@@ -81,12 +81,12 @@ struct PlacedResourcePool {
   const PlacedResource alloc(size_t requestedSize, bool isUploadResource) {
     ScopedLock s(&m_lock_);
 
-    auto& PendingList
+    auto& pendingList
         = getPendingPlacedResources(isUploadResource, requestedSize);
-    for (int32_t i = 0; i < (int32_t)PendingList.size(); ++i) {
-      if (PendingList[i].m_size_ >= requestedSize) {
-        PlacedResource resource = PendingList[i];
-        PendingList.erase(PendingList.begin() + i);
+    for (int32_t i = 0; i < (int32_t)pendingList.size(); ++i) {
+      if (pendingList[i].m_size_ >= requestedSize) {
+        PlacedResource resource = pendingList[i];
+        pendingList.erase(pendingList.begin() + i);
         m_usingPlacedResources_.insert(
             std::make_pair(resource.m_placedSubResource_.Get(), resource));
         return resource;
@@ -117,10 +117,10 @@ struct PlacedResourcePool {
 
   std::vector<PlacedResource>& getPendingPlacedResources(
       bool isUploadPlacedResource, size_t size) {
-    const int32_t Index = (int32_t)getPoolSizeType(size);
-    assert(Index != (int32_t)EPoolSizeType::MAX);
-    return isUploadPlacedResource ? m_pendingUploadPlacedResources_[Index]
-                                  : m_pendingPlacedResources_[Index];
+    const int32_t kIndex = (int32_t)getPoolSizeType(size);
+    assert(kIndex != (int32_t)EPoolSizeType::MAX);
+    return isUploadPlacedResource ? m_pendingUploadPlacedResources_[kIndex]
+                                  : m_pendingPlacedResources_[kIndex];
   }
 
   // PoolSize
