@@ -11,14 +11,14 @@ void TextureVk::releaseInternal() {
   // directly created, it needs to be destroyed.
   if (m_deviceMemory_) {
     if (m_image_) {
-      vkDestroyImage(g_rhi_vk->m_device_, m_image_, nullptr);
+      vkDestroyImage(g_rhiVk->m_device_, m_image_, nullptr);
     }
 
-    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory_, nullptr);
+    vkFreeMemory(g_rhiVk->m_device_, m_deviceMemory_, nullptr);
   }
 
   if (m_imageView_) {
-    vkDestroyImageView(g_rhi_vk->m_device_, m_imageView_, nullptr);
+    vkDestroyImageView(g_rhiVk->m_device_, m_imageView_, nullptr);
   }
 }
 
@@ -58,7 +58,7 @@ VkSampler TextureVk::s_createDefaultSamplerState() {
   samplerInfo.maxLod     = FLT_MAX;
 
   if (vkCreateSampler(
-          g_rhi_vk->m_device_, &samplerInfo, nullptr, &g_defaultSampler)
+          g_rhiVk->m_device_, &samplerInfo, nullptr, &g_defaultSampler)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create default sampler");
     return nullptr;
@@ -69,7 +69,7 @@ VkSampler TextureVk::s_createDefaultSamplerState() {
 
 void TextureVk::s_destroyDefaultSamplerState() {
   if (g_defaultSampler) {
-    vkDestroySampler(g_rhi_vk->m_device_, g_defaultSampler, nullptr);
+    vkDestroySampler(g_rhiVk->m_device_, g_defaultSampler, nullptr);
     g_defaultSampler = nullptr;
   }
 }
