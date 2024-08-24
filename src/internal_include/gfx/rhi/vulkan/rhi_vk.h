@@ -522,7 +522,7 @@ class RhiVk : public RHI {
   EMSAASamples m_selectedMSAASamples_ = EMSAASamples::COUNT_1;
 };
 
-extern RhiVk* g_rhi_vk;
+extern RhiVk* g_rhiVk;
 
 
 }  // namespace game_engine
