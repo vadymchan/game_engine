@@ -26,7 +26,7 @@ struct SimpleConstantBuffer {
   int32_t        m_texIndex = 0;
 };
 
-RhiDx12*                                         g_rhi_dx12 = nullptr;
+RhiDx12*                                         g_rhiDx12 = nullptr;
 std::unordered_map<size_t, ShaderBindingLayout*> RhiDx12::s_shaderBindingPool;
 TResourcePool<SamplerStateInfoDx12, MutexRWLock> RhiDx12::s_samplerStatePool;
 TResourcePool<RasterizationStateInfoDx12, MutexRWLock>
@@ -98,7 +98,7 @@ TResourcePool<RenderPassDx12, MutexRWLock>        RhiDx12::s_renderPassPool;
 // RhiDx12
 //////////////////////////////////////////////////////////////////////////
 RhiDx12::RhiDx12() {
-  g_rhi_dx12 = this;
+  g_rhiDx12 = this;
 }
 
 RhiDx12::~RhiDx12() {
@@ -1708,21 +1708,21 @@ bool RhiDx12::isSupportVSync() const {
 void PlacedResourcePool::init() {
   // The allocator should be able to allocate memory larger than the
   // PlacedResourceSizeThreshold.
-  assert(g_rhi_dx12->s_kPlacedResourceSizeThreshold
+  assert(g_rhiDx12->s_kPlacedResourceSizeThreshold
          <= s_kMemorySize[(int32_t)EPoolSizeType::MAX - 1]);
 
-  assert(g_rhi_dx12);
+  assert(g_rhiDx12);
   // TODO: consider remove nested smart pointers (probably need changes in
   // DeallocatorMultiFrameResource)
-  g_rhi_dx12->m_deallocatorMultiFramePlacedResource_.m_freeDelegate_ = std::bind(
+  g_rhiDx12->m_deallocatorMultiFramePlacedResource_.m_freeDelegate_ = std::bind(
       &PlacedResourcePool::freedFromPendingDelegateForCreatedResource,
       this,
       std::placeholders::_1);
 }
 
 void PlacedResourcePool::release() {
-  assert(g_rhi_dx12);
-  g_rhi_dx12->m_deallocatorMultiFramePlacedResource_.m_freeDelegate_ = nullptr;
+  assert(g_rhiDx12);
+  g_rhiDx12->m_deallocatorMultiFramePlacedResource_.m_freeDelegate_ = nullptr;
 }
 
 void PlacedResourcePool::free(const ComPtr<ID3D12Resource>& data) {
@@ -1730,7 +1730,7 @@ void PlacedResourcePool::free(const ComPtr<ID3D12Resource>& data) {
     return;
   }
 
-  if (g_rhi_dx12->s_kIsUsePlacedResource) {
+  if (g_rhiDx12->s_kIsUsePlacedResource) {
     ScopedLock s(&m_lock_);
 
     auto it_find = m_usingPlacedResources_.find(data.Get());
