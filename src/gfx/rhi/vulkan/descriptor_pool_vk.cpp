@@ -7,7 +7,7 @@ namespace game_engine {
 
 DescriptorPoolVk::~DescriptorPoolVk() {
   if (m_descriptorPool_) {
-    vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
+    vkDestroyDescriptorPool(g_rhiVk->m_device_, m_descriptorPool_, nullptr);
     m_descriptorPool_ = nullptr;
   }
   m_deallocateMultiframeShaderBindingInstance_.m_freeDelegate_ = nullptr;
@@ -15,7 +15,7 @@ DescriptorPoolVk::~DescriptorPoolVk() {
 
 void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   if (m_descriptorPool_) {
-    vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
+    vkDestroyDescriptorPool(g_rhiVk->m_device_, m_descriptorPool_, nullptr);
     m_descriptorPool_ = nullptr;
 
 #if !USE_RESET_DESCRIPTOR_POOL
@@ -31,7 +31,7 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   m_maxDescriptorSets_ = maxDescriptorSets;
   
   // TODO: remove (old version)
-  // constexpr int32_t    NumOfPoolSize = std::size(DefaultPoolSizes);
+  // constexpr int32_t    NumOfPoolSize = std::size(g_defaultPoolSizes);
   // VkDescriptorPoolSize Types[NumOfPoolSize];
   // memset(Types, 0, sizeof(Types));
 
@@ -41,15 +41,15 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   //      = static_cast<EShaderBindingType>(VK_DESCRIPTOR_TYPE_SAMPLER + i);
 
   //  PoolSizes[i] = static_cast<uint32_t>(
-  //      std::max(DefaultPoolSizes[i] * maxDescriptorSets, 4.0f));
+  //      std::max(g_defaultPoolSizes[i] * maxDescriptorSets, 4.0f));
 
   //  Types[i].type            = GetVulkanShaderBindingType(DescriptorType);
   //  Types[i].descriptorCount = PoolSizes[i];
   //}
 
-  std::vector<VkDescriptorPoolSize> Types(DefaultPoolSizes.size());
+  std::vector<VkDescriptorPoolSize> Types(g_defaultPoolSizes.size());
 
-  for (uint32_t i = 0; const auto& descriptorTypePair : DefaultPoolSizes) {
+  for (uint32_t i = 0; const auto& descriptorTypePair : g_defaultPoolSizes) {
     uint32_t poolSize = static_cast<uint32_t>(
         std::max(descriptorTypePair.second * maxDescriptorSets, 4.0f));
 
@@ -74,7 +74,7 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
 
   assert(VK_SUCCESS
          == vkCreateDescriptorPool(
-             g_rhi_vk->m_device_, &PoolInfo, nullptr, &m_descriptorPool_));
+             g_rhiVk->m_device_, &PoolInfo, nullptr, &m_descriptorPool_));
 
   m_deallocateMultiframeShaderBindingInstance_.m_freeDelegate_ = std::bind(
       &DescriptorPoolVk::freedFromPendingDelegate, this, std::placeholders::_1);
@@ -85,7 +85,7 @@ void DescriptorPoolVk::reset() {
   {
 #if USE_RESET_DESCRIPTOR_POOL
     verify(VK_SUCCESS
-           == vkResetDescriptorPool(g_rhi_vk->m_device_, DescriptorPool, 0));
+           == vkResetDescriptorPool(g_rhiVk->m_device_, DescriptorPool, 0));
 #else
     ScopedLock s(&m_descriptorPoolLock_);
     m_pendingDescriptorSets_ = m_allocatedDescriptorSets_;
@@ -120,7 +120,7 @@ std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::allocateDescriptorSet(
   VkDescriptorSet NewDescriptorSet = nullptr;
 
   if (vkAllocateDescriptorSets(
-          g_rhi_vk->m_device_, &DescriptorSetAllocateInfo, &NewDescriptorSet)
+          g_rhiVk->m_device_, &DescriptorSetAllocateInfo, &NewDescriptorSet)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to allocate descriptor set");
     return nullptr;
@@ -145,7 +145,7 @@ void DescriptorPoolVk::free(
 
   m_deallocateMultiframeShaderBindingInstance_.free(shaderBindingInstance);
 
-  // const int32_t CurrentFrameNumber = g_rhi_vk->getCurrentFrameNumber();
+  // const int32_t CurrentFrameNumber = g_rhiVk->getCurrentFrameNumber();
   // const int32_t OldestFrameToKeep = CurrentFrameNumber -
   // NumOfFramesToWaitBeforeReleasing;
 
@@ -199,7 +199,7 @@ void DescriptorPoolVk::free(
 
 void DescriptorPoolVk::release() {
   if (m_descriptorPool_) {
-    vkDestroyDescriptorPool(g_rhi_vk->m_device_, m_descriptorPool_, nullptr);
+    vkDestroyDescriptorPool(g_rhiVk->m_device_, m_descriptorPool_, nullptr);
     m_descriptorPool_ = nullptr;
   }
 
