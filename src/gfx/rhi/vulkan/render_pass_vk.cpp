@@ -7,11 +7,11 @@ namespace game_engine {
 
 void RenderPassVk::release() {
   if (m_frameBuffer_ != VK_NULL_HANDLE) {
-    vkDestroyFramebuffer(g_rhi_vk->m_device_, m_frameBuffer_, nullptr);
+    vkDestroyFramebuffer(g_rhiVk->m_device_, m_frameBuffer_, nullptr);
     m_frameBuffer_ = VK_NULL_HANDLE;
   }
   if (m_renderPass_ != VK_NULL_HANDLE) {
-    vkDestroyRenderPass(g_rhi_vk->m_device_, m_renderPass_, nullptr);
+    vkDestroyRenderPass(g_rhiVk->m_device_, m_renderPass_, nullptr);
     m_frameBuffer_ = VK_NULL_HANDLE;
   }
 }
@@ -83,7 +83,7 @@ bool RenderPassVk::createRenderPass() {
   //  // ...
 
   //  return vkCreateRenderPass(
-  //             g_rhi_vk->m_device_, &renderPassInfo, nullptr, &renderPass)
+  //             g_rhiVk->m_device_, &renderPassInfo, nullptr, &renderPass)
   //      == VK_SUCCESS;
   //}
 
@@ -281,7 +281,7 @@ bool RenderPassVk::createRenderPass() {
     renderPassCreateInfo.pDependencies   = SubpassDependencies.data();
 
     if (vkCreateRenderPass(
-            g_rhi_vk->m_device_, &renderPassCreateInfo, nullptr, &m_renderPass_)
+            g_rhiVk->m_device_, &renderPassCreateInfo, nullptr, &m_renderPass_)
         != VK_SUCCESS) {
       return false;
     }
@@ -328,7 +328,7 @@ bool RenderPassVk::createRenderPass() {
     framebufferInfo.layers = LayerCount;
 
     if (vkCreateFramebuffer(
-            g_rhi_vk->m_device_, &framebufferInfo, nullptr, &m_frameBuffer_)
+            g_rhiVk->m_device_, &framebufferInfo, nullptr, &m_frameBuffer_)
         != VK_SUCCESS) {
       return false;
     }
