@@ -59,9 +59,9 @@ class DrawCommand {
   PushConstant*                        pushConstant, const VertexBuffer*
   overrideInstanceData, int32_t subpassIndex) :
   RenderFrameContextPtr(renderFrameContextPtr) , viewLight(viewLight) ,
-  RenderObject(renderObject) , m_renderPass(renderPass) , Shader(shader) ,
+  RenderObject(renderObject) , kRenderPass(renderPass) , Shader(shader) ,
   PipelineStateFixed(pipelineStateFixed) , Material(material) ,
-  m_pushConstant(pushConstant) ,
+  kPushConstant(pushConstant) ,
   m_shaderBindingInstanceArray(shaderBindingInstanceArray) ,
   OverrideInstanceData(overrideInstanceData) , SubpassIndex(subpassIndex) {
     assert(RenderObject);
