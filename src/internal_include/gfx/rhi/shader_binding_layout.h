@@ -76,15 +76,15 @@ struct TextureResource : public SamplerResource {
                   const SamplerStateInfo* samplerState,
                   int32_t                 mipLevel = 0)
       : SamplerResource(samplerState)
-      , m_texture(texture)
-      , m_mipLevel_(mipLevel) {}
+      , kTexture(texture)
+      , kMipLevel(mipLevel) {}
 
   virtual ~TextureResource() {}
 
-  virtual const void* getResource() const override { return m_texture; }
+  virtual const void* getResource() const override { return kTexture; }
 
-  const Texture* m_texture   = nullptr;
-  const int32_t  m_mipLevel_ = 0;
+  const Texture* kTexture   = nullptr;
+  const int32_t  kMipLevel = 0;
 };
 
 struct TextureArrayResource : public ShaderBindingResource {
@@ -92,17 +92,17 @@ struct TextureArrayResource : public ShaderBindingResource {
 
   TextureArrayResource(const Texture** textureArray,
                        const int32_t   numOfTexures)
-      : m_textureArray_(textureArray)
-      , m_mumOfTexures_(numOfTexures) {}
+      : kTextureArray(textureArray)
+      , kNumOfTexures(numOfTexures) {}
 
   virtual ~TextureArrayResource() {}
 
-  virtual const void* getResource() const override { return m_textureArray_; }
+  virtual const void* getResource() const override { return kTextureArray; }
 
-  virtual int32_t numOfResource() const override { return m_mumOfTexures_; }
+  virtual int32_t numOfResource() const override { return kNumOfTexures; }
 
-  const Texture** m_textureArray_ = nullptr;
-  const int32_t   m_mumOfTexures_ = 1;
+  const Texture** kTextureArray = nullptr;
+  const int32_t   kNumOfTexures = 1;
 };
 
 //////////////////////////////////////////////////////////////////////////
