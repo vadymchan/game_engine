@@ -10,7 +10,7 @@ namespace game_engine {
 void RenderFrameContextVk::submitCurrentActiveCommandBuffer(
     ECurrentRenderPass currentRenderPass) {
   SwapchainImageVk* swapchainImageVk
-      = (SwapchainImageVk*)g_rhi_vk->m_swapchain_->getSwapchainImage(m_frameIndex_);
+      = (SwapchainImageVk*)g_rhiVk->m_swapchain_->getSwapchainImage(m_frameIndex_);
 
   switch (currentRenderPass) {
     case RenderFrameContextVk::ShadowPass:
@@ -32,12 +32,12 @@ void RenderFrameContextVk::queueSubmitCurrentActiveCommandBuffer(
     // TODO: temoporary removed
     // m_commandBuffer->end();
 
-    g_rhi_vk->queueSubmit(shared_from_this(), signalSemaphore);
-    g_rhi_vk->getCommandBufferManager()->returnCommandBuffer(m_commandBuffer_);
+    g_rhiVk->queueSubmit(shared_from_this(), signalSemaphore);
+    g_rhiVk->getCommandBufferManager()->returnCommandBuffer(m_commandBuffer_);
 
     // get new command buffer
-    m_commandBuffer_ = g_rhi_vk->m_commandBufferManager_->getOrCreateCommandBuffer();
-    g_rhi_vk->m_swapchain_->getSwapchainImage(m_frameIndex_)->m_commandBufferFence_
+    m_commandBuffer_ = g_rhiVk->m_commandBufferManager_->getOrCreateCommandBuffer();
+    g_rhiVk->m_swapchain_->getSwapchainImage(m_frameIndex_)->m_commandBufferFence_
         = (VkFence)m_commandBuffer_->getFenceHandle();
   }
 }
