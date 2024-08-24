@@ -24,7 +24,7 @@ class CommandBufferManagerVk : public ICommandBufferManager {
   //  for (auto* commandBuffer : availableCommandBuffers) {
   //    delete commandBuffer;
   //  }
-  //  vkDestroyCommandPool(g_rhi_vk->m_device_, commandPool, nullptr);
+  //  vkDestroyCommandPool(g_rhiVk->m_device_, commandPool, nullptr);
   //}
 
   virtual bool createPool(uint32_t QueueIndex);
