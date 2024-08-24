@@ -13,7 +13,7 @@ bool CommandBufferManagerVk::createPool(uint32_t QueueIndex) {
 
   poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;  // Optional
 
-  if (vkCreateCommandPool(g_rhi_vk->m_device_, &poolInfo, nullptr, &m_commandPool_)
+  if (vkCreateCommandPool(g_rhiVk->m_device_, &poolInfo, nullptr, &m_commandPool_)
       != VK_SUCCESS) {
     // TODO: Handle errors appropriately
     return false;
@@ -29,20 +29,20 @@ void CommandBufferManagerVk::releaseInternal() {
 
   for (auto& iter : m_usingCommandBuffers_) {
     iter->getFence()->waitForFence();
-    g_rhi_vk->getFenceManager()->returnFence(iter->getFence());
+    g_rhiVk->getFenceManager()->returnFence(iter->getFence());
     delete iter;
   }
   m_usingCommandBuffers_.clear();
 
   for (auto& iter : m_availableCommandBuffers_) {
     iter->getFence()->waitForFence();
-    g_rhi_vk->getFenceManager()->returnFence(iter->getFence());
+    g_rhiVk->getFenceManager()->returnFence(iter->getFence());
     delete iter;
   }
   m_availableCommandBuffers_.clear();
 
   if (m_commandPool_) {
-    vkDestroyCommandPool(g_rhi_vk->m_device_, m_commandPool_, nullptr);
+    vkDestroyCommandPool(g_rhiVk->m_device_, m_commandPool_, nullptr);
     m_commandPool_ = nullptr;
   }
 }
@@ -54,7 +54,7 @@ CommandBuffer* CommandBufferManagerVk::getOrCreateCommandBuffer() {
   if (m_availableCommandBuffers_.size() > 0) {
     for (int32_t i = 0; i < (int32_t)m_availableCommandBuffers_.size(); ++i) {
       const VkResult Result = vkGetFenceStatus(
-          g_rhi_vk->m_device_,
+          g_rhiVk->m_device_,
           (VkFence)m_availableCommandBuffers_[i]->getFenceHandle());
       if (Result == VK_SUCCESS)  // VK_SUCCESS Signaled
       {
@@ -85,7 +85,7 @@ CommandBuffer* CommandBufferManagerVk::getOrCreateCommandBuffer() {
 
     VkCommandBuffer vkCommandBuffer = nullptr;
     if (vkAllocateCommandBuffers(
-            g_rhi_vk->m_device_, &allocInfo, &vkCommandBuffer)
+            g_rhiVk->m_device_, &allocInfo, &vkCommandBuffer)
         != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error, "Failed to allocate command buffer");
       return nullptr;
@@ -93,7 +93,7 @@ CommandBuffer* CommandBufferManagerVk::getOrCreateCommandBuffer() {
 
     auto newCommandBuffer      = new CommandBufferVk();
     newCommandBuffer->getRef() = vkCommandBuffer;
-    newCommandBuffer->setFence(g_rhi_vk->m_fenceManager_->getOrCreateFence());
+    newCommandBuffer->setFence(g_rhiVk->m_fenceManager_->getOrCreateFence());
 
     m_usingCommandBuffers_.push_back(newCommandBuffer);
 
