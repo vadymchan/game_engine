@@ -24,11 +24,11 @@ void SubMemoryAllocatorVk::initialize(EVulkanBufferBits usage,
   m_properties_ = properties;
 
   VkMemoryRequirements memRequirements;
-  vkGetBufferMemoryRequirements(g_rhi_vk->m_device_, m_buffer_, &memRequirements);
+  vkGetBufferMemoryRequirements(g_rhiVk->m_device_, m_buffer_, &memRequirements);
   m_alignment_ = memRequirements.alignment;
 
   if (!!(properties & EVulkanMemoryBits::HOST_VISIBLE)) {
-    assert(vkMapMemory(g_rhi_vk->m_device_,
+    assert(vkMapMemory(g_rhiVk->m_device_,
                        m_deviceMemory_,
                        0,
                        m_subMemoryRange_.m_dataSize_,
