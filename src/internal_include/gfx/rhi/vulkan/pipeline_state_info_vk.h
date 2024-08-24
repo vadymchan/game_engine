@@ -21,7 +21,7 @@
 namespace game_engine {
 
 // TODO: consider moving to other file
-constexpr bool kUseVulkanNdcYFlip = true;
+constexpr bool g_kUseVulkanNdcYFlip = true;
 
 
 struct SamplerStateInfoVk : public SamplerStateInfo {
