@@ -44,10 +44,10 @@ void DescriptorHeapDx12::initialize(EDescriptorHeapTypeDX12 heapType,
   heapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
                                  : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
-  HRESULT hr = g_rhi_dx12->m_device_->CreateDescriptorHeap(
+  HRESULT hr = g_rhiDx12->m_device_->CreateDescriptorHeap(
       &heapDesc, IID_PPV_ARGS(&m_heap_));
   assert(SUCCEEDED(hr));
 
@@ -63,7 +63,7 @@ void DescriptorHeapDx12::initialize(EDescriptorHeapTypeDX12 heapType,
   }
 
   m_descriptorSize_
-      = g_rhi_dx12->m_device_->GetDescriptorHandleIncrementSize(HeapTypeDX12);
+      = g_rhiDx12->m_device_->GetDescriptorHandleIncrementSize(HeapTypeDX12);
   m_numOfDescriptors_ = numOfDescriptors;
 
   for (uint32_t i = 0; i < m_numOfDescriptors_; ++i) {
@@ -85,7 +85,7 @@ void DescriptorHeapDx12::release() {
 void DescriptorHeapDx12::free(uint32_t index, uint32_t delayFrames) {
   m_pendingFree_.push_back(
       {.m_descriptorIndex_ = index,
-       .m_frameIndex_      = g_rhi_dx12->getCurrentFrameNumber()});
+       .m_frameIndex_      = g_rhiDx12->getCurrentFrameNumber()});
   processPendingDescriptorPoolFree();
 }
 
@@ -127,8 +127,8 @@ void DescriptorHeapDx12::processPendingDescriptorPoolFree() {
 // DescriptorHeapDx12::OneFrameCreateConstantBufferView(RingBufferDx12*
 // buffer, uint64 offset, uint32_t size, ETextureFormat format)
 //{
-//     assert(g_rhi_dx12);
-//     assert(g_rhi_dx12->Device);
+//     assert(g_rhiDx12);
+//     assert(g_rhiDx12->Device);
 //
 //     DescriptorDx12 Descriptor = oneFrameAlloc();
 //
@@ -139,7 +139,7 @@ void DescriptorHeapDx12::processPendingDescriptorPoolFree() {
 //     cbvDesc.BufferLocation = buffer->getGPUAddress() + offset;
 //     cbvDesc.SizeInBytes = uint32_t(g_align(size,
 //     D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT));
-//     g_rhi_dx12->Device->CreateConstantBufferView(&cbvDesc,
+//     g_rhiDx12->Device->CreateConstantBufferView(&cbvDesc,
 //     Descriptor.CPUHandle); return Descriptor;
 // }
 
@@ -148,8 +148,8 @@ void DescriptorHeapDx12::processPendingDescriptorPoolFree() {
 // buffer, uint64 offset, uint32_t stride, uint32_t numOfElement,
 // ETextureFormat format)
 //{
-//     assert(g_rhi_dx12);
-//     assert(g_rhi_dx12->Device);
+//     assert(g_rhiDx12);
+//     assert(g_rhiDx12->Device);
 //
 //     D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
 //     desc.Format = (format == ETextureFormat::MAX) ? DXGI_FORMAT_UNKNOWN :
@@ -164,7 +164,7 @@ void DescriptorHeapDx12::processPendingDescriptorPoolFree() {
 //
 //     assert(buffer);
 //     assert(buffer->m_buffer);
-//     g_rhi_dx12->Device->g_createShaderResourceView(buffer->m_buffer.get(),
+//     g_rhiDx12->Device->g_createShaderResourceView(buffer->m_buffer.get(),
 //     &desc, Descriptor.CPUHandle); return Descriptor;
 // }
 
@@ -189,10 +189,10 @@ void OnlineDescriptorHeapBlocksDx12::initialize(
   heapDesc.Type                       = HeapTypeDX12;
   heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
-  HRESULT hr = g_rhi_dx12->m_device_->CreateDescriptorHeap(
+  HRESULT hr = g_rhiDx12->m_device_->CreateDescriptorHeap(
       &heapDesc, IID_PPV_ARGS(&m_heap_));
   assert(SUCCEEDED(hr));
 
@@ -204,7 +204,7 @@ void OnlineDescriptorHeapBlocksDx12::initialize(
   m_gpuHandleStart_ = m_heap_->GetGPUDescriptorHandleForHeapStart();
 
   m_descriptorSize_
-      = g_rhi_dx12->m_device_->GetDescriptorHandleIncrementSize(HeapTypeDX12);
+      = g_rhiDx12->m_device_->GetDescriptorHandleIncrementSize(HeapTypeDX12);
 
   const uint32_t BlockSize = totalHeapSize / descriptorsInBlock;
 
@@ -277,7 +277,7 @@ OnlineDescriptorHeapDx12* OnlineDescriptorHeapBlocksDx12::alloc() {
     FreeData freeData = *it;
 
     const bool CanAlloc
-        = (g_rhi_dx12->m_currentFrameNumber_ - freeData.m_releasedFrame_
+        = (g_rhiDx12->m_currentFrameNumber_ - freeData.m_releasedFrame_
            > s_kNumOfFramesToWaitBeforeReleasing)
        || (0 == freeData.m_releasedFrame_);
     if (CanAlloc) {
@@ -293,7 +293,7 @@ OnlineDescriptorHeapDx12* OnlineDescriptorHeapBlocksDx12::alloc() {
 void OnlineDescriptorHeapBlocksDx12::free(int32_t index) {
   ScopedLock s(&m_descriptorBlockLock_);
 
-  FreeData freeData = {.m_releasedFrame_ = g_rhi_dx12->m_currentFrameNumber_,
+  FreeData freeData = {.m_releasedFrame_ = g_rhiDx12->m_currentFrameNumber_,
                        .m_index_         = index};
   assert(!m_freeLists_.contains(freeData));
   m_freeLists_.insert(freeData);
