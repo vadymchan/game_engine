@@ -10,19 +10,19 @@ namespace game_engine {
 void SwapchainImageVk::releaseInternal() {
   m_TexturePtr_ = nullptr;
   if (m_available_) {
-    g_rhi_vk->getSemaphoreManager()->returnSemaphore(m_available_);
+    g_rhiVk->getSemaphoreManager()->returnSemaphore(m_available_);
     m_available_ = nullptr;
   }
   if (m_renderFinished_) {
-    g_rhi_vk->getSemaphoreManager()->returnSemaphore(m_renderFinished_);
+    g_rhiVk->getSemaphoreManager()->returnSemaphore(m_renderFinished_);
     m_renderFinished_ = nullptr;
   }
   if (m_renderFinishedAfterShadow_) {
-    g_rhi_vk->getSemaphoreManager()->returnSemaphore(m_renderFinishedAfterShadow_);
+    g_rhiVk->getSemaphoreManager()->returnSemaphore(m_renderFinishedAfterShadow_);
     m_renderFinishedAfterShadow_ = nullptr;
   }
   if (m_renderFinishedAfterBasePass_) {
-    g_rhi_vk->getSemaphoreManager()->returnSemaphore(
+    g_rhiVk->getSemaphoreManager()->returnSemaphore(
         m_renderFinishedAfterBasePass_);
     m_renderFinishedAfterBasePass_ = nullptr;
   }
@@ -35,7 +35,7 @@ void SwapchainImageVk::releaseInternal() {
 
 bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
   SwapChainSupportDetails swapChainSupport = g_querySwapChainSupport(
-      g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
+      g_rhiVk->m_physicalDevice_, g_rhiVk->m_surface_);
 
   // Choose the surface format
   VkSurfaceFormatKHR surfaceFormat{};
@@ -97,7 +97,7 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
 
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType           = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  createInfo.surface         = g_rhi_vk->m_surface_;
+  createInfo.surface         = g_rhiVk->m_surface_;
   createInfo.minImageCount   = imageCount;
   createInfo.imageFormat     = surfaceFormat.format;
   createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -107,7 +107,7 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
   QueueFamilyIndices indices
-      = g_findQueueFamilies(g_rhi_vk->m_physicalDevice_, g_rhi_vk->m_surface_);
+      = g_findQueueFamilies(g_rhiVk->m_physicalDevice_, g_rhiVk->m_surface_);
   uint32_t queueFamilyIndices[]
       = {indices.m_graphicsFamily_.value(), indices.m_presentFamily_.value()};
   if (indices.m_graphicsFamily_ != indices.m_presentFamily_) {
@@ -127,7 +127,7 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
   createInfo.oldSwapchain   = oldSwapChain;  // TODO : add old swapchain
 
   if (vkCreateSwapchainKHR(
-          g_rhi_vk->m_device_, &createInfo, nullptr, &m_swapChain_)
+          g_rhiVk->m_device_, &createInfo, nullptr, &m_swapChain_)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create swapchain");
     return false;
@@ -140,21 +140,21 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
       SwapchainImageVk* swapchainImage = m_images_[i];
       TextureVk* textureVk = (TextureVk*)swapchainImage->m_TexturePtr_.get();
       if (textureVk->m_imageView_) {
-        vkDestroyImageView(g_rhi_vk->m_device_, textureVk->m_imageView_, nullptr);
+        vkDestroyImageView(g_rhiVk->m_device_, textureVk->m_imageView_, nullptr);
         textureVk->m_imageView_ = nullptr;
       }
       swapchainImage->m_TexturePtr_.reset();
       // delete Images[i];
     }
-    vkDestroySwapchainKHR(g_rhi_vk->m_device_, oldSwapChain, nullptr);
+    vkDestroySwapchainKHR(g_rhiVk->m_device_, oldSwapChain, nullptr);
   }
 
   // Retrieve swapchain images
   vkGetSwapchainImagesKHR(
-      g_rhi_vk->m_device_, m_swapChain_, &imageCount, nullptr);
+      g_rhiVk->m_device_, m_swapChain_, &imageCount, nullptr);
   std::vector<VkImage> swapChainImages(imageCount);
   vkGetSwapchainImagesKHR(
-      g_rhi_vk->m_device_, m_swapChain_, &imageCount, swapChainImages.data());
+      g_rhiVk->m_device_, m_swapChain_, &imageCount, swapChainImages.data());
 
   m_format_ = g_getVulkanTextureFormat(surfaceFormat.format);
   m_extent_ = math::Dimension2Di((int)extent.width, (int)extent.height);
@@ -168,13 +168,13 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
     } else {
       swapchainImage = new SwapchainImageVk();
       swapchainImage->m_available_
-          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
+          = g_rhiVk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_renderFinished_
-          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
+          = g_rhiVk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_renderFinishedAfterShadow_
-          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
+          = g_rhiVk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_renderFinishedAfterBasePass_
-          = g_rhi_vk->getSemaphoreManager()->getOrCreateSemaphore();
+          = g_rhiVk->getSemaphoreManager()->getOrCreateSemaphore();
       swapchainImage->m_commandBufferFence_ = nullptr;
 
       m_images_[i] = swapchainImage;
@@ -196,7 +196,7 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
     viewInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
 
     VkImageView imageView;
-    if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+    if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
         != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error, "Failed to create image view");
       // TODO: Cleanup and return false
@@ -224,7 +224,7 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
 
     VkSampler textureSampler;
     if (vkCreateSampler(
-            g_rhi_vk->m_device_, &samplerInfo, nullptr, &textureSampler)
+            g_rhiVk->m_device_, &samplerInfo, nullptr, &textureSampler)
         != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error, "Failed to create texture sampler");
       // TODO: Cleanup and return false
@@ -247,16 +247,16 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
     swapchainImageTextureVk->m_mipLevels_ = 1;  // TODO: temporal hot-fix
   }
 
-  g_rhi_vk->s_renderPassPool.release();
-  g_rhi_vk->s_pipelineStatePool.release();
+  g_rhiVk->s_renderPassPool.release();
+  g_rhiVk->s_pipelineStatePool.release();
 
-  for (DescriptorPoolVk* pool : g_rhi_vk->m_descriptorPoolsSingleFrame_) {
+  for (DescriptorPoolVk* pool : g_rhiVk->m_descriptorPoolsSingleFrame_) {
     pool->m_pendingDescriptorSets_.clear();
     pool->m_allocatedDescriptorSets_.clear();
   }
-  if (g_rhi_vk->m_descriptorPoolMultiFrame_) {
-    g_rhi_vk->m_descriptorPoolMultiFrame_->m_pendingDescriptorSets_.clear();
-    g_rhi_vk->m_descriptorPoolMultiFrame_->m_allocatedDescriptorSets_.clear();
+  if (g_rhiVk->m_descriptorPoolMultiFrame_) {
+    g_rhiVk->m_descriptorPoolMultiFrame_->m_pendingDescriptorSets_.clear();
+    g_rhiVk->m_descriptorPoolMultiFrame_->m_allocatedDescriptorSets_.clear();
   }
 
   return true;
@@ -271,7 +271,7 @@ bool SwapchainVk::create(const std::shared_ptr<Window>& window) {
 }
 
 void SwapchainVk::releaseInternal() {
-  vkDestroySwapchainKHR(g_rhi_vk->m_device_, m_swapChain_, nullptr);
+  vkDestroySwapchainKHR(g_rhiVk->m_device_, m_swapChain_, nullptr);
 
   for (auto& iter : m_images_) {
     delete iter;
