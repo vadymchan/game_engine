@@ -26,7 +26,7 @@
 //  }
 //
 //  auto renderTargetPtr
-//      = std::shared_ptr<FrameBufferVk>(g_rhi_vk->createFrameBuffer(info));
+//      = std::shared_ptr<FrameBufferVk>(g_rhiVk->createFrameBuffer(info));
 //  if (renderTargetPtr) {
 //    FrameBufferResourceMap[hash].push_back({true, renderTargetPtr});
 //    FrameBufferHashVariableMap[renderTargetPtr.get()] = hash;
