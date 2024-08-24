@@ -45,10 +45,10 @@ void BufferVk::release() {
   }
 
   if (m_buffer_ != VK_NULL_HANDLE) {
-    vkDestroyBuffer(g_rhi_vk->m_device_, m_buffer_, nullptr);
+    vkDestroyBuffer(g_rhiVk->m_device_, m_buffer_, nullptr);
   }
   if (m_deviceMemory_ != VK_NULL_HANDLE) {
-    vkFreeMemory(g_rhi_vk->m_device_, m_deviceMemory_, nullptr);
+    vkFreeMemory(g_rhiVk->m_device_, m_deviceMemory_, nullptr);
   }
 
   m_deviceMemory_ = nullptr;
@@ -68,7 +68,7 @@ void* BufferVk::map(uint64_t offset, uint64_t size) {
     return nullptr;
   }
   vkMapMemory(
-      g_rhi_vk->m_device_, m_deviceMemory_, offset, size, 0, &m_mappedPointer_);
+      g_rhiVk->m_device_, m_deviceMemory_, offset, size, 0, &m_mappedPointer_);
   return m_mappedPointer_;
 }
 
@@ -80,7 +80,7 @@ void BufferVk::unmap() {
   if (!m_hasBufferOwnership_ || !m_mappedPointer_) {
     return;
   }
-  vkUnmapMemory(g_rhi_vk->m_device_, m_deviceMemory_);
+  vkUnmapMemory(g_rhiVk->m_device_, m_deviceMemory_);
   m_mappedPointer_ = nullptr;
 }
 
