@@ -10,13 +10,13 @@ void RenderFrameContextDx12::queueSubmitCurrentActiveCommandBuffer() {
     CommandBufferDx12* commandBufferDx12
         = (CommandBufferDx12*)m_commandBuffer_;
 
-    auto commandBufferManager = g_rhi_dx12->getCommandBufferManager();
+    auto commandBufferManager = g_rhiDx12->getCommandBufferManager();
     commandBufferManager->executeCommandList(commandBufferDx12);
     commandBufferManager->returnCommandBuffer(commandBufferDx12);
 
     // get new commandbuffer
     m_commandBuffer_ = commandBufferManager->getOrCreateCommandBuffer();
-    g_rhi_dx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
+    g_rhiDx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
         = commandBufferDx12->m_owner_->m_fence->signalWithNextFenceValue(
             commandBufferDx12->m_owner_->getCommandQueue().Get());
   }
@@ -28,13 +28,13 @@ void RenderFrameContextDx12::submitCurrentActiveCommandBuffer(
     CommandBufferDx12* commandBufferDx12
         = (CommandBufferDx12*)m_commandBuffer_;
 
-    auto commandBufferManager = g_rhi_dx12->getCommandBufferManager();
+    auto commandBufferManager = g_rhiDx12->getCommandBufferManager();
     commandBufferManager->executeCommandList(commandBufferDx12);
     commandBufferManager->returnCommandBuffer(commandBufferDx12);
 
     // get new commandbuffer
     m_commandBuffer_ = commandBufferManager->getOrCreateCommandBuffer();
-    g_rhi_dx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
+    g_rhiDx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
         = commandBufferDx12->m_owner_->m_fence->signalWithNextFenceValue(
             commandBufferDx12->m_owner_->getCommandQueue().Get());
   }
