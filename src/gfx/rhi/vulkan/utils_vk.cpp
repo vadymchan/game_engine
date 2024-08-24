@@ -133,7 +133,7 @@ VkSemaphore g_createSemaphore() {
 
   VkSemaphore semaphore;
   if (vkCreateSemaphore(
-          g_rhi_vk->m_device_, &semaphoreInfo, nullptr, &semaphore)
+          g_rhiVk->m_device_, &semaphoreInfo, nullptr, &semaphore)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create semaphore");
   }
@@ -148,7 +148,7 @@ VkFence g_createFence(bool signaled) {
                              : 0;  // Optionally create it in a signaled state
 
   VkFence fence;
-  if (vkCreateFence(g_rhi_vk->m_device_, &fenceInfo, nullptr, &fence)
+  if (vkCreateFence(g_rhiVk->m_device_, &fenceInfo, nullptr, &fence)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create fence");
   }
@@ -223,7 +223,7 @@ VkImageView g_createTextureView(VkImage            image,
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
   VkImageView imageView;
-  if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+  if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create image view");
   }
@@ -255,7 +255,7 @@ VkImageView g_createTexture2DArrayView(VkImage            image,
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
   VkImageView imageView;
-  if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+  if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create 2D array image view");
   }
@@ -286,7 +286,7 @@ VkImageView g_createTextureCubeView(VkImage            image,
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
   VkImageView imageView;
-  if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+  if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create cube image view");
   }
@@ -317,7 +317,7 @@ VkImageView g_createTextureViewForSpecificMipMap(VkImage            image,
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
   VkImageView imageView;
-  if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+  if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error,
                       "Failed to create image view for specific mip level");
@@ -351,7 +351,7 @@ VkImageView g_createTexture2DArrayViewForSpecificMipMap(
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
   VkImageView imageView;
-  if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+  if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
       != VK_SUCCESS) {
     GlobalLogger::Log(
         LogLevel::Error,
@@ -385,7 +385,7 @@ VkImageView g_createTextureCubeViewForSpecificMipMap(
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
   VkImageView imageView;
-  if (vkCreateImageView(g_rhi_vk->m_device_, &viewInfo, nullptr, &imageView)
+  if (vkCreateImageView(g_rhiVk->m_device_, &viewInfo, nullptr, &imageView)
       != VK_SUCCESS) {
     GlobalLogger::Log(
         LogLevel::Error,
@@ -426,28 +426,28 @@ bool g_createTexture2DArrayLowLevel(uint32_t              width,
   imageInfo.samples = numSamples;
   imageInfo.flags   = imageCreateFlagBits;  // Optional
 
-  if (vkCreateImage(g_rhi_vk->m_device_, &imageInfo, nullptr, &image)
+  if (vkCreateImage(g_rhiVk->m_device_, &imageInfo, nullptr, &image)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create 2D array image");
     return false;
   }
 
   VkMemoryRequirements memRequirements;
-  vkGetImageMemoryRequirements(g_rhi_vk->m_device_, image, &memRequirements);
+  vkGetImageMemoryRequirements(g_rhiVk->m_device_, image, &memRequirements);
 
   VkMemoryAllocateInfo allocInfo = {};
   allocInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize       = memRequirements.size;
   allocInfo.memoryTypeIndex      = g_findMemoryType(
-      g_rhi_vk->m_physicalDevice_, memRequirements.memoryTypeBits, properties);
-  if (vkAllocateMemory(g_rhi_vk->m_device_, &allocInfo, nullptr, &imageMemory)
+      g_rhiVk->m_physicalDevice_, memRequirements.memoryTypeBits, properties);
+  if (vkAllocateMemory(g_rhiVk->m_device_, &allocInfo, nullptr, &imageMemory)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error,
                       "Failed to allocate memory for 2D array image");
     return false;
   }
 
-  vkBindImageMemory(g_rhi_vk->m_device_, image, imageMemory, 0);
+  vkBindImageMemory(g_rhiVk->m_device_, image, imageMemory, 0);
 
   return true;
 }
@@ -674,7 +674,7 @@ size_t g_createBufferLowLevel(EVulkanBufferBits usage,
   bufferInfo.usage              = g_getVulkanBufferBits(usage);
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (!vkCreateBuffer(g_rhi_vk->m_device_, &bufferInfo, nullptr, &buffer)
+  if (!vkCreateBuffer(g_rhiVk->m_device_, &bufferInfo, nullptr, &buffer)
       == VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create buffer");
     return 0;
@@ -682,25 +682,25 @@ size_t g_createBufferLowLevel(EVulkanBufferBits usage,
 
   VkMemoryRequirements memRequirements;
   vkGetBufferMemoryRequirements(
-      g_rhi_vk->m_device_, buffer, &memRequirements);
+      g_rhiVk->m_device_, buffer, &memRequirements);
 
   VkMemoryAllocateInfo allocInfo = {};
   allocInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize       = memRequirements.size;
   allocInfo.memoryTypeIndex
-      = g_findMemoryType(g_rhi_vk->m_physicalDevice_,
+      = g_findMemoryType(g_rhiVk->m_physicalDevice_,
                        memRequirements.memoryTypeBits,
                        g_getVulkanMemoryPropertyFlagBits(properties));
 
   if (!vkAllocateMemory(
-          g_rhi_vk->m_device_, &allocInfo, nullptr, &bufferMemory)
+          g_rhiVk->m_device_, &allocInfo, nullptr, &bufferMemory)
       == VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to allocate buffer memory");
     return 0;
   }
 
   allocateSize = memRequirements.size;
-  if (vkBindBufferMemory(g_rhi_vk->m_device_, buffer, bufferMemory, 0)
+  if (vkBindBufferMemory(g_rhiVk->m_device_, buffer, bufferMemory, 0)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to bind buffer memory");
   }
@@ -720,8 +720,8 @@ std::shared_ptr<BufferVk> g_createBuffer(EVulkanBufferBits usage,
       = g_rhi->getMemoryPool()->alloc(usage, properties, size);
   BufferPtr->initializeWithMemory(m_memory);
 #else
-  if (!g_createBufferLowLevel(g_rhi_vk->m_device_,
-                             g_rhi_vk->m_physicalDevice_,
+  if (!g_createBufferLowLevel(g_rhiVk->m_device_,
+                             g_rhiVk->m_physicalDevice_,
                              usage,
                              properties,
                              size,
@@ -749,8 +749,8 @@ std::shared_ptr<BufferVk> g_createBuffer(EVulkanBufferBits usage,
 // #if USE_VK_MEMORY_POOL
 //// TODO: add memory pool logic
 // #else
-//   return g_createBuffer(g_rhi_vk->m_device_,
-//                       g_rhi_vk->m_physicalDevice_,
+//   return g_createBuffer(g_rhiVk->m_device_,
+//                       g_rhiVk->m_physicalDevice_,
 //                       usage,
 //                       properties,
 //                       size,
@@ -817,28 +817,28 @@ void g_copyBuffer(VkBuffer     srcBuffer,
                 VkDeviceSize size,
                 VkDeviceSize srcOffset,
                 VkDeviceSize dstOffset) {
-  auto* commandBuffer = g_rhi_vk->beginSingleTimeCommands();
+  auto* commandBuffer = g_rhiVk->beginSingleTimeCommands();
   g_copyBuffer(commandBuffer->getRef(),
              srcBuffer,
              dstBuffer,
              size,
              srcOffset,
              dstOffset);
-  g_rhi_vk->endSingleTimeCommands(commandBuffer);
+  g_rhiVk->endSingleTimeCommands(commandBuffer);
 }
 
 void g_copyBuffer(const BufferVk& srcBuffer,
                 const BufferVk& dstBuffer,
                 VkDeviceSize    size) {
   assert(srcBuffer.m_allocatedSize_ >= size && dstBuffer.m_allocatedSize_ >= size);
-  auto* commandBuffer = g_rhi_vk->beginSingleTimeCommands();
+  auto* commandBuffer = g_rhiVk->beginSingleTimeCommands();
   g_copyBuffer(commandBuffer->getRef(),
              srcBuffer.m_buffer_,
              dstBuffer.m_buffer_,
              size,
              srcBuffer.m_offset_,
              dstBuffer.m_offset_);
-  g_rhi_vk->endSingleTimeCommands(commandBuffer);
+  g_rhiVk->endSingleTimeCommands(commandBuffer);
 }
 
 void g_copyBufferToTexture(VkBuffer buffer,
@@ -848,7 +848,7 @@ void g_copyBufferToTexture(VkBuffer buffer,
                          uint32_t height,
                          int32_t  miplevel,
                          int32_t  layerIndex) {
-  auto* commandBuffer = g_rhi_vk->beginSingleTimeCommands();
+  auto* commandBuffer = g_rhiVk->beginSingleTimeCommands();
   g_copyBufferToTexture(commandBuffer->getRef(),
                       buffer,
                       bufferOffset,
@@ -857,7 +857,7 @@ void g_copyBufferToTexture(VkBuffer buffer,
                       height,
                       miplevel,
                       layerIndex);
-  g_rhi_vk->endSingleTimeCommands(commandBuffer);
+  g_rhiVk->endSingleTimeCommands(commandBuffer);
 }
 
 }  // namespace game_engine
