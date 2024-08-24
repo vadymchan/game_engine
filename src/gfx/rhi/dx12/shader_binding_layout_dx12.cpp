@@ -404,7 +404,7 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignatureInternal(
     }
 
     ComPtr<ID3D12RootSignature> RootSignature;
-    HRESULT hr_create = g_rhi_dx12->m_device_->CreateRootSignature(
+    HRESULT hr_create = g_rhiDx12->m_device_->CreateRootSignature(
         0,
         signature->GetBufferPointer(),
         signature->GetBufferSize(),
