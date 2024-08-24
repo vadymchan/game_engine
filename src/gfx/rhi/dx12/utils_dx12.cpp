@@ -209,7 +209,7 @@ ComPtr<ID3D12Resource> g_createStagingBuffer(const void* initData,
   const uint64_t AlignedSize = g_align(size, alignment);
 
   ComPtr<ID3D12Resource> UploadResourceRHI;
-  g_rhi_dx12->m_device_->CreateCommittedResource(
+  g_rhiDx12->m_device_->CreateCommittedResource(
       &g_getUploadHeap(),
       D3D12_HEAP_FLAG_NONE,
       &g_getUploadResourceDesc(AlignedSize),
@@ -236,11 +236,11 @@ void g_uploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
 
   ComPtr<ID3D12Resource> StagingBuffer
       = g_createStagingBuffer(initData, size, alignment);
-  CommandBufferDx12* commandBuffer = g_rhi_dx12->beginSingleTimeCopyCommands();
+  CommandBufferDx12* commandBuffer = g_rhiDx12->beginSingleTimeCopyCommands();
   assert(commandBuffer->isValid());
   commandBuffer->get()->CopyBufferRegion(
       DestBuffer.Get(), 0, StagingBuffer.Get(), 0, AlignedSize);
-  g_rhi_dx12->endSingleTimeCopyCommands(commandBuffer);
+  g_rhiDx12->endSingleTimeCopyCommands(commandBuffer);
 }
 
 D3D12_RESOURCE_DESC g_getDefaultResourceDesc(uint64_t alignedSize,
@@ -277,7 +277,7 @@ ComPtr<ID3D12Resource> g_createDefaultResource(uint64_t              alignedSize
   }
 
   ComPtr<ID3D12Resource> NewResourceRHI;
-  if (SUCCEEDED(g_rhi_dx12->m_device_->CreateCommittedResource(
+  if (SUCCEEDED(g_rhiDx12->m_device_->CreateCommittedResource(
           &HeapProperties,
           D3D12_HEAP_FLAG_NONE,
           &Desc,
@@ -354,7 +354,7 @@ std::shared_ptr<CreatedResource> g_createBufferInternal(
   resourceDesc.Layout             = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   resourceDesc.Alignment          = 0;
 
-  assert(g_rhi_dx12);
+  assert(g_rhiDx12);
 
   std::shared_ptr<CreatedResource> createdResource;
   if (!!(bufferCreateFlag & EBufferCreateFlag::Readback)) {
@@ -365,7 +365,7 @@ std::shared_ptr<CreatedResource> g_createBufferInternal(
     ComPtr<ID3D12Resource>         NewResource;
     const CD3DX12_HEAP_PROPERTIES& HeapProperties
         = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-    HRESULT hr = g_rhi_dx12->m_device_->CreateCommittedResource(
+    HRESULT hr = g_rhiDx12->m_device_->CreateCommittedResource(
         &HeapProperties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
@@ -381,10 +381,10 @@ std::shared_ptr<CreatedResource> g_createBufferInternal(
            == (bufferCreateFlag
                & EBufferCreateFlag::UAV));  // Not allowed Readback with UAV
     createdResource
-        = g_rhi_dx12->createUploadResource(&resourceDesc, initialResourceState);
+        = g_rhiDx12->createUploadResource(&resourceDesc, initialResourceState);
   } else {
     createdResource
-        = g_rhi_dx12->createResource(&resourceDesc, initialResourceState);
+        = g_rhiDx12->createResource(&resourceDesc, initialResourceState);
   }
 
   assert(createdResource->m_resource_);
@@ -476,7 +476,7 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
       }
 
       CommandBufferDx12* commandBuffer
-          = g_rhi_dx12->beginSingleTimeCopyCommands();
+          = g_rhiDx12->beginSingleTimeCopyCommands();
       assert(commandBuffer->isValid());
 
       commandBuffer->get()->CopyBufferRegion(
@@ -485,7 +485,7 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
           StagingBuffer->get(),
           0,
           size);
-      g_rhi_dx12->endSingleTimeCopyCommands(commandBuffer);
+      g_rhiDx12->endSingleTimeCopyCommands(commandBuffer);
     }
   }
 
@@ -508,8 +508,8 @@ std::shared_ptr<CreatedResource> g_createTexturenternal(
     EResourceLayout          imageLayout,
     D3D12_CLEAR_VALUE*       clearValue,
     const wchar_t*           resourceName) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   D3D12_RESOURCE_DESC TexDesc = {};
   TexDesc.MipLevels           = mipLevels;
@@ -542,7 +542,7 @@ std::shared_ptr<CreatedResource> g_createTexturenternal(
   TexDesc.Layout    = D3D12_TEXTURE_LAYOUT_UNKNOWN;
   TexDesc.Alignment = 0;
 
-  std::shared_ptr<CreatedResource> ImageResource = g_rhi_dx12->createResource(
+  std::shared_ptr<CreatedResource> ImageResource = g_rhiDx12->createResource(
       &TexDesc, g_getDX12ResourceLayout(imageLayout), clearValue);
   assert(ImageResource->m_resource_);
 
@@ -699,9 +699,9 @@ uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
   uint32_t                           numRow            = 0;
   uint64_t                           rowSize           = 0;
   uint64_t                           textureMemorySize = 0;
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
-  g_rhi_dx12->m_device_->GetCopyableFootprints(
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
+  g_rhiDx12->m_device_->GetCopyableFootprints(
       &imageDesc, 0, 1, 0, &layout, &numRow, &rowSize, &textureMemorySize);
 
   D3D12_TEXTURE_COPY_LOCATION dst = {};
@@ -775,19 +775,19 @@ void g_copyBuffer(ID3D12Resource* srcBuffer,
                 uint64_t        size,
                 uint64_t        srcOffset,
                 uint64_t        dstOffset) {
-  CommandBufferDx12* commandBuffer = g_rhi_dx12->beginSingleTimeCopyCommands();
+  CommandBufferDx12* commandBuffer = g_rhiDx12->beginSingleTimeCopyCommands();
   g_copyBuffer(commandBuffer->get(),
              srcBuffer,
              dstBuffer,
              size,
              srcOffset,
              dstOffset);
-  g_rhi_dx12->endSingleTimeCopyCommands(commandBuffer);
+  g_rhiDx12->endSingleTimeCopyCommands(commandBuffer);
 }
 
 void g_createConstantBufferView(BufferDx12* buffer) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -795,21 +795,21 @@ void g_createConstantBufferView(BufferDx12* buffer) {
   }
 
   assert(!buffer->m_cbv_.isValid());
-  buffer->m_cbv_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_cbv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   D3D12_CONSTANT_BUFFER_VIEW_DESC Desc{};
   Desc.BufferLocation = buffer->getGPUAddress();
   Desc.SizeInBytes    = (uint32_t)buffer->getAllocatedSize();
 
-  g_rhi_dx12->m_device_->CreateConstantBufferView(&Desc,
+  g_rhiDx12->m_device_->CreateConstantBufferView(&Desc,
                                                   buffer->m_cbv_.m_cpuHandle_);
 }
 
 void g_createShaderResourceViewStructuredBuffer(BufferDx12* buffer,
                                                uint32_t    stride,
                                                uint32_t    count) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -817,7 +817,7 @@ void g_createShaderResourceViewStructuredBuffer(BufferDx12* buffer,
   }
 
   assert(!buffer->m_srv_.isValid());
-  buffer->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_srv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   D3D12_SHADER_RESOURCE_VIEW_DESC Desc{};
   Desc.Format                     = DXGI_FORMAT_UNKNOWN;
@@ -827,13 +827,13 @@ void g_createShaderResourceViewStructuredBuffer(BufferDx12* buffer,
   Desc.Buffer.Flags               = D3D12_BUFFER_SRV_FLAG_NONE;
   Desc.Buffer.NumElements         = count;
   Desc.Buffer.StructureByteStride = stride;
-  g_rhi_dx12->m_device_->CreateShaderResourceView(
+  g_rhiDx12->m_device_->CreateShaderResourceView(
       buffer->m_buffer->get(), &Desc, buffer->m_srv_.m_cpuHandle_);
 }
 
 void g_createShaderResourceViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -841,7 +841,7 @@ void g_createShaderResourceViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
   }
 
   assert(!buffer->m_srv_.isValid());
-  buffer->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_srv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   D3D12_SHADER_RESOURCE_VIEW_DESC Desc{};
   Desc.Format                  = DXGI_FORMAT_R32_TYPELESS;
@@ -851,15 +851,15 @@ void g_createShaderResourceViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
   Desc.Buffer.Flags            = D3D12_BUFFER_SRV_FLAG_RAW;
   Desc.Buffer.NumElements
       = bufferSize / 4;  // DXGI_FORMAT_R32_TYPELESS size is 4
-  g_rhi_dx12->m_device_->CreateShaderResourceView(
+  g_rhiDx12->m_device_->CreateShaderResourceView(
       buffer->m_buffer->get(), &Desc, buffer->m_srv_.m_cpuHandle_);
 }
 
 void g_createShaderResourceViewFormatted(BufferDx12*    buffer,
                                         ETextureFormat format,
                                         uint32_t       bufferSize) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -867,7 +867,7 @@ void g_createShaderResourceViewFormatted(BufferDx12*    buffer,
   }
 
   assert(!buffer->m_srv_.isValid());
-  buffer->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_srv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   const uint32_t Stride
       = g_getDX12TextureComponentCount(format) * g_getDX12TexturePixelSize(format);
@@ -879,15 +879,15 @@ void g_createShaderResourceViewFormatted(BufferDx12*    buffer,
   Desc.Buffer.FirstElement     = 0;
   Desc.Buffer.Flags            = D3D12_BUFFER_SRV_FLAG_NONE;
   Desc.Buffer.NumElements      = bufferSize / Stride;
-  g_rhi_dx12->m_device_->CreateShaderResourceView(
+  g_rhiDx12->m_device_->CreateShaderResourceView(
       buffer->m_buffer->get(), &Desc, buffer->m_srv_.m_cpuHandle_);
 }
 
 void g_createUnorderedAccessViewStructuredBuffer(BufferDx12* buffer,
                                                 uint32_t    stride,
                                                 uint32_t    count) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -895,7 +895,7 @@ void g_createUnorderedAccessViewStructuredBuffer(BufferDx12* buffer,
   }
 
   assert(!buffer->m_uav_.isValid());
-  buffer->m_uav_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_uav_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   D3D12_UNORDERED_ACCESS_VIEW_DESC Desc{};
   Desc.Format                     = DXGI_FORMAT_UNKNOWN;
@@ -904,13 +904,13 @@ void g_createUnorderedAccessViewStructuredBuffer(BufferDx12* buffer,
   Desc.Buffer.Flags               = D3D12_BUFFER_UAV_FLAG_NONE;
   Desc.Buffer.NumElements         = count;
   Desc.Buffer.StructureByteStride = stride;
-  g_rhi_dx12->m_device_->CreateUnorderedAccessView(
+  g_rhiDx12->m_device_->CreateUnorderedAccessView(
       buffer->m_buffer->get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
 void g_createUnorderedAccessViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -918,7 +918,7 @@ void g_createUnorderedAccessViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
   }
 
   assert(!buffer->m_uav_.isValid());
-  buffer->m_uav_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_uav_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   D3D12_UNORDERED_ACCESS_VIEW_DESC Desc{};
   Desc.Format              = DXGI_FORMAT_R32_TYPELESS;
@@ -927,15 +927,15 @@ void g_createUnorderedAccessViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
   Desc.Buffer.Flags        = D3D12_BUFFER_UAV_FLAG_RAW;
   Desc.Buffer.NumElements
       = bufferSize / 4;  // DXGI_FORMAT_R32_TYPELESS size is 4
-  g_rhi_dx12->m_device_->CreateUnorderedAccessView(
+  g_rhiDx12->m_device_->CreateUnorderedAccessView(
       buffer->m_buffer->get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
 void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
                                          ETextureFormat format,
                                          uint32_t       bufferSize) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(buffer);
   if (!buffer) {
@@ -943,7 +943,7 @@ void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
   }
 
   assert(!buffer->m_uav_.isValid());
-  buffer->m_uav_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  buffer->m_uav_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   const uint32_t Stride
       = g_getDX12TextureComponentCount(format) * g_getDX12TexturePixelSize(format);
@@ -954,13 +954,13 @@ void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
   Desc.Buffer.FirstElement = 0;
   Desc.Buffer.Flags        = D3D12_BUFFER_UAV_FLAG_NONE;
   Desc.Buffer.NumElements  = bufferSize / Stride;
-  g_rhi_dx12->m_device_->CreateUnorderedAccessView(
+  g_rhiDx12->m_device_->CreateUnorderedAccessView(
       buffer->m_buffer->get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
 void g_createShaderResourceView(TextureDx12* texture) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(texture);
   if (!texture) {
@@ -968,7 +968,7 @@ void g_createShaderResourceView(TextureDx12* texture) {
   }
 
   assert(!texture->m_srv_.isValid());
-  texture->m_srv_ = g_rhi_dx12->m_descriptorHeaps_.alloc();
+  texture->m_srv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
   D3D12_SHADER_RESOURCE_VIEW_DESC Desc = {};
   Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1013,13 +1013,13 @@ void g_createShaderResourceView(TextureDx12* texture) {
       break;
   }
 
-  g_rhi_dx12->m_device_->CreateShaderResourceView(
+  g_rhiDx12->m_device_->CreateShaderResourceView(
       texture->m_texture->get(), &Desc, texture->m_srv_.m_cpuHandle_);
 }
 
 void g_createDepthStencilView(TextureDx12* texture) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(texture);
   if (!texture) {
@@ -1027,7 +1027,7 @@ void g_createDepthStencilView(TextureDx12* texture) {
   }
 
   assert(!texture->m_dsv_.isValid());
-  texture->m_dsv_ = g_rhi_dx12->m_dsvDescriptorHeaps_.alloc();
+  texture->m_dsv_ = g_rhiDx12->m_dsvDescriptorHeaps_.alloc();
   D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
 
   Desc.Format               = g_getDX12TextureFormat(texture->m_format_);
@@ -1062,13 +1062,13 @@ void g_createDepthStencilView(TextureDx12* texture) {
   //     Desc.Flags |= D3D12_DSV_FLAG_READ_ONLY_STENCIL;
   Desc.Flags = D3D12_DSV_FLAG_NONE;
 
-  g_rhi_dx12->m_device_->CreateDepthStencilView(
+  g_rhiDx12->m_device_->CreateDepthStencilView(
       texture->m_texture->get(), &Desc, texture->m_dsv_.m_cpuHandle_);
 }
 
 void g_createUnorderedAccessView(TextureDx12* texture) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(texture);
   if (!texture) {
@@ -1078,7 +1078,7 @@ void g_createUnorderedAccessView(TextureDx12* texture) {
   assert(!texture->m_uav_.isValid());
   assert(texture->m_mipLevels_ > 0);
   for (int32_t i = 0; i < texture->m_mipLevels_; ++i) {
-    DescriptorDx12 UAV = g_rhi_dx12->m_descriptorHeaps_.alloc();
+    DescriptorDx12 UAV = g_rhiDx12->m_descriptorHeaps_.alloc();
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC Desc = {};
     Desc.Format = g_getDX12TextureFormat(texture->m_format_);
@@ -1107,7 +1107,7 @@ void g_createUnorderedAccessView(TextureDx12* texture) {
         break;
     }
 
-    g_rhi_dx12->m_device_->CreateUnorderedAccessView(
+    g_rhiDx12->m_device_->CreateUnorderedAccessView(
         texture->m_texture->get(), nullptr, &Desc, UAV.m_cpuHandle_);
 
     if (i == 0) {
@@ -1119,8 +1119,8 @@ void g_createUnorderedAccessView(TextureDx12* texture) {
 }
 
 void g_createRenderTargetView(TextureDx12* texture) {
-  assert(g_rhi_dx12);
-  assert(g_rhi_dx12->m_device_);
+  assert(g_rhiDx12);
+  assert(g_rhiDx12->m_device_);
 
   assert(texture);
   if (!texture) {
@@ -1128,7 +1128,7 @@ void g_createRenderTargetView(TextureDx12* texture) {
   }
 
   assert(!texture->m_rtv_.isValid());
-  texture->m_rtv_ = g_rhi_dx12->m_rtvDescriptorHeaps_.alloc();
+  texture->m_rtv_ = g_rhiDx12->m_rtvDescriptorHeaps_.alloc();
 
   D3D12_RENDER_TARGET_VIEW_DESC Desc = {};
   Desc.Format                        = g_getDX12TextureFormat(texture->m_format_);
@@ -1158,7 +1158,7 @@ void g_createRenderTargetView(TextureDx12* texture) {
       break;
   }
 
-  g_rhi_dx12->m_device_->CreateRenderTargetView(
+  g_rhiDx12->m_device_->CreateRenderTargetView(
       texture->m_texture->get(), &Desc, texture->m_rtv_.m_cpuHandle_);
 }
 
