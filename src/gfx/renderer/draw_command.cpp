@@ -10,12 +10,14 @@ void DrawCommand::prepareToDraw(bool isPositionOnly) {
   if (!m_test_) {
     // GetShaderBindings
     if (m_view_) {
-      m_view_->getShaderBindingInstance(m_shaderBindingInstanceArray_,
-                                     m_renderFrameContextPtr_->m_useForwardRenderer_);
+      m_view_->getShaderBindingInstance(
+          m_shaderBindingInstanceArray_,
+          m_renderFrameContextPtr_->m_useForwardRenderer_);
     }
 
     // GetShaderBindings
-    m_oneRenderObjectUniformBuffer_ = m_renderObject_->createShaderBindingInstance();
+    m_oneRenderObjectUniformBuffer_
+        = m_renderObject_->createShaderBindingInstance();
     m_shaderBindingInstanceArray_.add(m_oneRenderObjectUniformBuffer_.get());
 
     if (m_material_) {
@@ -45,18 +47,18 @@ void DrawCommand::prepareToDraw(bool isPositionOnly) {
   m_shaderBindingInstanceCombiner_.m_shaderBindingInstanceArray
       = &m_shaderBindingInstanceArray_;
 
-  const auto& RenderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
+  const auto& renderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
 
   VertexBufferArray vertexBufferArray;
   vertexBufferArray.add(
       isPositionOnly
-          ? RenderObjectGeoDataPtr->m_vertexBufferPositionOnlyPtr_.get()
-          : RenderObjectGeoDataPtr->m_vertexBufferPtr_.get());
+          ? renderObjectGeoDataPtr->m_vertexBufferPositionOnlyPtr_.get()
+          : renderObjectGeoDataPtr->m_vertexBufferPtr_.get());
   if (m_overrideInstanceData_) {
     vertexBufferArray.add(m_overrideInstanceData_);
-  } else if (RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_) {
+  } else if (renderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_) {
     vertexBufferArray.add(
-        RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get());
+        renderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get());
   }
 
   // Create Pipeline
@@ -106,7 +108,8 @@ void DrawCommand::draw() const {
         for (int32_t i = 0; i < pushConstantRanges->m_numOfData_; ++i) {
           const PushConstantRange& range = (*pushConstantRanges)[i];
           vkCmdPushConstants(
-              (VkCommandBuffer)m_renderFrameContextPtr_->getActiveCommandBuffer()
+              (VkCommandBuffer)m_renderFrameContextPtr_
+                  ->getActiveCommandBuffer()
                   ->getNativeHandle(),
               ((PipelineStateInfoVk*)m_currentPipelineStateInfo_)
                   ->m_pipelineLayout_,
@@ -122,14 +125,14 @@ void DrawCommand::draw() const {
       m_renderFrameContextPtr_, m_isPositionOnly_, m_overrideInstanceData_);
 
   // Draw
-  const auto&          RenderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
-  const VertexBuffer* InstanceData
+  const auto& kRenderObjectGeoDataPtr = m_renderObject_->m_geometryDataPtr_;
+  const VertexBuffer* kInstanceData
       = m_overrideInstanceData_
           ? m_overrideInstanceData_
-          : RenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get();
-  const int32_t InstanceCount
-      = InstanceData ? InstanceData->getElementCount() : 1;
-  m_renderObject_->draw(m_renderFrameContextPtr_, InstanceCount);
+          : kRenderObjectGeoDataPtr->m_vertexBufferInstanceDataPtr_.get();
+  const int32_t kInstanceCount
+      = kInstanceData ? kInstanceData->getElementCount() : 1;
+  m_renderObject_->draw(m_renderFrameContextPtr_, kInstanceCount);
 }
 
 }  // namespace game_engine
