@@ -38,10 +38,11 @@ inline math::Vector3Df g_getDirectionFromEulerAngle(
 }
 
 // TODO: consider adding to math_library
-const math::Vector4Df g_colorGreen = math::Vector4Df(0.0f, 1.0f, 0.0f, 1.0f);
-const math::Vector4Df g_colorBlue  = math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f);
-const math::Vector4Df g_colorWhite = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
-const math::Vector4Df g_colorBlack = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+const math::Vector4Df g_kColorBlack = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
+const math::Vector4Df g_kColorRed   = math::Vector4Df(1.0f, 0.0f, 0.0f, 1.0f);
+const math::Vector4Df g_kColorGreen = math::Vector4Df(0.0f, 1.0f, 0.0f, 1.0f);
+const math::Vector4Df g_kColorBlue  = math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f);
+const math::Vector4Df g_kColorWhite = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
 
 }  // namespace math
 
