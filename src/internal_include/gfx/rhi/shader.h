@@ -32,12 +32,18 @@ namespace game_engine {
 template <typename... T>
 class Permutation {
   public:
-  static int s_getPermutationCount() { return 1; }
+  // ======= BEGIN: public static methods =====================================
 
   template <typename K>
   static int s_getDefineCount() {
     return 1;
   }
+
+  static int s_getPermutationCount() { return 1; }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public getters ============================================
 
   template <typename K>
   int get() const {
@@ -49,21 +55,33 @@ class Permutation {
     return int();
   }
 
-  template <typename K>
-  void setIndex(int) {}
-
   int getPermutationId() const { return 0; }
+
+  void getPermutationDefines(std::string&) const {}
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
 
   void setFromPermutationId(int) {}
 
-  void getPermutationDefines(std::string&) const {}
+  template <typename K>
+  void setIndex(int) {}
+
+  // ======= END: public setters   ============================================
 };
 
 template <typename T, typename... T1>
 class Permutation<T, T1...> : public Permutation<T1...> {
   public:
+  // ======= BEGIN: public aliases ============================================
+
   using Type  = T;
   using Super = Permutation<T1...>;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public static methods =====================================
 
   static int s_getPermutationCount() {
     return T::Count * Super::s_getPermutationCount();
@@ -77,6 +95,10 @@ class Permutation<T, T1...> : public Permutation<T1...> {
 
     return Super::template s_getDefineCount<K>();
   }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public getters ============================================
 
   template <typename K>
   int get() const {
@@ -96,24 +118,9 @@ class Permutation<T, T1...> : public Permutation<T1...> {
     return Super::template getIndex<K>();
   }
 
-  template <typename K>
-  void setIndex(int value) {
-    if (std::is_same<T, K>::value) {
-      ValueIndex = value;
-      return;
-    }
-
-    return Permutation<T1...>::template setIndex<K>(value);
-  }
-
   int getPermutationId() const {
     return ValueIndex * Super::s_getPermutationCount()
          + Super::getPermutationId();
-  }
-
-  void setFromPermutationId(int permutationId) {
-    ValueIndex = (permutationId / Super::s_getPermutationCount()) % T::Count;
-    Super::setFromPermutationId(permutationId);
   }
 
   void getPermutationDefines(std::string& defines) const {
@@ -126,10 +133,37 @@ class Permutation<T, T1...> : public Permutation<T1...> {
     Super::getPermutationDefines(defines);
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  template <typename K>
+  void setIndex(int value) {
+    if (std::is_same<T, K>::value) {
+      ValueIndex = value;
+      return;
+    }
+
+    return Permutation<T1...>::template setIndex<K>(value);
+  }
+
+  void setFromPermutationId(int permutationId) {
+    ValueIndex = (permutationId / Super::s_getPermutationCount()) % T::Count;
+    Super::setFromPermutationId(permutationId);
+  }
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   int ValueIndex = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct ShaderInfo {
+  // ======= BEGIN: public constructors =======================================
+
   ShaderInfo() = default;
 
   ShaderInfo(Name                   name,
@@ -143,7 +177,9 @@ struct ShaderInfo {
       , m_entryPoint_(entryPoint)
       , m_shaderType_(shaderType) {}
 
-  void initialize() {}
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public getters ============================================
 
   size_t getHash() const {
     if (m_hash_) {
@@ -151,15 +187,13 @@ struct ShaderInfo {
     }
 
     m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_name_.getNameHash(),
-                                       m_shaderFilepath_.getNameHash(),
-                                       m_preProcessors_.getNameHash(),
-                                       m_entryPoint_.getNameHash(),
-                                       m_shaderType_,
-                                       m_permutationId_);
+                                          m_shaderFilepath_.getNameHash(),
+                                          m_preProcessors_.getNameHash(),
+                                          m_entryPoint_.getNameHash(),
+                                          m_shaderType_,
+                                          m_permutationId_);
     return m_hash_;
   }
-
-  mutable size_t m_hash_ = 0;
 
   const Name& getName() const { return m_name_; }
 
@@ -177,41 +211,62 @@ struct ShaderInfo {
     return m_includeShaderFilePaths_;
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
   void setName(const Name& name) {
     m_name_ = name;
-    m_hash_    = 0;
+    m_hash_ = 0;
   }
 
   void setShaderFilepath(const Name& shaderFilepath) {
     m_shaderFilepath_ = shaderFilepath;
-    m_hash_              = 0;
+    m_hash_           = 0;
   }
 
   void setPreProcessors(const Name& preProcessors) {
     m_preProcessors_ = preProcessors;
-    m_hash_             = 0;
+    m_hash_          = 0;
   }
 
   void setEntryPoint(const Name& entryPoint) {
     m_entryPoint_ = entryPoint;
-    m_hash_          = 0;
+    m_hash_       = 0;
   }
 
   void setShaderType(const EShaderAccessStageFlag shaderType) {
     m_shaderType_ = shaderType;
-    m_hash_          = 0;
+    m_hash_       = 0;
   }
 
   void setPermutationId(const uint32_t permutationId) {
     m_permutationId_ = permutationId;
-    m_hash_             = 0;
+    m_hash_          = 0;
   }
 
   void setIncludeShaderFilePaths(const std::vector<Name>& paths) {
     m_includeShaderFilePaths_ = paths;
   }
 
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void initialize() {}
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  // TODO: consider making private
+  mutable size_t m_hash_ = 0;
+
+  // ======= END: public misc fields   ========================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   Name                   m_name_;
   Name                   m_preProcessors_;
   Name                   m_entryPoint_ = Name("main");
@@ -219,13 +274,28 @@ struct ShaderInfo {
   std::vector<Name>      m_includeShaderFilePaths_;
   EShaderAccessStageFlag m_shaderType_    = (EShaderAccessStageFlag)0;
   uint32_t               m_permutationId_ = 0;
+
+  // ======= END: private misc fields   =======================================
 };
 
 struct CompiledShader {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~CompiledShader() {}
+
+  // ======= END: public destructor   =========================================
 };
 
 struct Shader {
+  // ======= BEGIN: public static methods =====================================
+
+  static void s_startAndRunCheckUpdateShaderThread();
+  static void s_releaseCheckUpdateShaderThread();
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public static fields ======================================
+
   // TODO: consider renaming
   static bool                 s_isRunningCheckUpdateShaderThread;
   static std::thread          s_checkUpdateShaderThread;
@@ -233,84 +303,139 @@ struct Shader {
   static std::map<const Shader*, std::vector<size_t>>
       s_connectedPipelineStateHash;
 
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public constructors =======================================
+
   Shader() {}
 
   Shader(const ShaderInfo& shaderInfo)
       : m_shaderInfo_(shaderInfo) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~Shader();
 
-  static void s_startAndRunCheckUpdateShaderThread();
-  static void s_releaseCheckUpdateShaderThread();
+  // ======= END: public destructor   =========================================
 
-  bool         updateShader();
+  // ======= BEGIN: public overridden methods =================================
+
   virtual void initialize();
-
-  uint64_t   m_timeStamp_ = 0;
-  ShaderInfo m_shaderInfo_;
-
-  CompiledShader* getCompiledShader() const { return m_compiledShader; }
-
-  virtual void setPermutationId(int32_t permutaitonId) {}
 
   virtual int32_t getPermutationId() const { return 0; }
 
-  virtual int32_t s_getPermutationCount() const { return 1; }
+  virtual int32_t getPermutationCount() const { return 1; }
 
   virtual void getPermutationDefines(std::string& result) const {}
 
+  virtual void setPermutationId(int32_t permutaitonId) {}
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  CompiledShader* getCompiledShader() const { return m_compiledShader; }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool updateShader();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  uint64_t        m_timeStamp_ = 0;
+  ShaderInfo      m_shaderInfo_;
   CompiledShader* m_compiledShader = nullptr;
-  // TODO: add abstraction (should be related to Vulkan)
+  // TODO: add abstraction (should be related to Vulkan) - maybe deprecated
+  // comment
+
+  // ======= END: public misc fields   ========================================
 };
 
-// TODO: refactor
-#define DECLARE_SHADER_WITH_PERMUTATION(ShaderClass, PermutationVariable) \
-  public:                                                                 \
-  static ShaderInfo   GShaderInfo;                                        \
-  static ShaderClass* CreateShader(                                       \
-      const ShaderClass::ShaderPermutation& permutation);                 \
-  using Shader::Shader;                                                   \
-  virtual void setPermutationId(int32_t permutaitonId) override {         \
-    PermutationVariable.setFromPermutationId(permutaitonId);              \
-  }                                                                       \
-  virtual int32_t getPermutationId() const override {                     \
-    return PermutationVariable.getPermutationId();                        \
-  }                                                                       \
-  virtual int32_t s_getPermutationCount() const override {                \
-    return PermutationVariable.s_getPermutationCount();                   \
-  }                                                                       \
-  virtual void getPermutationDefines(std::string& result) const {         \
-    PermutationVariable.getPermutationDefines(result);                    \
+// TODO:
+// - consider whether there's better solution for this (templates, etc.)
+// - refactor
+#define DECLARE_SHADER_WITH_PERMUTATION(ShaderClass, PermutationVariable)  \
+  public:                                                                  \
+  static ShaderInfo   GShaderInfo;                                         \
+  static ShaderClass* CreateShader(                                        \
+      const ShaderClass::ShaderPermutation& permutation);                  \
+  using Shader::Shader;                                                    \
+  virtual void setPermutationId(int32_t permutaitonId) override {          \
+    PermutationVariable.setFromPermutationId(permutaitonId);               \
+  }                                                                        \
+  virtual int32_t getPermutationId() const override {                      \
+    return PermutationVariable.getPermutationId();                         \
+  }                                                                        \
+  virtual int32_t getPermutationCount() const override {                   \
+    return PermutationVariable.s_getPermutationCount();                    \
+  }                                                                        \
+  virtual void getPermutationDefines(std::string& result) const override { \
+    PermutationVariable.getPermutationDefines(result);                     \
   }
 
 struct ShaderForwardPixelShader : public Shader {
+  // ======= BEGIN: public nested types =======================================
+
   // TODO: currently not used
   // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
   DECLARE_DEFINE(USE_REVERSEZ, 0, 1);
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public aliases ============================================
+
   using ShaderPermutation
       = Permutation</*USE_VARIABLE_SHADING_RATE,*/ USE_REVERSEZ>;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ShaderPermutation m_permutation_;
 
+  // ======= END: public misc fields   ========================================
+
+  // TODO: consider wrap to comment (as other code elements in class)
   DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, m_permutation_)
 };
 
 struct ShaderGBufferVertexShader : public Shader {
+  // ======= BEGIN: public nested types =======================================
+
   DECLARE_DEFINE(USE_VERTEX_COLOR, 0, 1);
   DECLARE_DEFINE(USE_VERTEX_BITANGENT, 0, 1);
   DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
   DECLARE_DEFINE(USE_SPHERICAL_MAP, 0, 1);
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public aliases ============================================
+
   using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
                                         USE_VERTEX_BITANGENT,
                                         USE_ALBEDO_TEXTURE,
                                         USE_SPHERICAL_MAP>;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ShaderPermutation m_permutation_;
+
+  // ======= END: public misc fields   ========================================
 
   DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, m_permutation_)
 };
 
 struct ShaderGBufferPixelShader : public Shader {
+  // ======= BEGIN: public nested types =======================================
+
   DECLARE_DEFINE(USE_VERTEX_COLOR, 0, 1);
   DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
   DECLARE_DEFINE(USE_SRGB_ALBEDO_TEXTURE, 0, 1);
@@ -318,12 +443,23 @@ struct ShaderGBufferPixelShader : public Shader {
   // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
   DECLARE_DEFINE(USE_PBR, 0, 1);
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public aliases ============================================
+
   using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
                                         USE_ALBEDO_TEXTURE,
                                         USE_SRGB_ALBEDO_TEXTURE,
                                         /*USE_VARIABLE_SHADING_RATE,*/
                                         USE_PBR>;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ShaderPermutation m_permutation_;
+
+  // ======= END: public misc fields   ========================================
 
   DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, m_permutation_)
 };
@@ -366,11 +502,19 @@ struct ShaderGBufferPixelShader : public Shader {
 //};
 
 struct GraphicsPipelineShader {
+  // ======= BEGIN: public getters ============================================
+
+  size_t getHash() const;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   Shader* m_vertexShader_   = nullptr;
   Shader* m_geometryShader_ = nullptr;
   Shader* m_pixelShader_    = nullptr;
 
-  size_t getHash() const;
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
