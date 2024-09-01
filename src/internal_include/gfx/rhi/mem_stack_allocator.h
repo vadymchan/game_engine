@@ -12,6 +12,8 @@
 namespace game_engine {
 
 struct MemoryChunk {
+  // ======= BEGIN: public constructors =======================================
+
   MemoryChunk() = default;
 
   MemoryChunk(uint8_t* address, uint64_t offset, uint64_t dataSize)
@@ -19,8 +21,13 @@ struct MemoryChunk {
       , m_offset_(offset)
       , m_dataSize_(dataSize) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void* alloc(size_t numOfBytes) {
-    const uint64_t kAllocOffset = g_align<uint64_t>(m_offset_, DEFAULT_ALIGNMENT);
+    const uint64_t kAllocOffset
+        = g_align<uint64_t>(m_offset_, DEFAULT_ALIGNMENT);
     if (kAllocOffset + numOfBytes <= m_dataSize_) {
       m_offset_ = kAllocOffset + numOfBytes;
       return m_address_ + kAllocOffset;
@@ -28,18 +35,22 @@ struct MemoryChunk {
     return nullptr;
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   uint8_t* m_address_  = nullptr;
   uint64_t m_offset_   = 0;
   uint64_t m_dataSize_ = 0;
 
   MemoryChunk* m_next_ = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class PageAllocator {
   public:
-  static constexpr uint64_t s_kPageSize = 1024 * 4;
-  static constexpr uint64_t s_kMaxMemoryChunkSize
-      = s_kPageSize - sizeof(MemoryChunk);
+  // ======= BEGIN: public static methods =====================================
 
   static PageAllocator* get() {
     static PageAllocator* s_pageAllocator = nullptr;
@@ -49,6 +60,18 @@ class PageAllocator {
 
     return s_pageAllocator;
   }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public static fields ======================================
+
+  static constexpr uint64_t s_kPageSize = 1024 * 4;
+  static constexpr uint64_t s_kMaxMemoryChunkSize
+      = s_kPageSize - sizeof(MemoryChunk);
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   MemoryChunk* allocate() {
     {
@@ -137,19 +160,32 @@ class PageAllocator {
     }
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   MutexLock    m_lock_;
   MemoryChunk* m_freeChunk_        = nullptr;
   MemoryChunk* m_freeChunkBigSize_ = nullptr;
 
+  // ======= END: public misc fields   ========================================
+
   private:
-  PageAllocator()                                   = default;
-  PageAllocator(const PageAllocator&)               = delete;
-  PageAllocator(PageAllocator&&)                    = delete;
-  PageAllocator& operator=(const PageAllocator& In) = delete;
+  // ======= BEGIN: private constructors ======================================
+
+  // TODO: this probably should be public
+  PageAllocator()                                = default;
+  PageAllocator(const PageAllocator&)            = delete;
+  PageAllocator(PageAllocator&&)                 = delete;
+  PageAllocator& operator=(const PageAllocator&) = delete;
+
+  // ======= END: private constructors   ======================================
 };
 
 class MemStack {
   public:
+  // ======= BEGIN: public static methods =====================================
+
   static MemStack* get() {
     static MemStack* s_memStack = nullptr;
     if (!s_memStack) {
@@ -159,6 +195,10 @@ class MemStack {
     return s_memStack;
   }
 
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   template <typename T>
   T* alloc() {
     return (T*)alloc(sizeof(T));
@@ -166,8 +206,7 @@ class MemStack {
 
   void* alloc(uint64_t numOfBytes) {
     if (numOfBytes >= PageAllocator::s_kMaxMemoryChunkSize) {
-      MemoryChunk* newChunk
-          = PageAllocator::get()->allocateBigSize(numOfBytes);
+      MemoryChunk* newChunk = PageAllocator::get()->allocateBigSize(numOfBytes);
       assert(newChunk);
 
       newChunk->m_next_ = m_bigSizeChunk_;
@@ -210,14 +249,23 @@ class MemStack {
     }
   }
 
+  // ======= END: public misc methods   =======================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   MemoryChunk* m_topMemoryChunk_ = nullptr;
   MemoryChunk* m_bigSizeChunk_   = nullptr;
+
+  // ======= END: private misc fields   =======================================
 };
 
 template <typename T>
 class MemStackAllocator {
   public:
+  // ======= BEGIN: public aliases ============================================
+
+  // TODO: rewrite to using instead of typedef
   typedef size_t    size_type;
   typedef ptrdiff_t difference_type;
   typedef T*        pointer;
@@ -226,7 +274,12 @@ class MemStackAllocator {
   typedef const T&  const_reference;
   typedef T         value_type;
 
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   // TODO: refactor numOfElements
+  // TODO: for all ENABLE_ALLOCATOR_LOG use logger class (GlobalLogger)
   pointer allocate(size_t numOfElement) {
 #if ENABLE_ALLOCATOR_LOG
     pointer allocatedAddress = static_cast<pointer>(
@@ -272,6 +325,8 @@ class MemStackAllocator {
 #endif
     address->~T();
   }
+
+  // ======= END: public misc methods   =======================================
 };
 
 }  // namespace game_engine
