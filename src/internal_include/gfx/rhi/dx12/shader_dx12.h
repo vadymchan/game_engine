@@ -10,9 +10,17 @@
 namespace game_engine {
 
 struct CompiledShaderDx12 : public CompiledShader {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~CompiledShaderDx12();
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ComPtr<IDxcBlob> m_shaderBlob_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
