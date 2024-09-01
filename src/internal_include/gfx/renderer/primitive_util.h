@@ -16,80 +16,160 @@
 namespace game_engine {
 class QuadPrimitive : public Object {
   public:
+  // ======= BEGIN: public setters ============================================
+
   void setPlane(const math::Plane& plane);
 
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   math::Plane m_plane_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class ConePrimitive : public Object {
   public:
+  // ======= BEGIN: public misc fields ========================================
+
   float           m_height_ = 0.0f;
   float           m_radius_ = 0.0f;
   math::Vector4Df m_color_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class CylinderPrimitive : public Object {
   public:
+  // ======= BEGIN: public misc fields ========================================
+
   float           m_height_ = 0.0f;
   float           m_radius_ = 0.0f;
   math::Vector4Df m_color_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class BillboardQuadPrimitive : public QuadPrimitive {
   public:
-  Camera* m_camera_ = nullptr;
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void update(float deltaTime) override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  Camera* m_camera_ = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class UIQuadPrimitive : public Object {
   public:
-  math::Vector2Df m_position_;
-  math::Vector2Df m_size_;
+  // ======= BEGIN: public overridden methods =================================
 
   // virtual void draw(const std::shared_ptr<RenderFrameContext>&
   // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
-  void           setTexture(const Texture* texture);
-  void           setUniformParams(const Shader* shader) const;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   const Texture* getTexture() const;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  void setTexture(const Texture* texture);
+  void setUniformParams(const Shader* shader) const;
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  math::Vector2Df m_position_;
+  math::Vector2Df m_size_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class FullscreenQuadPrimitive : public Object {
   public:
+  // ======= BEGIN: public overridden methods =================================
+
   // virtual void draw(const std::shared_ptr<RenderFrameContext>&
   // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public setters ============================================
+
   void setUniformBuffer(const Shader* shader) const;
   void setTexture(int                     index,
                   const Texture*          texture,
                   const SamplerStateInfo* samplerState);
+
+  // ======= END: public setters   ============================================
 };
 
 class BoundBoxObject : public Object {
   public:
+  // ======= BEGIN: public setters ============================================
+
   void setUniformBuffer(const Shader* shader);
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void updateBoundBox(const BoundBox& boundBox);
   void updateBoundBox();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   BoundBox        m_boundBox_;
   Object*         m_ownerObject_ = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class BoundSphereObject : public Object {
   public:
+  // ======= BEGIN: public setters ============================================
+
   void setUniformBuffer(const Shader* shader);
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   BoundSphere     m_boundSphere_;
   Object*         m_ownerObject_ = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class SegmentPrimitive : public Object {
   public:
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual void update(float deltaTime) override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   math::Vector3Df getCurrentEnd() const {
     float           t   = std::clamp(m_time_, 0.0f, 1.0f);
     math::Vector3Df end = (m_end_ - m_start_);
@@ -101,36 +181,60 @@ class SegmentPrimitive : public Object {
     return result;
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void updateSegment();
   void updateSegment(const math::Vector3Df& start,
                      const math::Vector3Df& end,
                      const math::Vector4Df& color,
                      float                  time = 1.0f);
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   math::Vector3Df m_start_;
   math::Vector3Df m_end_;
   math::Vector4Df m_color_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   float           m_time_  = 0.0f;
 
-  virtual void update(float deltaTime) override;
+  // ======= END: public misc fields   ========================================
 };
 
 class ArrowSegmentPrimitive : public Object {
   public:
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ArrowSegmentPrimitive() {
     delete m_segmentObject_;
     delete m_coneObject_;
   }
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
   virtual void update(float deltaTime) override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public setters ============================================
 
   void setPosition(const math::Vector3Df& pos);
   void setStart(const math::Vector3Df& start);
   void setEnd(const math::Vector3Df& end);
   void setTime(float time);
 
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   SegmentPrimitive* m_segmentObject_ = nullptr;
   ConePrimitive*    m_coneObject_    = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 // class DirectionalLightPrimitive : public Object {
@@ -180,10 +284,16 @@ class ArrowSegmentPrimitive : public Object {
 
 class FrustumPrimitive : public Object {
   public:
+  // ======= BEGIN: public constructors =======================================
+
   FrustumPrimitive() = default;
 
   FrustumPrimitive(const Camera* targetCamera)
       : m_targetCamera_(targetCamera) {}
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
 
   virtual ~FrustumPrimitive() {
     for (int32_t i = 0; i < std::size(m_segments_); ++i) {
@@ -195,11 +305,19 @@ class FrustumPrimitive : public Object {
     }
   }
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
   virtual void update(float deltaTime) override;
   // virtual void draw(const std::shared_ptr<RenderFrameContext>&
   // renderFrameContext, const Camera* camera, const Shader* shader, const
   // std::list<const Light*>& lights, int32_t instanceCount = 0) const
   // override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   SegmentPrimitive* m_segments_[16]    = {};
   QuadPrimitive*    m_plane_[6]        = {};
@@ -208,11 +326,27 @@ class FrustumPrimitive : public Object {
   bool              m_drawPlane_       = false;
   math::Vector3Df   m_offset_;
   math::Vector3Df   m_scale_ = math::g_oneVector<float, 3>();
+
+  // ======= END: public misc fields   ========================================
 };
 
 class Graph2D : public Object {
   public:
+  // ======= BEGIN: public overridden methods =================================
+
   virtual void update(float deltaTime) override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  int32_t getMaxInstancCount() const {
+    return static_cast<int32_t>(m_resultMatrices_.size());
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
 
   void sethPosition(const math::Vector2Df& pos);
   void setPoints(const std::vector<math::Vector2Df>& points);
@@ -221,11 +355,15 @@ class Graph2D : public Object {
     m_guardLineSize_ = size;
   }
 
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void updateBuffer();
 
-  int32_t getMaxInstancCount() const {
-    return static_cast<int32_t>(m_resultMatrices_.size());
-  }
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   bool            m_dirtyFlag_ = false;
   math::Vector2Df m_position_;
@@ -233,6 +371,8 @@ class Graph2D : public Object {
   std::vector<math::Vector2Df> m_points_;
   std::vector<math::Vector2Df> m_resultPoints_;
   std::vector<math::Matrix4f>  m_resultMatrices_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 // TODO: consider moving this global functions
@@ -339,12 +479,12 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //     Camera*               targetCamera,
 //     DirectionalLight*     light,
 //     const char*            textureFilename);
-// 
+//
 // PointLightPrimitive* g_createPointLightDebug(const math::Vector3Df& scale,
 //                                             Camera* targetCamera,
 //                                             PointLight*           light,
 //                                             const char* textureFilename);
-// 
+//
 // SpotLightPrimitive*  g_createSpotLightDebug(const math::Vector3Df& scale,
 //                                            Camera* targetCamera, SpotLight*
 //                                            light, const char*
