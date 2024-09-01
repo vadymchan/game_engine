@@ -15,8 +15,9 @@ namespace game_engine {
 
 class Window {
   public:
+  // ======= BEGIN: public nested types =======================================
 
-enum class Flags : uint32_t {
+  enum class Flags : uint32_t {
     None              = 0,
     Fullscreen        = SDL_WINDOW_FULLSCREEN,
     Shown             = SDL_WINDOW_SHOWN,
@@ -27,9 +28,11 @@ enum class Flags : uint32_t {
     Vulkan            = SDL_WINDOW_VULKAN
   };
 
+  // ======= END: public nested types   =======================================
 
+  // ======= BEGIN: public constructors =======================================
 
-  //TODO: YAGNI - remove
+  // TODO: YAGNI - remove
   Window()
       : m_title_("")
       , m_size_(0, 0)
@@ -51,10 +54,12 @@ enum class Flags : uint32_t {
                                    m_size_.height(),
                                    static_cast<std::uint32_t>(m_flags_))} {}
 
-  Window(const Window&)                    = delete;
-  auto operator=(const Window&) -> Window& = delete;
-  Window(Window&&)                         = delete;
-  auto operator=(Window&&) -> Window&      = delete;
+  Window(const Window&) = delete;
+  Window(Window&&)      = delete;
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
 
   ~Window() {
     if (m_window_) {
@@ -62,6 +67,10 @@ enum class Flags : uint32_t {
       m_window_ = nullptr;
     }
   }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
 
   // clang-format off
 
@@ -80,17 +89,34 @@ enum class Flags : uint32_t {
 
   // clang-format on
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void onResize(const WindowEvent& event) {
     m_size_ = math::Dimension2Di(event.data1, event.data2);
     SDL_SetWindowSize(m_window_, event.data1, event.data2);
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public overloaded operators ===============================
+
+  auto operator=(const Window&) -> Window& = delete;
+  auto operator=(Window&&) -> Window&      = delete;
+
+  // ======= END: public overloaded operators   ===============================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   std::string        m_title_;
   math::Dimension2Di m_size_;
   math::Point2Di     m_position_;
   Flags              m_flags_;
   SDL_Window*        m_window_{nullptr};
+
+  // ======= END: private misc fields   =======================================
 };
 
 DECLARE_ENUM_BIT_OPERATORS(Window::Flags)
