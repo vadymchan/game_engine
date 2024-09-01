@@ -18,6 +18,8 @@ namespace fs = std::filesystem;
 
 class SpirvUtil {
   public:
+  // ======= BEGIN: public static methods =====================================
+
   static std::vector<uint32_t> s_compileHlslFileToSpirv(
       const fs::path&     shaderFilePath,
       shaderc_shader_kind shaderKind,
@@ -74,7 +76,8 @@ class SpirvUtil {
     return {compilationResult.cbegin(), compilationResult.cend()};
   }
 
-  static shaderc_shader_kind s_getShadercShaderKind(EShaderAccessStageFlag flag) {
+  static shaderc_shader_kind s_getShadercShaderKind(
+      EShaderAccessStageFlag flag) {
     switch (flag) {
       case EShaderAccessStageFlag::VERTEX:
         return shaderc_glsl_vertex_shader;
@@ -102,7 +105,11 @@ class SpirvUtil {
     }
   }
 
+  // ======= END: public static methods   =====================================
+
   private:
+  // ======= BEGIN: private static methods ====================================
+
   static std::string s_readShaderFile_(const fs::path& shaderFilePath) {
     std::ifstream shaderFile(shaderFilePath);
     if (!shaderFile) {
@@ -117,11 +124,17 @@ class SpirvUtil {
     return shaderStream.str();
   }
 
+  // ======= END: private static methods   ====================================
+
+  // ======= BEGIN: private static fields =====================================
+
   // TODO: make it configurable
   static constexpr auto s_kTargetEnvironment = shaderc_target_env_vulkan;
   // TODO: select depending on selected vulkan version in vkInstance
   static constexpr auto s_kTargetVersion  = shaderc_env_version_vulkan_1_3;
   static constexpr auto s_kSourceLanguage = shaderc_source_language_hlsl;
+
+  // ======= END: private static fields   =====================================
 };
 }  // namespace game_engine
 
