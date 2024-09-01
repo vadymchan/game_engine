@@ -11,7 +11,13 @@ namespace game_engine {
 
 class WindowEventHandler {
   public:
+         // ======= BEGIN: public aliases ============================================
+
   using EventCallback = std::function<void(const WindowEvent&)>;
+
+  // ======= END: public aliases   ============================================
+  
+  // ======= BEGIN: public misc methods =======================================
 
   void subscribe(WindowEventType eventType, const EventCallback& callback) {
     m_subscribers_[eventType].push_back(callback);
@@ -26,13 +32,29 @@ class WindowEventHandler {
     }
   }
 
+  // ======= END: public misc methods   =======================================
+
+
+
+
   private:
+          // ======= BEGIN: private misc methods ======================================
+
   void handleEvent_(const WindowEvent& event, const EventCallback& callback) {
     callback(event);
   }
 
+
+  // ======= END: private misc methods   ======================================
+  
+  // ======= BEGIN: private misc fields =======================================
+
   std::unordered_map<WindowEventType, std::vector<EventCallback>>
       m_subscribers_;
+
+  // ======= END: private misc fields   =======================================
+
+
 };
 
 }  // namespace game_engine
