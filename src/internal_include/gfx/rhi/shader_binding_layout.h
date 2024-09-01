@@ -21,55 +21,113 @@ struct SamplerStateInfo;
 // Single resources
 struct ShaderBindingResource
 /*: public std::enable_shared_from_this<ShaderBindingResource>*/ {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ShaderBindingResource() {}
 
-  virtual const void* getResource() const { return nullptr; }
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual int32_t numOfResource() const { return 1; }
 
   virtual bool isBindless() const { return false; }
+
+  virtual const void* getResource() const { return nullptr; }
+
+  // ======= END: public overridden methods   =================================
 };
 
 struct UniformBufferResource : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   UniformBufferResource() = default;
 
   UniformBufferResource(const IUniformBufferBlock* uniformBuffer)
       : m_uniformBuffer_(uniformBuffer) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~UniformBufferResource() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getResource() const override { return m_uniformBuffer_; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public constants ==========================================
+
   const IUniformBufferBlock* m_uniformBuffer_ = nullptr;
+
+  // ======= END: public constants   ==========================================
 };
 
 struct BufferResource : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   BufferResource() = default;
 
   BufferResource(const IBuffer* buffer)
       : m_buffer(buffer) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~BufferResource() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getResource() const override { return m_buffer; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public constants ==========================================
+
   const IBuffer* m_buffer = nullptr;
+
+  // ======= END: public constants   ==========================================
 };
 
 struct SamplerResource : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   SamplerResource() = default;
 
   SamplerResource(const SamplerStateInfo* samplerState)
       : m_samplerState_(samplerState) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~SamplerResource() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getResource() const override { return m_samplerState_; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public constants ==========================================
+
   const SamplerStateInfo* m_samplerState_ = nullptr;
+
+  // ======= END: public constants   ==========================================
 };
 
 struct TextureResource : public SamplerResource {
+  // ======= BEGIN: public constructors =======================================
+
   TextureResource() = default;
 
   TextureResource(const Texture*          texture,
@@ -79,43 +137,84 @@ struct TextureResource : public SamplerResource {
       , kTexture(texture)
       , kMipLevel(mipLevel) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~TextureResource() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getResource() const override { return kTexture; }
 
-  const Texture* kTexture   = nullptr;
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public constants ==========================================
+
+  const Texture* kTexture  = nullptr;
   const int32_t  kMipLevel = 0;
+
+  // ======= END: public constants   ==========================================
 };
 
 struct TextureArrayResource : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   TextureArrayResource() = default;
 
-  TextureArrayResource(const Texture** textureArray,
-                       const int32_t   numOfTexures)
+  TextureArrayResource(const Texture** textureArray, const int32_t numOfTexures)
       : kTextureArray(textureArray)
       , kNumOfTexures(numOfTexures) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~TextureArrayResource() {}
 
-  virtual const void* getResource() const override { return kTextureArray; }
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual int32_t numOfResource() const override { return kNumOfTexures; }
 
+  virtual const void* getResource() const override { return kTextureArray; }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public constants ==========================================
+
   const Texture** kTextureArray = nullptr;
   const int32_t   kNumOfTexures = 1;
+
+  // ======= END: public constants   ==========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 
 // Bindless resources, It contain multiple resources at once.
 struct UniformBufferResourceBindless : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   UniformBufferResourceBindless() = default;
 
   UniformBufferResourceBindless(
       const std::vector<const IUniformBufferBlock*>& uniformBuffers)
       : m_uniformBuffers_(uniformBuffers) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~UniformBufferResourceBindless() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual bool isBindless() const { return true; }
 
   virtual const void* getResource(int32_t index) const {
     return m_uniformBuffers_[index];
@@ -125,36 +224,66 @@ struct UniformBufferResourceBindless : public ShaderBindingResource {
     return (int32_t)m_uniformBuffers_.size();
   }
 
-  virtual bool isBindless() const { return true; }
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   std::vector<const IUniformBufferBlock*> m_uniformBuffers_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct BufferResourceBindless : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   BufferResourceBindless() = default;
 
   BufferResourceBindless(const std::vector<const IBuffer*>& buffers)
       : m_buffers(buffers) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~BufferResourceBindless() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual bool isBindless() const { return true; }
 
   virtual const void* getResource(int32_t index) const {
     return m_buffers[index];
   }
 
-  virtual bool isBindless() const { return true; }
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   std::vector<const IBuffer*> m_buffers;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct SamplerResourceBindless : public ShaderBindingResource {
+  // ======= BEGIN: public constructors =======================================
+
   SamplerResourceBindless() = default;
 
   SamplerResourceBindless(
       const std::vector<const SamplerStateInfo*>& samplerStates)
       : m_samplerStates_(samplerStates) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~SamplerResourceBindless() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getResource(int32_t index) const {
     return m_samplerStates_[index];
@@ -162,10 +291,18 @@ struct SamplerResourceBindless : public ShaderBindingResource {
 
   virtual bool isBindless() const { return true; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<const SamplerStateInfo*> m_samplerStates_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct TextureResourceBindless : public ShaderBindingResource {
+  // ======= BEGIN: public nested types =======================================
+
   struct TextureBindData {
     TextureBindData() = default;
 
@@ -181,12 +318,24 @@ struct TextureResourceBindless : public ShaderBindingResource {
     int32_t           m_mipLevel_     = 0;
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public constructors =======================================
+
   TextureResourceBindless() = default;
 
   TextureResourceBindless(const std::vector<TextureBindData>& textureBindData)
       : m_textureBindDatas_(textureBindData) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~TextureResourceBindless() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getResource(int32_t index) const {
     return &m_textureBindDatas_[0];
@@ -194,14 +343,26 @@ struct TextureResourceBindless : public ShaderBindingResource {
 
   virtual bool isBindless() const { return true; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<TextureBindData> m_textureBindDatas_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct TextureArrayResourceBindless : public ShaderBindingResource {
+  // ======= BEGIN: public nested types =======================================
+
   struct TextureArrayBindData {
     Texture** m_textureArray_ = nullptr;
     int32_t   m_numOfTexure_  = 0;
   };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public constructors =======================================
 
   TextureArrayResourceBindless() = default;
 
@@ -209,11 +370,15 @@ struct TextureArrayResourceBindless : public ShaderBindingResource {
       const std::vector<TextureArrayBindData>& textureArrayBindDatas)
       : m_textureArrayBindDatas_(textureArrayBindDatas) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~TextureArrayResourceBindless() {}
 
-  virtual const void* getResource(int32_t index) const {
-    return &m_textureArrayBindDatas_[index];
-  }
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual int32_t numOfResource(int32_t index) const {
     return m_textureArrayBindDatas_[index].m_numOfTexure_;
@@ -221,12 +386,24 @@ struct TextureArrayResourceBindless : public ShaderBindingResource {
 
   virtual bool isBindless() const { return true; }
 
+  virtual const void* getResource(int32_t index) const {
+    return &m_textureArrayBindDatas_[index];
+  }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<TextureArrayBindData> m_textureArrayBindDatas_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 
 struct ShaderBindingResourceInlineAllocator {
+  // ======= BEGIN: public misc methods =======================================
+
   template <typename T, typename... T1>
   T* alloc(T1... args) {
     assert((m_offset_ + sizeof(T)) < sizeof(m_data_));
@@ -238,14 +415,18 @@ struct ShaderBindingResourceInlineAllocator {
 
   void reset() { m_offset_ = 0; }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   uint8_t m_data_[1024];
   int32_t m_offset_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct ShaderBinding {
-  // TODO: rename according to the convention
-  static constexpr int32_t s_kAppendLast
-      = -1;  // m_bindingPoint_ is appending last
+  // ======= BEGIN: public constructors =======================================
 
   ShaderBinding() = default;
 
@@ -274,6 +455,10 @@ struct ShaderBinding {
     getHash();
   }
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public getters ============================================
+
   size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
@@ -288,6 +473,10 @@ struct ShaderBinding {
     return m_hash_;
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void cloneWithoutResource(ShaderBinding& result) const {
     result.m_isInline_         = m_isInline_;
     result.m_bindingPoint_     = m_bindingPoint_;
@@ -297,6 +486,18 @@ struct ShaderBinding {
     result.m_isBindless_       = m_isBindless_;
     result.m_hash_             = m_hash_;
   }
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public constants ==========================================
+
+  // TODO: rename according to the convention
+  // m_bindingPoint_ is appending last
+  static constexpr int32_t s_kAppendLast = -1;
+
+  // ======= END: public constants   ==========================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   mutable size_t m_hash_ = 0;
 
@@ -309,11 +510,12 @@ struct ShaderBinding {
       = EShaderAccessStageFlag::ALL_GRAPHICS;
 
   const ShaderBindingResource* m_resource_ = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct ShaderBindingArray {
-  // TODO: rename according to the convention
-  static constexpr int32_t s_kNumOfInlineData = 10;
+  // ======= BEGIN: public misc methods =======================================
 
   template <typename... T>
   void add(T... args) {
@@ -334,6 +536,22 @@ struct ShaderBindingArray {
     ++m_numOfData_;
   }
 
+  void cloneWithoutResource(ShaderBindingArray& result) const {
+    memcpy(
+        &result.m_data_[0], &m_data_[0], sizeof(ShaderBinding) * m_numOfData_);
+
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
+      ShaderBinding* srcAddress = (ShaderBinding*)&m_data_[i];
+      ShaderBinding* dstAddress = (ShaderBinding*)&result.m_data_[i];
+      srcAddress->cloneWithoutResource(*dstAddress);
+    }
+    result.m_numOfData_ = m_numOfData_;
+  }
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public getters ============================================
+
   size_t getHash() const {
     size_t         hash    = 0;
     ShaderBinding* address = (ShaderBinding*)&m_data_[0];
@@ -342,6 +560,10 @@ struct ShaderBindingArray {
     }
     return hash;
   }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   ShaderBindingArray& operator=(const ShaderBindingArray& In) {
     memcpy(
@@ -355,25 +577,27 @@ struct ShaderBindingArray {
     return (ShaderBinding*)(&m_data_[index]);
   }
 
-  void cloneWithoutResource(ShaderBindingArray& result) const {
-    memcpy(&result.m_data_[0],
-           &m_data_[0],
-           sizeof(ShaderBinding) * m_numOfData_);
+  // ======= END: public overloaded operators   ===============================
 
-    for (int32_t i = 0; i < m_numOfData_; ++i) {
-      ShaderBinding* srcAddress = (ShaderBinding*)&m_data_[i];
-      ShaderBinding* dstAddress = (ShaderBinding*)&result.m_data_[i];
-      srcAddress->cloneWithoutResource(*dstAddress);
-    }
-    result.m_numOfData_ = m_numOfData_;
-  }
+  // ======= BEGIN: public constants ==========================================
+
+  // TODO: rename according to the convention
+  static constexpr int32_t s_kNumOfInlineData = 10;
+
+  // ======= END: public constants   ==========================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   ShaderBinding m_data_[s_kNumOfInlineData];
   int32_t       m_numOfData_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 template <typename T>
 struct TShaderBinding : public ShaderBinding {
+  // ======= BEGIN: public constructors =======================================
+
   TShaderBinding(const int32_t                bindingPoint,
                  const int32_t                numOfDescriptors,
                  const EShaderBindingType     bindingType,
@@ -383,7 +607,13 @@ struct TShaderBinding : public ShaderBinding {
           bindingPoint, numOfDescriptors, bindingType, accessStageFlags)
       , m_data_(data) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   T m_data_ = T();
+
+  // ======= END: public misc fields   ========================================
 };
 
 // struct ShaderBindingArray {
@@ -423,15 +653,20 @@ enum class ShaderBindingInstanceType : uint8_t {
 
 struct ShaderBindingInstance
     : public std::enable_shared_from_this<ShaderBindingInstance> {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ShaderBindingInstance() {}
 
-  // TODO: check according to naming conventions
-  const struct ShaderBindingLayout* m_shaderBindingsLayouts_ = nullptr;
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void initialize(const ShaderBindingArray& shaderBindingArray) {}
 
   virtual void updateShaderBindings(
       const ShaderBindingArray& shaderBindingArray) {}
+
+  virtual void free() {}
 
   virtual void* getHandle() const { return nullptr; }
 
@@ -439,16 +674,28 @@ struct ShaderBindingInstance
     return nullptr;
   }
 
-  virtual void free() {}
-
   virtual ShaderBindingInstanceType getType() const { return m_type_; }
 
   virtual void setType(const ShaderBindingInstanceType type) { m_type_ = type; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public constants ==========================================
+
+  // TODO: check according to naming conventions
+  const struct ShaderBindingLayout* m_shaderBindingsLayouts_ = nullptr;
+
+  // ======= END: public constants   ==========================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   ShaderBindingInstanceType m_type_ = ShaderBindingInstanceType::SingleFrame;
+
+  // ======= END: private misc fields   =======================================
 };
 
+// TODO: consider moving somewhere else
 // TODO: MemStack for ShaderBindingInstanceArray to allocate fast memory
 using ShaderBindingInstanceArray
     = ResourceContainer<const ShaderBindingInstance*>;
@@ -456,7 +703,13 @@ using ShaderBindingInstancePtrArray
     = std::vector<std::shared_ptr<ShaderBindingInstance>>;
 
 struct ShaderBindingLayout {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ShaderBindingLayout() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual bool initialize(const ShaderBindingArray& shaderBindingArray) {
     return false;
@@ -483,16 +736,27 @@ struct ShaderBindingLayout {
 
   virtual void* getHandle() const { return nullptr; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t m_hash_ = 0;
 
+  // ======= END: public misc fields   ========================================
+
   protected:
+  // ======= BEGIN: protected misc fields =====================================
+
   ShaderBindingArray m_shaderBindingArray_;  // Resource information is empty
+
+  // ======= END: protected misc fields   =====================================
 };
 
+// TODO: consider moving to other place
 using ShaderBindingLayoutArray = ResourceContainer<const ShaderBindingLayout*>;
 
-// TODO: rename namespace + consider anonymous namespace. Also write doxygen
-// comments explaining why to use this
+// TODO: move to other place. rename namespace + consider anonymous namespace.
+// Also write doxygen comments explaining why to use this
 namespace test {
 uint32_t g_getCurrentFrameNumber();
 }  // namespace test
@@ -501,8 +765,7 @@ uint32_t g_getCurrentFrameNumber();
 // inflighting GPU Data (ex. ShaderBindingInstance, IUniformBufferBlock)
 template <typename T>
 struct DeallocatorMultiFrameResource {
-  // TODO: check if according to naming conventions
-  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
+  // ======= BEGIN: public nested types =======================================
 
   struct PendingFreeData {
     PendingFreeData() = default;
@@ -515,9 +778,9 @@ struct DeallocatorMultiFrameResource {
     std::shared_ptr<T> m_dataPtr_    = nullptr;
   };
 
-  std::vector<PendingFreeData> m_pendingFree_;
-  int32_t                      m_canReleasePendingFreeDataFrameNumber_ = 0;
-  std::function<void(std::shared_ptr<T>)> m_freeDelegate_;
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   void free(std::shared_ptr<T> dataPtr) {
     const int32_t CurrentFrameNumber = test::g_getCurrentFrameNumber();
@@ -558,8 +821,26 @@ struct DeallocatorMultiFrameResource {
 
     m_pendingFree_.emplace_back(PendingFreeData(CurrentFrameNumber, dataPtr));
   }
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public constants ==========================================
+
+  // TODO: check if according to naming conventions
+  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
+
+  // ======= END: public constants   ==========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  std::vector<PendingFreeData> m_pendingFree_;
+  int32_t                      m_canReleasePendingFreeDataFrameNumber_ = 0;
+  std::function<void(std::shared_ptr<T>)> m_freeDelegate_;
+
+  // ======= END: public misc fields   ========================================
 };
 
+// TODO: consider moving somewhere else
 using DeallocatorMultiFrameShaderBindingInstance
     = DeallocatorMultiFrameResource<ShaderBindingInstance>;
 // using DeallocatorMultiFrameUniformBufferBlock
