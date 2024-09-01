@@ -14,6 +14,20 @@
 namespace game_engine {
 
 struct Texture : public ShaderBindableResource {
+  // ======= BEGIN: public static methods =====================================
+
+  static int32_t s_getMipLevels(int32_t witdh, int32_t height) {
+    return 1
+         + static_cast<uint32_t>(
+               // TODO: instead of using (std::max) consider undefine max macro
+               // from Window.h
+               std::floor(std::log2((std::max)(witdh, height))));
+  }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public constructors =======================================
+
   Texture()
       : m_type_(ETextureType::MAX)
       , m_format_(ETextureFormat::RGB8)
@@ -24,11 +38,11 @@ struct Texture : public ShaderBindableResource {
       , m_sRGB_(false) {}
 
   Texture(ETextureType              type,
-           ETextureFormat            format,
-           const math::Dimension2Di& extent,
-           uint32_t                  layerCount  = 1,
-           EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
-           bool                      sRGB      = false)
+          ETextureFormat            format,
+          const math::Dimension2Di& extent,
+          uint32_t                  layerCount  = 1,
+          EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
+          bool                      sRGB        = false)
       : m_type_(type)
       , m_format_(format)
       , m_extent_(extent)
@@ -37,15 +51,15 @@ struct Texture : public ShaderBindableResource {
       , m_sampleCount_(sampleCount)
       , m_sRGB_(sRGB) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~Texture() {}
 
-  static int32_t s_getMipLevels(int32_t witdh, int32_t height) {
-    return 1
-         + static_cast<uint32_t>(
-               // TODO: instead of using (std::max) consider undefine max macro
-               // from Window.h
-               std::floor(std::log2((std::max)(witdh, height))));
-  }
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void* getHandle() const { return nullptr; }
 
@@ -57,11 +71,20 @@ struct Texture : public ShaderBindableResource {
     return EResourceLayout::UNDEFINED;
   }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   bool isDepthFormat() const { return game_engine::s_isDepthFormat(m_format_); }
 
   bool isDepthOnlyFormat() const {
     return game_engine::s_isDepthOnlyFormat(m_format_);
   }
+
+  // ======= END: public misc methods   =======================================
+
+
+  // ======= BEGIN: public misc fields ========================================
 
   ETextureType       m_type_;  // TODO: analog to VkImageViewType imageViewType
   ETextureFormat     m_format_;
@@ -70,6 +93,8 @@ struct Texture : public ShaderBindableResource {
   uint32_t           m_layerCount_;
   EMSAASamples       m_sampleCount_;
   bool               m_sRGB_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
