@@ -19,7 +19,7 @@
 //
 //  static void s_returnFrameBuffer(FrameBufferVk* renderTarget);
 //
-//  static void release();
+//  static void s_release();
 //
 //  struct FrameBufferPoolResourceVk {
 //    bool                           IsUsing = false;
