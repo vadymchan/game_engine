@@ -26,19 +26,27 @@ namespace game_engine {
 #define PARALLELFOR_WITH_PASSSETUP 0
 
 struct SimplePushConstant {
+  // ======= BEGIN: public misc fields ========================================
+
   math::Vector4Df m_color_ = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
 
   // No need for now
-  // bool ShowVRSArea = false;
-  // bool Padding[3];
+  // bool m_showVRSArea_ = false;
+  // bool m_padding_[3];
 
-  // bool ShowGrid = true;
-  // bool Padding2[3];
+  // bool m_showGrid_ = true;
+  // bool m_padding2_[3];
+
+  // ======= END: public misc fields   ========================================
+
+
 };
 
 class Renderer {
   public:
-  Renderer() = default;
+    // ======= BEGIN: public constructors =======================================
+
+Renderer() = default;
 
   Renderer(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
            const View&                                view,
@@ -47,7 +55,15 @@ class Renderer {
       , m_view_(view)
       , m_window_(std::move(window)) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~Renderer() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void setup() {
     m_frameIndex_            = g_rhi->getCurrentFrameIndex();
@@ -88,6 +104,102 @@ class Renderer {
 #endif
   }
 
+
+
+  virtual void basePass() {
+    const auto& screenWidth  = m_window_->getSize().width();
+    const auto& screenHeight = m_window_->getSize().height();
+
+    if (m_basePassSetupCompleteEvent_.valid()) {
+      m_basePassSetupCompleteEvent_.wait();
+    }
+
+    {
+      if (m_useForwardRenderer_) {
+        g_rhi->transitionLayout(
+            m_renderFrameContextPtr_->getActiveCommandBuffer(),
+            // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->getTexture(),
+            m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_finalColorPtr_
+                ->getTexture(),
+            EResourceLayout::COLOR_ATTACHMENT);
+        // TODO: worked for Vulkan
+        // EResourceLayout::PRESENT_SRC);
+      } else {
+        // TODO: not used for now
+        /*for (int32_t i = 0;
+           i
+           < std::size(RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer);
+           ++i) {
+        g_rhi->transitionLayout(
+            RenderFrameContextPtr->getActiveCommandBuffer(),
+            RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i]
+                ->getTexture(),
+            EResourceLayout::COLOR_ATTACHMENT);
+      }*/
+      }
+
+      {
+        auto newLayout
+            = m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
+                      ->getTexture()
+                      ->isDepthOnlyFormat()
+                ? EResourceLayout::DEPTH_ATTACHMENT
+                : EResourceLayout::DEPTH_STENCIL_ATTACHMENT;
+        g_rhi->transitionLayout(
+            m_renderFrameContextPtr_->getActiveCommandBuffer(),
+            m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
+                ->getTexture(),
+            newLayout);
+      }
+
+      // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->getActiveCommandBuffer());
+      if (m_baseRenderPass_
+          && m_baseRenderPass_->beginRenderPass(
+              m_renderFrameContextPtr_->getActiveCommandBuffer())) {
+        // Draw G-m_buffer : subpass 0
+        for (const auto& command : m_basePasses_) {
+          command.draw();
+        }
+
+        // TODO: not used for now
+        // Draw Light : subpass 1
+        /*if (!useForwardRenderer && gOptions.UseSubpass) {
+          g_rhi->nextSubpass(
+              RenderFrameContextPtr->getActiveCommandBuffer());
+          DeferredLightPass_TodoRefactoring(BaseRenderPass);
+        }*/
+
+        m_baseRenderPass_->endRenderPass();
+      }
+    }
+  }
+
+  virtual void render() {
+    setup();
+
+    basePass();
+
+    // Queue submit to prepare scenecolor RT for postprocess
+    // if (gOptions.QueueSubmitAfterBasePass) {
+    // RenderFrameContextPtr->getActiveCommandBuffer()->end();
+    m_renderFrameContextPtr_->submitCurrentActiveCommandBuffer(
+        RenderFrameContext::BasePass);
+    // RenderFrameContextPtr->getActiveCommandBuffer()->begin();
+    //}
+
+    g_rhi->incrementFrameNumber();
+  }
+
+  // ======= END: public overridden methods   =================================
+
+
+
+
+
+     
+  // ======= BEGIN: public misc methods =======================================
+
+  // TODO: consider making virtual
   void setupBasePass() {
     const auto& screenWidth  = m_window_->getSize().width();
     const auto& screenHeight = m_window_->getSize().height();
@@ -214,8 +326,8 @@ class Renderer {
     //        gOptions.UseVRS);
     // -----------------------------------------------------
 
-    const RTClearValue kClearColor = RTClearValue(0.0f, 0.0f, 0.0f, 1.0f);
-    const RTClearValue kClearDepth = RTClearValue(1.0f, 0);
+    const RtClearValue kClearColor = RtClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+    const RtClearValue kClearDepth = RtClearValue(1.0f, 0);
 
     Attachment depth = Attachment(
         m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_,
@@ -522,89 +634,16 @@ class Renderer {
 #endif
   }
 
-  virtual void basePass() {
-    const auto& screenWidth  = m_window_->getSize().width();
-    const auto& screenHeight = m_window_->getSize().height();
+  // ======= END: public misc methods   =======================================
 
-    if (m_basePassSetupCompleteEvent_.valid()) {
-      m_basePassSetupCompleteEvent_.wait();
-    }
+  // ======= BEGIN: public constants ==========================================
 
-    {
-      if (m_useForwardRenderer_) {
-        g_rhi->transitionLayout(
-            m_renderFrameContextPtr_->getActiveCommandBuffer(),
-            // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->getTexture(),
-            m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_finalColorPtr_
-                ->getTexture(),
-            EResourceLayout::COLOR_ATTACHMENT);
-        // TODO: worked for Vulkan
-        // EResourceLayout::PRESENT_SRC);
-      } else {
-        // TODO: not used for now
-        /*for (int32_t i = 0;
-           i
-           < std::size(RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer);
-           ++i) {
-        g_rhi->transitionLayout(
-            RenderFrameContextPtr->getActiveCommandBuffer(),
-            RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i]
-                ->getTexture(),
-            EResourceLayout::COLOR_ATTACHMENT);
-      }*/
-      }
+  // Thread per task for PassSetup
+  const int32_t kMaxPassSetupTaskPerThreadCount = 100;
 
-      {
-        auto newLayout
-            = m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
-                      ->getTexture()
-                      ->isDepthOnlyFormat()
-                ? EResourceLayout::DEPTH_ATTACHMENT
-                : EResourceLayout::DEPTH_STENCIL_ATTACHMENT;
-        g_rhi->transitionLayout(
-            m_renderFrameContextPtr_->getActiveCommandBuffer(),
-            m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
-                ->getTexture(),
-            newLayout);
-      }
+  // ======= END: public constants   ==========================================
 
-      // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->getActiveCommandBuffer());
-      if (m_baseRenderPass_
-          && m_baseRenderPass_->beginRenderPass(
-              m_renderFrameContextPtr_->getActiveCommandBuffer())) {
-        // Draw G-m_buffer : subpass 0
-        for (const auto& command : m_basePasses_) {
-          command.draw();
-        }
-
-        // TODO: not used for now
-        // Draw Light : subpass 1
-        /*if (!useForwardRenderer && gOptions.UseSubpass) {
-          g_rhi->nextSubpass(
-              RenderFrameContextPtr->getActiveCommandBuffer());
-          DeferredLightPass_TodoRefactoring(BaseRenderPass);
-        }*/
-
-        m_baseRenderPass_->endRenderPass();
-      }
-    }
-  }
-
-  virtual void render() {
-    setup();
-
-    basePass();
-
-    // Queue submit to prepare scenecolor RT for postprocess
-    // if (gOptions.QueueSubmitAfterBasePass) {
-    // RenderFrameContextPtr->getActiveCommandBuffer()->end();
-    m_renderFrameContextPtr_->submitCurrentActiveCommandBuffer(
-        RenderFrameContext::BasePass);
-    // RenderFrameContextPtr->getActiveCommandBuffer()->begin();
-    //}
-
-    g_rhi->incrementFrameNumber();
-  }
+  // ======= BEGIN: public misc fields ========================================
 
   bool m_useForwardRenderer_ = true;
 
@@ -621,10 +660,11 @@ class Renderer {
   // Current FrameIndex
   int32_t m_frameIndex_ = 0;
 
-  // Thread per task for PassSetup
-  const int32_t kMaxPassSetupTaskPerThreadCount = 100;
-
   std::shared_ptr<Window> m_window_;
+
+  // ======= END: public misc fields   ========================================
+
+
 };
 
 }  // namespace game_engine
