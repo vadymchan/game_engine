@@ -11,12 +11,23 @@
 namespace game_engine {
 
 struct RenderFrameContextVk : public RenderFrameContext {
+  public:
+  // ======= BEGIN: public constructors =======================================
+
   RenderFrameContextVk() = default;
 
   RenderFrameContextVk(CommandBuffer* commandBuffer)
       : RenderFrameContext(commandBuffer) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~RenderFrameContextVk() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) override;
@@ -24,11 +35,20 @@ struct RenderFrameContextVk : public RenderFrameContext {
   virtual void queueSubmitCurrentActiveCommandBuffer(
       ISemaphore* signalSemaphore);
 
-  public:
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ISemaphore* m_currentWaitSemaphore_ = nullptr;
 
+  // ======= END: public misc fields   ========================================
+
   protected:
+  // ======= BEGIN: protected misc fields =====================================
+
   CommandBuffer* m_commandBuffer_ = nullptr;
+
+  // ======= END: protected misc fields   =====================================
 };
 }  // namespace game_engine
 
