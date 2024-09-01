@@ -22,7 +22,7 @@
 //
 //   static void s_seturnRenderTarget(RenderTargetVk* renderTarget);
 //
-//   static void release();
+//   static void s_release();
 //
 //   struct RenderTargetPoolResourceVk {
 //     bool                            IsUsing = false;
