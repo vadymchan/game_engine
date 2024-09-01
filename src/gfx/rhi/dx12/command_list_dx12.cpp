@@ -54,20 +54,20 @@ void CommandBufferDx12::reset() const {
 }
 
 void* CommandBufferDx12::getFenceHandle() const {
-  return m_owner_->m_fence ? m_owner_->m_fence->getHandle() : nullptr;
+  return m_owner_->m_fence_ ? m_owner_->m_fence_->getHandle() : nullptr;
 }
 
 void CommandBufferDx12::setFence(void* fence) {
-  // m_fence = (FenceDx12*)fence;
+  // m_fence_ = (FenceDx12*)fence;
   assert(0);
 }
 
 IFence* CommandBufferDx12::getFence() const {
-  return m_owner_->m_fence;
+  return m_owner_->m_fence_;
 }
 
 bool CommandBufferDx12::isCompleteForWaitFence() {
-  return m_owner_->m_fence->isComplete(m_fenceValue_);
+  return m_owner_->m_fence_->isComplete(m_fenceValue_);
 }
 
 bool CommandBufferDx12::end() const {
