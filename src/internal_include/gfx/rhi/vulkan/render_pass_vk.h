@@ -16,21 +16,19 @@ namespace game_engine {
 
 class RenderPassVk : public RenderPass {
   public:
+  // ======= BEGIN: public aliases ============================================
+
   using RenderPass::RenderPass;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public destructor =========================================
 
   virtual ~RenderPassVk() { release(); }
 
-  void release();
+  // ======= END: public destructor   =========================================
 
-  // bool initialize(const RenderPassInfoVk& renderPassInfo) {
-  //   m_renderPassInfo_ = renderPassInfo;
-  //   if (!createRenderPass()) {
-  //     return false;
-  //   }
-  //   return createFrameBuffer();
-  // }
-
-  void initialize() { createRenderPass(); }
+  // ======= BEGIN: public overridden methods =================================
 
   // TODO: add subpassContents param
   bool beginRenderPass(const CommandBuffer* commandBuffer
@@ -43,11 +41,34 @@ class RenderPassVk : public RenderPass {
 
   virtual void* getFrameBuffer() const override { return m_frameBuffer_; }
 
-  bool createRenderPass();
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public setters ============================================
 
   // TODO: make private
-
   void setFinalLayoutToAttachment_(const Attachment& attachment) const;
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void initialize() { createRenderPass(); }
+
+  // bool initialize(const RenderPassInfoVk& renderPassInfo) {
+  //   m_renderPassInfo_ = renderPassInfo;
+  //   if (!createRenderPass()) {
+  //     return false;
+  //   }
+  //   return createFrameBuffer();
+  // }
+
+  bool createRenderPass();
+
+  void release();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   const CommandBuffer* m_commandBuffer_ = nullptr;
 
@@ -56,6 +77,8 @@ class RenderPassVk : public RenderPass {
   std::vector<VkClearValue> m_clearValues_;
   VkRenderPass              m_renderPass_  = VK_NULL_HANDLE;
   VkFramebuffer             m_frameBuffer_ = VK_NULL_HANDLE;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
