@@ -44,44 +44,31 @@ struct ShaderInfo;
 // - consider implementing as singleton
 class RHI {
   public:
-  RHI();
-
-  virtual ~RHI() {}
-
-  // BEGIN: shader related functions and variables
-  // =================================================================
+  // ======= BEGIN: public static fields ======================================
 
   static TResourcePool<Shader, MutexRWLock> s_shaderPool;
 
-  template <typename T = Shader>
-  T* createShader(const ShaderInfo& shaderInfo) const {
-    return (T*)s_shaderPool.getOrCreate<ShaderInfo, T>(shaderInfo);
-  }
+  // ======= END: public static fields   ======================================
 
-  void addShader(const ShaderInfo& shaderInfo, Shader* shader) {
-    return s_shaderPool.add(shaderInfo, shader);
-  }
+  // ======= BEGIN: public constructors =======================================
 
-  void releaseShader(const ShaderInfo& shaderInfo) {
-    s_shaderPool.release(shaderInfo);
-  }
+  RHI();
 
-  std::vector<Shader*> getAllShaders() {
-    std::vector<Shader*> output;
-    s_shaderPool.getAllResource(output);
-    return output;
-  }
+  // ======= END: public constructors   =======================================
 
-  // END: shader related functions and variables
-  // =================================================================
+  // ======= BEGIN: public destructor =========================================
 
-  virtual Name getRHIName() { return Name::s_kInvalid; }
+  virtual ~RHI() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  // TODO: sort methods in correct order
 
   virtual bool init(const std::shared_ptr<Window>& window);
   virtual void onInitRHI();
   virtual void release();
-
-  virtual void* getWindow() const { return nullptr; }
 
   virtual SamplerStateInfo* createSamplerState(
       const SamplerStateInfo& info) const {
@@ -94,45 +81,6 @@ class RHI {
   // TODO: not used / overriden (consider remove)
   virtual void bindSamplerState(std::int32_t            index,
                                 const SamplerStateInfo* samplerState) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setClear(ERenderBufferType typeBit) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setClearColor(float r, float g, float b, float a) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setClearColor(math::Vector4Df rgba) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setClearBuffer(ERenderBufferType typeBit,
-                              const float*      value,
-                              std::int32_t      bufferIndex) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setClearBuffer(ERenderBufferType   typeBit,
-                              const std::int32_t* value,
-                              std::int32_t        bufferIndex) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setFrameBuffer(const FrameBuffer* rt,
-                              std::int32_t       index = 0,
-                              bool               mrt   = false) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setDrawBuffers(
-      const std::initializer_list<EDrawBufferType>& list) const {}
-
-  virtual void setTextureFilter(ETextureType         type,
-                                std::int32_t         sampleCount,
-                                ETextureFilterTarget target,
-                                ETextureFilter       filter) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setTextureWrap(int flag) const {}
-
-  // TODO: not used / overriden (consider remove)
-  virtual void setTexture(std::int32_t index, const Texture* texture) const {}
 
   virtual void drawArrays(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
@@ -182,14 +130,14 @@ class RHI {
   virtual void drawIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
-      IBuffer*                                    buffer,
+      IBuffer*                                   buffer,
       std::int32_t                               startIndex,
       std::int32_t                               drawCount) const {}
 
   virtual void drawElementsIndirect(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       // EPrimitiveType                          type,
-      IBuffer*                                    buffer,
+      IBuffer*                                   buffer,
       std::int32_t                               startIndex,
       std::int32_t                               drawCount) const {}
 
@@ -209,15 +157,494 @@ class RHI {
                                EPolygonMode polygonMode
                                = EPolygonMode::FILL) const {}
 
-  // TODO: not used / overriden (consider remove)
-  virtual void setDepthBias(float constant, float slope) const {}
-
   virtual bool createShaderInternal(Shader*           shader,
                                     const ShaderInfo& shaderInfo) const {
     return false;
   }
 
   virtual void releaseShader(Shader* shader) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual Texture* createNullTexture() const { return nullptr; }
+
+  virtual std::shared_ptr<Texture> createTextureFromData(
+      const ImageData* imageData) const {
+    return nullptr;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual Texture* createCubeTextureFromData(std::vector<void*> faces,
+                                             std::int32_t       width,
+                                             std::int32_t       height,
+                                             bool               sRGB,
+                                             ETextureFormat     textureFormat
+                                             = ETextureFormat::RGBA8,
+                                             bool createMipmap = false) const {
+    return nullptr;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual FrameBuffer* createFrameBuffer(const FrameBufferInfo& info) const {
+    return nullptr;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual std::shared_ptr<RenderTarget> createRenderTarget(
+      const RenderTargetInfo& info) const {
+    return nullptr;
+  }
+
+  // TODO: the following methods related to render setting configurations and
+  // they may be POC in future
+
+  // TODO: not used / overriden
+  virtual void enableDepthTest(bool enable) const {}
+
+  // TODO: not used / overriden
+  virtual void enableBlend(bool enable) const {}
+
+  // TODO: not used / overriden
+  virtual void enableSRGB(bool enable) const {}
+
+  // TODO: not used / overriden
+  virtual void enableDepthClip(bool enable) const {}
+
+  // TODO: either implement in future or remove
+  virtual void beginDebugEvent(const char* name) const {}
+
+  // TODO: either implement in future or remove
+  virtual void endDebugEvent() const {}
+
+  // TODO: either implement in future or remove
+  // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
+  //                             const char*            name,
+  //                             const math::Vector4Df& color
+  //                             = math::g_kColorGreen) const {}
+
+  // TODO: either implement in future or remove
+  virtual void endDebugEvent(CommandBuffer* commandBuffer) const {}
+
+  // TODO: not used / overriden
+  virtual void generateMips(const Texture* texture) const {}
+
+  // TODO: not used / overriden
+  virtual void enableWireframe(bool enable) const {}
+
+  // TODO: not used / overriden
+  virtual void enableRasterizerDiscard(bool enable) const {}
+
+  // TODO: not used / overriden
+  virtual void enableMultisample(bool enable) const {}
+
+  virtual void flush() const {}
+
+  virtual void finish() const {}
+
+  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() {
+    return nullptr;
+  }
+
+  virtual void endRenderFrame(
+      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {}
+
+  virtual void queueSubmit(
+      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
+      class ISemaphore*                          signalSemaphore) {}
+
+  virtual RasterizationStateInfo* createRasterizationState(
+      const RasterizationStateInfo& initializer) const {
+    return nullptr;
+  }
+
+  virtual StencilOpStateInfo* createStencilOpStateInfo(
+      const StencilOpStateInfo& initializer) const {
+    return nullptr;
+  }
+
+  virtual DepthStencilStateInfo* createDepthStencilState(
+      const DepthStencilStateInfo& initializer) const {
+    return nullptr;
+  }
+
+  virtual BlendingStateInfo* createBlendingState(
+      const BlendingStateInfo& initializer) const {
+    return nullptr;
+  }
+
+  virtual PipelineStateInfo* createPipelineStateInfo(
+      const PipelineStateFixedInfo*   pipelineStateFixed,
+      const GraphicsPipelineShader    shader,
+      const VertexBufferArray&        vertexBufferArray,
+      const RenderPass*               renderPass,
+      const ShaderBindingLayoutArray& shaderBindingArray,
+      const PushConstant*             pushConstant,
+      std::int32_t                    subpassIndex) const {
+    return nullptr;
+  }
+
+  virtual PipelineStateInfo* createComputePipelineStateInfo(
+      const Shader*                   shader,
+      const ShaderBindingLayoutArray& shaderBindingArray,
+      const PushConstant*             pushConstant) const {
+    return nullptr;
+  }
+
+  // TODO: implement
+  // virtual PipelineStateInfo* createRaytracingPipelineStateInfo(
+  //    const std::vector<RaytracingPipelineShader>& shaders,
+  //    const RaytracingPipelineData&                raytracingData,
+  //    const ShaderBindingLayoutArray&              shaderBindingArray,
+  //    const PushConstant*                          pushConstant) const {
+  //  return nullptr;
+  //}
+
+  virtual void removePipelineStateInfo(size_t hash) {}
+
+  virtual ShaderBindingLayout* createShaderBindings(
+      const ShaderBindingArray& shaderBindingArray) const {
+    assert(0);
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
+      const ShaderBindingArray&       shaderBindingArray,
+      const ShaderBindingInstanceType type) const {
+    assert(0);
+    return nullptr;
+  }
+
+  // ResourceBarrier
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
+                                Texture*        texture,
+                                EResourceLayout newLayout) const {
+    return true;
+  }
+
+  virtual bool transitionLayoutImmediate(Texture*        texture,
+                                         EResourceLayout newLayout) const {
+    return true;
+  }
+
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
+                                IBuffer*        buffer,
+                                EResourceLayout newLayout) const {
+    return true;
+  }
+
+  virtual bool transitionLayoutImmediate(IBuffer*        buffer,
+                                         EResourceLayout newLayout) const {
+    return true;
+  }
+
+  virtual void uavBarrier(CommandBuffer* commandBuffer,
+                          Texture*       texture) const {}
+
+  virtual void uavBarrierImmediate(Texture* texture) const {}
+
+  virtual void uavBarrier(CommandBuffer* commandBuffer, IBuffer* buffer) const {
+  }
+
+  virtual void uavBarrierImmediate(IBuffer* buffer) const {}
+
+  //////////////////////////////////////////////////////////////////////////
+
+  virtual void recreateSwapChain() {}
+
+  virtual void bindShadingRateImage(CommandBuffer* commandBuffer,
+                                    Texture*       vrstexture) const {}
+
+  virtual void nextSubpass(const CommandBuffer* commandBuffer) const {}
+
+  virtual void bindGraphicsShaderBindingInstances(
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*             piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const {}
+
+  virtual void bindComputeShaderBindingInstances(
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*             piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const {}
+
+  virtual void bindRaytracingShaderBindingInstances(
+      const CommandBuffer*                 commandBuffer,
+      const PipelineStateInfo*             piplineState,
+      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
+      std::uint32_t                        firstSet) const {}
+
+  virtual void incrementFrameNumber() {}
+
+  // TODO: not implemented
+  virtual bool isSupportVSync() const { return false; }
+
+  virtual bool onHandleResized(std::uint32_t witdh,
+                               std::uint32_t height,
+                               bool          isMinimized) {
+    return false;
+  }
+
+  // virtual RaytracingScene* createRaytracingScene() const { return nullptr; }
+
+  virtual CommandBuffer* beginSingleTimeCommands() const { return nullptr; }
+
+  virtual void endSingleTimeCommands(CommandBuffer* commandBuffer) const {}
+
+  // RaytracingScene* raytracingScene = nullptr;
+
+  // CreateBuffers
+  virtual std::shared_ptr<IBuffer> createStructuredBuffer(
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      std::uint64_t     stride,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<IBuffer> createRawBuffer(
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<IBuffer> createFormattedBuffer(
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      ETextureFormat    format,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0) const {
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<IUniformBufferBlock> createUniformBufferBlock(
+      Name name, LifeTimeType lifeTimeType, size_t size = 0) const {
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<VertexBuffer> createVertexBuffer(
+      const std::shared_ptr<VertexStreamData>& streamData) const {
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<IndexBuffer> createIndexBuffer(
+      const std::shared_ptr<IndexStreamData>& streamData) const {
+    return nullptr;
+  }
+
+  // Create Images
+  virtual std::shared_ptr<Texture> create2DTexture(
+      std::uint32_t        witdh,
+      std::uint32_t        height,
+      std::uint32_t        arrayLayers,
+      std::uint32_t        mipLevels,
+      ETextureFormat       format,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
+      const wchar_t*       resourceName  = nullptr) const {
+    return nullptr;
+  }
+
+  virtual std::shared_ptr<Texture> createCubeTexture(
+      std::uint32_t        witdh,
+      std::uint32_t        height,
+      std::uint32_t        mipLevels,
+      ETextureFormat       format,
+      ETextureCreateFlag   textureCreateFlag,
+      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkData& imageBulkData = {},
+      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
+      const wchar_t*       resourceName  = nullptr) const {
+    return nullptr;
+  }
+
+  // TODO: consider use Dimension or Point instead of Vector2Di
+  virtual RenderPass* getOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const {
+    return nullptr;
+  }
+
+  // TODO: consider use Dimension or Point instead of Vector2Di
+  virtual RenderPass* getOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const {
+    return nullptr;
+  }
+
+  // TODO: consider use Dimension or Point instead of Vector2Di
+  virtual RenderPass* getOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const Attachment&              colorResolveAttachment,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const {
+    return nullptr;
+  }
+
+  // TODO: consider use Dimension or Point instead of Vector2Di
+  virtual RenderPass* getOrCreateRenderPass(
+      const RenderPassInfo&  renderPassInfo,
+      const math::Vector2Di& offset,
+      const math::Vector2Di& extent) const {
+    return nullptr;
+  }
+
+  virtual Name getRHIName() { return Name::s_kInvalid; }
+
+  virtual void* getWindow() const { return nullptr; }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Matrix4d& result,
+                                const Name&     name,
+                                const Shader*   shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(int&          result,
+                                const Name&   name,
+                                const Shader* shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(std::uint32_t& result,
+                                const Name&    name,
+                                const Shader*  shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(float&        result,
+                                const Name&   name,
+                                const Shader* shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector2Df& result,
+                                const Name&      name,
+                                const Shader*    shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::VectorNf<1>& result,
+                                const Name&        name,
+                                const Shader*      shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector4Df& result,
+                                const Name&      name,
+                                const Shader*    shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector2Di& result,
+                                const Name&      name,
+                                const Shader*    shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector3Di& result,
+                                const Name&      name,
+                                const Shader*    shader) const {
+    return false;
+  }
+
+  // TODO: not used / overriden (consider remove)
+  virtual bool getUniformbuffer(math::Vector4Di& result,
+                                const Name&      name,
+                                const Shader*    shader) const {
+    return false;
+  }
+
+  virtual ICommandBufferManager* getCommandBufferManager() const {
+    return nullptr;
+  }
+
+  virtual EMSAASamples getSelectedMSAASamples() const {
+    return EMSAASamples::COUNT_1;
+  }
+
+  virtual std::shared_ptr<ISwapchain> getSwapchain() const { return nullptr; }
+
+  virtual class ISwapchainImage* getSwapchainImage(std::int32_t index) const {
+    return nullptr;
+  }
+
+  // TODO: not used / overriden
+  virtual std::uint32_t getMaxSwapchainCount() const { return 0; }
+
+  virtual MemoryPool* getMemoryPool() const { return nullptr; }
+
+  virtual IFenceManager* getFenceManager() { return nullptr; }
+
+  virtual ISemaphoreManager* getSemaphoreManager() { return nullptr; }
+
+  virtual std::uint32_t getCurrentFrameIndex() const { return 0; }
+
+  virtual std::uint32_t getCurrentFrameNumber() const { return 0; }
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setClear(ERenderBufferType typeBit) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearColor(float r, float g, float b, float a) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearColor(math::Vector4Df rgba) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearBuffer(ERenderBufferType typeBit,
+                              const float*      value,
+                              std::int32_t      bufferIndex) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setClearBuffer(ERenderBufferType   typeBit,
+                              const std::int32_t* value,
+                              std::int32_t        bufferIndex) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setFrameBuffer(const FrameBuffer* rt,
+                              std::int32_t       index = 0,
+                              bool               mrt   = false) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setDrawBuffers(
+      const std::initializer_list<EDrawBufferType>& list) const {}
+
+  virtual void setTextureFilter(ETextureType         type,
+                                std::int32_t         sampleCount,
+                                ETextureFilterTarget target,
+                                ETextureFilter       filter) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setTextureWrap(int flag) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setTexture(std::int32_t index, const Texture* texture) const {}
+
+  // TODO: not used / overriden (consider remove)
+  virtual void setDepthBias(float constant, float slope) const {}
 
   // TODO: not used / overriden (consider remove)
   virtual void setViewport(std::int32_t x,
@@ -319,471 +746,92 @@ class RHI {
     return false;
   }
 
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Matrix4d& result,
-                                const Name&     name,
-                                const Shader*   shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(int&          result,
-                                const Name&   name,
-                                const Shader* shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(std::uint32_t& result,
-                                const Name&    name,
-                                const Shader*  shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(float&        result,
-                                const Name&   name,
-                                const Shader* shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Vector2Df& result,
-                                const Name&      name,
-                                const Shader*    shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::VectorNf<1>& result,
-                                const Name&        name,
-                                const Shader*      shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Vector4Df& result,
-                                const Name&      name,
-                                const Shader*    shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Vector2Di& result,
-                                const Name&      name,
-                                const Shader*    shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Vector3Di& result,
-                                const Name&      name,
-                                const Shader*    shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Vector4Di& result,
-                                const Name&      name,
-                                const Shader*    shader) const {
-    return false;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual Texture* createNullTexture() const { return nullptr; }
-
-  virtual std::shared_ptr<Texture> createTextureFromData(
-      const ImageData* imageData) const {
-    return nullptr;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual Texture* createCubeTextureFromData(std::vector<void*> faces,
-                                             std::int32_t       width,
-                                             std::int32_t       height,
-                                             bool               sRGB,
-                                             ETextureFormat     textureFormat
-                                             = ETextureFormat::RGBA8,
-                                             bool createMipmap = false) const {
-    return nullptr;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual FrameBuffer* createFrameBuffer(const FrameBufferInfo& info) const {
-    return nullptr;
-  }
-
-  // TODO: not used / overriden (consider remove)
-  virtual std::shared_ptr<RenderTarget> createRenderTarget(
-      const RenderTargetInfo& info) const {
-    return nullptr;
-  }
-
-  // TODO: the following methods related to render setting configurations and they may be POC in future
-
-  // TODO: not used / overriden 
-  virtual void enableDepthTest(bool enable) const {}
-
-  // TODO: not used / overriden 
-  virtual void enableBlend(bool enable) const {}
-
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setBlendFunc(EBlendFactor src, EBlendFactor dest) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setBlendFuncRT(EBlendFactor src,
                               EBlendFactor dest,
                               std::int32_t rtIndex = 0) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setBlendEquation(EBlendOp func) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setBlendEquation(EBlendOp func, std::int32_t rtIndex) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setBlendColor(float r, float g, float b, float a) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void enableStencil(bool enable) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setStencilOpSeparate(EFace      face,
                                     EStencilOp sFail,
                                     EStencilOp dpFail,
                                     EStencilOp dpPass) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setStencilFunc(ECompareOp    func,
                               std::int32_t  ref,
                               std::uint32_t mask) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setDepthFunc(ECompareOp func) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setDepthMask(bool enable) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setColorMask(bool r, bool g, bool b, bool a) const {}
 
-  // TODO: not used / overriden 
-  virtual void enableSRGB(bool enable) const {}
-
-  // TODO: not used / overriden 
-  virtual void enableDepthClip(bool enable) const {}
-
-  // TODO: either implement in future or remove
-  virtual void beginDebugEvent(const char* name) const {}
-
-  // TODO: either implement in future or remove
-  virtual void endDebugEvent() const {}
-
-  // TODO: either implement in future or remove
-  // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
-  //                             const char*            name,
-  //                             const math::Vector4Df& color
-  //                             = math::g_kColorGreen) const {}
-
-  // TODO: either implement in future or remove
-  virtual void endDebugEvent(CommandBuffer* commandBuffer) const {}
-
-  // TODO: not used / overriden 
-  virtual void generateMips(const Texture* texture) const {}
-
-  // TODO: not used / overriden 
-  virtual void enableWireframe(bool enable) const {}
-
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setImageTexture(std::int32_t            index,
                                const Texture*          texture,
                                EImageTextureAccessType type) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setPolygonMode(EFace        face,
                               EPolygonMode mode = EPolygonMode::FILL) {}
 
-  // TODO: not used / overriden 
-  virtual void enableRasterizerDiscard(bool enable) const {}
-
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setTextureMipmapLevelLimit(ETextureType type,
                                           std::int32_t sampleCount,
                                           std::int32_t baseLevel,
                                           std::int32_t maxLevel) const {}
 
-  // TODO: not used / overriden 
-  virtual void enableMultisample(bool enable) const {}
-
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setCubeMapSeamless(bool enable) const {}
 
-  // TODO: not used / overriden 
+  // TODO: not used / overriden
   virtual void setLineWidth(float width) const {}
 
-  virtual void flush() const {}
+  // ======= END: public overridden methods   =================================
 
-  virtual void finish() const {}
+  // ======= BEGIN: public getters ============================================
 
-  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() {
-    return nullptr;
+  std::vector<Shader*> getAllShaders() {
+    std::vector<Shader*> output;
+    s_shaderPool.getAllResource(output);
+    return output;
   }
 
-  virtual void endRenderFrame(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {}
+  // ======= END: public getters   ============================================
 
-  virtual void queueSubmit(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      class ISemaphore*                           signalSemaphore) {}
+  // ======= BEGIN: public misc methods =======================================
 
-  virtual RasterizationStateInfo* createRasterizationState(
-      const RasterizationStateInfo& initializer) const {
-    return nullptr;
+  template <typename T = Shader>
+  T* createShader(const ShaderInfo& shaderInfo) const {
+    return (T*)s_shaderPool.getOrCreate<ShaderInfo, T>(shaderInfo);
   }
 
-  virtual StencilOpStateInfo* createStencilOpStateInfo(
-      const StencilOpStateInfo& initializer) const {
-    return nullptr;
+  void addShader(const ShaderInfo& shaderInfo, Shader* shader) {
+    return s_shaderPool.add(shaderInfo, shader);
   }
 
-  virtual DepthStencilStateInfo* createDepthStencilState(
-      const DepthStencilStateInfo& initializer) const {
-    return nullptr;
-  }
-
-  virtual BlendingStateInfo* createBlendingState(
-      const BlendingStateInfo& initializer) const {
-    return nullptr;
-  }
-
-  virtual PipelineStateInfo* createPipelineStateInfo(
-      const PipelineStateFixedInfo*   pipelineStateFixed,
-      const GraphicsPipelineShader    shader,
-      const VertexBufferArray&        vertexBufferArray,
-      const RenderPass*               renderPass,
-      const ShaderBindingLayoutArray& shaderBindingArray,
-      const PushConstant*             pushConstant,
-      std::int32_t                    subpassIndex) const {
-    return nullptr;
-  }
-
-  virtual PipelineStateInfo* createComputePipelineStateInfo(
-      const Shader*                   shader,
-      const ShaderBindingLayoutArray& shaderBindingArray,
-      const PushConstant*             pushConstant) const {
-    return nullptr;
-  }
-
-  // TODO: implement
-  // virtual PipelineStateInfo* createRaytracingPipelineStateInfo(
-  //    const std::vector<RaytracingPipelineShader>& shaders,
-  //    const RaytracingPipelineData&                raytracingData,
-  //    const ShaderBindingLayoutArray&              shaderBindingArray,
-  //    const PushConstant*                          pushConstant) const {
-  //  return nullptr;
-  //}
-
-  virtual void removePipelineStateInfo(size_t hash) {}
-
-  virtual ShaderBindingLayout* createShaderBindings(
-      const ShaderBindingArray& shaderBindingArray) const {
-    assert(0);
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
-      const ShaderBindingArray&       shaderBindingArray,
-      const ShaderBindingInstanceType type) const {
-    assert(0);
-    return nullptr;
-  }
-
-  // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* getOrCreateRenderPass(
-      const std::vector<Attachment>& colorAttachments,
-      const math::Vector2Di&         offset,
-      const math::Vector2Di&         extent) const {
-    return nullptr;
-  }
-
-  // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* getOrCreateRenderPass(
-      const std::vector<Attachment>& colorAttachments,
-      const Attachment&              depthAttachment,
-      const math::Vector2Di&         offset,
-      const math::Vector2Di&         extent) const {
-    return nullptr;
-  }
-
-  // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* getOrCreateRenderPass(
-      const std::vector<Attachment>& colorAttachments,
-      const Attachment&              depthAttachment,
-      const Attachment&              colorResolveAttachment,
-      const math::Vector2Di&         offset,
-      const math::Vector2Di&         extent) const {
-    return nullptr;
-  }
-
-  // TODO: consider use Dimension or Point instead of Vector2Di
-  virtual RenderPass* getOrCreateRenderPass(
-      const RenderPassInfo&  renderPassInfo,
-      const math::Vector2Di& offset,
-      const math::Vector2Di& extent) const {
-    return nullptr;
-  }
-
-  virtual ICommandBufferManager* getCommandBufferManager() const {
-    return nullptr;
-  }
-
-  virtual EMSAASamples getSelectedMSAASamples() const {
-    return EMSAASamples::COUNT_1;
-  }
-
-  // ResourceBarrier
-  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                Texture*        texture,
-                                EResourceLayout newLayout) const {
-    return true;
-  }
-
-  virtual bool transitionLayoutImmediate(Texture*        texture,
-                                         EResourceLayout newLayout) const {
-    return true;
-  }
-
-  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                IBuffer*         buffer,
-                                EResourceLayout newLayout) const {
-    return true;
-  }
-
-  virtual bool transitionLayoutImmediate(IBuffer*         buffer,
-                                         EResourceLayout newLayout) const {
-    return true;
-  }
-
-  virtual void uavBarrier(CommandBuffer* commandBuffer,
-                          Texture*       texture) const {}
-
-  virtual void uavBarrierImmediate(Texture* texture) const {}
-
-  virtual void uavBarrier(CommandBuffer* commandBuffer, IBuffer* buffer) const {}
-
-  virtual void uavBarrierImmediate(IBuffer* buffer) const {}
-
-  //////////////////////////////////////////////////////////////////////////
-
-  virtual std::shared_ptr<ISwapchain> getSwapchain() const { return nullptr; }
-
-  virtual class ISwapchainImage* getSwapchainImage(std::int32_t index) const {
-    return nullptr;
-  }
-
-  virtual void recreateSwapChain() {}
-
-  // TODO: not used / overriden 
-  virtual std::uint32_t getMaxSwapchainCount() const { return 0; }
-
-  virtual void bindShadingRateImage(CommandBuffer* commandBuffer,
-                                    Texture*       vrstexture) const {}
-
-  virtual MemoryPool* getMemoryPool() const { return nullptr; }
-
-  virtual void nextSubpass(const CommandBuffer* commandBuffer) const {}
-
-  virtual void bindGraphicsShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
-      const PipelineStateInfo*             piplineState,
-      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
-      std::uint32_t                        firstSet) const {}
-
-  virtual void bindComputeShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
-      const PipelineStateInfo*             piplineState,
-      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
-      std::uint32_t                        firstSet) const {}
-
-  virtual void bindRaytracingShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
-      const PipelineStateInfo*             piplineState,
-      const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
-      std::uint32_t                        firstSet) const {}
-
-  virtual IFenceManager* getFenceManager() { return nullptr; }
-
-  virtual ISemaphoreManager* getSemaphoreManager() { return nullptr; }
-
-  virtual std::uint32_t getCurrentFrameIndex() const { return 0; }
-
-  virtual std::uint32_t getCurrentFrameNumber() const { return 0; }
-
-  virtual void incrementFrameNumber() {}
-
-  // TODO: not implemented
-  virtual bool isSupportVSync() const { return false; }
-
-  virtual bool onHandleResized(std::uint32_t witdh,
-                               std::uint32_t height,
-                               bool          isMinimized) {
-    return false;
-  }
-
-  // virtual RaytracingScene* createRaytracingScene() const { return nullptr; }
-
-  virtual CommandBuffer* beginSingleTimeCommands() const { return nullptr; }
-
-  virtual void endSingleTimeCommands(CommandBuffer* commandBuffer) const {}
-
-  // RaytracingScene* raytracingScene = nullptr;
-
-  // CreateBuffers
-  virtual std::shared_ptr<IBuffer> createStructuredBuffer(
-      std::uint64_t     size,
-      std::uint64_t     alignment,
-      std::uint64_t     stride,
-      EBufferCreateFlag bufferCreateFlag,
-      EResourceLayout   initialState,
-      const void*       data     = nullptr,
-      std::uint64_t     dataSize = 0) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<IBuffer> createRawBuffer(
-      std::uint64_t     size,
-      std::uint64_t     alignment,
-      EBufferCreateFlag bufferCreateFlag,
-      EResourceLayout   initialState,
-      const void*       data     = nullptr,
-      std::uint64_t     dataSize = 0) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<IBuffer> createFormattedBuffer(
-      std::uint64_t     size,
-      std::uint64_t     alignment,
-      ETextureFormat    format,
-      EBufferCreateFlag bufferCreateFlag,
-      EResourceLayout   initialState,
-      const void*       data     = nullptr,
-      std::uint64_t     dataSize = 0) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<IUniformBufferBlock> createUniformBufferBlock(
-      Name name, LifeTimeType lifeTimeType, size_t size = 0) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<VertexBuffer> createVertexBuffer(
-      const std::shared_ptr<VertexStreamData>& streamData) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<IndexBuffer> createIndexBuffer(
-      const std::shared_ptr<IndexStreamData>& streamData) const {
-    return nullptr;
+  void releaseShader(const ShaderInfo& shaderInfo) {
+    s_shaderPool.release(shaderInfo);
   }
 
   template <typename T = IBuffer>
@@ -841,36 +889,6 @@ class RHI {
         createUniformBufferBlock(name, lifeTimeType, size));
   }
 
-  //////////////////////////////////////////////////////////////////////////
-
-  // Create Images
-  virtual std::shared_ptr<Texture> create2DTexture(
-      std::uint32_t        witdh,
-      std::uint32_t        height,
-      std::uint32_t        arrayLayers,
-      std::uint32_t        mipLevels,
-      ETextureFormat       format,
-      ETextureCreateFlag   textureCreateFlag,
-      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& imageBulkData = {},
-      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName  = nullptr) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<Texture> createCubeTexture(
-      std::uint32_t        witdh,
-      std::uint32_t        height,
-      std::uint32_t        mipLevels,
-      ETextureFormat       format,
-      ETextureCreateFlag   textureCreateFlag,
-      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& imageBulkData = {},
-      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
-      const wchar_t*       resourceName  = nullptr) const {
-    return nullptr;
-  }
-
   template <typename T>
   std::shared_ptr<T> create2DTexture(
       std::uint32_t        witdh,
@@ -881,7 +899,7 @@ class RHI {
       ETextureCreateFlag   textureCreateFlag,
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageCopyData = {},
-      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
+      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const {
     return std::static_pointer_cast<T>(create2DTexture(witdh,
                                                        height,
@@ -904,7 +922,7 @@ class RHI {
       ETextureCreateFlag   textureCreateFlag,
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageCopyData = {},
-      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
+      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const {
     return std::static_pointer_cast<T>(createCubeTexture(witdh,
                                                          height,
@@ -917,7 +935,7 @@ class RHI {
                                                          resourceName));
   }
 
-  //////////////////////////////////////////////////////////////////////////
+  // ======= END: public misc methods   =======================================
 };
 
 extern RHI* g_rhi;
@@ -953,8 +971,10 @@ template <ETextureFilter         TMinification  = ETextureFilter::NEAREST,
           ETextureComparisonMode TTextureComparisonMode
           = ETextureComparisonMode::NONE>
 struct TSamplerStateInfo {
+  // ======= BEGIN: public static methods =====================================
+
   static SamplerStateInfo* s_create(math::Vector4Df BorderColor
-                                  = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f)) {
+                                    = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f)) {
     static SamplerStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
       return cachedInfo;
@@ -978,6 +998,8 @@ struct TSamplerStateInfo {
     cachedInfo = g_rhi->createSamplerState(initializer);
     return cachedInfo;
   }
+
+  // ======= END: public static methods   =====================================
 };
 
 template <EPolygonMode TPolygonMode             = EPolygonMode::FILL,
@@ -996,6 +1018,8 @@ template <EPolygonMode TPolygonMode             = EPolygonMode::FILL,
           bool         TAlphaToCoverageEnable   = false,
           bool         TAlphaToOneEnable        = false>
 struct TRasterizationStateInfo {
+  // ======= BEGIN: public static methods =====================================
+
   /**
    * @brief Creates a rasterization state object based on the template
    * parameters and/or runtime parameters.
@@ -1039,6 +1063,8 @@ struct TRasterizationStateInfo {
     cachedInfo = g_rhi->createRasterizationState(initializer);
     return cachedInfo;
   }
+
+  // ======= END: public static methods   =====================================
 };
 
 template <bool       TDepthTestEnable       = false,
@@ -1049,8 +1075,10 @@ template <bool       TDepthTestEnable       = false,
           float      TMinDepthBounds        = 0.0f,
           float      TMaxDepthBounds        = 1.0f>
 struct TDepthStencilStateInfo {
+  // ======= BEGIN: public static methods =====================================
+
   static DepthStencilStateInfo* s_create(StencilOpStateInfo* Front = nullptr,
-                                       StencilOpStateInfo* Back  = nullptr) {
+                                         StencilOpStateInfo* Back  = nullptr) {
     static DepthStencilStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
       return cachedInfo;
@@ -1070,6 +1098,8 @@ struct TDepthStencilStateInfo {
     cachedInfo = g_rhi->createDepthStencilState(initializer);
     return cachedInfo;
   }
+
+  // ======= END: public static methods   =====================================
 };
 
 template <bool         TBlendEnable    = false,
@@ -1081,6 +1111,8 @@ template <bool         TBlendEnable    = false,
           EBlendOp     TAlphaBlendOp   = EBlendOp::ADD,
           EColorMask   TColorWriteMask = EColorMask::ALL>
 struct TBlendingStateInfo {
+  // ======= BEGIN: public static methods =====================================
+
   static BlendingStateInfo* s_create() {
     static BlendingStateInfo* cachedInfo = nullptr;
     if (cachedInfo) {
@@ -1100,6 +1132,8 @@ struct TBlendingStateInfo {
     cachedInfo = g_rhi->createBlendingState(initializer);
     return cachedInfo;
   }
+
+  // ======= END: public static methods   =====================================
 };
 
 }  // namespace game_engine
