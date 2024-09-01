@@ -21,6 +21,8 @@ namespace game_engine {
 
 class RenderObjectGeometryData {
   public:
+  // ======= BEGIN: public constructors =======================================
+
   RenderObjectGeometryData() = default;
 
   RenderObjectGeometryData(
@@ -33,19 +35,41 @@ class RenderObjectGeometryData {
       const std::shared_ptr<VertexStreamData>& vertexStream,
       const std::shared_ptr<VertexStreamData>& positionOnlyVertexStream,
       const std::shared_ptr<IndexStreamData>&  indexStream) {
-    createNewForRaytracing(
-        vertexStream, positionOnlyVertexStream, indexStream);
+    createNewForRaytracing(vertexStream, positionOnlyVertexStream, indexStream);
   }
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
 
   ~RenderObjectGeometryData() {
     m_vertexStreamPtr_.reset();
     m_vertexStreamPositionOnlyPtr_.reset();
   }
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
+
+  EPrimitiveType getPrimitiveType() const {
+    return m_vertexStreamPtr_ ? m_vertexStreamPtr_->m_primitiveType_
+                              : EPrimitiveType::MAX;
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool hasInstancing() const { return !!m_vertexBufferInstanceDataPtr_; }
+
+  bool hasVertexColor() const { return m_hasVertexColor_; }
+
+  bool hasVertexBiTangent() const { return m_hasVertexBiTangent_; }
+
   void create(const std::shared_ptr<VertexStreamData>& vertexStream,
               const std::shared_ptr<IndexStreamData>&  indexStream,
               bool                                     hasVertexColor = true,
-              bool hasVertexBiTangent = false);
+              bool hasVertexBiTangent                                 = false);
 
   void createNewForRaytracing(
       const std::shared_ptr<VertexStreamData>& vertexStream,
@@ -58,16 +82,9 @@ class RenderObjectGeometryData {
   void updateVertexStream(
       const std::shared_ptr<VertexStreamData>& vertexStream);
 
-  EPrimitiveType getPrimitiveType() const {
-    return m_vertexStreamPtr_ ? m_vertexStreamPtr_->m_primitiveType_
-                              : EPrimitiveType::MAX;
-  }
+  // ======= END: public misc methods   =======================================
 
-  bool hasInstancing() const { return !!m_vertexBufferInstanceDataPtr_; }
-
-  bool hasVertexColor() const { return m_hasVertexColor_; }
-
-  bool hasVertexBiTangent() const { return m_hasVertexBiTangent_; }
+  // ======= BEGIN: public misc fields ========================================
 
   std::shared_ptr<VertexStreamData> m_vertexStreamPtr_;
   std::shared_ptr<VertexStreamData> m_vertexStreamInstanceDataPtr_;
@@ -86,13 +103,90 @@ class RenderObjectGeometryData {
 
   bool m_hasVertexColor_     = true;
   bool m_hasVertexBiTangent_ = false;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class RenderObject {
   public:
+  // ======= BEGIN: public nested types =======================================
+
+  struct RenderObjectUniformBuffer {
+    math::Matrix4f m_matrix;
+    math::Matrix4f m_invMatrix;
+  };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public constructors =======================================
+
   RenderObject() {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~RenderObject() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
+
+  EPrimitiveType getPrimitiveType() const {
+    return m_geometryDataPtr_->getPrimitiveType();
+  }
+
+  const std::vector<float>& getVertices() const;
+
+  const math::Vector3Df& getPosition() const { return m_position_; }
+
+  const math::Vector3Df& getRotation() const { return m_rotation_; }
+
+  const math::Vector3Df& getScale() const { return m_scale_; }
+
+  // TODO: seems it not used, consider removing
+  template <typename T>
+  T* getBottomLevelASBuffer() const {
+    return (T*)m_bottomLevelASBuffer_.get();
+  }
+
+  // TODO: seems it not used, consider removing
+  template <typename T>
+  T* getScratchASBuffer() const {
+    return (T*)m_scratchASBuffer_.get();
+  }
+
+  // TODO: seems it not used, consider removing
+  template <typename T>
+  T* getVertexAndIndexOffsetBuffer() const {
+    return (T*)m_vertexAndIndexOffsetBuffer_.get();
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  // TODO: consider use parameter name `value`
+  void setPosition(const math::Vector3Df& position) {
+    m_position_ = position;
+    setDirtyFlags_(EDirty::POS);
+  }
+
+  // TODO: consider use parameter name `value`
+  void setRotation(const math::Vector3Df& rotation) {
+    m_rotation_ = rotation;
+    setDirtyFlags_(EDirty::ROT);
+  }
+
+  // TODO: consider use parameter name `value`
+  void setScale(const math::Vector3Df& scale) {
+    m_scale_ = scale;
+    setDirtyFlags_(EDirty::SCALE);
+  }
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void createRenderObject(
       const std::shared_ptr<RenderObjectGeometryData>&
@@ -115,18 +209,10 @@ class RenderObject {
     draw(renderFrameContext, 0, -1, 0, -1, instanceCount);
   }
 
-  EPrimitiveType getPrimitiveType() const {
-    return m_geometryDataPtr_->getPrimitiveType();
-  }
-
   virtual void bindBuffers(
       const std::shared_ptr<RenderFrameContext>& renderFrameContext,
       bool                                       positionOnly,
       const VertexBuffer* overrideInstanceData = nullptr) const;
-
-  const std::vector<float>& getVertices() const;
-
-  bool hasInstancing() const { return m_geometryDataPtr_->hasInstancing(); }
 
   // TODO: currently not needed, uncomment or delete
   /*virtual bool IsSupportRaytracing() const {
@@ -142,7 +228,24 @@ class RenderObject {
   m_geometryDataPtr_->m_vertexBufferPositionOnlyPtr_->IsSupportRaytracing();
   }*/
 
+  //////////////////////////////////////////////////////////////////////////
+  // RenderObjectUniformBuffer
+  virtual const std::shared_ptr<ShaderBindingInstance>&
+      createShaderBindingInstance();
+
+  //////////////////////////////////////////////////////////////////////////
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool hasInstancing() const { return m_geometryDataPtr_->hasInstancing(); }
+
   void updateWorldMatrix();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   math::Matrix4f m_world_;
 
@@ -153,71 +256,18 @@ class RenderObject {
   std::shared_ptr<IBuffer> m_scratchASBuffer_;
   std::shared_ptr<IBuffer> m_vertexAndIndexOffsetBuffer_;
 
-
-  // TODO: seems it not used, consider removing
-  template <typename T>
-  T* getBottomLevelASBuffer() const {
-    return (T*)m_bottomLevelASBuffer_.get();
-  }
-
-  // TODO: seems it not used, consider removing
-  template <typename T>
-  T* getScratchASBuffer() const {
-    return (T*)m_scratchASBuffer_.get();
-  }
-
-  // TODO: seems it not used, consider removing
-  template <typename T>
-  T* getVertexAndIndexOffsetBuffer() const {
-    return (T*)m_vertexAndIndexOffsetBuffer_.get();
-  }
-
-  // TODO: consider use parameter name `value`
-  void setPosition(const math::Vector3Df& position) {
-    m_position_ = position;
-    setDirtyFlags_(EDirty::POS);
-  }
-
-  // TODO: consider use parameter name `value`
-  void setRotation(const math::Vector3Df& rotation) {
-    m_rotation_ = rotation;
-    setDirtyFlags_(EDirty::ROT);
-  }
-
-  // TODO: consider use parameter name `value`
-  void setScale(const math::Vector3Df& scale) {
-    m_scale_ = scale;
-    setDirtyFlags_(EDirty::SCALE);
-  }
-
-  const math::Vector3Df& getPosition() const { return m_position_; }
-
-  const math::Vector3Df& getRotation() const { return m_rotation_; }
-
-  const math::Vector3Df& getScale() const { return m_scale_; }
-
   bool m_isTwoSided_       = false;
   bool m_isHiddenBoundBox_ = false;
 
-  //////////////////////////////////////////////////////////////////////////
-
-  struct RenderObjectUniformBuffer {
-    math::Matrix4f m_matrix;
-    math::Matrix4f m_invMatrix;
-  };
-
-  //////////////////////////////////////////////////////////////////////////
-  // RenderObjectUniformBuffer
-  virtual const std::shared_ptr<ShaderBindingInstance>&
-      createShaderBindingInstance();
-
-  //////////////////////////////////////////////////////////////////////////
-
   std::shared_ptr<Material> m_materialPtr_;
   // TODO: consider removing
-  std::shared_ptr<IBuffer>   m_testUniformBuffer_;
+  std::shared_ptr<IBuffer>  m_testUniformBuffer_;
+
+  // ======= END: public misc fields   ========================================
 
   private:
+  // ======= BEGIN: private nested types ======================================
+
   enum EDirty : int8_t {
     NONE          = 0,
     POS           = 1,
@@ -226,14 +276,20 @@ class RenderObject {
     POS_ROT_SCALE = POS | ROT | SCALE,
   };
 
-  EDirty m_dirtyFlags_ = EDirty::POS_ROT_SCALE;
+  // ======= END: private nested types   ======================================
 
-  // TODO: conside renaming 
+  // ======= BEGIN: private setters ===========================================
+
+  // TODO: conside renaming
   void setDirtyFlags_(EDirty inEnum) {
     using T       = std::underlying_type<EDirty>::type;
     m_dirtyFlags_ = static_cast<EDirty>(static_cast<T>(inEnum)
                                         | static_cast<T>(m_dirtyFlags_));
   }
+
+  // ======= END: private setters   ===========================================
+
+  // ======= BEGIN: private misc methods ======================================
 
   void clearDirtyFlags_(EDirty inEnum) {
     using T       = std::underlying_type<EDirty>::type;
@@ -242,6 +298,12 @@ class RenderObject {
   }
 
   void clearDirtyFlags_() { m_dirtyFlags_ = EDirty::NONE; }
+
+  // ======= END: private misc methods   ======================================
+
+  // ======= BEGIN: private misc fields =======================================
+
+  EDirty m_dirtyFlags_ = EDirty::POS_ROT_SCALE;
 
   math::Vector3Df m_position_ = math::Vector3Df(0);
   math::Vector3Df m_rotation_ = math::Vector3Df(0);
@@ -253,8 +315,10 @@ class RenderObject {
   std::shared_ptr<ShaderBindingInstance> m_renderObjectShaderBindingInstance_;
 
   // TODO: Special code for PBR test (currently not used)
-  //float m_lastMetallic_  = 0.0f;
-  //float m_lastRoughness_ = 0.0f;
+  // float m_lastMetallic_  = 0.0f;
+  // float m_lastRoughness_ = 0.0f;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
