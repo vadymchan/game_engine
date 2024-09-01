@@ -20,6 +20,8 @@
 namespace game_engine {
 
 struct FrustumPlane {
+  // ======= BEGIN: public misc methods =======================================
+
   bool isInFrustum(const math::Vector3Df& pos, float radius) const {
     for (const auto& plane : m_planes_) {
       const float r = pos.dot(plane.m_n_) - plane.m_d_ + radius;
@@ -44,23 +46,28 @@ struct FrustumPlane {
     return true;
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::array<math::Plane, 6> m_planes_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class Camera {
   public:
+  // ======= BEGIN: public nested types =======================================
+
   enum ECameraType {
     NORMAL = 0,
     ORTHO,
     MAX
   };
 
-  Camera()
-      : m_type_(ECameraType::NORMAL) {}
+  // ======= END: public nested types   =======================================
 
-  virtual ~Camera() {}
-
-  static std::map<int32_t, Camera*> s_cameraMap;
+    // ======= BEGIN: public static methods =====================================
 
   static void s_addCamera(int32_t id, Camera* camera) {
     s_cameraMap.insert(std::make_pair(id, camera));
@@ -150,6 +157,289 @@ class Camera {
     camera->m_isPerspectiveProjection_ = isPerspectiveProjection;
   }
 
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public static fields ======================================
+
+  static std::map<int32_t, Camera*> s_cameraMap;
+
+  // ======= END: public static fields   ======================================
+
+
+  // ======= BEGIN: public constructors =======================================
+
+  Camera()
+      : m_type_(ECameraType::NORMAL) {}
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  virtual ~Camera() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
+
+  // TODO: remove Vector postfix
+  math::Vector3Df getForwardVector() const {
+    return m_view_.getColumn<2>().resizedCopy<3>();
+  }
+
+  math::Vector3Df getUpVector() const {
+    return m_view_.getColumn<1>().resizedCopy<3>();
+  }
+
+  math::Vector3Df getRightVector() const {
+    return m_view_.getColumn<0>().resizedCopy<3>();
+  }
+
+  math::Matrix4f getViewProjectionMatrix() const { return m_viewProjection_; }
+
+  math::Matrix4f getInverseViewProjectionMatrix() const {
+    return m_invViewProjection_;
+  }
+
+  // TODO: seems not used
+  math::Vector3Df getEulerAngle() const { return m_eulerAngle_; }
+
+  void getRectInNDCSpace(math::Vector3Df&      minPosition,
+                         math::Vector3Df&      maxPosition,
+                         const math::Matrix4f& vp) const {
+    // TODO: consider more descriptive name
+    math::Vector3Df farLt;
+    math::Vector3Df farRt;
+    math::Vector3Df farLb;
+    math::Vector3Df farRb;
+
+    math::Vector3Df nearLt;
+    math::Vector3Df nearRt;
+    math::Vector3Df nearLb;
+    math::Vector3Df nearRb;
+
+    // TODO: consider better naming convention
+    const auto  kOrigin = m_position_;
+    const float kNear   = m_Near_;
+    const float kFar    = m_far_;
+
+    if (m_isPerspectiveProjection_) {
+      const float     kInvAspect = ((float)m_width_ / (float)m_height_);
+      const float     kLength    = tanf(m_FOVRad_ * 0.5f);
+      math::Vector3Df targetVec  = getForwardVector().normalized();
+      math::Vector3Df rightVec
+          = getRightVector().normalized() * kLength * kInvAspect;
+      math::Vector3Df upVec = getUpVector().normalized() * kLength;
+
+      math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
+      math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
+      math::Vector3Df rightDown = (targetVec + rightVec - upVec);
+      math::Vector3Df leftDown  = (targetVec - rightVec - upVec);
+
+      farLt = kOrigin + leftUp * kFar;
+      farRt = kOrigin + rightUp * kFar;
+      farLb = kOrigin + leftDown * kFar;
+      farRb = kOrigin + rightDown * kFar;
+
+      nearLt = kOrigin + leftUp * kNear;
+      nearRt = kOrigin + rightUp * kNear;
+      nearLb = kOrigin + leftDown * kNear;
+      nearRb = kOrigin + rightDown * kNear;
+    } else {
+      const float kWidth  = (float)m_width_;
+      const float kHeight = (float)m_height_;
+
+      math::Vector3Df targetVec = getForwardVector().normalized();
+      math::Vector3Df rightVec  = getRightVector().normalized();
+      math::Vector3Df upVec     = getUpVector().normalized();
+
+      farLt = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f
+            + upVec * kHeight * 0.5f;
+      farRt = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f
+            + upVec * kHeight * 0.5f;
+      farLb = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f
+            - upVec * kHeight * 0.5f;
+      farRb = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f
+            - upVec * kHeight * 0.5f;
+
+      nearLt = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
+             + upVec * kHeight * 0.5f;
+      nearRt = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
+             + upVec * kHeight * 0.5f;
+      nearLb = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
+             - upVec * kHeight * 0.5f;
+      nearRb = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
+             - upVec * kHeight * 0.5f;
+    }
+
+    // Transform to NDC space
+    {
+      farLt = math::g_transformPoint(farLt, vp);
+      farRt = math::g_transformPoint(farRt, vp);
+      farLb = math::g_transformPoint(farLb, vp);
+      farRb = math::g_transformPoint(farRb, vp);
+
+      nearLt = math::g_transformPoint(nearLt, vp);
+      nearRt = math::g_transformPoint(nearRt, vp);
+      nearLb = math::g_transformPoint(nearLb, vp);
+      nearRb = math::g_transformPoint(nearRb, vp);
+    }
+
+    minPosition = math::Vector3Df(FLT_MAX);
+    minPosition = std::min(minPosition, farLt);
+    minPosition = std::min(minPosition, farRt);
+    minPosition = std::min(minPosition, farLb);
+    minPosition = std::min(minPosition, farRb);
+    minPosition = std::min(minPosition, nearLt);
+    minPosition = std::min(minPosition, nearRt);
+    minPosition = std::min(minPosition, nearLb);
+    minPosition = std::min(minPosition, nearRb);
+
+    maxPosition = math::Vector3Df(FLT_MIN);
+    maxPosition = std::max(maxPosition, farLt);
+    maxPosition = std::max(maxPosition, farRt);
+    maxPosition = std::max(maxPosition, farLb);
+    maxPosition = std::max(maxPosition, farRb);
+    maxPosition = std::max(maxPosition, nearLt);
+    maxPosition = std::max(maxPosition, nearRt);
+    maxPosition = std::max(maxPosition, nearLb);
+    maxPosition = std::max(maxPosition, nearRb);
+  }
+
+  // TODO: seems not used
+  void getRectInScreenSpace(math::Vector3Df&       minPosition,
+                            math::Vector3Df&       maxPosition,
+                            const math::Matrix4f&  vp,
+                            const math::Vector2Df& screenSize
+                            = math::Vector2Df(1.0f, 1.0f)) const {
+    getRectInNDCSpace(minPosition, maxPosition, vp);
+
+    // Min XY
+    minPosition = std::max(minPosition, math::Vector3Df(-1.0f, -1.0f, -1.0f));
+    minPosition.x() = (minPosition.x() * 0.5f + 0.5f) * screenSize.x();
+    minPosition.y() = (minPosition.y() * 0.5f + 0.5f) * screenSize.y();
+
+    // Max XY
+    maxPosition     = std::min(maxPosition, math::Vector3Df(1.0f, 1.0f, 1.0f));
+    maxPosition.x() = (maxPosition.x() * 0.5f + 0.5f) * screenSize.x();
+    maxPosition.y() = (maxPosition.y() * 0.5f + 0.5f) * screenSize.y();
+  }
+
+  // TODO: seems not used
+  void getFrustumVertexInWorld(math::Vector3Df* vertexArray) const {
+    math::Vector3Df farLt;
+    math::Vector3Df farRt;
+    math::Vector3Df farLb;
+    math::Vector3Df farRb;
+
+    math::Vector3Df nearLt;
+    math::Vector3Df nearRt;
+    math::Vector3Df nearLb;
+    math::Vector3Df nearRb;
+
+    const auto  kOrigin = m_position_;
+    const float kNear   = m_Near_;
+    const float kFar    = m_far_;
+
+    if (m_isPerspectiveProjection_) {
+      const float     kInvAspect = ((float)m_width_ / (float)m_height_);
+      const float     kLength    = tanf(m_FOVRad_ * 0.5f);
+      math::Vector3Df targetVec  = getForwardVector().normalized();
+      math::Vector3Df rightVec
+          = getRightVector().normalized() * kLength * kInvAspect;
+      math::Vector3Df upVec = getUpVector().normalized() * kLength;
+
+      math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
+      math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
+      math::Vector3Df rightDown = (targetVec + rightVec - upVec);
+      math::Vector3Df leftDown  = (targetVec - rightVec - upVec);
+
+      farLt = kOrigin + leftUp * kFar;
+      farRt = kOrigin + rightUp * kFar;
+      farLb = kOrigin + leftDown * kFar;
+      farRb = kOrigin + rightDown * kFar;
+
+      nearLt = kOrigin + leftUp * kNear;
+      nearRt = kOrigin + rightUp * kNear;
+      nearLb = kOrigin + leftDown * kNear;
+      nearRb = kOrigin + rightDown * kNear;
+    } else {
+      const float kWidth  = (float)m_width_;
+      const float kHeight = (float)m_height_;
+
+      math::Vector3Df targetVec = getForwardVector().normalized();
+      math::Vector3Df rightVec  = getRightVector().normalized();
+      math::Vector3Df upVec     = getUpVector().normalized();
+
+      farLt = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f
+            + upVec * kHeight * 0.5f;
+      farRt = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f
+            + upVec * kHeight * 0.5f;
+      farLb = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f
+            - upVec * kHeight * 0.5f;
+      farRb = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f
+            - upVec * kHeight * 0.5f;
+
+      nearLt = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
+             + upVec * kHeight * 0.5f;
+      nearRt = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
+             + upVec * kHeight * 0.5f;
+      nearLb = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
+             - upVec * kHeight * 0.5f;
+      nearRb = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
+             - upVec * kHeight * 0.5f;
+    }
+
+    vertexArray[0] = farLt;
+    vertexArray[1] = farRt;
+    vertexArray[2] = farLb;
+    vertexArray[3] = farRb;
+
+    vertexArray[4] = nearLt;
+    vertexArray[5] = nearRt;
+    vertexArray[6] = nearLb;
+    vertexArray[7] = nearRb;
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  void setEulerAngle(const math::Vector3Df& eulerAngle) {
+    if (m_eulerAngle_ != eulerAngle) {
+      m_eulerAngle_ = eulerAngle;
+      updateCameraParameters();
+    }
+  }
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool isInFrustum(const math::Vector3Df& pos, float radius) {
+    for (auto& iter : m_frustum_.m_planes_) {
+      // TODO: consider better naming
+      const float kD = pos.dot(iter.m_n_) - iter.m_d_ + radius;
+      if (kD < 0.0f) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool isInFrustumWithDirection(const math::Vector3Df& pos,
+                                const math::Vector3Df& dir,
+                                float                  radius) const {
+    for (auto& iter : m_frustum_.m_planes_) {
+      const float kD = pos.dot(iter.m_n_) - iter.m_d_ + radius;
+      if (kD < 0.0f) {
+        if (dir.dot(iter.m_n_) <= 0) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   virtual math::Matrix4f createView() const {
     // TODO: consider adding RH / LH selection logic
     return math::g_lookAtLh(m_position_, m_target_, m_up_);
@@ -167,17 +457,6 @@ class Camera {
     return math::g_orthoLhZo(
         (float)m_width_, (float)m_height_, m_Near_, m_far_);
   }
-
-  // TODO: remove (currently not used)
-  // virtual void BindCamera(const Shader* shader) const {
-  //  auto VP = Projection * view;
-  //  auto P  = Projection;
-  //  SET_UNIFORM_BUFFER_STATIC("P", P, shader);
-  //  SET_UNIFORM_BUFFER_STATIC("VP", VP, shader);
-  //  SET_UNIFORM_BUFFER_STATIC("Eye", m_position_, shader);
-
-  //
-  //}
 
   void updateCameraFrustum() {
     auto       toTarget = (m_target_ - m_position_).normalized();
@@ -242,26 +521,6 @@ class Camera {
     m_up_     = m_position_ + upDir;
   }
 
-  void setEulerAngle(const math::Vector3Df& eulerAngle) {
-    if (m_eulerAngle_ != eulerAngle) {
-      m_eulerAngle_ = eulerAngle;
-      updateCameraParameters();
-    }
-  }
-
-  // TODO: remove Vector postfix
-  math::Vector3Df getForwardVector() const {
-    return m_view_.getColumn<2>().resizedCopy<3>();
-  }
-
-  math::Vector3Df getUpVector() const {
-    return m_view_.getColumn<1>().resizedCopy<3>();
-  }
-
-  math::Vector3Df getRightVector() const {
-    return m_view_.getColumn<0>().resizedCopy<3>();
-  }
-
   void moveShift(float dist) {
     auto toRight  = getRightVector() * dist;
     m_position_  += toRight;
@@ -307,226 +566,16 @@ class Camera {
     rotateCameraAxis(math::Vector3Df(0.0f, 0.0f, 1.0f), radian);
   }
 
-  math::Matrix4f getViewProjectionMatrix() const { return m_viewProjection_; }
+  // TODO: remove (currently not used)
+  // virtual void bindCamera(const Shader* shader) const {
+  //  auto VP = Projection * view;
+  //  auto P  = Projection;
+  //  SET_UNIFORM_BUFFER_STATIC("P", P, shader);
+  //  SET_UNIFORM_BUFFER_STATIC("VP", VP, shader);
+  //  SET_UNIFORM_BUFFER_STATIC("Eye", m_position_, shader);
 
-  math::Matrix4f getInverseViewProjectionMatrix() const {
-    return m_invViewProjection_;
-  }
-
-  bool isInFrustum(const math::Vector3Df& pos, float radius) {
-    for (auto& iter : m_frustum_.m_planes_) {
-      // TODO: consider better naming
-      const float kD = pos.dot(iter.m_n_) - iter.m_d_ + radius;
-      if (kD < 0.0f) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool isInFrustumWithDirection(const math::Vector3Df& pos,
-                                const math::Vector3Df& dir,
-                                float                  radius) const {
-    for (auto& iter : m_frustum_.m_planes_) {
-      const float kD = pos.dot(iter.m_n_) - iter.m_d_ + radius;
-      if (kD < 0.0f) {
-        if (dir.dot(iter.m_n_) <= 0) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  // TODO: seems not used
-  math::Vector3Df getEulerAngle() const { return m_eulerAngle_; }
-
-  void getRectInNDCSpace(math::Vector3Df&      minPosition,
-                         math::Vector3Df&      maxPosition,
-                         const math::Matrix4f& vp) const {
-    // TODO: consider more descriptive name
-    math::Vector3Df farLt;
-    math::Vector3Df farRt;
-    math::Vector3Df farLb;
-    math::Vector3Df farRb;
-
-    math::Vector3Df nearLt;
-    math::Vector3Df nearRt;
-    math::Vector3Df nearLb;
-    math::Vector3Df nearRb;
-
-    // TODO: consider better naming convention
-    const auto  kOrigin = m_position_;
-    const float kNear   = m_Near_;
-    const float kFar    = m_far_;
-
-    if (m_isPerspectiveProjection_) {
-      const float     kInvAspect = ((float)m_width_ / (float)m_height_);
-      const float     kLength    = tanf(m_FOVRad_ * 0.5f);
-      math::Vector3Df targetVec  = getForwardVector().normalized();
-      math::Vector3Df rightVec
-          = getRightVector().normalized() * kLength * kInvAspect;
-      math::Vector3Df upVec = getUpVector().normalized() * kLength;
-
-      math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
-      math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
-      math::Vector3Df rightDown = (targetVec + rightVec - upVec);
-      math::Vector3Df leftDown  = (targetVec - rightVec - upVec);
-
-      farLt = kOrigin + leftUp * kFar;
-      farRt = kOrigin + rightUp * kFar;
-      farLb = kOrigin + leftDown * kFar;
-      farRb = kOrigin + rightDown * kFar;
-
-      nearLt = kOrigin + leftUp * kNear;
-      nearRt = kOrigin + rightUp * kNear;
-      nearLb = kOrigin + leftDown * kNear;
-      nearRb = kOrigin + rightDown * kNear;
-    } else {
-      const float kWidth = (float)m_width_;
-      const float kHeight = (float)m_height_;
-
-      math::Vector3Df targetVec = getForwardVector().normalized();
-      math::Vector3Df rightVec  = getRightVector().normalized();
-      math::Vector3Df upVec     = getUpVector().normalized();
-
-      farLt
-          = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
-      farRt
-          = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
-      farLb
-          = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
-      farRb
-          = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
-
-      nearLt = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
-             + upVec * kHeight * 0.5f;
-      nearRt = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
-             + upVec * kHeight * 0.5f;
-      nearLb = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f
-             - upVec * kHeight * 0.5f;
-      nearRb = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f
-             - upVec * kHeight * 0.5f;
-    }
-
-    // Transform to NDC space
-    {
-      farLt = math::g_transformPoint(farLt, vp);
-      farRt = math::g_transformPoint(farRt, vp);
-      farLb = math::g_transformPoint(farLb, vp);
-      farRb = math::g_transformPoint(farRb, vp);
-
-      nearLt = math::g_transformPoint(nearLt, vp);
-      nearRt = math::g_transformPoint(nearRt, vp);
-      nearLb = math::g_transformPoint(nearLb, vp);
-      nearRb = math::g_transformPoint(nearRb, vp);
-    }
-
-    minPosition = math::Vector3Df(FLT_MAX);
-    minPosition = std::min(minPosition, farLt);
-    minPosition = std::min(minPosition, farRt);
-    minPosition = std::min(minPosition, farLb);
-    minPosition = std::min(minPosition, farRb);
-    minPosition = std::min(minPosition, nearLt);
-    minPosition = std::min(minPosition, nearRt);
-    minPosition = std::min(minPosition, nearLb);
-    minPosition = std::min(minPosition, nearRb);
-
-    maxPosition = math::Vector3Df(FLT_MIN);
-    maxPosition = std::max(maxPosition, farLt);
-    maxPosition = std::max(maxPosition, farRt);
-    maxPosition = std::max(maxPosition, farLb);
-    maxPosition = std::max(maxPosition, farRb);
-    maxPosition = std::max(maxPosition, nearLt);
-    maxPosition = std::max(maxPosition, nearRt);
-    maxPosition = std::max(maxPosition, nearLb);
-    maxPosition = std::max(maxPosition, nearRb);
-  }
-
-  void getRectInScreenSpace(math::Vector3Df&       minPosition,
-                            math::Vector3Df&       maxPosition,
-                            const math::Matrix4f&  vp,
-                            const math::Vector2Df& screenSize
-                            = math::Vector2Df(1.0f, 1.0f)) const {
-    getRectInNDCSpace(minPosition, maxPosition, vp);
-
-    // Min XY
-    minPosition = std::max(minPosition, math::Vector3Df(-1.0f, -1.0f, -1.0f));
-    minPosition.x() = (minPosition.x() * 0.5f + 0.5f) * screenSize.x();
-    minPosition.y() = (minPosition.y() * 0.5f + 0.5f) * screenSize.y();
-
-    // Max XY
-    maxPosition     = std::min(maxPosition, math::Vector3Df(1.0f, 1.0f, 1.0f));
-    maxPosition.x() = (maxPosition.x() * 0.5f + 0.5f) * screenSize.x();
-    maxPosition.y() = (maxPosition.y() * 0.5f + 0.5f) * screenSize.y();
-  }
-
-  void getFrustumVertexInWorld(math::Vector3Df* vertexArray) const {
-    math::Vector3Df farLt;
-    math::Vector3Df farRt;
-    math::Vector3Df farLb;
-    math::Vector3Df farRb;
-
-    math::Vector3Df nearLt;
-    math::Vector3Df nearRt;
-    math::Vector3Df nearLb;
-    math::Vector3Df nearRb;
-
-    const auto  kOrigin = m_position_;
-    const float kNear      = m_Near_;
-    const float kFar      = m_far_;
-
-    if (m_isPerspectiveProjection_) {
-      const float     kInvAspect = ((float)m_width_ / (float)m_height_);
-      const float     kLength    = tanf(m_FOVRad_ * 0.5f);
-      math::Vector3Df targetVec = getForwardVector().normalized();
-      math::Vector3Df rightVec
-          = getRightVector().normalized() * kLength * kInvAspect;
-      math::Vector3Df upVec = getUpVector().normalized() * kLength;
-
-      math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
-      math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
-      math::Vector3Df rightDown = (targetVec + rightVec - upVec);
-      math::Vector3Df leftDown  = (targetVec - rightVec - upVec);
-
-      farLt = kOrigin + leftUp * kFar;
-      farRt = kOrigin + rightUp * kFar;
-      farLb = kOrigin + leftDown * kFar;
-      farRb = kOrigin + rightDown * kFar;
-
-      nearLt = kOrigin + leftUp * kNear;
-      nearRt = kOrigin + rightUp * kNear;
-      nearLb = kOrigin + leftDown * kNear;
-      nearRb = kOrigin + rightDown * kNear;
-    } else {
-      const float kWidth = (float)m_width_;
-      const float kHeight = (float)m_height_;
-
-      math::Vector3Df targetVec = getForwardVector().normalized();
-      math::Vector3Df rightVec  = getRightVector().normalized();
-      math::Vector3Df upVec     = getUpVector().normalized();
-
-      farLt = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
-      farRt = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
-      farLb = kOrigin + targetVec * kFar - rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
-      farRb = kOrigin + targetVec * kFar + rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
-
-      nearLt = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
-      nearRt = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f + upVec * kHeight * 0.5f;
-      nearLb = kOrigin + targetVec * kNear - rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
-      nearRb = kOrigin + targetVec * kNear + rightVec * kWidth * 0.5f - upVec * kHeight * 0.5f;
-    }
-
-    vertexArray[0] = farLt;
-    vertexArray[1] = farRt;
-    vertexArray[2] = farLb;
-    vertexArray[3] = farRb;
-
-    vertexArray[4] = nearLt;
-    vertexArray[5] = nearRt;
-    vertexArray[6] = nearLb;
-    vertexArray[7] = nearRb;
-  }
+  //
+  //}
 
   // TODO: currently not used
   // void AddLight(Light* light);
@@ -570,6 +619,11 @@ class Camera {
   //}
   //////////////////////////////////////////////////////////////////////////
 
+  // ======= END: public misc methods   =======================================
+
+
+  // ======= BEGIN: public misc fields ========================================
+
   ECameraType m_type_;
 
   math::Vector3Df m_position_;
@@ -606,10 +660,14 @@ class Camera {
   // bool  m_isEnableCullMode_       = false;
   // float m_pcfSizeDirectional_   = 2.0f;
   // float m_pcfSizeOmnidirectional_ = 8.0f;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class OrthographicCamera : public Camera {
   public:
+  // ======= BEGIN: public static methods =====================================
+
   static OrthographicCamera* s_createCamera(const math::Vector3Df& pos,
                                             const math::Vector3Df& target,
                                             const math::Vector3Df& up,
@@ -637,10 +695,10 @@ class OrthographicCamera : public Camera {
                           float                  farDist,
                           float                  distance = 300.0f) {
     const auto kToTarget = (target - pos);
-    camera->m_position_ = pos;
-    camera->m_target_   = target;
-    camera->m_up_       = up;
-    camera->m_distance_ = distance;
+    camera->m_position_  = pos;
+    camera->m_target_    = target;
+    camera->m_up_        = up;
+    camera->m_distance_  = distance;
     camera->setEulerAngle(math::g_getEulerAngleFrom(kToTarget));
 
     camera->m_Near_                    = nearDist;
@@ -653,12 +711,24 @@ class OrthographicCamera : public Camera {
     camera->m_maxY_ = maxY;
   }
 
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public constructors =======================================
+
   OrthographicCamera() { m_type_ = ECameraType::ORTHO; }
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual math::Matrix4f createProjection() const {
     return math::g_orthoLhZo(
         m_minX_, m_maxX_, m_maxY_, m_minY_, m_Near_, m_far_);
   }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
 
   float getMinX() const { return m_minX_; }
 
@@ -668,6 +738,10 @@ class OrthographicCamera : public Camera {
 
   float getMaxY() const { return m_maxY_; }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
   void setMinX(float minX) { m_minX_ = minX; }
 
   void setMinY(float minY) { m_minY_ = minY; }
@@ -676,12 +750,20 @@ class OrthographicCamera : public Camera {
 
   void setMaxY(float maxY) { m_maxY_ = maxY; }
 
+  // ======= END: public setters   ============================================
+
+
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   float m_minX_ = 0.0f;
   float m_minY_ = 0.0f;
 
   float m_maxX_ = 0.0f;
   float m_maxY_ = 0.0f;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
