@@ -8,11 +8,20 @@
 namespace game_engine {
 
 struct UniformBufferBlockDx12 : public IUniformBufferBlock {
-  friend struct PlacedResourcePool;
+  // ======= BEGIN: public aliases ============================================
 
   using IUniformBufferBlock::IUniformBufferBlock;
   using IUniformBufferBlock::updateBufferData;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~UniformBufferBlockDx12();
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void init(size_t size) override;
 
@@ -28,13 +37,36 @@ struct UniformBufferBlockDx12 : public IUniformBufferBlock {
 
   virtual size_t getBufferOffset() const override { return 0; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   // TODO: consider if the naming is correct
   const DescriptorDx12& getCBV() const;
   uint64_t              getGPUAddress() const;
 
+  // ======= END: public getters   ============================================
+
   private:
-  UniformBufferBlockDx12(const UniformBufferBlockDx12&)            = delete;
+  // ======= BEGIN: private friend classes ====================================
+
+  friend struct PlacedResourcePool;
+
+  // ======= END: private friend classes   ====================================
+
+  // ======= BEGIN: private constructors ======================================
+
+  UniformBufferBlockDx12(const UniformBufferBlockDx12&) = delete;
+
+  // ======= END: private constructors   ======================================
+
+  // ======= BEGIN: private overloaded operators ==============================
+
   UniformBufferBlockDx12& operator=(const UniformBufferBlockDx12&) = delete;
+
+  // ======= END: private overloaded operators   ==============================
+
+  // ======= BEGIN: private misc fields =======================================
 
   std::shared_ptr<BufferDx12> m_bufferPtr_;
 
@@ -42,6 +74,8 @@ struct UniformBufferBlockDx12 : public IUniformBufferBlock {
   int64_t         m_ringBufferOffset_        = 0;
   uint8_t*        m_ringBufferDestAddress_   = nullptr;
   size_t          m_ringBufferAllocatedSize_ = 0;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
