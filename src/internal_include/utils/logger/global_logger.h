@@ -9,14 +9,23 @@
 namespace game_engine {
 
 class GlobalLogger {
-  static inline std::vector<std::shared_ptr<ILogger>> s_loggers;
-
   public:
+  // ======= BEGIN: public static fields ======================================
+
   static void AddLogger(const std::shared_ptr<ILogger>& logger);
 
   static void Log(LogLevel logLevel, const std::string& message);
+
+  // ======= END: public static fields   ======================================
+
+  private:
+  // ======= BEGIN: private static fields =====================================
+
+  static inline std::vector<std::shared_ptr<ILogger>> s_loggers;
+
+  // ======= END: private static fields   =====================================
 };
 
 }  // namespace game_engine
 
-#endif // GAME_ENGINE_GLOBAL_LOGGER_H
+#endif  // GAME_ENGINE_GLOBAL_LOGGER_H
