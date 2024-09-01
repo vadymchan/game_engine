@@ -94,14 +94,14 @@ std::shared_ptr<TextureDx12> g_createTexture(
     ETextureFormat       format,
     ETextureCreateFlag   textureCreateFlag,
     EResourceLayout      imageLayout  = EResourceLayout::UNDEFINED,
-    const RTClearValue& clearValue   = RTClearValue::s_kInvalid,
+    const RtClearValue& clearValue   = RtClearValue::s_kInvalid,
     const wchar_t*       resourceName = nullptr);
 
 std::shared_ptr<TextureDx12> g_createTexture(
     const std::shared_ptr<CreatedResource>& texture,
     ETextureCreateFlag                       textureCreateFlag,
     EResourceLayout                          imageLayout,
-    const RTClearValue&                     clearValue,
+    const RtClearValue&                     clearValue,
     const wchar_t*                           resourceName);
 
 uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
