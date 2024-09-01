@@ -554,7 +554,7 @@ void RhiVk::release() {
   s_blendingStatePool.release();
   s_pipelineStatePool.release();
 
-  FrameBufferPool::release();
+  FrameBufferPool::s_release();
   RenderTargetPool::s_release();
 
   // TODO: consider removing
@@ -747,7 +747,7 @@ bool RhiVk::createShaderInternal(Shader*           shader,
 
   std::vector<Name> IncludeFilePaths;
   Shader*           shader_vk = shader;
-  assert(shader_vk->s_getPermutationCount());
+  assert(shader_vk->getPermutationCount());
   {
     assert(!shader_vk->m_compiledShader);
     // TODO: check for memory leak, use smart pointer
@@ -1523,7 +1523,7 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
     ETextureCreateFlag   textureCreateFlag,
     EResourceLayout      imageLayout,
     const ImageBulkData& imageBulkData,
-    const RTClearValue&  clearValue,
+    const RtClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   VkImageCreateFlagBits          ImageCreateFlags{};
   const VkMemoryPropertyFlagBits PropertyFlagBits
@@ -1601,7 +1601,7 @@ std::shared_ptr<Texture> RhiVk::createCubeTexture(
     ETextureCreateFlag   textureCreateFlag,
     EResourceLayout      imageLayout,
     const ImageBulkData& imageBulkData,
-    const RTClearValue&  clearValue,
+    const RtClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   VkImageCreateFlagBits ImageCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
   const VkMemoryPropertyFlagBits PropertyFlagBits
@@ -1869,7 +1869,7 @@ void RhiVk::recreateSwapChain() {
   m_commandBufferManager_ = new CommandBufferManagerVk();
   m_commandBufferManager_->createPool(m_graphicsQueue_.m_queueIndex_);
 
-  FrameBufferPool::release();
+  FrameBufferPool::s_release();
   RenderTargetPool::s_release();
   s_pipelineStatePool.release();
   s_renderPassPool.release();
