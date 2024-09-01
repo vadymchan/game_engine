@@ -17,6 +17,42 @@ enum class ConsoleStreamType {
 
 class ConsoleLogger : public ILogger {
   public:
+  // ======= BEGIN: public constructors =======================================
+
+  ConsoleLogger(const std::string& loggerName
+                = std::string(s_kDefaultLoggerName),
+                LogLevel           logLevel    = s_kDefaultLogLevel,
+                const std::string& pattern     = std::string(s_kDefaultPattern),
+                ConsoleStreamType  consoleType = s_kDefaultConsoleType,
+                bool               multiThreaded = true,
+                bool               colored       = true);
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  void log(LogLevel logLevel, const std::string& message) override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  [[nodiscard]] auto getLoggerName() const -> const std::string&;
+  [[nodiscard]] auto getPattern() const -> const std::string&;
+  [[nodiscard]] auto getLogLevel() const -> LogLevel;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  void setLoggerName(const std::string& name);
+  void setPattern(const std::string& pattern);
+  void setLogLevel(LogLevel level);
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public constants ==========================================
+
   static constexpr std::string_view s_kDefaultLoggerName = "default_logger";
   static constexpr LogLevel         s_kDefaultLogLevel   = LogLevel::Trace;
   static constexpr std::string_view s_kDefaultPattern
@@ -24,7 +60,11 @@ class ConsoleLogger : public ILogger {
   static constexpr ConsoleStreamType s_kDefaultConsoleType
       = ConsoleStreamType::StdOut;
 
+  // ======= END: public constants   ==========================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   std::string                     m_pattern_;
   std::shared_ptr<spdlog::logger> m_logger_;
   LogLevel                        m_logLevel_;
@@ -32,26 +72,7 @@ class ConsoleLogger : public ILogger {
   bool                            m_isMultithreaded_;
   bool                            m_isColored_;
 
-  public:
-  ConsoleLogger(const std::string& loggerName
-                = std::string(s_kDefaultLoggerName),
-                LogLevel           logLevel   = s_kDefaultLogLevel,
-                const std::string& pattern     = std::string(s_kDefaultPattern),
-                ConsoleStreamType  consoleType = s_kDefaultConsoleType,
-                bool               multiThreaded = true,
-                bool               colored        = true);
-
-  void log(LogLevel logLevel, const std::string& message) override;
-
-  // Getters
-  [[nodiscard]] auto getLoggerName() const -> const std::string&;
-  [[nodiscard]] auto getPattern() const -> const std::string&;
-  [[nodiscard]] auto getLogLevel() const -> LogLevel;
-
-  // Setters
-  void setLoggerName(const std::string& name);
-  void setPattern(const std::string& pattern);
-  void setLogLevel(LogLevel level);
+  // ======= END: private misc fields   =======================================
 };
 }  // namespace game_engine
-#endif // GAME_ENGINE_CONSOLE_LOGGER_H
+#endif  // GAME_ENGINE_CONSOLE_LOGGER_H
