@@ -14,6 +14,8 @@
 namespace game_engine {
 
 struct RenderTargetInfo {
+  // ======= BEGIN: public getters ============================================
+
   size_t getHash() const {
     return GETHASH_FROM_INSTANT_STRUCT(m_rype_,
                                        m_format_,
@@ -28,6 +30,10 @@ struct RenderTargetInfo {
                                        m_isMemoryless_);
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ETextureType       m_rype_                = ETextureType::TEXTURE_2D;
   ETextureFormat     m_format_              = ETextureFormat::RGB8;
   math::Dimension2Di m_extent_              = math::Dimension2Di(0);
@@ -36,11 +42,15 @@ struct RenderTargetInfo {
   EMSAASamples       m_sampleCount_         = EMSAASamples::COUNT_1;
   bool               m_isUseAsSubpassInput_ = false;
   bool               m_isMemoryless_        = false;
-  RTClearValue       m_rtClearValue         = RTClearValue::s_kInvalid;
+  RtClearValue       m_rtClearValue         = RtClearValue::s_kInvalid;
   ETextureCreateFlag m_textureCreateFlag_   = ETextureCreateFlag::RTV;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
+  // ======= BEGIN: public static methods =====================================
+
   // Create render target from texture, It is useful to create render target
   // from swapchain texture
   template <typename T1, class... T2>
@@ -53,6 +63,10 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
       const std::shared_ptr<Texture>& texturePtr) {
     return std::make_shared<RenderTarget>(texturePtr);
   }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public constructors =======================================
 
   RenderTarget() = default;
 
@@ -67,7 +81,15 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
     }
   }
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   ~RenderTarget() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
 
   size_t getHash() const {
     if (m_hash_) {
@@ -76,41 +98,61 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
 
     m_hash_ = m_info_.getHash();
     if (getTexture()) {
-      m_hash_ = XXH64(reinterpret_cast<uint64_t>(getTexture()->getHandle()), m_hash_);
+      m_hash_ = XXH64(reinterpret_cast<uint64_t>(getTexture()->getHandle()),
+                      m_hash_);
     }
     return m_hash_;
   }
 
-  // TODO: consider renaming 
-  void returnRt();
-
   EResourceLayout getLayout() const {
-    return m_texturePtr_ ? m_texturePtr_->getLayout() : EResourceLayout::UNDEFINED;
+    return m_texturePtr_ ? m_texturePtr_->getLayout()
+                         : EResourceLayout::UNDEFINED;
   }
 
   Texture* getTexture() const { return m_texturePtr_.get(); }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  // TODO: consider renaming
+  void returnRt();
+
+  // ======= END: public misc methods   =======================================
+
+
+
+  // ======= BEGIN: public misc fields ========================================
+
   RenderTargetInfo         m_info_;
   std::shared_ptr<Texture> m_texturePtr_;
 
-  mutable size_t m_hash_                         = 0;
+  mutable size_t m_hash_                          = 0;
   bool           m_isCreatedFromRenderTargetPool_ = false;
+
+  // ======= END: public misc fields   ========================================
 };
 
 // ==================== SceneRenderTarget ( for Renderer) =====================
 
 struct SceneRenderTarget {
+  // ======= BEGIN: public misc methods =======================================
+
+  void create(std::shared_ptr<Window> window, const ISwapchainImage* swapchain);
+
+  void returnRt();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  // ======= END: public misc fields   ========================================
   std::shared_ptr<RenderTarget> m_colorPtr_;
   std::shared_ptr<RenderTarget> m_depthPtr_;
   std::shared_ptr<RenderTarget> m_resolvePtr_;
 
   // Final rendered image, post-processed
   std::shared_ptr<RenderTarget> m_finalColorPtr_;
-
-  void create(std::shared_ptr<Window> window,
-              const ISwapchainImage*   swapchain);
-
-  void returnRt();
 };
 
 }  // namespace game_engine
