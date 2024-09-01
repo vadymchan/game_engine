@@ -50,12 +50,47 @@ namespace game_engine {
 
 class RhiVk : public RHI {
   public:
+  // ======= BEGIN: public nested types =======================================
+
+  struct QueueVk {
+    uint32_t m_queueIndex_ = 0;
+    VkQueue  m_queue_      = nullptr;
+  };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public static fields ======================================
+
+  static std::unordered_map<size_t, ShaderBindingLayoutVk*> s_shaderBindingPool;
+  static TResourcePool<SamplerStateInfoVk, MutexRWLock>     s_samplerStatePool;
+  static TResourcePool<RasterizationStateInfoVk, MutexRWLock>
+      s_rasterizationStatePool;
+  static TResourcePool<StencilOpStateInfoVk, MutexRWLock> s_stencilOpStatePool;
+  static TResourcePool<DepthStencilStateInfoVk, MutexRWLock>
+      s_depthStencilStatePool;
+  static TResourcePool<BlendingStateInfoVk, MutexRWLock> s_blendingStatePool;
+  static TResourcePool<PipelineStateInfoVk, MutexRWLock> s_pipelineStatePool;
+  static TResourcePool<RenderPassVk, MutexRWLock>        s_renderPassPool;
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public constructors =======================================
+
   RhiVk();
-  RhiVk(const RhiVk&)                    = delete;
-  auto operator=(const RhiVk&) -> RhiVk& = delete;
-  RhiVk(RhiVk&&)                         = delete;
-  auto operator=(RhiVk&&) -> RhiVk&      = delete;
-  virtual ~RhiVk()                       = default;
+  RhiVk(const RhiVk&) = delete;
+  RhiVk(RhiVk&&)      = delete;
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  virtual ~RhiVk() = default;
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  // TODO: consider group and sort methods
 
   // TODO: consider change signature for Window object
   virtual bool init(const std::shared_ptr<Window>& window) override;
@@ -138,16 +173,7 @@ class RhiVk : public RHI {
         std::move(PipelineStateInfo(shader, shaderBindingArray, pushConstant)));
   }
 
-  // Create m_buffers
-  std::shared_ptr<IBuffer> createBufferInternal(
-      std::uint64_t     size,
-      std::uint64_t     alignment,
-      EBufferCreateFlag bufferCreateFlag,
-      EResourceLayout   initialState,
-      const void*       data     = nullptr,
-      std::uint64_t     dataSize = 0
-      /*, const wchar_t*    resourceName = nullptr*/) const;
-
+  // Create Buffers
   virtual std::shared_ptr<IBuffer> createStructuredBuffer(
       std::uint64_t     size,
       std::uint64_t     alignment,
@@ -187,12 +213,6 @@ class RhiVk : public RHI {
       Name name, LifeTimeType lifeTimeType, size_t size = 0) const override;
 
   // Create Images
-  VkImageUsageFlags getImageUsageFlags(
-      ETextureCreateFlag textureCreateFlag) const;
-
-  VkMemoryPropertyFlagBits getMemoryPropertyFlagBits(
-      ETextureCreateFlag textureCreateFlag) const;
-
   virtual std::shared_ptr<Texture> create2DTexture(
       uint32_t             witdh,
       uint32_t             height,
@@ -202,7 +222,7 @@ class RhiVk : public RHI {
       ETextureCreateFlag   textureCreateFlag,
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageBulkData = {},
-      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
+      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const override;
 
   virtual std::shared_ptr<Texture> createCubeTexture(
@@ -213,90 +233,8 @@ class RhiVk : public RHI {
       ETextureCreateFlag   textureCreateFlag,
       EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
       const ImageBulkData& imageBulkData = {},
-      const RTClearValue&  clearValue    = RTClearValue::s_kInvalid,
+      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
       const wchar_t*       resourceName  = nullptr) const override;
-
-  void removePipelineStateInfo(size_t hash) {
-    s_pipelineStatePool.release(hash);
-  }
-
-  virtual RenderPass* getOrCreateRenderPass(
-      const std::vector<Attachment>& colorAttachments,
-      const math::Vector2Di&         offset,
-      const math::Vector2Di&         extent) const override {
-    return s_renderPassPool.getOrCreate(
-        RenderPassVk(colorAttachments, offset, extent));
-  }
-
-  virtual RenderPass* getOrCreateRenderPass(
-      const std::vector<Attachment>& colorAttachments,
-      const Attachment&              depthAttachment,
-      const math::Vector2Di&         offset,
-      const math::Vector2Di&         extent) const override {
-    return s_renderPassPool.getOrCreate(
-        RenderPassVk(colorAttachments, depthAttachment, offset, extent));
-  }
-
-  virtual RenderPass* getOrCreateRenderPass(
-      const std::vector<Attachment>& colorAttachments,
-      const Attachment&              depthAttachment,
-      const Attachment&              colorResolveAttachment,
-      const math::Vector2Di&         offset,
-      const math::Vector2Di&         extent) const override {
-    return s_renderPassPool.getOrCreate(RenderPassVk(colorAttachments,
-                                                     depthAttachment,
-                                                     colorResolveAttachment,
-                                                     offset,
-                                                     extent));
-  }
-
-  virtual RenderPass* getOrCreateRenderPass(
-      const RenderPassInfo&  renderPassInfo,
-      const math::Vector2Di& offset,
-      const math::Vector2Di& extent) const override {
-    return s_renderPassPool.getOrCreate(
-        RenderPassVk(renderPassInfo, offset, extent));
-  }
-
-  virtual MemoryPoolVk* getMemoryPool() const override { return m_memoryPool_; }
-
-  DescriptorPoolVk* getDescriptorPoolForSingleFrame() const {
-    return m_descriptorPoolsSingleFrame_[m_currentFrameIndex_];
-  }
-
-  DescriptorPoolVk* getDescriptorPoolMultiFrame() const {
-    return m_descriptorPoolMultiFrame_;
-  }
-
-  RingBufferVk* getOneFrameUniformRingBuffer() const {
-    return m_oneFrameUniformRingBuffers_[m_currentFrameIndex_];
-  }
-
-  virtual CommandBufferManagerVk* getCommandBufferManager() const override {
-    return m_commandBufferManager_;
-  }
-
-  virtual SemaphoreManagerVk* getSemaphoreManager() override {
-    return &m_semaphoreManager_;
-  }
-
-  virtual FenceManagerVk* getFenceManager() override { return m_fenceManager_; }
-
-  virtual std::shared_ptr<ISwapchain> getSwapchain() const override {
-    return m_swapchain_;
-  }
-
-  virtual uint32_t getCurrentFrameIndex() const override {
-    return m_currentFrameIndex_;
-  }
-
-  virtual EMSAASamples getSelectedMSAASamples() const override {
-    return m_selectedMSAASamples_;
-  }
-
-  virtual uint32_t getCurrentFrameNumber() const override {
-    return m_currentFrameNumber_;
-  }
 
   virtual bool onHandleResized(uint32_t witdh,
                                uint32_t height,
@@ -311,7 +249,7 @@ class RhiVk : public RHI {
     return true;
   }
 
-  virtual void incrementFrameNumber() { ++m_currentFrameNumber_; }
+  virtual void incrementFrameNumber() override { ++m_currentFrameNumber_; }
 
   void drawArrays(const std::shared_ptr<RenderFrameContext>& renderFrameContext,
                   /*EPrimitiveType                               type, -
@@ -391,38 +329,28 @@ class RhiVk : public RHI {
 
   void recreateSwapChain() override;
 
+  void queueSubmit(
+      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
+      ISemaphore*                                signalSemaphore) override;
+
   virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() override;
 
   virtual void endRenderFrame(const std::shared_ptr<RenderFrameContext>&
                                   renderFrameContextPtr) override;
 
-  void queueSubmit(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      ISemaphore*                                signalSemaphore) override;
-
   virtual CommandBufferVk* beginSingleTimeCommands() const override;
 
   void endSingleTimeCommands(CommandBuffer* commandBuffer) const override;
+
+  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
+                                Texture*        texture,
+                                EResourceLayout newLayout) const override;
 
   virtual void bindGraphicsShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const override;
-
-  // TODO: add methods for VkBufferMemoryBarrier transition layout
-
-  bool transitionLayout(VkCommandBuffer commandBuffer,
-                        VkImage         image,
-                        VkFormat        format,
-                        uint32_t        mipLevels,
-                        uint32_t        layoutCount,
-                        VkImageLayout   oldLayout,
-                        VkImageLayout   newLayout) const;
-
-  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                Texture*        texture,
-                                EResourceLayout newLayout) const override;
 
   virtual void bindComputeShaderBindingInstances(
       const CommandBuffer*                 commandBuffer,
@@ -433,10 +361,121 @@ class RhiVk : public RHI {
   // TODO: currently not used
   virtual void nextSubpass(const CommandBuffer* commandBuffer) const override;
 
-  // TODO: uncomment
-  // private:
-  const std::vector<const char*> kDeviceExtensions
-      = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+  virtual RenderPass* getOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
+    return s_renderPassPool.getOrCreate(
+        RenderPassVk(colorAttachments, offset, extent));
+  }
+
+  virtual RenderPass* getOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
+    return s_renderPassPool.getOrCreate(
+        RenderPassVk(colorAttachments, depthAttachment, offset, extent));
+  }
+
+  virtual RenderPass* getOrCreateRenderPass(
+      const std::vector<Attachment>& colorAttachments,
+      const Attachment&              depthAttachment,
+      const Attachment&              colorResolveAttachment,
+      const math::Vector2Di&         offset,
+      const math::Vector2Di&         extent) const override {
+    return s_renderPassPool.getOrCreate(RenderPassVk(colorAttachments,
+                                                     depthAttachment,
+                                                     colorResolveAttachment,
+                                                     offset,
+                                                     extent));
+  }
+
+  virtual RenderPass* getOrCreateRenderPass(
+      const RenderPassInfo&  renderPassInfo,
+      const math::Vector2Di& offset,
+      const math::Vector2Di& extent) const override {
+    return s_renderPassPool.getOrCreate(
+        RenderPassVk(renderPassInfo, offset, extent));
+  }
+
+  virtual MemoryPoolVk* getMemoryPool() const override { return m_memoryPool_; }
+
+  virtual CommandBufferManagerVk* getCommandBufferManager() const override {
+    return m_commandBufferManager_;
+  }
+
+  virtual SemaphoreManagerVk* getSemaphoreManager() override {
+    return &m_semaphoreManager_;
+  }
+
+  virtual FenceManagerVk* getFenceManager() override { return m_fenceManager_; }
+
+  virtual std::shared_ptr<ISwapchain> getSwapchain() const override {
+    return m_swapchain_;
+  }
+
+  virtual uint32_t getCurrentFrameIndex() const override {
+    return m_currentFrameIndex_;
+  }
+
+  virtual EMSAASamples getSelectedMSAASamples() const override {
+    return m_selectedMSAASamples_;
+  }
+
+  virtual uint32_t getCurrentFrameNumber() const override {
+    return m_currentFrameNumber_;
+  }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  DescriptorPoolVk* getDescriptorPoolForSingleFrame() const {
+    return m_descriptorPoolsSingleFrame_[m_currentFrameIndex_];
+  }
+
+  DescriptorPoolVk* getDescriptorPoolMultiFrame() const {
+    return m_descriptorPoolMultiFrame_;
+  }
+
+  RingBufferVk* getOneFrameUniformRingBuffer() const {
+    return m_oneFrameUniformRingBuffers_[m_currentFrameIndex_];
+  }
+
+  // Create Images
+  VkImageUsageFlags getImageUsageFlags(
+      ETextureCreateFlag textureCreateFlag) const;
+
+  VkMemoryPropertyFlagBits getMemoryPropertyFlagBits(
+      ETextureCreateFlag textureCreateFlag) const;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void removePipelineStateInfo(size_t hash) {
+    s_pipelineStatePool.release(hash);
+  }
+
+  // Create Buffers
+  std::shared_ptr<IBuffer> createBufferInternal(
+      std::uint64_t     size,
+      std::uint64_t     alignment,
+      EBufferCreateFlag bufferCreateFlag,
+      EResourceLayout   initialState,
+      const void*       data     = nullptr,
+      std::uint64_t     dataSize = 0
+      /*, const wchar_t*    resourceName = nullptr*/) const;
+
+  // TODO: add methods for VkBufferMemoryBarrier transition layout
+  bool transitionLayout(VkCommandBuffer commandBuffer,
+                        VkImage         image,
+                        VkFormat        format,
+                        uint32_t        mipLevels,
+                        uint32_t        layoutCount,
+                        VkImageLayout   oldLayout,
+                        VkImageLayout   newLayout) const;
 
   void populateDebugMessengerCreateInfo(
       VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -444,6 +483,25 @@ class RhiVk : public RHI {
   bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 
   bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public overloaded operators ===============================
+
+  auto operator=(const RhiVk&) -> RhiVk& = delete;
+  auto operator=(RhiVk&&) -> RhiVk&      = delete;
+
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public constants ==========================================
+
+  const std::vector<const char*> kDeviceExtensions
+      = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+  // const bool  m_isVSyncEnabled_{true};
+
+  // ======= END: public constants   ==========================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   VkInstance m_instance_;
 
@@ -454,11 +512,6 @@ class RhiVk : public RHI {
 
   VkDevice m_device_;
 
-  struct QueueVk {
-    uint32_t m_queueIndex_ = 0;
-    VkQueue  m_queue_      = nullptr;
-  };
-
   QueueVk m_graphicsQueue_;
   QueueVk m_computeQueue_;
   QueueVk m_presentQueue_;
@@ -466,7 +519,6 @@ class RhiVk : public RHI {
   VkDebugUtilsMessengerEXT m_debugMessenger_ = nullptr;
 
   std::shared_ptr<SwapchainVk> m_swapchain_ = std::make_shared<SwapchainVk>();
-  // const bool  m_isVSyncEnabled_{true};
 
   // TODO: consider whether need in this place
   std::shared_ptr<Window> m_window_;
@@ -491,20 +543,11 @@ class RhiVk : public RHI {
 
   mutable MutexRWLock m_shaderBindingPoolLock_;
 
-  static std::unordered_map<size_t, ShaderBindingLayoutVk*> s_shaderBindingPool;
-  static TResourcePool<SamplerStateInfoVk, MutexRWLock>     s_samplerStatePool;
-  static TResourcePool<RasterizationStateInfoVk, MutexRWLock>
-      s_rasterizationStatePool;
-  static TResourcePool<StencilOpStateInfoVk, MutexRWLock> s_stencilOpStatePool;
-  static TResourcePool<DepthStencilStateInfoVk, MutexRWLock>
-      s_depthStencilStatePool;
-  static TResourcePool<BlendingStateInfoVk, MutexRWLock> s_blendingStatePool;
-  static TResourcePool<PipelineStateInfoVk, MutexRWLock> s_pipelineStatePool;
-  static TResourcePool<RenderPassVk, MutexRWLock>        s_renderPassPool;
-
   bool m_isFramebufferResized_ = false;
 
   EMSAASamples m_selectedMSAASamples_ = EMSAASamples::COUNT_1;
+
+  // ======= END: public misc fields   ========================================
 };
 
 extern RhiVk* g_rhiVk;
