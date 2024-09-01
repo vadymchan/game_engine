@@ -230,7 +230,7 @@ bool VertexBufferVk::initialize(
 
       // g_copyBuffer(stagingBuffer, *stream.BufferPtr.get(), bufferSize);
 
-      // stagingBuffer.release();
+      // stagingBuffer.s_release();
 
       // m_bindInfos.m_buffers.push_back(stream.BufferPtr->m_buffer);
       // m_bindInfos.Offsets.push_back(stream.Offset +
@@ -578,7 +578,7 @@ bool IndexBufferVk::initialize(
   //     *BufferPtr.get());
   // g_copyBuffer(stagingBuffer, *BufferPtr.get(), bufferSize);
 
-  // stagingBuffer.release();
+  // stagingBuffer.s_release();
 
   const EBufferCreateFlag BufferCreateFlag
       = EBufferCreateFlag::IndexBuffer | EBufferCreateFlag::UAV
