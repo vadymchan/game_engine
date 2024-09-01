@@ -30,11 +30,22 @@ struct InstantStructInternal<T, Args...>
   //               "InstanceStruct members should be 'trivially copyable'");
   static_assert(!std::is_pointer<T>::value,
                 "InstanceStruct members should not be 'pointer'");
-  T m_data_{};
+  // ======= BEGIN: public constructors =======================================
 
   InstantStructInternal<T, Args...>(T v, Args... args)
       : m_data_(v)
       , InstantStructInternal<Args...>(args...) {}
+
+  // ======= END: public constructors   =======================================
+
+ // ======= BEGIN: public misc fields ========================================
+
+  T m_data_{};
+
+  // ======= END: public misc fields   ========================================
+
+
+
 };
 
 template <>
@@ -50,8 +61,12 @@ struct InstantStructInternal<> {
 // class constructor.
 template <typename... Args>
 struct InstantStruct : public InstantStructInternal<Args...> {
+  // ======= BEGIN: public constructors =======================================
+
   InstantStruct(Args... args)
       : InstantStructInternal<Args...>(args...) {}
+
+  // ======= END: public constructors   =======================================
 };
 
 // TODO: check whether this is portable
