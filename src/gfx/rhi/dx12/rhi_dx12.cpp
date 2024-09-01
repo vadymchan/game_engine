@@ -204,8 +204,8 @@ void RhiDx12::waitForGPU() const {
   auto Queue = m_commandBufferManager_->getCommandQueue();
   assert(Queue);
 
-  if (m_commandBufferManager_ && m_commandBufferManager_->m_fence) {
-    m_commandBufferManager_->m_fence->signalWithNextFenceValue(Queue.Get(),
+  if (m_commandBufferManager_ && m_commandBufferManager_->m_fence_) {
+    m_commandBufferManager_->m_fence_->signalWithNextFenceValue(Queue.Get(),
                                                               true);
   }
 }
@@ -658,7 +658,7 @@ bool RhiDx12::createShaderInternal(Shader*           shader,
                                    const ShaderInfo& shaderInfo) const {
   std::vector<Name> IncludeFilePaths;
   Shader*           shader_dx12 = shader;
-  assert(shader_dx12->s_getPermutationCount());
+  assert(shader_dx12->getPermutationCount());
   {
     assert(!shader_dx12->m_compiledShader);
     CompiledShaderDx12* CurCompiledShader = new CompiledShaderDx12();
@@ -867,7 +867,7 @@ std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
   SwapchainImageDx12* currentSwapchainImage
       = (SwapchainImageDx12*)m_swapchain_->getCurrentSwapchainImage();
   assert(m_commandBufferManager_);
-  m_commandBufferManager_->m_fence->waitForFenceValue(
+  m_commandBufferManager_->m_fence_->waitForFenceValue(
       currentSwapchainImage->m_fenceValue_);
   //////////////////////////////////////////////////////////////////////////
 
@@ -905,7 +905,7 @@ void RhiDx12::endRenderFrame(
   m_commandBufferManager_->executeCommandList(commandBuffer);
 
   CurrentSwapchainImage->m_fenceValue_
-      = commandBuffer->m_owner_->m_fence->signalWithNextFenceValue(
+      = commandBuffer->m_owner_->m_fence_->signalWithNextFenceValue(
           m_commandBufferManager_->getCommandQueue().Get());
 
   HRESULT hr = S_OK;
@@ -1165,7 +1165,7 @@ std::shared_ptr<Texture> RhiDx12::create2DTexture(
     ETextureCreateFlag   textureCreateFlag,
     EResourceLayout      imageLayout,
     const ImageBulkData& imageBulkData,
-    const RTClearValue&  clearValue,
+    const RtClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   auto TexturePtr = g_createTexture(witdh,
                                   height,
@@ -1214,7 +1214,7 @@ std::shared_ptr<Texture> RhiDx12::createCubeTexture(
     ETextureCreateFlag   textureCreateFlag,
     EResourceLayout      imageLayout,
     const ImageBulkData& imageBulkData,
-    const RTClearValue&  clearValue,
+    const RtClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   auto TexturePtr = g_createTexture(witdh,
                                   height,
