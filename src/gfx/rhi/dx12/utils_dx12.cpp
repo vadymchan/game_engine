@@ -562,7 +562,7 @@ std::shared_ptr<TextureDx12> g_createTexture(uint32_t           witdh,
                                            ETextureFormat     format,
                                            ETextureCreateFlag textureCreateFlag,
                                            EResourceLayout    imageLayout,
-                                           const RTClearValue& clearValue,
+                                           const RtClearValue& clearValue,
                                            const wchar_t*      resourceName) {
   bool              HasClearValue = false;
   D3D12_CLEAR_VALUE ClearValue{};
@@ -642,7 +642,7 @@ std::shared_ptr<TextureDx12> g_createTexture(
     const std::shared_ptr<CreatedResource>& texture,
     ETextureCreateFlag                      textureCreateFlag,
     EResourceLayout                         imageLayout,
-    const RTClearValue&                     clearValue,
+    const RtClearValue&                     clearValue,
     const wchar_t*                          resourceName) {
   const auto desc       = texture->m_resource_.get()->Get()->GetDesc();
   auto       TexturePtr = std::make_shared<TextureDx12>(
