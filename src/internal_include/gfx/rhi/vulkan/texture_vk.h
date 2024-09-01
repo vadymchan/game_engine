@@ -13,6 +13,16 @@ namespace game_engine {
 
 class TextureVk : public Texture {
   public:
+  // ======= BEGIN: public static methods =====================================
+
+  // TODO: clear resources
+  static VkSampler s_createDefaultSamplerState();
+  static void      s_destroyDefaultSamplerState();
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public constructors =======================================
+
   TextureVk()
       : Texture() {}
 
@@ -22,14 +32,20 @@ class TextureVk : public Texture {
             const math::Dimension2Di& extent,
             uint32_t                  layerCount  = 1,
             EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
-            bool                      sRGB      = false)
+            bool                      sRGB        = false)
       : Texture(type, format, extent, layerCount, sampleCount, sRGB) {}
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
 
   virtual ~TextureVk() { releaseInternal(); }
 
-  virtual void release() override { releaseInternal(); }
+  // ======= END: public destructor   =========================================
 
-  void releaseInternal();
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual void release() override { releaseInternal(); }
 
   virtual void* getHandle() const override { return m_image_; }
 
@@ -37,12 +53,16 @@ class TextureVk : public Texture {
 
   virtual EResourceLayout getLayout() const override { return m_imageLayout_; }
 
-  // TODO: clear resources
+  // ======= END: public overridden methods   =================================
 
-  static VkSampler s_createDefaultSamplerState();
-  static void      s_destroyDefaultSamplerState();
+  // ======= BEGIN: public misc methods =======================================
 
-  // private:
+  void releaseInternal();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   VkImage     m_image_ = VK_NULL_HANDLE;  // TODO: consider using pool
   VkImageView m_imageView_
       = VK_NULL_HANDLE;  // TODO: consider several image views per VkImage
@@ -53,6 +73,8 @@ class TextureVk : public Texture {
   // TODO:
   // - UAV image view
   // - std::map for each mip map image view
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
