@@ -14,11 +14,17 @@ namespace game_engine {
 
 class RenderTargetPool {
   public:
-  RenderTargetPool();
-  ~RenderTargetPool();
+  // ======= BEGIN: public nested types =======================================
 
-  static std::shared_ptr<RenderTarget> s_getRenderTarget(
-      const RenderTargetInfo& info);
+  struct RenderTargetPoolResource {
+    bool                          m_isUsing_ = false;
+    std::shared_ptr<RenderTarget> m_renderTargetPtr_;
+  };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public static methods =====================================
+
   static void s_seturnRenderTarget(RenderTarget* renderTarget);
 
   static void s_releaseForRecreateSwapchain() {
@@ -40,16 +46,32 @@ class RenderTargetPool {
     m_renderTargetHashVariableMap_.clear();
   }
 
-  struct RenderTargetPoolResource {
-    bool                          m_isUsing_ = false;
-    std::shared_ptr<RenderTarget> m_renderTargetPtr_;
-  };
+  static std::shared_ptr<RenderTarget> s_getRenderTarget(
+      const RenderTargetInfo& info);
+
+  // static struct Texture* s_getNullTexture(ETextureType type);
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public static fields ======================================
 
   static std::map<size_t, std::list<RenderTargetPoolResource> >
                                          m_renderTargetResourceMap_;
   static std::map<RenderTarget*, size_t> m_renderTargetHashVariableMap_;
 
-  // static struct Texture* GetNullTexture(ETextureType type);
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public constructors =======================================
+
+  RenderTargetPool();
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  ~RenderTargetPool();
+
+  // ======= END: public destructor   =========================================
 };
 
 }  // namespace game_engine
