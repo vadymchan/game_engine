@@ -12,6 +12,26 @@ namespace game_engine {
 // Temporary array for one frame data
 template <typename T, int32_t NumOfInlineData = 10>
 struct ResourceContainer {
+  // ======= BEGIN: public static methods =====================================
+
+  template <typename T2>
+  static void s_getHash(size_t& hash, int32_t index, const T2& data) {
+    hash ^= (data->getHash() << index);
+  }
+
+  size_t getHash() const {
+    size_t hash = 0;
+    for (int32_t i = 0; i < m_numOfData_; ++i) {
+      // hash ^= (Data[i]->s_getHash() << i);
+      s_getHash(hash, i, m_data_[i]);
+    }
+    return hash;
+  }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public constructors =======================================
+
   ResourceContainer() = default;
 
   ResourceContainer(const ResourceContainer& data) {
@@ -26,6 +46,10 @@ struct ResourceContainer {
     std::copy_n(data.m_data_, data.m_numOfData_, m_data_);
     m_numOfData_ = data.m_numOfData_;
   }
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   void add(T element) {
     assert(NumOfInlineData > m_numOfData_);
@@ -64,21 +88,11 @@ struct ResourceContainer {
     return EmptyValue;
   }
 
-  template <typename T2>
-  static void s_getHash(size_t& hash, int32_t index, const T2& data) {
-    hash ^= (data->getHash() << index);
-  }
-
-  size_t getHash() const {
-    size_t hash = 0;
-    for (int32_t i = 0; i < m_numOfData_; ++i) {
-      // hash ^= (Data[i]->s_getHash() << i);
-      s_getHash(hash, i, m_data_[i]);
-    }
-    return hash;
-  }
-
   void reset() { m_numOfData_ = 0; }
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   ResourceContainer<T, NumOfInlineData>& operator=(
       const ResourceContainer<T, NumOfInlineData>& data) {
@@ -108,8 +122,14 @@ struct ResourceContainer {
     return m_data_[index];
   }
 
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc fields ========================================
+
   T       m_data_[NumOfInlineData];
   int32_t m_numOfData_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
