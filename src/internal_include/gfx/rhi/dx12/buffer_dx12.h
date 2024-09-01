@@ -16,6 +16,8 @@ namespace game_engine {
 struct CommandBufferDx12;
 
 struct BufferDx12 : public IBuffer {
+  // ======= BEGIN: public constructors =======================================
+
   BufferDx12() = default;
 
   BufferDx12(std::shared_ptr<CreatedResource> buffer,
@@ -27,11 +29,17 @@ struct BufferDx12 : public IBuffer {
       , m_alignment_(alignment)
       , m_bufferCreateFlag_(bufferCreateFlag) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~BufferDx12() { release(); }
 
-  virtual void release() override;
+  // ======= END: public destructor   =========================================
 
-  virtual void* getMappedPointer() const override { return m_cpuAddress_; }
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual void release() override;
 
   virtual void* map(uint64_t offset, uint64_t size) override {
     assert(m_buffer && m_buffer->isValid());
@@ -91,6 +99,8 @@ struct BufferDx12 : public IBuffer {
     }
   }
 
+  virtual void* getMappedPointer() const override { return m_cpuAddress_; }
+
   virtual void* getHandle() const override { return m_buffer->get(); }
 
   virtual uint64_t getAllocatedSize() const override {
@@ -101,11 +111,19 @@ struct BufferDx12 : public IBuffer {
 
   virtual uint64_t getOffset() const { return m_offset_; }
 
+  virtual EResourceLayout getLayout() const { return m_layout_; }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   inline uint64_t getGPUAddress() const {
     return m_buffer->getGPUVirtualAddress() + m_offset_;
   }
 
-  virtual EResourceLayout getLayout() const { return m_layout_; }
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   EBufferCreateFlag m_bufferCreateFlag_ = EBufferCreateFlag::NONE;
   uint64_t          m_size_             = 0;
@@ -118,13 +136,21 @@ struct BufferDx12 : public IBuffer {
   DescriptorDx12                   m_srv_;
   DescriptorDx12                   m_uav_;
   EResourceLayout                  m_layout_ = EResourceLayout::UNDEFINED;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct VertexStreamDx12 {
+  // ======= BEGIN: public getters ============================================
+
   template <typename T>
   T* getBuffer() const {
     return (T*)m_bufferPtr_.get();
   }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   Name        m_name_;
   // uint32_t Count;
@@ -138,24 +164,14 @@ struct VertexStreamDx12 {
   // int32_t     m_instanceDivisor_ = 0;
 
   std::shared_ptr<BufferDx12> m_bufferPtr_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct VertexBufferDx12 : public VertexBuffer {
+  // ======= BEGIN: public nested types =======================================
+
   struct BindInfo {
-    void reset() {
-      m_inputElementDescs_.clear();
-      // m_buffers.clear();
-      // Offsets.clear();
-      m_startBindingIndex_ = 0;
-    }
-
-    D3D12_INPUT_LAYOUT_DESC createVertexInputLayoutDesc() const {
-      D3D12_INPUT_LAYOUT_DESC Desc;
-      Desc.pInputElementDescs = m_inputElementDescs_.data();
-      Desc.NumElements        = (uint32_t)m_inputElementDescs_.size();
-      return Desc;
-    }
-
     inline size_t getHash() const {
       size_t result = 0;
       for (int32_t i = 0; i < (int32_t)m_inputElementDescs_.size(); ++i) {
@@ -174,6 +190,20 @@ struct VertexBufferDx12 : public VertexBuffer {
       return result;
     }
 
+    void reset() {
+      m_inputElementDescs_.clear();
+      // m_buffers.clear();
+      // Offsets.clear();
+      m_startBindingIndex_ = 0;
+    }
+
+    D3D12_INPUT_LAYOUT_DESC createVertexInputLayoutDesc() const {
+      D3D12_INPUT_LAYOUT_DESC Desc;
+      Desc.pInputElementDescs = m_inputElementDescs_.data();
+      Desc.NumElements        = (uint32_t)m_inputElementDescs_.size();
+      return Desc;
+    }
+
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescs_;
 
     // m_buffer references VertexStreamDx12, so there's no need for separate
@@ -184,32 +214,9 @@ struct VertexBufferDx12 : public VertexBuffer {
     int32_t m_startBindingIndex_ = 0;
   };
 
-  virtual size_t getHash() const override {
-    if (m_hash_) {
-      return m_hash_;
-    }
+  // ======= END: public nested types   =======================================
 
-    m_hash_ = getVertexInputStateHash()
-            ^ (size_t)m_vertexStreamData_->m_primitiveType_;
-    return m_hash_;
-  }
-
-  inline size_t getVertexInputStateHash() const {
-    return m_bindInfos_.getHash();
-  }
-
-  inline D3D12_INPUT_LAYOUT_DESC createVertexInputLayoutDesc() const {
-    return m_bindInfos_.createVertexInputLayoutDesc();
-  }
-
-  inline D3D12_PRIMITIVE_TOPOLOGY_TYPE getTopologyTypeOnly() const {
-    return g_getDX12PrimitiveTopologyTypeOnly(
-        m_vertexStreamData_->m_primitiveType_);
-  }
-
-  inline D3D12_PRIMITIVE_TOPOLOGY getTopology() const {
-    return g_getDX12PrimitiveTopology(m_vertexStreamData_->m_primitiveType_);
-  }
+  // ======= BEGIN: public static methods =====================================
 
   static void s_createVertexInputState(
       std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescs,
@@ -224,36 +231,94 @@ struct VertexBufferDx12 : public VertexBuffer {
     }
   }
 
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public overridden methods =================================
+
   virtual bool initialize(
       const std::shared_ptr<VertexStreamData>& streamData) override;
-  virtual void    bind(const std::shared_ptr<RenderFrameContext>&
-                           renderFrameContext) const override;
-  virtual void    bind(CommandBufferDx12* commandList) const;
+  virtual void bind(const std::shared_ptr<RenderFrameContext>&
+                        renderFrameContext) const override;
+  virtual void bind(CommandBufferDx12* commandList) const;
+
   virtual IBuffer* getBuffer(int32_t streamIndex) const override;
+
+  virtual size_t getHash() const override {
+    if (m_hash_) {
+      return m_hash_;
+    }
+
+    m_hash_ = getVertexInputStateHash()
+            ^ (size_t)m_vertexStreamData_->m_primitiveType_;
+    return m_hash_;
+  }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  inline size_t getVertexInputStateHash() const {
+    return m_bindInfos_.getHash();
+  }
+
+  inline D3D12_PRIMITIVE_TOPOLOGY_TYPE getTopologyTypeOnly() const {
+    return g_getDX12PrimitiveTopologyTypeOnly(
+        m_vertexStreamData_->m_primitiveType_);
+  }
+
+  inline D3D12_PRIMITIVE_TOPOLOGY getTopology() const {
+    return g_getDX12PrimitiveTopology(m_vertexStreamData_->m_primitiveType_);
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  inline D3D12_INPUT_LAYOUT_DESC createVertexInputLayoutDesc() const {
+    return m_bindInfos_.createVertexInputLayoutDesc();
+  }
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   BindInfo                              m_bindInfos_;
   std::vector<VertexStreamDx12>         m_streams_;
   // TODO: consider renaming
   std::vector<D3D12_VERTEX_BUFFER_VIEW> m_VBView_;
   mutable size_t                        m_hash_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct IndexBufferDx12 : public IndexBuffer {
+  // ======= BEGIN: public overridden methods =================================
+
   virtual void bind(const std::shared_ptr<RenderFrameContext>&
                         renderFrameContext) const override;
   virtual void bind(CommandBufferDx12* commandList) const;
   virtual bool initialize(
       const std::shared_ptr<IndexStreamData>& streamData) override;
 
+  virtual BufferDx12* getBuffer() const override { return m_bufferPtr_.get(); }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   inline uint32_t getIndexCount() const {
     return m_indexStreamData_->m_elementCount_;
   }
 
-  virtual BufferDx12* getBuffer() const override { return m_bufferPtr_.get(); }
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   std::shared_ptr<BufferDx12> m_bufferPtr_;
   // TODO: consider renaming
   D3D12_INDEX_BUFFER_VIEW     m_IBView_;
+
+  // ======= END: public misc fields   ========================================
 };
 }  // namespace game_engine
 #endif  // GAME_ENGINE_BUFFER_DX12_H
