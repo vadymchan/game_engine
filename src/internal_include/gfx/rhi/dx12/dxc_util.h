@@ -21,6 +21,8 @@ namespace fs = std::filesystem;
 
 class DxcUtil {
   public:
+  // ======= BEGIN: public static methods =====================================
+
   // TODO: consider whether this is the good naming convention
   static DxcUtil& s_getInstance(const wchar_t* dllName = L"dxcompiler.dll",
                                 const char*    fnName  = "DxcCreateInstance") {
@@ -29,6 +31,10 @@ class DxcUtil {
     instance.initialize(dllName, fnName);
     return instance;
   }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   HRESULT initialize(const wchar_t* dllName = L"dxcompiler.dll",
                      const char*    fnName  = "DxcCreateInstance") {
@@ -136,26 +142,10 @@ class DxcUtil {
     return shader;
   }
 
+  // ======= END: public misc methods   =======================================
+
   private:
-  DxcUtil() = default;
-
-  ~DxcUtil() { release(); }
-
-  DxcUtil(const DxcUtil&)            = delete;
-  DxcUtil& operator=(const DxcUtil&) = delete;
-
-  HRESULT createInstance_(REFCLSID clsid, REFIID iid, void** result) {
-    if (!result) {
-      return E_POINTER;
-    }
-    if (!m_dll_) {
-      return E_FAIL;
-    }
-    if (!m_createFn_) {
-      return E_FAIL;
-    }
-    return m_createFn_(clsid, iid, result);
-  }
+  // ======= BEGIN: private static methods ====================================
 
   static std::string s_readShaderFile_(const fs::path& shaderFilePath) {
     std::ifstream shaderFile(shaderFilePath);
@@ -171,8 +161,50 @@ class DxcUtil {
     return shaderStream.str();
   }
 
+  // ======= END: private static methods   ====================================
+
+  // ======= BEGIN: private constructors ======================================
+
+  DxcUtil()               = default;
+  DxcUtil(const DxcUtil&) = delete;
+
+  // ======= END: private constructors   ======================================
+
+  // ======= BEGIN: private destructors ========================================
+
+  ~DxcUtil() { release(); }
+
+  // ======= END: private destructors   ========================================
+
+  // ======= BEGIN: private misc methods ======================================
+
+  HRESULT createInstance_(REFCLSID clsid, REFIID iid, void** result) {
+    if (!result) {
+      return E_POINTER;
+    }
+    if (!m_dll_) {
+      return E_FAIL;
+    }
+    if (!m_createFn_) {
+      return E_FAIL;
+    }
+    return m_createFn_(clsid, iid, result);
+  }
+
+  // ======= END: private misc methods   ======================================
+
+  // ======= BEGIN: private overloaded operators ==============================
+
+  DxcUtil& operator=(const DxcUtil&) = delete;
+
+  // ======= END: private overloaded operators   ==============================
+
+  // ======= BEGIN: private misc fields =======================================
+
   HMODULE               m_dll_      = nullptr;
   DxcCreateInstanceProc m_createFn_ = nullptr;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
