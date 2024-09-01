@@ -24,6 +24,8 @@ namespace game_engine {
 // Viewport
 //////////////////////////////////////////////////////////////////////////
 struct Viewport {
+  // ======= BEGIN: public constructors =======================================
+
   Viewport() = default;
 
   Viewport(int32_t x,
@@ -52,14 +54,9 @@ struct Viewport {
       , m_minDepth_(minDepth)
       , m_maxDepth_(maxDepth) {}
 
-  float m_x_        = 0.0f;
-  float m_y_        = 0.0f;
-  float m_width_    = 0.0f;
-  float m_height_   = 0.0f;
-  float m_minDepth_ = 0.0f;
-  float m_maxDepth_ = 1.0f;
+  // ======= END: public constructors   =======================================
 
-  mutable size_t m_hash_ = 0;
+  // ======= BEGIN: public getters ============================================
 
   size_t getHash() const {
     if (m_hash_) {
@@ -70,22 +67,38 @@ struct Viewport {
         m_x_, m_y_, m_width_, m_height_, m_minDepth_, m_maxDepth_);
     return m_hash_;
   }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  float m_x_        = 0.0f;
+  float m_y_        = 0.0f;
+  float m_width_    = 0.0f;
+  float m_height_   = 0.0f;
+  float m_minDepth_ = 0.0f;
+  float m_maxDepth_ = 1.0f;
+
+  mutable size_t m_hash_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // Scissor
 //////////////////////////////////////////////////////////////////////////
 struct Scissor {
+  // ======= BEGIN: public constructors =======================================
+
   Scissor() = default;
 
   Scissor(int32_t x, int32_t y, int32_t width, int32_t height)
       : m_offset_(x, y)
       , m_extent_(width, height) {}
 
-  math::Point2Di     m_offset_;
-  math::Dimension2Di m_extent_;
+  // ======= END: public constructors   =======================================
 
-  mutable size_t m_hash_ = 0;
+  // ======= BEGIN: public getters ============================================
 
   size_t getHash() const {
     if (m_hash_) {
@@ -95,13 +108,34 @@ struct Scissor {
     m_hash_ = GETHASH_FROM_INSTANT_STRUCT(m_offset_, m_extent_);
     return m_hash_;
   }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  math::Point2Di     m_offset_;
+  math::Dimension2Di m_extent_;
+
+  mutable size_t m_hash_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // SamplerStateInfo
 //////////////////////////////////////////////////////////////////////////
 struct SamplerStateInfo : public ShaderBindableResource {
+  // ======= BEGIN: public constructors =======================================
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~SamplerStateInfo() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   virtual void initialize() { getHash(); }
 
@@ -127,6 +161,10 @@ struct SamplerStateInfo : public ShaderBindableResource {
                                           m_maxLOD_);
     return m_hash_;
   }
+
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc methods =======================================
 
   std::string toString() const {
     std::string result;
@@ -171,6 +209,10 @@ struct SamplerStateInfo : public ShaderBindableResource {
     return result;
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t m_hash_ = 0;
 
   ETextureFilter      m_minification_  = ETextureFilter::NEAREST;
@@ -188,13 +230,21 @@ struct SamplerStateInfo : public ShaderBindableResource {
   math::Vector4Df m_borderColor_ = math::Vector4Df(0.0f, 0.0f, 0.0f, 1.0f);
   float           m_minLOD_      = -FLT_MAX;
   float           m_maxLOD_      = FLT_MAX;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // RasterizationStateInfo
 //////////////////////////////////////////////////////////////////////////
 struct RasterizationStateInfo {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~RasterizationStateInfo() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   virtual void initialize() { getHash(); }
 
@@ -221,6 +271,10 @@ struct RasterizationStateInfo {
     return m_hash_;
   }
 
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t m_hash_ = 0;
 
   EPolygonMode m_polygonMode_             = EPolygonMode::FILL;
@@ -240,13 +294,21 @@ struct RasterizationStateInfo {
   float        m_minSampleShading_      = 0.2f;
   bool         m_alphaToCoverageEnable_ = false;
   bool         m_alphaToOneEnable_      = false;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // StencilOpStateInfo
 //////////////////////////////////////////////////////////////////////////
 struct StencilOpStateInfo {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~StencilOpStateInfo() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   virtual void initialize() { getHash(); }
 
@@ -265,6 +327,10 @@ struct StencilOpStateInfo {
     return m_hash_;
   }
 
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t m_hash_ = 0;
 
   EStencilOp m_failOp_      = EStencilOp::KEEP;
@@ -274,13 +340,21 @@ struct StencilOpStateInfo {
   uint32_t   m_compareMask_ = 0;
   uint32_t   m_writeMask_   = 0;
   uint32_t   m_reference_   = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // DepthStencilStateInfo
 //////////////////////////////////////////////////////////////////////////
 struct DepthStencilStateInfo {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~DepthStencilStateInfo() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   virtual void initialize() { getHash(); }
 
@@ -301,6 +375,10 @@ struct DepthStencilStateInfo {
     return m_hash_;
   }
 
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t m_hash_ = 0;
 
   bool                m_depthTestEnable_       = false;
@@ -313,14 +391,22 @@ struct DepthStencilStateInfo {
   float               m_minDepthBounds_        = 0.0f;
   float               m_maxDepthBounds_        = 1.0f;
 
-  // VkPipelineDepthStencilStateCreateFlags    flags;
+  // VkPipelineDepthStencilStateCreateFlags    m_flags_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // BlendingStateInfo
 //////////////////////////////////////////////////////////////////////////
 struct BlendingStateInfo {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~BlendingStateInfo() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overloaded operators ===============================
 
   virtual void initialize() { getHash(); }
 
@@ -340,6 +426,10 @@ struct BlendingStateInfo {
     return m_hash_;
   }
 
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t m_hash_ = 0;
 
   bool         m_blendEnable_    = false;
@@ -351,18 +441,22 @@ struct BlendingStateInfo {
   EBlendOp     m_alphaBlendOp_   = EBlendOp::ADD;
   EColorMask   m_colorWriteMask_ = EColorMask::NONE;
 
-  // VkPipelineColorBlendStateCreateFlags          flags;
-  // VkBool32                                      logicOpEnable;
-  // VkLogicOp                                     logicOp;
-  // uint32_t                                      attachmentCount;
-  // const VkPipelineColorBlendAttachmentState* pAttachments;
-  // float                                         blendConstants[4];
+  // VkPipelineColorBlendStateCreateFlags       m_flags_;
+  // VkBool32                                   m_logicOpEnable_;
+  // VkLogicOp                                  m_logicOp_;
+  // uint32_t                                   m_attachmentCount_;
+  // const VkPipelineColorBlendAttachmentState* m_pAttachments_;
+  // float                                      m_blendConstants_[4];
+
+  // ======= END: public misc fields   ========================================
 };
 
 //////////////////////////////////////////////////////////////////////////
 // PipelineStateFixedInfo
 //////////////////////////////////////////////////////////////////////////
 struct PipelineStateFixedInfo {
+  // ======= BEGIN: public constructors =======================================
+
   PipelineStateFixedInfo() = default;
 
   PipelineStateFixedInfo(RasterizationStateInfo*      rasterizationState,
@@ -409,6 +503,10 @@ struct PipelineStateFixedInfo {
     createHash();
   }
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   size_t createHash() const {
     if (m_hash_) {
       return m_hash_;
@@ -438,6 +536,10 @@ struct PipelineStateFixedInfo {
     return m_hash_;
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<Viewport>              m_viewports_;
   std::vector<Scissor>               m_scissors_;
   std::vector<EPipelineDynamicState> m_dynamicStates_;
@@ -448,9 +550,13 @@ struct PipelineStateFixedInfo {
   bool                    m_isUseVRS_           = false;
 
   mutable size_t m_hash_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct PushConstantRange {
+  // ======= BEGIN: public constructors =======================================
+
   PushConstantRange() = default;
 
   PushConstantRange(EShaderAccessStageFlag accessStageFlag,
@@ -460,13 +566,23 @@ struct PushConstantRange {
       , m_offset_(offset)
       , m_size_(size) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   EShaderAccessStageFlag m_accessStageFlag_
       = EShaderAccessStageFlag::ALL_GRAPHICS;
   int32_t m_offset_ = 0;
   int32_t m_size_   = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct PushConstant {
+  // ======= BEGIN: public constructors =======================================
+
+  // TODO: consider sorting these constructors
+
   PushConstant() = default;
 
   PushConstant(const PushConstant& pushConstant) {
@@ -529,42 +645,17 @@ struct PushConstant {
     set(data, pushConstantRanges);
   }
 
-  template <typename T>
-  void set(const T& data, const PushConstantRange& pushConstantRange) {
-    assert(sizeof(T) < 256);
+  // ======= END: public constructors   =======================================
 
-    m_usedSize_ = sizeof(T);
-    memcpy(m_data_, &data, sizeof(T));
-    m_pushConstantRanges_.add(pushConstantRange);
-    getHash();
-  }
+  // ======= BEGIN: public destructor =========================================
 
-  template <typename T>
-  void set(const T&                                    data,
-           const ResourceContainer<PushConstantRange>& pushConstantRanges) {
-    assert(sizeof(T) < 256);
+  // ======= END: public destructor   =========================================
 
-    m_usedSize_ = sizeof(T);
-    memcpy(m_data_, &data, sizeof(T));
-    m_pushConstantRanges_ = pushConstantRanges;
-    getHash();
-  }
+  // ======= BEGIN: public getters ============================================
 
   template <typename T>
   T& get() const {
     return *(T*)&m_data_[0];
-  }
-
-  bool isValid() const { return m_usedSize_ > 0; }
-
-  PushConstant& operator=(const PushConstant& pushConstant) {
-    assert(pushConstant.m_usedSize_ < 256);
-
-    m_usedSize_ = pushConstant.m_usedSize_;
-    memcpy(m_data_, pushConstant.m_data_, pushConstant.m_usedSize_);
-    m_pushConstantRanges_ = pushConstant.m_pushConstantRanges_;
-    m_hash_               = pushConstant.m_hash_;
-    return *this;
   }
 
   size_t getHash() const {
@@ -593,10 +684,61 @@ struct PushConstant {
     return &m_pushConstantRanges_;
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  template <typename T>
+  void set(const T& data, const PushConstantRange& pushConstantRange) {
+    assert(sizeof(T) < 256);
+
+    m_usedSize_ = sizeof(T);
+    memcpy(m_data_, &data, sizeof(T));
+    m_pushConstantRanges_.add(pushConstantRange);
+    getHash();
+  }
+
+  template <typename T>
+  void set(const T&                                    data,
+           const ResourceContainer<PushConstantRange>& pushConstantRanges) {
+    assert(sizeof(T) < 256);
+
+    m_usedSize_ = sizeof(T);
+    memcpy(m_data_, &data, sizeof(T));
+    m_pushConstantRanges_ = pushConstantRanges;
+    getHash();
+  }
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool isValid() const { return m_usedSize_ > 0; }
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public overloaded operators ===============================
+
+  PushConstant& operator=(const PushConstant& pushConstant) {
+    assert(pushConstant.m_usedSize_ < 256);
+
+    m_usedSize_ = pushConstant.m_usedSize_;
+    memcpy(m_data_, pushConstant.m_data_, pushConstant.m_usedSize_);
+    m_pushConstantRanges_ = pushConstant.m_pushConstantRanges_;
+    m_hash_               = pushConstant.m_hash_;
+    return *this;
+  }
+
+  // ======= END: public overloaded operators   ===============================
+
+  // ======= BEGIN: public misc fields ========================================
+
   mutable size_t                       m_hash_ = 0;
   ResourceContainer<PushConstantRange> m_pushConstantRanges_;
   uint8_t                              m_data_[256];
   int32_t                              m_usedSize_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 // struct Shader;
@@ -610,11 +752,17 @@ struct PushConstant {
 // PipelineStateInfo
 //////////////////////////////////////////////////////////////////////////
 struct PipelineStateInfo {
+  // ======= BEGIN: public nested types =======================================
+
   enum class EPipelineType : uint8_t {
     Graphics = 0,
     Compute,
     RayTracing
   };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public constructors =======================================
 
   PipelineStateInfo() = default;
 
@@ -690,9 +838,41 @@ struct PipelineStateInfo {
   //, m_raytracingPipelineData_(pipelineState.m_raytracingPipelineData_)
   {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~PipelineStateInfo() {}
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual void initialize() { getHash(); }
+
+  virtual void* getHandle() const { return nullptr; }
+
+  virtual void* getPipelineLayoutHandle() const { return nullptr; }
+
+  virtual void* createGraphicsPipelineState() { return nullptr; }
+
+  virtual void* createComputePipelineState() { return nullptr; }
+
+  // TODO: implement in the future
+  // virtual void* createRaytracingPipelineState() { return nullptr; }
+
+  virtual void bind(
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   size_t getHash() const;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   mutable size_t m_hash_ = 0;
 
@@ -706,23 +886,9 @@ struct PipelineStateInfo {
   ShaderBindingLayoutArray      m_shaderBindingLayoutArray_;
   const PushConstant*           kPushConstant;
   const PipelineStateFixedInfo* kPipelineStateFixed = nullptr;
-  int32_t                       m_subpassIndex_       = 0;
+  int32_t                       m_subpassIndex_     = 0;
 
-  virtual void initialize() { getHash(); }
-
-  virtual void* getHandle() const { return nullptr; }
-
-  virtual void* getPipelineLayoutHandle() const { return nullptr; }
-
-  virtual void* createGraphicsPipelineState() { return nullptr; }
-
-  virtual void* createComputePipelineState() { return nullptr; }
-
-  // TODO: implement in the future
-  //virtual void* createRaytracingPipelineState() { return nullptr; }
-
-  virtual void bind(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
