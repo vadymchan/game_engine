@@ -23,14 +23,21 @@ namespace game_engine {
 
 class Engine {
   public:
-  Engine() = default;
+  // ======= BEGIN: public constructors =======================================
 
-  Engine(const Engine&)                     = delete;
-  auto operator=(const Engine&) -> Engine&  = delete;
-  Engine(Engine&&)                          = delete;
-  auto operator=(const Engine&&) -> Engine& = delete;
+  Engine()              = default;
+  Engine(const Engine&) = delete;
+  Engine(Engine&&)      = delete;
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
 
   ~Engine() = default;
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   // TODO: add config file
   auto init() -> bool {
@@ -117,7 +124,18 @@ class Engine {
 
   void onClose(const ApplicationEvent& event) { m_isRunning_ = false; }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public overloaded operators ===============================
+
+  auto operator=(const Engine&) -> Engine&  = delete;
+  auto operator=(const Engine&&) -> Engine& = delete;
+
+  // ======= END: public overloaded operators   ===============================
+
   private:
+  // ======= BEGIN: private misc methods ======================================
+
   void processEvents_() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -132,6 +150,10 @@ class Engine {
 
     Shader::s_startAndRunCheckUpdateShaderThread();
   }
+
+  // ======= END: private misc methods   ======================================
+
+  // ======= BEGIN: private misc fields =======================================
 
   bool                           m_isRunning_{false};
   DeltaTime                      m_deltaTime_;
@@ -150,6 +172,8 @@ class Engine {
 
   std::unique_ptr<Game> m_game_;
   // TODO: memory manager
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
