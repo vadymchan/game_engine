@@ -10,7 +10,18 @@ namespace game_engine {
 
 class WindowEventManager {
   public:
-  WindowEventManager(std::shared_ptr<WindowEventHandler> windowHandler)
+    // ======= BEGIN: public constructors =======================================
+
+
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+
+
+  // ======= END: public misc methods   =======================================
+WindowEventManager(std::shared_ptr<WindowEventHandler> windowHandler)
       : m_windowHandler_(std::move(windowHandler)) {}
 
   void routeEvent(const Event& event) {
@@ -21,7 +32,12 @@ class WindowEventManager {
   }
 
   private:
-  std::shared_ptr<WindowEventHandler> m_windowHandler_;
+    // ======= BEGIN: private misc fields =======================================
+
+
+
+  // ======= END: private misc fields   =======================================
+std::shared_ptr<WindowEventHandler> m_windowHandler_;
 };
 
 }  // namespace game_engine
