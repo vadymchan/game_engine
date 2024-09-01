@@ -13,24 +13,7 @@ namespace game_engine {
 struct CommandBufferDx12;
 
 struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
-  virtual ~ShaderBindingInstanceDx12() {}
-
-  virtual void initialize(
-      const ShaderBindingArray& shaderBindingArray) override;
-  virtual void updateShaderBindings(
-      const ShaderBindingArray& shaderBindingArray) override;
-  virtual void* getHandle() const override;
-
-  virtual const std::vector<uint32_t>* getDynamicOffsets() const override {
-    return 0;
-  }
-
-  virtual void free() override;
-
-  void bindGraphics(CommandBufferDx12* commandList,
-                    std::int32_t&      startIndex) const;
-  void bindCompute(CommandBufferDx12* commandList, std::int32_t& startIndex);
-  void copyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
+  // ======= BEGIN: public nested types =======================================
 
   // TODO: consider using only enum class
   struct InlineRootParamType {
@@ -65,9 +48,46 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
     const ShaderBindableResource* m_resource_ = nullptr;
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  virtual ~ShaderBindingInstanceDx12() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual void initialize(
+      const ShaderBindingArray& shaderBindingArray) override;
+  virtual void updateShaderBindings(
+      const ShaderBindingArray& shaderBindingArray) override;
+  virtual void free() override;
+
+  virtual void* getHandle() const override;
+
+  virtual const std::vector<uint32_t>* getDynamicOffsets() const override {
+    return 0;
+  }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void bindGraphics(CommandBufferDx12* commandList,
+                    std::int32_t&      startIndex) const;
+  void bindCompute(CommandBufferDx12* commandList, std::int32_t& startIndex);
+  void copyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<InlineRootParamData> m_rootParameterInlines_;
   std::vector<DescriptorData>      m_descriptors_;
   std::vector<DescriptorData>      m_samplerDescriptors_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
