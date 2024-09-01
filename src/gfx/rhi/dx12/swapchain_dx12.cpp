@@ -105,7 +105,7 @@ bool SwapchainDx12::create(const std::shared_ptr<Window>& window) {
                                           1,
                                           EMSAASamples::COUNT_1,
                                           false,
-                                          RTClearValue::s_kInvalid,
+                                          RtClearValue::s_kInvalid,
                                           RenderTargetResource);
     swapchainImage->m_TexturePtr_ = TextureDX12Ptr;
 
@@ -185,7 +185,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
         1,
         EMSAASamples::COUNT_1,
         false,
-        RTClearValue::s_kInvalid,
+        RtClearValue::s_kInvalid,
         RenderTargetResource);
     swapchainImage->m_TexturePtr_ = TextureDX12Ptr;
 
