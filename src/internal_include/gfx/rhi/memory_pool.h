@@ -13,40 +13,62 @@ class SubMemoryAllocator;
 
 // Memory range in sub memory
 struct Range {
+  // ======= BEGIN: public misc fields ========================================
+
   uint64_t m_offset_   = 0;
   uint64_t m_dataSize_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct Memory {
-  bool isValid() const { return m_buffer; }
+  // ======= BEGIN: public getters ============================================
 
   void* getBuffer() const { return m_buffer; }
 
-  void*               getMappedPointer() const;
-  void*               getMemory() const;
-  void                free();
-  void                reset();
+  void* getMappedPointer() const;
+  void* getMemory() const;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool isValid() const { return m_buffer; }
+
+  void free();
+  void reset();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   void*               m_buffer = nullptr;
   Range               m_range;
   SubMemoryAllocator* m_subMemoryAllocator = nullptr;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class SubMemoryAllocator {
   public:
+  // ======= BEGIN: public nested types =======================================
+
   friend class MemoryPool;
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~SubMemoryAllocator() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void initialize(EVulkanBufferBits usage,
                           EVulkanMemoryBits properties,
                           uint64_t          size)
       = 0;
-
-  virtual void* getBuffer() const { return nullptr; }
-
-  virtual void* getMemory() const { return nullptr; }
-
-  virtual void* getMappedPointer() const { return m_mappedPointer_; }
 
   virtual Memory alloc(uint64_t requstedSize);
 
@@ -55,7 +77,17 @@ class SubMemoryAllocator {
     return (m_usages_ == usages) && (m_properties_ == properties);
   }
 
+  virtual void* getBuffer() const { return nullptr; }
+
+  virtual void* getMemory() const { return nullptr; }
+
+  virtual void* getMappedPointer() const { return m_mappedPointer_; }
+
+  // ======= END: public overridden methods   =================================
+
   protected:
+  // ======= BEGIN: protected misc methods ====================================
+
   virtual void free_(const Memory& freeMemory) {
     ScopedLock s(&m_lock_);
 
@@ -69,6 +101,10 @@ class SubMemoryAllocator {
     }
   }
 
+  // ======= END: protected misc methods   ====================================
+
+  // ======= BEGIN: protected misc fields =====================================
+
   MutexLock          m_lock_;
   void*              m_mappedPointer_ = nullptr;
   std::vector<Range> m_freeLists_;
@@ -77,11 +113,14 @@ class SubMemoryAllocator {
   EVulkanBufferBits  m_usages_     = EVulkanBufferBits::TRANSFER_SRC;
   EVulkanMemoryBits  m_properties_ = EVulkanMemoryBits::DEVICE_LOCAL;
   uint64_t           m_alignment_  = 16;
+
+  // ======= END: protected misc fields   =====================================
 };
 
 class MemoryPool {
   public:
-  virtual ~MemoryPool() {}
+  // ======= BEGIN: public nested types =======================================
+
   enum class EPoolSizeType : uint8_t {
     E128,
     E256,
@@ -128,9 +167,29 @@ class MemoryPool {
     Memory  m_memory_;
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public static fields ======================================
+
   static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
 
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  virtual ~MemoryPool() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
   virtual SubMemoryAllocator* createSubMemoryAllocator() const = 0;
+
+  virtual Memory alloc(EVulkanBufferBits usages,
+                       EVulkanMemoryBits properties,
+                       uint64_t          size);
+
+  virtual void free(const Memory& freeMemory);
 
   // select the appropriate PoolSize
   virtual EPoolSizeType getPoolSizeType(uint64_t size) const {
@@ -142,16 +201,17 @@ class MemoryPool {
     return EPoolSizeType::MAX;
   }
 
-  virtual Memory alloc(EVulkanBufferBits usages,
-                       EVulkanMemoryBits properties,
-                       uint64_t          size);
+  // ======= END: public overridden methods   =================================
 
-  virtual void free(const Memory& freeMemory);
+  // ======= BEGIN: public misc fields ========================================
 
-  MutexLock                        m_lock_;
-  std::vector<SubMemoryAllocator*> m_memoryPools_[(int32_t)EPoolSizeType::MAX + 1];
-  std::vector<PendingFreeMemory>   m_pendingFree_;
-  int32_t                          m_canReleasePendingFreeMemoryFrameNumber_ = 0;
+  MutexLock m_lock_;
+  std::vector<SubMemoryAllocator*>
+      m_memoryPools_[(int32_t)EPoolSizeType::MAX + 1];
+  std::vector<PendingFreeMemory> m_pendingFree_;
+  int32_t                        m_canReleasePendingFreeMemoryFrameNumber_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
