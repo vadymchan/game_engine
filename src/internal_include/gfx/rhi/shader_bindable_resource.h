@@ -7,14 +7,26 @@
 namespace game_engine {
 
 struct ShaderBindableResource {
+  // ======= BEGIN: public constructors =======================================
+
   ShaderBindableResource() = default;
 
   ShaderBindableResource(const Name& name)
       : m_resourceName_(name) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ShaderBindableResource() {}
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   Name m_resourceName_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
