@@ -51,7 +51,7 @@
 //  }
 //}
 //
-//void RenderTargetPoolVk::release() {
+//void RenderTargetPoolVk::s_release() {
 //  RenderTargetResourceMap.clear();
 //  RenderTargetHashVariableMap.clear();
 //}
