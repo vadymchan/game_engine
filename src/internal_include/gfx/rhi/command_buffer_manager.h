@@ -7,13 +7,13 @@ namespace game_engine {
 
 class CommandBuffer {
   public:
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~CommandBuffer() {}
 
-  virtual void* getNativeHandle() const { return nullptr; }
+  // ======= END: public destructor   =========================================
 
-  virtual void* getFenceHandle() const { return nullptr; }
-
-  virtual void setFence(void* fence) {}
+  // ======= BEGIN: public overridden methods =================================
 
   virtual bool begin() const { return false; }
 
@@ -22,16 +22,32 @@ class CommandBuffer {
   virtual void reset() const {}
 
   virtual IFence* getFence() const { return nullptr; }
+
+  virtual void* getNativeHandle() const { return nullptr; }
+
+  virtual void* getFenceHandle() const { return nullptr; }
+
+  virtual void setFence(void* fence) {}
+
+  // ======= END: public overridden methods   =================================
 };
 
 class ICommandBufferManager {
   public:
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ICommandBufferManager() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void release() = 0;
 
-  virtual CommandBuffer* getOrCreateCommandBuffer()              = 0;
-  virtual void returnCommandBuffer(CommandBuffer* commandBuffer) = 0;
+  virtual void           returnCommandBuffer(CommandBuffer* commandBuffer) = 0;
+  virtual CommandBuffer* getOrCreateCommandBuffer()                        = 0;
+
+  // ======= END: public overridden methods   =================================
 };
 
 }  // namespace game_engine
