@@ -12,6 +12,8 @@ namespace game_engine {
 
 class MouseEventHandler {
   public:
+  // ======= BEGIN: public nested types =======================================
+
   class ButtonEventHandler {
     public:
     struct EventInfo {
@@ -100,6 +102,10 @@ class MouseEventHandler {
     std::vector<EventCallback> m_mouseWheelSubscribers_;
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void subscribe(const ButtonEventHandler::EventInfo&     eventInfo,
                  const ButtonEventHandler::EventCallback& callback) {
     m_buttonEventHandler_.subscribe(eventInfo, callback);
@@ -127,10 +133,22 @@ class MouseEventHandler {
     m_wheelEventHandler_.dispatch(event);
   }
 
+
+  // ======= END: public misc methods   =======================================
+
+
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   ButtonEventHandler m_buttonEventHandler_;
   MotionEventHandler m_motionEventHandler_;
   WheelEventHandler  m_wheelEventHandler_;
+
+  // ======= END: private misc fields   =======================================
+
+
+
 };
 
 }  // namespace game_engine
