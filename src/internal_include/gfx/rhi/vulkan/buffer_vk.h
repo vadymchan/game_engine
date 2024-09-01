@@ -23,6 +23,8 @@ namespace game_engine {
 
 class BufferVk : public IBuffer {
   public:
+  // ======= BEGIN: public constructors =======================================
+
   BufferVk()
       : m_buffer_(VK_NULL_HANDLE)
       , m_deviceMemory_(VK_NULL_HANDLE)
@@ -40,9 +42,15 @@ class BufferVk : public IBuffer {
 
   BufferVk(const Memory& memory) { initializeWithMemory(memory); }
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   ~BufferVk() { release(); }
 
-  void initializeWithMemory(const Memory& memory);
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void release() override;
 
@@ -52,11 +60,28 @@ class BufferVk : public IBuffer {
 
   virtual void unmap() override;
 
-  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
-
   virtual void updateBuffer(const void* data, uint64_t size) override;
 
-  // private:
+  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
+
+  virtual void* getHandle() const override { return m_buffer_; }
+
+  virtual uint64_t getAllocatedSize() const override {
+    return m_allocatedSize_;
+  }
+
+  virtual uint64_t getOffset() const override { return m_offset_; }
+
+  virtual uint64_t getBufferSize() const override { return m_realBufferSize_; }
+
+  virtual EResourceLayout getLayout() const override { return m_layout_; }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void initializeWithMemory(const Memory& memory);
+
   // TODO: consider remove it
   // void createBuffer(VkDeviceSize          size,
   //                  VkBufferUsageFlags    usage,
@@ -108,15 +133,9 @@ class BufferVk : public IBuffer {
   // TODO: log error
   //}
 
-  virtual void* getHandle() const override { return m_buffer_; }
+  // ======= END: public misc methods   =======================================
 
-  virtual uint64_t getAllocatedSize() const override { return m_allocatedSize_; }
-
-  virtual uint64_t getOffset() const override { return m_offset_; }
-
-  virtual uint64_t getBufferSize() const override { return m_realBufferSize_; }
-
-  virtual EResourceLayout getLayout() const override { return m_layout_; }
+  // ======= BEGIN: public misc fields ========================================
 
   // TODO: consider descriptive names for Memory and VkDeviceMemory
   Memory          m_memory_;
@@ -130,12 +149,16 @@ class BufferVk : public IBuffer {
   bool            m_hasBufferOwnership_ = true;
   EResourceLayout m_layout_
       = EResourceLayout::UNDEFINED;  // TODO: previously was m_imageLayout
+
+  // ======= END: public misc fields   ========================================
 };
 
 // ============== Vertex m_buffer Vk =======================
 
 // TODO: consider make general
 struct VertexStreamVk {
+  // ======= BEGIN: public misc fields ========================================
+
   Name        m_name_;
   EBufferType m_bufferType_ = EBufferType::Static;
   // TODO: not used (consider remove)
@@ -145,11 +168,15 @@ struct VertexStreamVk {
   // int32_t            m_instanceDivisor_ = 0;
 
   std::shared_ptr<BufferVk> m_bufferPtr_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct VertexBufferArrayVk;
 
 struct VertexBufferVk : public VertexBuffer {
+  // ======= BEGIN: public nested types =======================================
+
   struct BindInfo {
     void reset();
 
@@ -157,7 +184,8 @@ struct VertexBufferVk : public VertexBuffer {
 
     size_t getHash() const {
       size_t result = 0;
-      for (int32_t i = 0; i < (int32_t)m_inputBindingDescriptions_.size(); ++i) {
+      for (int32_t i = 0; i < (int32_t)m_inputBindingDescriptions_.size();
+           ++i) {
         result = XXH64(m_inputBindingDescriptions_[i].binding, result);
         result = XXH64(m_inputBindingDescriptions_[i].stride, result);
         result = XXH64(m_inputBindingDescriptions_[i].inputRate, result);
@@ -183,17 +211,25 @@ struct VertexBufferVk : public VertexBuffer {
     int32_t m_startBindingIndex_ = 0;
   };
 
-  VkPipelineVertexInputStateCreateInfo createVertexInputState() const {
-    return m_bindInfos_.createVertexInputState();
-  }
+  // ======= END: public nested types   =======================================
 
-  VkPipelineInputAssemblyStateCreateInfo createInputAssemblyState() const;
+  // ======= BEGIN: public static methods =====================================
 
   static void s_createVertexInputState(
       VkPipelineVertexInputStateCreateInfo&           vertexInputInfo,
       std::vector<VkVertexInputBindingDescription>&   bindingDescriptions,
       std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
       const VertexBufferArray&                        vertexBufferArray);
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual bool initialize(
+      const std::shared_ptr<VertexStreamData>& streamData) override;
+
+  virtual void bind(const std::shared_ptr<RenderFrameContext>&
+                        renderFrameContext) const override;
 
   virtual int32_t getElementCount() const {
     return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
@@ -208,6 +244,15 @@ struct VertexBufferVk : public VertexBuffer {
     return m_hash_;
   }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  IBuffer* getBuffer(int32_t streamIndex) const override {
+    assert(m_streams_.size() > streamIndex);
+    return m_streams_[streamIndex].m_bufferPtr_.get();
+  }
+
   size_t getVertexInputStateHash() const { return m_bindInfos_.getHash(); }
 
   size_t getInputAssemblyStateHash() const {
@@ -215,23 +260,30 @@ struct VertexBufferVk : public VertexBuffer {
     return GETHASH_FROM_INSTANT_STRUCT(state);
   }
 
-  virtual void bind(const std::shared_ptr<RenderFrameContext>&
-                        renderFrameContext) const override;
+  // ======= END: public getters   ============================================
 
-  virtual bool initialize(
-      const std::shared_ptr<VertexStreamData>& streamData) override;
+  // ======= BEGIN: public misc methods =======================================
 
-  IBuffer* getBuffer(int32_t streamIndex) const override {
-    assert(m_streams_.size() > streamIndex);
-    return m_streams_[streamIndex].m_bufferPtr_.get();
+  VkPipelineVertexInputStateCreateInfo createVertexInputState() const {
+    return m_bindInfos_.createVertexInputState();
   }
+
+  VkPipelineInputAssemblyStateCreateInfo createInputAssemblyState() const;
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   mutable size_t              m_hash_ = 0;
   BindInfo                    m_bindInfos_;
   std::vector<VertexStreamVk> m_streams_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
+  // ======= BEGIN: public getters ============================================
+
   size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
@@ -245,31 +297,49 @@ struct VertexBufferArrayVk : public ResourceContainer<const VertexBufferVk*> {
     return m_hash_;
   }
 
+  // ======= END: public getters   ============================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   mutable size_t m_hash_ = 0;
+
+  // ======= END: private misc fields   =======================================
 };
 
 // ================ Index m_buffer Vk ===========================
 
 struct IndexBufferVk : public IndexBuffer {
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual bool initialize(
+      const std::shared_ptr<IndexStreamData>& streamData) override;
+
+  virtual void bind(const std::shared_ptr<RenderFrameContext>&
+                        renderFrameContext) const override;
+
+  virtual BufferVk* getBuffer() const override { return m_bufferPtr_.get(); }
 
   virtual int32_t getElementCount() const {
     return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
   }
 
-  virtual void bind(const std::shared_ptr<RenderFrameContext>&
-                        renderFrameContext) const override;
-  virtual bool initialize(
-      const std::shared_ptr<IndexStreamData>& streamData) override;
+  // ======= END: public overridden methods   =================================
 
-  virtual BufferVk* getBuffer() const override { return m_bufferPtr_.get(); }
+  // ======= BEGIN: public getters ============================================
 
   uint32_t getIndexCount() const { return m_indexStreamData_->m_elementCount_; }
 
   VkIndexType getVulkanIndexFormat(EBufferElementType IndexType) const;
   uint32_t    getVulkanIndexStride(EBufferElementType IndexType) const;
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::shared_ptr<BufferVk> m_bufferPtr_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
