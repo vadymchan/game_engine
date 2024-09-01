@@ -19,10 +19,18 @@
 
 namespace game_engine {
 
-struct CompiledShaderVk: public CompiledShader {
+struct CompiledShaderVk : public CompiledShader {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~CompiledShaderVk();
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   VkPipelineShaderStageCreateInfo m_shaderStage_{};
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
