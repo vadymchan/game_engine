@@ -1,5 +1,5 @@
 BasedOnStyle: Google
-#IndentWidth: 4 
+#IndentWidth: 4
 #IndentCaseLabels: false
 AccessModifierOffset: 0
 
@@ -7,13 +7,13 @@ AlignConsecutiveAssignments:
   Enabled: true
   AcrossEmptyLines: false
   AcrossComments: false
-  AlignCompound : true
-  PadOperators : true
+  AlignCompound: true
+  PadOperators: true
 
 AlignConsecutiveBitFields:
-  Enabled:         true
+  Enabled: true
   AcrossEmptyLines: true
-  AcrossComments:  true
+  AcrossComments: true
 
 AlignConsecutiveDeclarations:
   Enabled: true
@@ -28,51 +28,51 @@ AlignConsecutiveMacros:
 AlignOperands: AlignAfterOperator
 #AlignOperands: Align
 
-BreakBeforeBinaryOperators : All
+BreakBeforeBinaryOperators: All
 #BreakBeforeBinaryOperators : NonAssignment
 
-AlignTrailingComments: 
+AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 2
 
-AllowShortFunctionsOnASingleLine : InlineOnly
+AllowShortFunctionsOnASingleLine: InlineOnly
 
-BinPackArguments : false
-BinPackParameters : false
+BinPackArguments: false
+BinPackParameters: false
 
-BracedInitializerIndentWidth : 2
+BracedInitializerIndentWidth: 2
 
-AlignArrayOfStructures : Right
+AlignArrayOfStructures: Right
 
 BreakConstructorInitializers: BeforeComma
 
 PackConstructorInitializers: Never
 
-#BreakInheritanceList: AfterComma  
-BreakInheritanceList: BeforeComma  
+#BreakInheritanceList: AfterComma
+BreakInheritanceList: BeforeComma
 
 #maybe google style is better
 #EmptyLineAfterAccessModifier : Always
 #EmptyLineBeforeAccessModifier : Always
 
-FixNamespaceComments : true
+FixNamespaceComments: true
 
-ShortNamespaceLines : 0
+ShortNamespaceLines: 0
 
-IndentPPDirectives : BeforeHash
+IndentPPDirectives: BeforeHash
 
-IndentWrappedFunctionNames : true
+IndentWrappedFunctionNames: true
 
 #IndentRequiresClause : false
 
 #be careful with that
-InsertBraces : true 
+InsertBraces: true
 
 IntegerLiteralSeparator:
   Binary: 4
   #BinaryMinDigits : 6
   Decimal: 3
-  DecimalMinDigits : 5
+  DecimalMinDigits: 5
   Hex: 2
   #HexMinDigits : 4
 
@@ -84,43 +84,52 @@ IntegerLiteralSeparator:
 #idk the Right and Middle in my case works the same like Left (no diff)
 #ReferenceAlignment : Pointer
 
-QualifierAlignment : Custom
+QualifierAlignment: Custom
 
-QualifierOrder: [ 'friend', 'static', 'inline', 'const', 'volatile', 'constexpr', 'type',  'restrict']
+QualifierOrder:
+  [
+    "friend",
+    "static",
+    "inline",
+    "const",
+    "volatile",
+    "constexpr",
+    "type",
+    "restrict",
+  ]
 
-RemoveParentheses : ReturnStatement
+RemoveParentheses: ReturnStatement
 
-RemoveSemicolon : true
+RemoveSemicolon: true
 
-SeparateDefinitionBlocks : Always
+SeparateDefinitionBlocks: Always
 
-SortUsingDeclarations : Lexicographic
+SortUsingDeclarations: Lexicographic
 
-AllowShortEnumsOnASingleLine : false
+AllowShortEnumsOnASingleLine: false
 
 #BEGIN:includes
 #----------------------------------
 
-SortIncludes: true  
-IncludeBlocks: Regroup  
+SortIncludes: true
+IncludeBlocks: Regroup
 
 IncludeCategories:
   # Header corresponding to the source file
-  - Regex:           '^"(.*\b|).*\.h"'
-    Priority:        0
+  - Regex: '^"(.*\b|).*\.h"'
+    Priority: 0
 
   # 1. Local headers with ".h" extension
-  - Regex:           '^".*\.h"'
-    Priority:        1
+  - Regex: '^".*\.h"'
+    Priority: 1
 
   # C system headers
-  - Regex:           '^<.*\.h>'
-    Priority:        2
+  - Regex: '^<.*\.h>'
+    Priority: 2
 
   # C++ system headers
-  - Regex:           '^<[^.]+>$'
-    Priority:        3
-
+  - Regex: "^<[^.]+>$"
+    Priority: 3
 #END:includes
 #----------------------------------
 
