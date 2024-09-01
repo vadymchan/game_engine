@@ -13,11 +13,23 @@
 namespace game_engine {
 
 struct RingBufferDx12 : public IBuffer {
+  // ======= BEGIN: public constructors =======================================
+
   RingBufferDx12() = default;
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
 
   virtual ~RingBufferDx12() { release(); }
 
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
   virtual void create(uint64_t totalSize, uint32_t alignment = 16);
+
+  virtual void release() override { m_cbv_.free(); }
 
   virtual void reset() {
     ScopedLock s(&m_lock_);
@@ -28,7 +40,8 @@ struct RingBufferDx12 : public IBuffer {
   virtual uint64_t alloc(uint64_t allocSize) {
     ScopedLock s(&m_lock_);
 
-    const uint64_t kAllocOffset = g_align<uint64_t>(m_ringBufferOffset_, m_alignment_);
+    const uint64_t kAllocOffset
+        = g_align<uint64_t>(m_ringBufferOffset_, m_alignment_);
     if (kAllocOffset + allocSize <= m_ringBufferSize_) {
       m_ringBufferOffset_ = kAllocOffset + allocSize;
       return kAllocOffset;
@@ -39,9 +52,20 @@ struct RingBufferDx12 : public IBuffer {
     return 0;
   }
 
-  virtual void release() override { m_cbv_.free(); }
+  virtual void* map() override {
+    assert(m_ringBufferSize_);
+    assert(!m_mappedPointer_);
+    D3D12_RANGE readRange = {};
 
-  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
+    HRESULT hr = m_buffer_->m_resource_.get()->Get()->Map(
+        0, &readRange, reinterpret_cast<void**>(&m_mappedPointer_));
+    assert(SUCCEEDED(hr));
+
+    if (FAILED(hr)) {
+      return nullptr;
+    }
+    return m_mappedPointer_;
+  }
 
   virtual void* map(uint64_t offset, uint64_t size) override {
     assert(size);
@@ -52,21 +76,6 @@ struct RingBufferDx12 : public IBuffer {
 
     HRESULT hr = m_buffer_->m_resource_.get()->Get()->Map(
         0, &kReadRange, reinterpret_cast<void**>(&m_mappedPointer_));
-    assert(SUCCEEDED(hr));
-
-    if (FAILED(hr)) {
-      return nullptr;
-    }
-    return m_mappedPointer_;
-  }
-
-  virtual void* map() override {
-    assert(m_ringBufferSize_);
-    assert(!m_mappedPointer_);
-    D3D12_RANGE readRange = {};
-
-    HRESULT hr = m_buffer_->m_resource_.get()->Get()->Map(
-        0, &readRange, reinterpret_cast<void**>(&m_mappedPointer_));
     assert(SUCCEEDED(hr));
 
     if (FAILED(hr)) {
@@ -93,17 +102,29 @@ struct RingBufferDx12 : public IBuffer {
     }
   }
 
+  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
+
   virtual void* getHandle() const override { return m_buffer_->get(); }
 
-  virtual uint64_t getAllocatedSize() const override { return m_ringBufferSize_; }
+  virtual uint64_t getAllocatedSize() const override {
+    return m_ringBufferSize_;
+  }
 
   virtual uint64_t getBufferSize() const override { return m_ringBufferSize_; }
 
   virtual uint64_t getOffset() const override { return m_ringBufferOffset_; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
   inline uint64_t getGPUAddress() const {
     return m_buffer_->getGPUVirtualAddress();
   }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   uint64_t                         m_ringBufferOffset_ = 0;
   uint32_t                         m_alignment_        = 16;
@@ -115,6 +136,8 @@ struct RingBufferDx12 : public IBuffer {
   DescriptorDx12 m_cbv_;
 
   MutexLock m_lock_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
