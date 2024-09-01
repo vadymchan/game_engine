@@ -50,7 +50,7 @@
 //  }
 //}
 //
-//void FrameBufferPoolVk::release() {
+//void FrameBufferPoolVk::s_release() {
 //  FrameBufferResourceMap.clear();
 //  FrameBufferHashVariableMap.clear();
 //}
