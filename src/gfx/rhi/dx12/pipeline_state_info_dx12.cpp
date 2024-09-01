@@ -37,8 +37,7 @@ void SamplerStateInfoDx12::initialize() {
 
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
-  g_rhiDx12->m_device_->CreateSampler(&samplerDesc,
-                                       m_samplerSRV_.m_cpuHandle_);
+  g_rhiDx12->m_device_->CreateSampler(&samplerDesc, m_samplerSRV_.m_cpuHandle_);
 
   m_resourceName_ = Name(toString().c_str());
 }
@@ -73,8 +72,8 @@ void DepthStencilStateInfoDx12::initialize() {
   m_depthStencilStateDesc_.DepthWriteMask = m_depthWriteEnable_
                                               ? D3D12_DEPTH_WRITE_MASK_ALL
                                               : D3D12_DEPTH_WRITE_MASK_ZERO;
-  m_depthStencilStateDesc_.DepthFunc      = g_getDX12CompareOp(m_depthCompareOp_);
-  m_depthStencilStateDesc_.StencilEnable  = m_stencilTestEnable_;
+  m_depthStencilStateDesc_.DepthFunc = g_getDX12CompareOp(m_depthCompareOp_);
+  m_depthStencilStateDesc_.StencilEnable = m_stencilTestEnable_;
   // DepthStencilStateDesc.StencilReadMask;
   // DepthStencilStateDesc.StencilWriteMask;
   if (m_front_) {
@@ -133,7 +132,7 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
 
   std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
   VertexBufferDx12::s_createVertexInputState(inputElementDescs,
-                                           m_vertexBufferArray_);
+                                             m_vertexBufferArray_);
   psoDesc.InputLayout.pInputElementDescs = inputElementDescs.data();
   psoDesc.InputLayout.NumElements        = (uint32_t)inputElementDescs.size();
 
@@ -146,9 +145,8 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
 
   if (kGraphicsShader.m_vertexShader_) {
     // TODO: rename
-    auto VS_Compiled
-        = (CompiledShaderDx12*)
-              kGraphicsShader.m_vertexShader_->getCompiledShader();
+    auto VS_Compiled = (CompiledShaderDx12*)
+                           kGraphicsShader.m_vertexShader_->getCompiledShader();
     assert(VS_Compiled);
     psoDesc.VS
         = {.pShaderBytecode = VS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -164,9 +162,8 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
            .BytecodeLength  = GS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
   if (kGraphicsShader.m_pixelShader_) {
-    auto PS_Compiled
-        = (CompiledShaderDx12*)
-              kGraphicsShader.m_pixelShader_->getCompiledShader();
+    auto PS_Compiled = (CompiledShaderDx12*)
+                           kGraphicsShader.m_pixelShader_->getCompiledShader();
     assert(PS_Compiled);
     psoDesc.PS
         = {.pShaderBytecode = PS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -271,8 +268,7 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
           m_shaderBindingLayoutArray_);
   psoDesc.pRootSignature = RootSignature.Get();
   if (kComputeShader) {
-    auto CS_Compiled
-        = (CompiledShaderDx12*)kComputeShader->getCompiledShader();
+    auto CS_Compiled = (CompiledShaderDx12*)kComputeShader->getCompiledShader();
     assert(CS_Compiled);
     psoDesc.CS
         = {.pShaderBytecode = CS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -323,9 +319,10 @@ void PipelineStateInfoDx12::bind(CommandBufferDx12* commandList) const {
     assert(m_pipelineState_);
     commandList->m_commandList_->SetPipelineState(m_pipelineState_.Get());
   } else if (m_pipelineType_ == PipelineStateInfo::EPipelineType::RayTracing) {
-    assert(m_raytracingStateObject_);
-    commandList->m_commandList_->SetPipelineState1(
-        m_raytracingStateObject_.Get());
+    // TODO: currently not implemented
+    // assert(m_raytracingStateObject_);
+    // commandList->m_commandList_->SetPipelineState1(
+    //     m_raytracingStateObject_.Get());
   }
 }
 
