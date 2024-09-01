@@ -12,23 +12,39 @@ namespace game_engine {
 
 struct RootParameterExtractor {
   public:
-  std::vector<D3D12_ROOT_PARAMETER1>   m_rootParameters_;
-  std::vector<D3D12_DESCRIPTOR_RANGE1> m_descriptors_;
-  std::vector<D3D12_DESCRIPTOR_RANGE1> m_samplerDescriptors_;
+  // ======= BEGIN: public misc methods =======================================
 
   void extract(const ShaderBindingLayoutArray& bindingLayoutArray,
                int32_t                         registerSpace = 0);
   void extract(const ShaderBindingInstanceArray& bindingLayoutArray,
                int32_t                           registerSpace = 0);
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  std::vector<D3D12_ROOT_PARAMETER1>   m_rootParameters_;
+  std::vector<D3D12_DESCRIPTOR_RANGE1> m_descriptors_;
+  std::vector<D3D12_DESCRIPTOR_RANGE1> m_samplerDescriptors_;
+
+  // ======= END: public misc fields   ========================================
+
   protected:
+  // ======= BEGIN: protected misc methods ====================================
+
   void extract_(int32_t&                  descriptorOffset,
-               int32_t&                  samplerDescriptorOffset,
-               const ShaderBindingArray& shaderBindingArray,
-               int32_t                   registerSpace = 0);
+                int32_t&                  samplerDescriptorOffset,
+                const ShaderBindingArray& shaderBindingArray,
+                int32_t                   registerSpace = 0);
+
+  // ======= END: protected misc methods   ====================================
 
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   int32_t m_numOfInlineRootParameter_ = 0;
+
+  // ======= END: private misc fields   =======================================
 };
 
 struct ShaderBindingLayoutDx12 : public ShaderBindingLayout {
