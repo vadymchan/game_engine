@@ -119,15 +119,15 @@ inline auto g_getDX12TexturePixelSize(ETextureFormat type) {
 // clang-format on
 
 inline ETextureType g_getDX12TextureDemension(D3D12_RESOURCE_DIMENSION type,
-                                            bool isArray) {
+                                              bool isArray) {
   switch (type) {
     case D3D12_RESOURCE_DIMENSION_TEXTURE2D: {
       return isArray ? ETextureType::TEXTURE_2D_ARRAY
-                       : ETextureType::TEXTURE_2D;
+                     : ETextureType::TEXTURE_2D;
     }
     case D3D12_RESOURCE_DIMENSION_TEXTURE3D: {
       return isArray ? ETextureType::TEXTURE_3D_ARRAY
-                       : ETextureType::TEXTURE_3D;
+                     : ETextureType::TEXTURE_3D;
     }
     case D3D12_RESOURCE_DIMENSION_UNKNOWN:
     case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
@@ -301,8 +301,8 @@ inline uint8_t g_getDX12ColorMask(EColorMask type) {
 }
 
 inline D3D12_FILTER g_getDX12TextureFilter(ETextureFilter minification,
-                                         ETextureFilter magnification,
-                                         bool isComparison = false) {
+                                           ETextureFilter magnification,
+                                           bool isComparison = false) {
   // Comparison is used for ShadowMap
   if (isComparison) {
     D3D12_FILTER filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
@@ -462,8 +462,8 @@ inline D3D12_FILTER g_getDX12TextureFilter(ETextureFilter minification,
 }
 
 inline void g_getDepthFormatForSRV(DXGI_FORMAT& texFormat,
-                                 DXGI_FORMAT& srvFormat,
-                                 DXGI_FORMAT  originalTexFormat) {
+                                   DXGI_FORMAT& srvFormat,
+                                   DXGI_FORMAT  originalTexFormat) {
   switch (originalTexFormat) {
     case DXGI_FORMAT_D16_UNORM:
       texFormat = DXGI_FORMAT_R16_TYPELESS;
@@ -523,13 +523,17 @@ GENERATE_CONVERSION_FUNCTION(g_getDX12ResourceLayout,
 
 // Generated from CreateResource, CreateUploadResource
 struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
-  ~CreatedResource() { free(); }
+  // ======= BEGIN: public nested types =======================================
 
   enum class EType : uint8_t {
     Standalone,    // CommittedResource
     ResourcePool,  // PlacedResource
-    Swapchain,     // no need release by me
+    Swapchain,     // no need s_release by me
   };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public static methods =====================================
 
   static std::shared_ptr<CreatedResource> s_createdFromStandalone(
       const ComPtr<ID3D12Resource>& resource) {
@@ -549,9 +553,19 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
         new CreatedResource(EType::Swapchain, resource));
   }
 
-  bool isValid() const { return m_resource_ && (*m_resource_).Get(); }
+  // ======= END: public static methods   =====================================
 
-  ID3D12Resource* get() const { return m_resource_ ? (*m_resource_).Get() : nullptr; }
+  // ======= BEGIN: public destructor =========================================
+
+  ~CreatedResource() { free(); }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
+
+  ID3D12Resource* get() const {
+    return m_resource_ ? (*m_resource_).Get() : nullptr;
+  }
 
   // TODO: not used
   const ComPtr<ID3D12Resource>& getPtr() const { return *m_resource_; }
@@ -560,13 +574,27 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
     return m_resource_ ? (*m_resource_)->GetGPUVirtualAddress() : 0;
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool isValid() const { return m_resource_ && (*m_resource_).Get(); }
+
   void free();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   EType                                   m_resourceType_ = EType::Standalone;
   // TODO: consider remove shared ptr and use pure Resource
   std::shared_ptr<ComPtr<ID3D12Resource>> m_resource_;
 
+  // ======= END: public misc fields   ========================================
+
   private:
+  // ======= BEGIN: private constructors ======================================
+
   CreatedResource() {}
 
   CreatedResource(EType type, const ComPtr<ID3D12Resource>& resource)
@@ -574,8 +602,15 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
       , m_resource_(std::make_shared<ComPtr<ID3D12Resource>>(resource)) {}
 
   // prevent copying
-  CreatedResource(const CreatedResource&)            = delete;
+  CreatedResource(const CreatedResource&) = delete;
+
+  // ======= END: private constructors   ======================================
+
+  // ======= BEGIN: private overloaded operators ==============================
+
   CreatedResource& operator=(const CreatedResource&) = delete;
+
+  // ======= END: private overloaded operators   ==============================
 };
 
 }  // namespace game_engine
