@@ -593,7 +593,7 @@ void Game::update(float deltaTime) {
   // for (auto& iter : Object::s_getBoundBoxObject())
   //	iter->update(deltaTime);
 
-  // for (auto& iter : Object::GetBoundSphereObject())
+  // for (auto& iter : Object::s_getBoundSphereObject())
   //	iter->update(deltaTime);
 
   // for (auto& iter : Object::s_getDebugObject())
