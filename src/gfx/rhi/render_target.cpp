@@ -27,7 +27,7 @@ void SceneRenderTarget::create(std::shared_ptr<Window> window,
     MsaaSamples,  // SampleCount
     IsUseAsSubpassInput,
     IsMemoryless,
-    RTClearValue(0.0f, 0.0f, 0.0f, 1.0f)
+    RtClearValue(0.0f, 0.0f, 0.0f, 1.0f)
     //, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT  // TODO: remove
   };
   // ColorRTInfo.ResourceName = Text("ColorPtr");
@@ -42,7 +42,7 @@ void SceneRenderTarget::create(std::shared_ptr<Window> window,
     MsaaSamples,  // SampleCount
     IsUseAsSubpassInput,
     IsMemoryless,
-    RTClearValue(1.0f, 0)
+    RtClearValue(1.0f, 0)
     //, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT  // TODO: remove
   };
   // DepthRTInfo.ResourceName = Text("DepthPtr");
