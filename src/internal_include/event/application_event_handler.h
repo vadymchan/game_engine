@@ -11,7 +11,14 @@ namespace game_engine {
 
 class ApplicationEventHandler {
   public:
-  using EventCallback = std::function<void(const ApplicationEvent&)>;
+   // ======= BEGIN: public aliases ============================================
+
+using EventCallback = std::function<void(const ApplicationEvent&)>;
+
+
+  // ======= END: public aliases   ============================================
+  
+  // ======= BEGIN: public misc methods =======================================
 
   void subscribe(ApplicationEventType eventType, const EventCallback& callback) {
     m_subscribers_[eventType].push_back(callback);
@@ -26,13 +33,28 @@ class ApplicationEventHandler {
     }
   }
 
+  // ======= END: public misc methods   =======================================
+
+
+
   private:
-  void handleEvent_(const ApplicationEvent& event, const EventCallback& callback) {
+    // ======= BEGIN: private misc methods ======================================
+
+void handleEvent_(const ApplicationEvent& event, const EventCallback& callback) {
     callback(event);
   }
 
+  // ======= END: private misc methods   ======================================
+  
+  // ======= BEGIN: private misc fields =======================================
+
   std::unordered_map<ApplicationEventType, std::vector<EventCallback>>
       m_subscribers_;
+
+  // ======= END: private misc fields   =======================================
+
+
+
 };
 
 }  // namespace game_engine
