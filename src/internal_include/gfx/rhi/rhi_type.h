@@ -80,25 +80,25 @@ constexpr auto g_generateInverseConversionTypeMap(T1... args) {
 // Macro to insert the given elements into an array. This is used for converting
 // from engine types to API types. It's suitable for arrays because the range of
 // engine types is small and all integer values from 0 to N are used.
-#define GENERATE_STATIC_CONVERSION_ARRAY(...)                           \
-  {                                                                     \
+#define GENERATE_STATIC_CONVERSION_ARRAY(...)                             \
+  {                                                                       \
     static auto _TypeArray_ = g_generateConversionTypeArray(__VA_ARGS__); \
-    return _TypeArray_[(int64_t)type];                                  \
+    return _TypeArray_[(int64_t)type];                                    \
   }
 
 // Macro to insert the given elements into a map. This is used for converting
 // from API types to engine types. Maps are used here because the range of
 // engine types can be large or mixed, making arrays inefficient due to memory
 // waste.
-#define GENERATE_STATIC_CONVERSION_MAP(...)                         \
-  {                                                                 \
+#define GENERATE_STATIC_CONVERSION_MAP(...)                           \
+  {                                                                   \
     static auto _TypeMap_ = g_generateConversionTypeMap(__VA_ARGS__); \
-    return _TypeMap_[type];                                         \
+    return _TypeMap_[type];                                           \
   }
-#define GENERATE_STATIC_INVERSECONVERSION_MAP(...)                         \
-  {                                                                        \
+#define GENERATE_STATIC_INVERSECONVERSION_MAP(...)                           \
+  {                                                                          \
     static auto _TypeMap_ = g_generateInverseConversionTypeMap(__VA_ARGS__); \
-    return _TypeMap_[type];                                                \
+    return _TypeMap_[type];                                                  \
   }
 
 // Macro to obtain the first item of a variadic macro
@@ -144,7 +144,7 @@ std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
   };                                                                         \
   static std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1>     \
                      EnumType##Strings = split<EnumType>(#__VA_ARGS__, ','); \
-  inline const char* g_enumToString(EnumType value) {                          \
+  inline const char* g_enumToString(EnumType value) {                        \
     return EnumType##Strings[static_cast<size_t>(value)].c_str();            \
   }
 //////////////////////////////////////////////////////////////////////////
@@ -674,22 +674,36 @@ enum class ETextureCreateFlag : uint32_t {
 DECLARE_ENUM_BIT_OPERATORS(ETextureCreateFlag)
 
 struct DepthStencilClearType {
+  // ======= BEGIN: public misc fields ========================================
+
   float    m_depth_;
   uint32_t m_stencil_;
+
+  // ======= END: public misc fields   ========================================
 };
 
-class RTClearValue {
+class RtClearValue {
   public:
-  static const RTClearValue s_kInvalid;
+  // ======= BEGIN: public nested types =======================================
 
   union ClearValueType {
     float                 m_color_[4];
     DepthStencilClearType m_depthStencil_;
   };
 
-  constexpr RTClearValue() = default;
+  // ======= END: public nested types   =======================================
 
-  RTClearValue(const math::Vector4Df& color)
+  // ======= BEGIN: public static fields ======================================
+
+  static const RtClearValue s_kInvalid;
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public constructors =======================================
+
+  constexpr RtClearValue() = default;
+
+  RtClearValue(const math::Vector4Df& color)
       : m_type_(ERTClearType::Color) {
     m_clearValue_.m_color_[0] = color.x();
     m_clearValue_.m_color_[1] = color.y();
@@ -697,7 +711,7 @@ class RTClearValue {
     m_clearValue_.m_color_[3] = color.w();
   }
 
-  constexpr RTClearValue(float r, float g, float b, float a)
+  constexpr RtClearValue(float r, float g, float b, float a)
       : m_type_(ERTClearType::Color) {
     m_clearValue_.m_color_[0] = r;
     m_clearValue_.m_color_[1] = g;
@@ -705,25 +719,15 @@ class RTClearValue {
     m_clearValue_.m_color_[3] = a;
   }
 
-  constexpr RTClearValue(float depth, uint32_t stencil)
+  constexpr RtClearValue(float depth, uint32_t stencil)
       : m_type_(ERTClearType::DepthStencil) {
     m_clearValue_.m_depthStencil_.m_depth_   = depth;
     m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
   }
 
-  void setColor(const math::Vector4Df& color) {
-    m_type_                   = ERTClearType::Color;
-    m_clearValue_.m_color_[0] = color.x();
-    m_clearValue_.m_color_[1] = color.y();
-    m_clearValue_.m_color_[2] = color.z();
-    m_clearValue_.m_color_[3] = color.w();
-  }
+  // ======= END: public constructors   =======================================
 
-  void setDepthStencil(float depth, uint8_t stencil) {
-    m_type_                                  = ERTClearType::DepthStencil;
-    m_clearValue_.m_depthStencil_.m_depth_   = depth;
-    m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
-  }
+  // ======= BEGIN: public getters ============================================
 
   const float* getCleraColor() const { return &m_clearValue_.m_color_[0]; }
 
@@ -738,8 +742,6 @@ class RTClearValue {
   }
 
   ClearValueType getClearValue() const { return m_clearValue_; }
-
-  void resetToNoneType() { m_type_ = ERTClearType::None; }
 
   ERTClearType getType() const { return m_type_; }
 
@@ -758,21 +760,59 @@ class RTClearValue {
         m_clearValue_.m_depthStencil_.m_stencil_);
   }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public setters ============================================
+
+  void setColor(const math::Vector4Df& color) {
+    m_type_                   = ERTClearType::Color;
+    m_clearValue_.m_color_[0] = color.x();
+    m_clearValue_.m_color_[1] = color.y();
+    m_clearValue_.m_color_[2] = color.z();
+    m_clearValue_.m_color_[3] = color.w();
+  }
+
+  void setDepthStencil(float depth, uint8_t stencil) {
+    m_type_                                  = ERTClearType::DepthStencil;
+    m_clearValue_.m_depthStencil_.m_depth_   = depth;
+    m_clearValue_.m_depthStencil_.m_stencil_ = stencil;
+  }
+
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void resetToNoneType() { m_type_ = ERTClearType::None; }
+
+  // ======= END: public misc methods   =======================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   ERTClearType   m_type_ = ERTClearType::None;
   ClearValueType m_clearValue_;
+
+  // ======= END: private misc fields   =======================================
 };
 
 struct BaseVertex {
+  // ======= BEGIN: public misc fields ========================================
+
   math::Vector3Df m_position_  = math::g_zeroVector<float, 3>();
   math::Vector3Df m_normal_    = math::g_zeroVector<float, 3>();
   math::Vector3Df m_tangent_   = math::g_zeroVector<float, 3>();
   math::Vector3Df m_bitangent_ = math::g_zeroVector<float, 3>();
   math::Vector2Df m_texCoord_  = math::g_zeroVector<float, 2>();
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct PositionOnlyVertex {
+  // ======= BEGIN: public misc fields ========================================
+
   math::Vector3Df m_position_ = math::g_zeroVector<float, 3>();
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
