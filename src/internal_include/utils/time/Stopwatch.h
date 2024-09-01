@@ -7,6 +7,8 @@ namespace game_engine {
 
 class Stopwatch {
   public:
+  // ======= BEGIN: public aliases ============================================
+
   using DurationNano  = std::chrono::nanoseconds;
   using DurationMicro = std::chrono::microseconds;
   using DurationMilli = std::chrono::milliseconds;
@@ -23,13 +25,17 @@ class Stopwatch {
   template <typename Period = std::ratio<1>>
   using DurationDouble = DurationCustom<double, Period>;
 
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  [[nodiscard]] auto isRunning() const -> bool;
+
   void start();
   void stop();
   void resume();
   void pause();
   void reset();
-
-  [[nodiscard]] auto isRunning() const -> bool;
 
   /**
    * @tparam DurationType A std::chrono::duration type or a duration alias
@@ -49,14 +55,24 @@ class Stopwatch {
     return std::chrono::duration_cast<DurationType>(currentElapsed).count();
   }
 
+  // ======= END: public misc methods   =======================================
+
   private:
+  // ======= BEGIN: private aliases ===========================================
+
   using Clock     = std::chrono::high_resolution_clock;
   using TimePoint = Clock::time_point;
   using Duration  = Clock::duration;
 
+  // ======= END: private aliases   ===========================================
+
+  // ======= BEGIN: private misc fields =======================================
+
   TimePoint m_startTime_;
-  TimePoint m_pausedTime_{}; // default init to epoch
+  TimePoint m_pausedTime_{};  // default init to epoch
   bool      m_isRunning_{false};
+
+  // ======= END: private misc fields   =======================================
 };
 
 /// Represents the duration between two frames. Used for frame
