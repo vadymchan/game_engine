@@ -1,8 +1,8 @@
 #ifndef GAME_ENGINE_COMMAND_BUFFER_VK_H
 #define GAME_ENGINE_COMMAND_BUFFER_VK_H
 
-#include "gfx/rhi/vulkan/fence_vk.h"
 #include "gfx/rhi/command_buffer_manager.h"
+#include "gfx/rhi/vulkan/fence_vk.h"
 
 #include <vulkan/vulkan.h>
 
@@ -10,9 +10,15 @@ namespace game_engine {
 
 class CommandBufferVk : public CommandBuffer {
   public:
+  // ======= BEGIN: public destructor =========================================
+
   ~CommandBufferVk() {
     // Clean-up code if needed
   }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual bool begin() const override;
 
@@ -21,11 +27,7 @@ class CommandBufferVk : public CommandBuffer {
   // TODO: add flags parameter
   virtual void reset(/*VkCommandBufferResetFlags flags = 0*/) const override;
 
-  VkCommandBuffer& getRef() { return m_commandBuffer_; }
-
-  virtual void* getNativeHandle() const override {
-    return m_commandBuffer_;
-  }
+  virtual void* getNativeHandle() const override { return m_commandBuffer_; }
 
   // TODO: consider remove that
   virtual void* getFenceHandle() const override {
@@ -36,9 +38,21 @@ class CommandBufferVk : public CommandBuffer {
 
   virtual void setFence(IFence* fence) { m_fence_ = fence; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  VkCommandBuffer& getRef() { return m_commandBuffer_; }
+
+  // ======= END: public getters   ============================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   IFence*         m_fence_         = nullptr;
   VkCommandBuffer m_commandBuffer_ = nullptr;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
