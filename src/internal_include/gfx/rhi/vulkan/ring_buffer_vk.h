@@ -10,9 +10,19 @@
 namespace game_engine {
 
 struct RingBufferVk : public IBuffer {
+  // ======= BEGIN: public constructors =======================================
+
   RingBufferVk() = default;
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~RingBufferVk() { release(); }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void create(EVulkanBufferBits bufferBits,
                       uint64_t          totalSize,
@@ -24,8 +34,6 @@ struct RingBufferVk : public IBuffer {
 
   virtual void release() override;
 
-  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
-
   // TODO: for map use 1 method (combine to 1)
   virtual void* map(uint64_t offset, uint64_t size) override;
 
@@ -35,13 +43,21 @@ struct RingBufferVk : public IBuffer {
 
   virtual void updateBuffer(const void* data, uint64_t size) override;
 
+  virtual void* getMappedPointer() const override { return m_mappedPointer_; }
+
   virtual void* getHandle() const override { return m_buffer_; }
 
-  virtual uint64_t getAllocatedSize() const override { return m_ringBufferSize_; }
+  virtual uint64_t getAllocatedSize() const override {
+    return m_ringBufferSize_;
+  }
 
   virtual uint64_t getBufferSize() const override { return m_ringBufferSize_; }
 
   virtual uint64_t getOffset() const override { return m_ringBufferOffset_; }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   uint64_t       m_ringBufferOffset_ = 0;
   uint32_t       m_alignment_        = 16;
@@ -51,6 +67,8 @@ struct RingBufferVk : public IBuffer {
   void*          m_mappedPointer_    = nullptr;
 
   MutexLock m_lock_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
