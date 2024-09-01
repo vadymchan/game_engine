@@ -131,7 +131,7 @@ bool RenderPassDx12::createRenderPass() {
         if (HasClear) {
           m_rtvClears_.push_back(attachment.m_rtClearValue);
         } else {
-          m_rtvClears_.push_back(RTClearValue::s_kInvalid);
+          m_rtvClears_.push_back(RtClearValue::s_kInvalid);
         }
         m_rtvCPUHandles_.push_back(TextureDX12->m_rtv_.m_cpuHandle_);
         m_rtvFormats_.push_back(g_getDX12TextureFormat(RTInfo.m_format_));
