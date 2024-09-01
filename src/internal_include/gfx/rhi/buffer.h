@@ -13,6 +13,8 @@ namespace game_engine {
 
 class IBufferAttribute {
   public:
+  // ======= BEGIN: public nested types =======================================
+
   struct Attribute {
     Attribute(EBufferElementType underlyingType = EBufferElementType::BYTE,
               int32_t            offset         = 0,
@@ -42,6 +44,10 @@ class IBufferAttribute {
     int32_t            m_stride_;
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public constructors =======================================
+
   IBufferAttribute(const Name&                   name,
                    EBufferType                   bufferType,
                    // VkBufferUsageFlags            bufferUsage,
@@ -57,13 +63,24 @@ class IBufferAttribute {
   //, InputRate(inputRate)
   {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~IBufferAttribute() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getBufferData() const  = 0;
   virtual size_t      getBufferSize() const  = 0;
   virtual size_t      getElementSize() const = 0;
 
-  // private:
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   Name                   m_name_;
   EBufferType            m_bufferType_ = EBufferType::Static;
   // TODO: Not needed
@@ -72,12 +89,16 @@ class IBufferAttribute {
   std::vector<Attribute> m_attributes_;
   // TODO: Not needed
   // VkVertexInputRate      InputRate;
+
+  // ======= END: public misc fields   ========================================
 };
 
 // TODO: create interface for this class, use custom enums for abstraction
 template <typename T>
 class BufferAttributeStream : public IBufferAttribute {
   public:
+  // ======= BEGIN: public constructors =======================================
+
   BufferAttributeStream() = default;
 
   BufferAttributeStream(const Name&                   name,
@@ -93,7 +114,15 @@ class BufferAttributeStream : public IBufferAttribute {
           name, bufferType, /*bufferUsage,*/ stride, attributes /*, inputRate*/)
       , m_data_(data) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~BufferAttributeStream() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual const void* getBufferData() const { return m_data_.data(); }
 
@@ -101,25 +130,36 @@ class BufferAttributeStream : public IBufferAttribute {
 
   virtual size_t getElementSize() const { return sizeof(T); }
 
-  // private:
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<T> m_data_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct IBuffer
     : public ShaderBindableResource
     , public std::enable_shared_from_this<IBuffer> {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~IBuffer() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void release() = 0;
 
-  virtual void* getMappedPointer() const                      = 0;
   virtual void* map(uint64_t offset, uint64_t size)           = 0;
   virtual void* map()                                         = 0;
   virtual void  unmap()                                       = 0;
   virtual void  updateBuffer(const void* data, uint64_t size) = 0;
 
-  virtual void*    getHandle() const = 0;
-  virtual uint64_t getOffset() const = 0;
+  virtual void*    getMappedPointer() const = 0;
+  virtual void*    getHandle() const        = 0;
+  virtual uint64_t getOffset() const        = 0;
   // AllocatedSize from memory pool
   virtual uint64_t getAllocatedSize() const = 0;
   virtual uint64_t getBufferSize() const    = 0;  // RequstedSize
@@ -127,11 +167,31 @@ struct IBuffer
   virtual EResourceLayout getLayout() const {
     return EResourceLayout::UNDEFINED;
   }
+
+  // ======= END: public overridden methods   =================================
 };
 
 class VertexStreamData {
   public:
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~VertexStreamData() { m_streams_.clear(); }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  // TODO: consider renaming stream(s)
+  std::vector<std::shared_ptr<IBufferAttribute>> m_streams_;
+  EPrimitiveType   m_primitiveType_   = EPrimitiveType::TRIANGLES;
+  EVertexInputRate m_vertexInputRate_ = EVertexInputRate::VERTEX;
+  int32_t          m_elementCount_    = 0;
+  int32_t          m_bindingIndex_    = 0;
+  int32_t          m_startLocation_   = 0;
+
+  // ======= END: public misc fields   ========================================
+
+  // ======= BEGIN: public getters ============================================
 
   int32_t getEndLocation() const {
     int32_t endLocation = m_startLocation_;
@@ -141,72 +201,98 @@ class VertexStreamData {
     return endLocation;
   }
 
-  // private:
-  // TODO: consider renaming stream(s)
-  std::vector<std::shared_ptr<IBufferAttribute>> m_streams_;
-  EPrimitiveType   m_primitiveType_   = EPrimitiveType::TRIANGLES;
-  EVertexInputRate m_vertexInputRate_ = EVertexInputRate::VERTEX;
-  int32_t          m_elementCount_    = 0;
-  int32_t          m_bindingIndex_    = 0;
-  int32_t          m_startLocation_   = 0;
+  // ======= END: public getters   ============================================
 };
 
 struct VertexBuffer {
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~VertexBuffer() {}
 
-  virtual Name getName() const { return Name::s_kInvalid; }
+  // ======= END: public destructor   =========================================
 
-  virtual size_t getHash() const { return 0; }
-
-  virtual void bind(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
-
-  virtual int32_t getElementCount() const {
-    return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
-  }
+  // ======= BEGIN: public overridden methods =================================
 
   virtual bool initialize(const std::shared_ptr<VertexStreamData>& streamData) {
     return false;
   }
 
+  virtual void bind(
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+
   // virtual bool IsSupportRaytracing() const { return false; }
+
+  virtual Name getName() const { return Name::s_kInvalid; }
+
+  virtual size_t getHash() const { return 0; }
+
+  virtual int32_t getElementCount() const {
+    return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
+  }
 
   virtual IBuffer* getBuffer(int32_t streamIndex) const { return nullptr; }
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::shared_ptr<VertexStreamData> m_vertexStreamData_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class IndexStreamData {
   public:
+  // ======= BEGIN: public destructor =========================================
+
   ~IndexStreamData() { delete m_stream_; }
 
-  // private:
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   IBufferAttribute* m_stream_       = nullptr;
   uint32_t          m_elementCount_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct IndexBuffer {
-  std::shared_ptr<IndexStreamData> m_indexStreamData_;
+  // ======= BEGIN: public destructor =========================================
 
   virtual ~IndexBuffer() {}
 
-  virtual Name getName() const { return Name::s_kInvalid; }
+  // ======= END: public destructor   =========================================
 
-  virtual void bind(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
-
-  virtual int32_t getElementCount() const {
-    return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
-  }
+  // ======= BEGIN: public overridden methods =================================
 
   virtual bool initialize(const std::shared_ptr<IndexStreamData>& streamData) {
     return false;
   }
 
+  virtual void bind(
+      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+
+  virtual Name getName() const { return Name::s_kInvalid; }
+
   virtual IBuffer* getBuffer() const { return nullptr; }
+
+  virtual int32_t getElementCount() const {
+    return m_indexStreamData_ ? m_indexStreamData_->m_elementCount_ : 0;
+  }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  std::shared_ptr<IndexStreamData> m_indexStreamData_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct VertexBufferArray : public ResourceContainer<const VertexBuffer*> {
+  // ======= BEGIN: public getters ============================================
+
   size_t getHash() const {
     if (m_hash_) {
       return m_hash_;
@@ -219,8 +305,14 @@ struct VertexBufferArray : public ResourceContainer<const VertexBuffer*> {
     return m_hash_;
   }
 
+  // ======= END: public getters   ============================================
+
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   mutable size_t m_hash_ = 0;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
