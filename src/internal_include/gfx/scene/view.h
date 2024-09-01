@@ -16,6 +16,8 @@ namespace game_engine {
 
 class View {
   public:
+  // ======= BEGIN: public constructors =======================================
+
   View() = default;
 
   View(const Camera* camera /*, const std::vector<Light*>& lights*/)
@@ -27,7 +29,9 @@ class View {
     }*/
   }
 
-  void prepareViewUniformBufferShaderBindingInstance();
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public getters ============================================
 
   void getShaderBindingInstance(
       ShaderBindingInstanceArray& shaderBindingInstanceArray,
@@ -38,11 +42,24 @@ class View {
       ShaderBindingLayoutArray& shaderBindingsLayoutArray,
       bool                      isForwardRenderer = false) const;
 
-  const Camera*                          m_camera_ = nullptr;
-  // std::vector<ViewLight>              lights;
-  // std::vector<ViewLight>              ShadowCasterLights;
-  std::shared_ptr<IUniformBufferBlock>   m_viewUniformBufferPtr_;
-  std::shared_ptr<ShaderBindingInstance> m_viewUniformBufferShaderBindingInstance_;
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void prepareViewUniformBufferShaderBindingInstance();
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
+  const Camera*                        m_camera_ = nullptr;
+  // std::vector<ViewLight>            m_lights_;
+  // std::vector<ViewLight>            m_shadowCasterLights_;
+  std::shared_ptr<IUniformBufferBlock> m_viewUniformBufferPtr_;
+  std::shared_ptr<ShaderBindingInstance>
+      m_viewUniformBufferShaderBindingInstance_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
