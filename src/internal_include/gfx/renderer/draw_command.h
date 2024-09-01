@@ -19,6 +19,8 @@ namespace game_engine {
 
 class DrawCommand {
   public:
+  // ======= BEGIN: public constructors =======================================
+
   DrawCommand() = default;
 
   DrawCommand(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
@@ -91,29 +93,46 @@ class DrawCommand {
     assert(m_renderObject_);
   }
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void prepareToDraw(bool isPositionOnly);
 
   void draw() const;
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public constants ==========================================
+
+  const View*         m_view_;
+  const PushConstant* m_pushConstant_         = nullptr;
+  const VertexBuffer* m_overrideInstanceData_ = nullptr;
+
+  // ======= END: public constants   ==========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ShaderBindingInstanceArray    m_shaderBindingInstanceArray_;
   ShaderBindingInstanceCombiner m_shaderBindingInstanceCombiner_;
 
-  const View* m_view_;
+  RenderPass*             m_renderPass_ = nullptr;
+  GraphicsPipelineShader  m_shader_;
+  RenderObject*           m_renderObject_             = nullptr;
+  PipelineStateFixedInfo* m_pipelineStateFixed_       = nullptr;
+  PipelineStateInfo*      m_currentPipelineStateInfo_ = nullptr;
+  Material*               m_material_                 = nullptr;
 
-  RenderPass*                         m_renderPass_ = nullptr;
-  GraphicsPipelineShader              m_shader_;
-  RenderObject*                       m_renderObject_             = nullptr;
-  PipelineStateFixedInfo*             m_pipelineStateFixed_       = nullptr;
-  PipelineStateInfo*                  m_currentPipelineStateInfo_ = nullptr;
-  Material*                           m_material_                 = nullptr;
-  const PushConstant*                 m_pushConstant_             = nullptr;
-  const VertexBuffer*                 m_overrideInstanceData_     = nullptr;
   std::shared_ptr<RenderFrameContext> m_renderFrameContextPtr_;
   bool                                m_isPositionOnly_ = false;
   int32_t                             m_subpassIndex_   = 0;
   bool                                m_test_           = false;
 
   std::shared_ptr<ShaderBindingInstance> m_oneRenderObjectUniformBuffer_;
+
+  // ======= END: public misc fields   ========================================
+
+
 };
 
 // TODO: not used (used for light draw commands)
