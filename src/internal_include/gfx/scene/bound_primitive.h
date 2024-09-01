@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_BOUND_PRIMITIVE_H
 #define GAME_ENGINE_BOUND_PRIMITIVE_H
 
-// TODO: 
+// TODO:
 // - consider move file to other directory
 // - consider rename a file
 
@@ -12,6 +12,8 @@
 namespace game_engine {
 
 struct BoundBox {
+  // ======= BEGIN: public static methods =====================================
+
   static BoundBox s_generateBoundBox(const std::vector<float>& vertices) {
     auto min = math::Vector3Df(FLT_MAX);
     auto max = math::Vector3Df(FLT_MIN);
@@ -44,20 +46,36 @@ struct BoundBox {
     return {min, max};
   }
 
-  void createBoundBox(const std::vector<float>& vertices) {
-    *this = BoundBox::s_generateBoundBox(vertices);
-  }
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public getters ============================================
 
   math::Vector3Df getExtent() const { return m_max_ - m_min_; }
 
   math::Vector3Df getHalfExtent() const { return getExtent() / 0.5f; }
 
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  void createBoundBox(const std::vector<float>& vertices) {
+    *this = BoundBox::s_generateBoundBox(vertices);
+  }
+
+  // ======= END: public misc methods   =======================================
+
+
+
+  // ======= BEGIN: public misc fields ========================================
+
   math::Vector3Df m_min_;
   math::Vector3Df m_max_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct BoundSphere {
-  float m_radius_ = 0.0f;
+  // ======= BEGIN: public static methods =====================================
 
   static BoundSphere s_generateBoundSphere(const std::vector<float>& vertices) {
     auto maxDist = FLT_MIN;
@@ -69,7 +87,7 @@ struct BoundSphere {
 
       auto       currentPos = math::Vector3Df(x, y, z);
       // TODO: consider better naming
-      const auto kDist       = currentPos.magnitude();
+      const auto kDist = currentPos.magnitude();
       if (maxDist < kDist) {
         maxDist = kDist;
       }
@@ -77,9 +95,22 @@ struct BoundSphere {
     return {maxDist};
   }
 
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void createBoundSphere(const std::vector<float>& vertices) {
     *this = BoundSphere::s_generateBoundSphere(vertices);
   }
+
+  // ======= END: public misc methods   =======================================
+
+
+  // ======= BEGIN: public misc fields ========================================
+
+  float m_radius_ = 0.0f;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
