@@ -7,10 +7,27 @@
 namespace math {
 // TODO: consider change from struct to class and make the fields private
 struct Plane {
+  // ======= BEGIN: public static methods =====================================
+
+  // TODO: use Point3Df instead of Vector3Df
+  static Plane s_createFrustumFromThreePoints(const math::Vector3Df& p0,
+                                              const math::Vector3Df& p1,
+                                              const math::Vector3Df& p2) {
+    const auto kDirection0 = p1 - p0;
+    const auto kDirection1 = p2 - p0;
+    auto       normal      = kDirection0.cross(kDirection1).normalized();
+    const auto kDistance   = p2.dot(normal);
+    return Plane(normal, kDistance);
+  }
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public constructors =======================================
+
   Plane() = default;
 
-  // TODO: write documentation that n is the normal of the plane (or consider
-  // renaming it)
+  // TODO: write documentation that n is the normal of the plane (or
+  // consider renaming it)
   Plane(float nX, float nY, float nZ, float distance)
       : m_n_(nX, nY, nZ)
       , m_d_(distance) {}
@@ -19,16 +36,9 @@ struct Plane {
       : m_n_(std::move(normal))
       , m_d_(distance) {}
 
-  // TODO: use Point3Df instead of Vector3Df
-  static Plane s_createFrustumFromThreePoints(const math::Vector3Df& p0,
-                                              const math::Vector3Df& p1,
-                                              const math::Vector3Df& p2) {
-    const auto kDirection0 = p1 - p0;
-    const auto kDirection1 = p2 - p0;
-    auto       normal     = kDirection0.cross(kDirection1).normalized();
-    const auto kDistance   = p2.dot(normal);
-    return Plane(normal, kDistance);
-  }
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   // TODO: consider rename
   float dotProductWithNormal(const math::Vector3Df& direction) {
@@ -42,9 +52,17 @@ struct Plane {
          + m_n_.z() * position.z() + m_d_;
   }
 
+  // ======= END: public misc methods   =======================================
+
+
+
+  // ======= BEGIN: public misc fields ========================================
+
   // TODO: consider whether this is the acceptable name or not
   math::Vector3Df m_n_;
   float           m_d_;
+
+  // ======= END: public misc fields   ========================================
 };
 }  // namespace math
 
