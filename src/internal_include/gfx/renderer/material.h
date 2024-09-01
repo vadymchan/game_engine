@@ -11,7 +11,7 @@ namespace game_engine {
 
 class Material {
   public:
-  virtual ~Material() {}
+  // ======= BEGIN: public nested types =======================================
 
   enum class EMaterialTextureType : int8_t {
     Albedo = 0,
@@ -30,6 +30,27 @@ class Material {
     ETextureAddressMode m_textureAddressModeV_ = ETextureAddressMode::REPEAT;
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  virtual ~Material() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public getters ============================================
+
+  template <typename T>
+  T* getTexture(EMaterialTextureType type) const {
+    return (T*)(getTexture(type));
+  }
+
+  Texture* getTexture(EMaterialTextureType type) const;
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   bool hasAlbedoTexture() const {
     return m_texData_[(int32_t)EMaterialTextureType::Albedo].m_texture_;
   }
@@ -43,20 +64,19 @@ class Material {
              : false;
   }
 
-  Texture* getTexture(EMaterialTextureType type) const;
+  const std::shared_ptr<ShaderBindingInstance>& createShaderBindingInstance();
 
-  template <typename T>
-  T* getTexture(EMaterialTextureType type) const {
-    return (T*)(getTexture(type));
-  }
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   TextureData m_texData_[static_cast<int32_t>(EMaterialTextureType::Max)];
   bool        m_useSphericalMap_ = false;
 
-  const std::shared_ptr<ShaderBindingInstance>& createShaderBindingInstance();
-
   std::shared_ptr<ShaderBindingInstance> m_shaderBindingInstance_ = nullptr;
   mutable bool m_needToUpdateShaderBindingInstance_               = true;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
