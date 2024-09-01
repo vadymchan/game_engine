@@ -9,20 +9,40 @@ namespace game_engine {
 
 class RenderPassDx12 : public RenderPass {
   public:
+  // ======= BEGIN: public aliases ============================================
+
   using RenderPass::RenderPass;
 
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~RenderPassDx12() { release(); }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual bool beginRenderPass(const CommandBuffer* commandBuffer) override;
+  virtual void endRenderPass() override;
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  const std::vector<DXGI_FORMAT>& getRTVFormats() const {
+    return m_rtvFormats_;
+  }
+
+  DXGI_FORMAT getDSVFormat() const { return m_dsvFormat_; }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   void initialize();
   bool createRenderPass();
   void release();
-
-  // virtual void* getRenderPass() const override { return kRenderPass; }
-  // inline const VkRenderPass& GetRenderPassRaw() const { return
-  // kRenderPass; } virtual void* getFrameBuffer() const override { return
-  // m_frameBuffer; }
-
-  virtual bool beginRenderPass(const CommandBuffer* commandBuffer) override;
 
   // Remove this. After organizing the relationship between CommandBufferDx12
   // and CommandBuffer.
@@ -81,29 +101,32 @@ class RenderPassDx12 : public RenderPass {
     return true;
   }
 
-  virtual void endRenderPass() override;
-
-  const std::vector<DXGI_FORMAT>& getRTVFormats() const { return m_rtvFormats_; }
-
-  DXGI_FORMAT getDSVFormat() const { return m_dsvFormat_; }
+  // ======= END: public misc methods   =======================================
 
   private:
+  // ======= BEGIN: private misc methods ======================================
+
   void setFinalLayoutToAttachment_(const Attachment& attachment) const;
 
-  private:
+  // ======= END: private misc methods   ======================================
+
+  // ======= BEGIN: private misc fields =======================================
+
   const CommandBufferDx12* m_commandBuffer_ = nullptr;
 
   // TODO: consider if this is the appropriate naming convention
   std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_rtvCPUHandles_;
   D3D12_CPU_DESCRIPTOR_HANDLE              m_dsvCPUDHandle_ = {};
 
-  std::vector<RTClearValue> m_rtvClears_;
-  RTClearValue              m_dsvClear_     = RTClearValue(1.0f, 0);
+  std::vector<RtClearValue> m_rtvClears_;
+  RtClearValue              m_dsvClear_        = RtClearValue(1.0f, 0);
   bool                      m_dsvDepthClear_   = false;
   bool                      m_dsvStencilClear_ = false;
 
   std::vector<DXGI_FORMAT> m_rtvFormats_;
   DXGI_FORMAT              m_dsvFormat_ = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
