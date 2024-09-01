@@ -11,6 +11,8 @@ namespace game_engine {
 template <typename T, typename LOCK_TYPE>
 class TResourcePool {
   public:
+  // ======= BEGIN: public getters ============================================
+
   template <typename TInitializer, typename T1 = T>
   T* getOrCreate(const TInitializer& initializer) {
     const size_t hash = initializer.getHash();
@@ -65,6 +67,17 @@ class TResourcePool {
     }
   }
 
+  void getAllResource(std::vector<T*>& Out) {
+    Out.reserve(m_pool_.size());
+    for (auto it : m_pool_) {
+      Out.push_back(it.second);
+    }
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   template <typename TInitializer, typename T1 = T>
   void add(TInitializer&& initializer, T1* resource) {
     ScopeReadLock sr(&m_lock_);
@@ -73,13 +86,6 @@ class TResourcePool {
     assert(resource);
     if (resource) {
       m_pool_[hash] = resource;
-    }
-  }
-
-  void getAllResource(std::vector<T*>& Out) {
-    Out.reserve(m_pool_.size());
-    for (auto it : m_pool_) {
-      Out.push_back(it.second);
     }
   }
 
@@ -105,8 +111,14 @@ class TResourcePool {
     m_pool_.clear();
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::unordered_map<size_t, T*> m_pool_;
   LOCK_TYPE                      m_lock_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
