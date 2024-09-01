@@ -16,22 +16,42 @@ namespace game_engine {
 
 class Object {
   public:
-  Object() {}
+  // ======= BEGIN: public static methods =====================================
 
-  virtual ~Object() {
-    Object::s_removeBoundBoxObject(m_boundBoxObject_);
-    delete m_boundBoxObject_;
-
-    Object::s_removeBoundSphereObject(m_boundSphereObject_);
-    delete m_boundSphereObject_;
-
-    for (auto& RenderObject : m_renderObjects_) {
-      delete RenderObject;
-    }
-    m_renderObjects_.clear();
+  static const std::vector<Object*>& s_getShadowCasterObject() {
+    return s_shadowCasterObject;
   }
 
-  //////////////////////////////////////////////////////////////////////////
+  static const std::vector<Object*>& s_getStaticObject() {
+    return s_staticObjects;
+  }
+
+  static const std::vector<Object*>& s_getBoundBoxObject() {
+    return s_boundBoxObjects;
+  }
+
+  static const std::vector<Object*>& s_getBoundSphereObject() {
+    return s_boundSphereObjects;
+  }
+
+  static const std::vector<Object*>& s_getDebugObject() {
+    return s_debugObjects;
+  }
+
+  static const std::vector<Object*>& s_getUIObject() { return s_UIObjects; }
+
+  static const std::vector<Object*>& s_getUIDebugObject() {
+    return s_UIDebugObjects;
+  }
+
+  static const std::vector<RenderObject*>& s_getShadowCasterRenderObject() {
+    return s_shadowCasterRenderObject;
+  }
+
+  static const std::vector<RenderObject*>& s_getStaticRenderObject() {
+    return s_staticRenderObjects;
+  }
+
   static void s_addObject(Object* object) {
     if (!object) {
       return;
@@ -56,6 +76,41 @@ class Object {
         }
       }
     }
+  }
+
+  static void s_addBoundBoxObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_boundBoxObjects.push_back(object);
+  }
+
+  static void s_addBoundSphereObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_boundSphereObjects.push_back(object);
+  }
+
+  static void s_addDebugObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_debugObjects.push_back(object);
+  }
+
+  static void s_addUIObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_UIObjects.push_back(object);
+  }
+
+  static void s_addUIDebugObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_UIDebugObjects.push_back(object);
   }
 
   static void s_removeObject(Object* object) {
@@ -90,6 +145,56 @@ class Object {
     }
   }
 
+  static void s_removeBoundBoxObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_boundBoxObjects.erase(
+        std::remove_if(s_boundBoxObjects.begin(),
+                       s_boundBoxObjects.end(),
+                       [&object](Object* param) { return param == object; }));
+  }
+
+  static void s_removeBoundSphereObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_boundSphereObjects.erase(
+        std::remove_if(s_boundSphereObjects.begin(),
+                       s_boundSphereObjects.end(),
+                       [&object](Object* param) { return param == object; }));
+  }
+
+  static void s_removeDebugObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_debugObjects.erase(std::remove_if(
+        s_debugObjects.begin(), s_debugObjects.end(), [&object](Object* param) {
+          return param == object;
+        }));
+  }
+
+  static void s_removeUIObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_UIObjects.erase(std::remove_if(
+        s_UIObjects.begin(), s_UIObjects.end(), [&object](Object* param) {
+          return param == object;
+        }));
+  }
+
+  static void s_removeUIDebugObject(Object* object) {
+    if (!object) {
+      return;
+    }
+    s_UIDebugObjects.erase(
+        std::remove_if(s_UIDebugObjects.begin(),
+                       s_UIDebugObjects.end(),
+                       [&object](Object* param) { return param == object; }));
+  }
+
   static void s_flushDirtyState() {
     if (!s_dirtyStateObjects.empty()) {
       for (auto iter : s_dirtyStateObjects) {
@@ -111,130 +216,48 @@ class Object {
     }
   }
 
-  static const std::vector<Object*>& s_getShadowCasterObject() {
-    return s_shadowCasterObject;
-  }
+  // ======= END: public static methods   =====================================
 
-  static const std::vector<Object*>& s_getStaticObject() {
-    return s_staticObjects;
-  }
+  // ======= BEGIN: public static fields ======================================
 
-  static const std::vector<Object*>& s_getBoundBoxObject() {
-    return s_boundBoxObjects;
-  }
+  static std::vector<Object*>       s_shadowCasterObject;
+  static std::vector<RenderObject*> s_shadowCasterRenderObject;
+  static std::vector<Object*>       s_staticObjects;
+  static std::vector<RenderObject*> s_staticRenderObjects;
+  static std::vector<Object*>       s_boundBoxObjects;
+  static std::vector<Object*>       s_boundSphereObjects;
+  static std::vector<Object*>       s_debugObjects;
+  // TODO: consider rename
+  static std::vector<Object*>       s_UIObjects;
+  static std::vector<Object*>       s_UIDebugObjects;
+  static std::set<Object*>          s_dirtyStateObjects;
 
-  static const std::vector<Object*>& GetBoundSphereObject() {
-    return s_boundSphereObjects;
-  }
+  // ======= END: public static fields   ======================================
 
-  static const std::vector<Object*>& s_getDebugObject() { return s_debugObjects; }
+  // ======= BEGIN: public constructors =======================================
 
-  static const std::vector<Object*>& s_getUIObject() { return s_UIObjects; }
+  Object() {}
 
-  static const std::vector<Object*>& s_getUIDebugObject() {
-    return s_UIDebugObjects;
-  }
+  // ======= END: public constructors   =======================================
 
-  static const std::vector<RenderObject*>& s_getShadowCasterRenderObject() {
-    return s_shadowCasterRenderObject;
-  }
+  // ======= BEGIN: public destructor =========================================
 
-  static const std::vector<RenderObject*>& s_getStaticRenderObject() {
-    return s_staticRenderObjects;
-  }
+  virtual ~Object() {
+    Object::s_removeBoundBoxObject(m_boundBoxObject_);
+    delete m_boundBoxObject_;
 
-  static void s_addBoundBoxObject(Object* object) {
-    if (!object) {
-      return;
+    Object::s_removeBoundSphereObject(m_boundSphereObject_);
+    delete m_boundSphereObject_;
+
+    for (auto& RenderObject : m_renderObjects_) {
+      delete RenderObject;
     }
-    s_boundBoxObjects.push_back(object);
+    m_renderObjects_.clear();
   }
 
-  static void s_removeBoundBoxObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_boundBoxObjects.erase(
-        std::remove_if(s_boundBoxObjects.begin(),
-                       s_boundBoxObjects.end(),
-                       [&object](Object* param) { return param == object; }));
-  }
+  // ======= END: public destructor   =========================================
 
-  static void s_addBoundSphereObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_boundSphereObjects.push_back(object);
-  }
-
-  static void s_removeBoundSphereObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_boundSphereObjects.erase(
-        std::remove_if(s_boundSphereObjects.begin(),
-                       s_boundSphereObjects.end(),
-                       [&object](Object* param) { return param == object; }));
-  }
-
-  static void s_addDebugObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_debugObjects.push_back(object);
-  }
-
-  static void s_removeDebugObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_debugObjects.erase(std::remove_if(
-        s_debugObjects.begin(), s_debugObjects.end(), [&object](Object* param) {
-          return param == object;
-        }));
-  }
-
-  static void s_addUIObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_UIObjects.push_back(object);
-  }
-
-  static void s_removeUIObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_UIObjects.erase(std::remove_if(
-        s_UIObjects.begin(), s_UIObjects.end(), [&object](Object* param) {
-          return param == object;
-        }));
-  }
-
-  static void s_addUIDebugObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_UIDebugObjects.push_back(object);
-  }
-
-  static void s_removeUIDebugObject(Object* object) {
-    if (!object) {
-      return;
-    }
-    s_UIDebugObjects.erase(
-        std::remove_if(s_UIDebugObjects.begin(),
-                       s_UIDebugObjects.end(),
-                       [&object](Object* param) { return param == object; }));
-  }
-
-  //////////////////////////////////////////////////////////////////////////
-
-  virtual void update(float deltaTime) {
-    if (m_isPostUpdate_ && m_postUpdateFunc_) {
-      m_postUpdateFunc_(this, deltaTime);
-    }
-  }
+  // ======= BEGIN: public setters ============================================
 
   void setDirtyState() {
     m_dirtyObjectState_ = true;
@@ -256,6 +279,20 @@ class Object {
     setDirtyState();
   }
 
+  // ======= END: public setters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+  bool hasInstancing() const {
+    return m_renderObjects_[0] ? m_renderObjects_[0]->hasInstancing() : false;
+  }
+
+  virtual void update(float deltaTime) {
+    if (m_isPostUpdate_ && m_postUpdateFunc_) {
+      m_postUpdateFunc_(this, deltaTime);
+    }
+  }
+
   void showBoundBox(bool isShow) {
     if (isShow) {
       Object::s_addBoundBoxObject(m_boundBoxObject_);
@@ -266,16 +303,22 @@ class Object {
     }
   }
 
-  bool hasInstancing() const {
-    return m_renderObjects_[0] ? m_renderObjects_[0]->hasInstancing() : false;
-  }
+  // ======= END: public misc methods   =======================================
+
+
+  // TODO: make private
+  // private:
+
+
+
+  // ======= BEGIN: public misc fields ========================================
 
   std::shared_ptr<RenderObjectGeometryData> m_renderObjectGeometryDataPtr_;
   std::vector<RenderObject*>                m_renderObjects_;
 
   bool m_skipShadowMapGen_       = false;
   bool m_skipUpdateShadowVolume_ = false;
-  bool m_isVisible_                = true;
+  bool m_isVisible_              = true;
   bool m_dirtyObjectState_       = false;
 
   bool                                m_isPostUpdate_ = true;
@@ -287,19 +330,7 @@ class Object {
   BoundBox    m_boundBox_;
   BoundSphere m_boundSphere_;
 
-  // TODO: make private
-  // private:
-  static std::vector<Object*>       s_shadowCasterObject;
-  static std::vector<RenderObject*> s_shadowCasterRenderObject;
-  static std::vector<Object*>       s_staticObjects;
-  static std::vector<RenderObject*> s_staticRenderObjects;
-  static std::vector<Object*>       s_boundBoxObjects;
-  static std::vector<Object*>       s_boundSphereObjects;
-  static std::vector<Object*>       s_debugObjects;
-  // TODO: consider rename
-  static std::vector<Object*>       s_UIObjects;
-  static std::vector<Object*>       s_UIDebugObjects;
-  static std::set<Object*>          s_dirtyStateObjects;
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
