@@ -10,16 +10,24 @@
 
 namespace game_engine {
 
-
-
 class KeyboardEventHandler {
   public:
-  using EventCallback = std::function<void(const KeyboardEvent&)>;
+  // ======= BEGIN: public nested types =======================================
 
   struct EventInfo {
     KeyType    m_type;  // SDL_KEYDOWN or SDL_KEYUP
     VirtualKey m_key;
   };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public aliases ============================================
+
+  using EventCallback = std::function<void(const KeyboardEvent&)>;
+
+  // ======= END: public aliases   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   void subscribe(EventInfo eventType, const EventCallback& callback) {
     auto& subscribers = (eventType.m_type == SDL_KEYDOWN)
@@ -39,16 +47,26 @@ class KeyboardEventHandler {
     }
   }
 
+  // ======= END: public misc methods   =======================================
+
   private:
+  // ======= BEGIN: private misc methods ======================================
+
   void handleEvent_(const KeyboardEvent& event, const EventCallback& callback) {
     // Directly execute the event handling logic
     callback(event);
   }
 
+  // ======= END: private misc methods   ======================================
+
+  // ======= BEGIN: private misc fields =======================================
+
   std::unordered_map<VirtualKey, std::vector<EventCallback>>
       m_keyUpSubscribers_;
   std::unordered_map<VirtualKey, std::vector<EventCallback>>
       m_keyDownSubscribers_;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
