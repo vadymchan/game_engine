@@ -81,7 +81,7 @@ bool CommandBufferManagerDx12::initialize(ComPtr<ID3D12Device>    device,
     }
   }
 
-  m_fence = (FenceDx12*)g_rhiDx12->m_fenceManager_.getOrCreateFence();
+  m_fence_ = (FenceDx12*)g_rhiDx12->m_fenceManager_.getOrCreateFence();
 
   return true;
 }
@@ -95,7 +95,7 @@ void CommandBufferManagerDx12::executeCommandList(
   ID3D12CommandList* pCommandLists[] = {commandList->get()};
   m_commandQueue_->ExecuteCommandLists(1, pCommandLists);
 
-  auto* fence = commandList->m_owner_->m_fence;
+  auto* fence = commandList->m_owner_->m_fence_;
   assert(fence);
 
   if (fence) {
