@@ -48,9 +48,19 @@ const std::unordered_map<VkDescriptorType, float> g_kDefaultPoolSizes = {
 };
 
 struct DescriptorPoolVk {
+  // ======= BEGIN: public constructors =======================================
+
   DescriptorPoolVk() = default;
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~DescriptorPoolVk();
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void create(uint32_t maxDescriptorSets = 128);
 
@@ -62,11 +72,19 @@ struct DescriptorPoolVk {
   virtual void free(
       std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);
 
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void release();
 
   // This will be called from 'DeallocatorMultiFrameShaderBindingInstance'
   void freedFromPendingDelegate(
       std::shared_ptr<ShaderBindingInstance> shaderBindingInstance);
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   std::map<VkDescriptorSetLayout, ShaderBindingInstancePtrArray>
       m_pendingDescriptorSets_;
@@ -82,6 +100,8 @@ struct DescriptorPoolVk {
 
   DeallocatorMultiFrameShaderBindingInstance
       m_deallocateMultiframeShaderBindingInstance_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
