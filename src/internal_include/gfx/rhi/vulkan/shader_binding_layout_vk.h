@@ -7,7 +7,7 @@
 #include "gfx/rhi/shader_binding_layout.h"
 #include "gfx/rhi/vulkan/buffer_vk.h"
 // #include "gfx/rhi/vulkan/pipeline_state_info_vk.h" // circular dependency
-#include "gfx/rhi/pipeline_state_info.h" // circular dependency
+#include "gfx/rhi/pipeline_state_info.h"  // circular dependency
 #include "gfx/rhi/vulkan/texture_vk.h"
 #include "gfx/rhi/vulkan/uniform_buffer_object_vk.h"
 #include "utils/third_party/xxhash_util.h"
@@ -23,6 +23,8 @@
 namespace game_engine {
 
 struct WriteDescriptorInfo {
+  // ======= BEGIN: public constructors =======================================
+
   WriteDescriptorInfo() = default;
 
   WriteDescriptorInfo(VkDescriptorBufferInfo bufferInfo)
@@ -37,41 +39,62 @@ struct WriteDescriptorInfo {
   //     accelerationStructureInfo) :
   //     AccelerationStructureInfo(accelerationStructureInfo) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   VkDescriptorBufferInfo m_bufferInfo_{};
   VkDescriptorImageInfo  m_imageInfo_{};
   // Raytracing (WIP)
-  // VkWriteDescriptorSetAccelerationStructureKHR AccelerationStructureInfo{};
+  // VkWriteDescriptorSetAccelerationStructureKHR
+  // m_accelerationStructureInfo_{};
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct WriteDescriptorSet {
+  // ======= BEGIN: public misc methods =======================================
+
   void reset();
 
-  void setWriteDescriptorInfo(int32_t               index,
+  void setWriteDescriptorInfo(int32_t              index,
                               const ShaderBinding* shaderBinding);
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   bool                              m_isInitialized_ = false;
   std::vector<WriteDescriptorInfo>  m_writeDescriptorInfos_;
   // This is the final result, generated using WriteDescriptorInfos
   std::vector<VkWriteDescriptorSet> m_descriptorWrites_;
   std::vector<uint32_t>             m_dynamicOffsets_;
-};
 
-// ----------------------
+  // ======= END: public misc fields   ========================================
+};
 
 // TODO: move to Vulkan folder
 struct ShaderBindingInstanceVk : public ShaderBindingInstance {
-  virtual ~ShaderBindingInstanceVk() {}
-
-  const struct ShaderBindingLayoutVk* m_shaderBindingsLayouts_ = nullptr;
+  // ======= BEGIN: public static methods =====================================
 
   static void s_createWriteDescriptorSet(
-      WriteDescriptorSet&        descriptorWrites,
-      const VkDescriptorSet      descriptorSet,
+      WriteDescriptorSet&       descriptorWrites,
+      const VkDescriptorSet     descriptorSet,
       const ShaderBindingArray& shaderBindingArray);
 
   static void s_updateWriteDescriptorSet(
-      WriteDescriptorSet&        descriptorWrites,
+      WriteDescriptorSet&       descriptorWrites,
       const ShaderBindingArray& shaderBindingArray);
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  virtual ~ShaderBindingInstanceVk() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual void initialize(
       const ShaderBindingArray& shaderBindingArray) override;
@@ -79,34 +102,79 @@ struct ShaderBindingInstanceVk : public ShaderBindingInstance {
   virtual void updateShaderBindings(
       const ShaderBindingArray& shaderBindingArray) override;
 
+  virtual void free() override;
+
   virtual void* getHandle() const override { return m_descriptorSet_; }
 
   virtual const std::vector<uint32_t>* getDynamicOffsets() const override {
     return &m_writeDescriptorSet_.m_dynamicOffsets_;
   }
 
-  virtual void free() override;
+  virtual ShaderBindingInstanceType getType() const override { return m_type_; }
 
-  virtual ShaderBindingInstanceType getType() const { return m_type_; }
-
-  virtual void setType(const ShaderBindingInstanceType type) {
+  virtual void setType(const ShaderBindingInstanceType type) override {
     m_type_ = type;
   }
 
-  private:
-  ShaderBindingInstanceType m_type_ = ShaderBindingInstanceType::SingleFrame;
+  // ======= END: public overridden methods   =================================
 
-  public:
+  // ======= BEGIN: public constants ==========================================
+
+  const struct ShaderBindingLayoutVk* m_shaderBindingsLayouts_ = nullptr;
+
+  // ======= END: public constants   ==========================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   // When the DescriptorPool is released, everything can be handled, so it is
   // not separately destroyed
   VkDescriptorSet    m_descriptorSet_ = nullptr;
   WriteDescriptorSet m_writeDescriptorSet_;
+
+  // ======= END: public misc fields   ========================================
+
+  private:
+  // ======= BEGIN: private misc fields =======================================
+
+  ShaderBindingInstanceType m_type_ = ShaderBindingInstanceType::SingleFrame;
+
+  // ======= END: private misc fields   =======================================
 };
 
 struct ShaderBindingLayoutVk;
 
 struct ShaderBindingLayoutVk : public ShaderBindingLayout {
+  // ======= BEGIN: public static methods =====================================
+
+  static VkDescriptorSetLayout s_createDescriptorSetLayout(
+      const ShaderBindingArray& shaderBindingArray);
+
+  static VkPipelineLayout s_createPipelineLayout(
+      const ShaderBindingLayoutArray& shaderBindingLayoutArray,
+      const PushConstant*             pushConstant);
+
+  static void s_clearPipelineLayout();
+
+  // ======= END: public static methods   =====================================
+
+  // ======= BEGIN: public static fields ======================================
+
+  static MutexRWLock s_descriptorLayoutPoolLock;
+  static std::unordered_map<size_t, VkDescriptorSetLayout>
+      s_descriptorLayoutPool;
+
+  static MutexRWLock                                  s_pipelineLayoutPoolLock;
+  static std::unordered_map<size_t, VkPipelineLayout> s_pipelineLayoutPool;
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~ShaderBindingLayoutVk() { release(); }
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   virtual bool initialize(
       const ShaderBindingArray& shaderBindingArray) override;
@@ -123,34 +191,35 @@ struct ShaderBindingLayoutVk : public ShaderBindingLayout {
 
   virtual void* getHandle() const override { return m_descriptorSetLayout_; }
 
-  void release();
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: protected getters =========================================
 
   // TODO: not used
   std::vector<VkDescriptorPoolSize> getDescriptorPoolSizeArray(
       uint32_t maxAllocations) const;
 
-  mutable size_t m_hash_ = 0;
+  // ======= END: protected getters   =========================================
 
-  protected:
-  ShaderBindingArray m_shaderBindingArray_;
+  // ======= BEGIN: public misc methods =======================================
 
-  public:
-  static VkDescriptorSetLayout s_createDescriptorSetLayout(
-      const ShaderBindingArray& shaderBindingArray);
+  void release();
 
-  static VkPipelineLayout s_createPipelineLayout(
-      const ShaderBindingLayoutArray& shaderBindingLayoutArray,
-      const PushConstant*             pushConstant);
+  // ======= END: public misc methods   =======================================
 
-  static void s_clearPipelineLayout();
+  // ======= BEGIN: public misc fields ========================================
 
+  mutable size_t        m_hash_                = 0;
   VkDescriptorSetLayout m_descriptorSetLayout_ = nullptr;
 
-  static MutexRWLock s_descriptorLayoutPoolLock;
-  static std::unordered_map<size_t, VkDescriptorSetLayout> s_descriptorLayoutPool;
+  // ======= END: public misc fields   ========================================
 
-  static MutexRWLock                                  s_pipelineLayoutPoolLock;
-  static std::unordered_map<size_t, VkPipelineLayout> s_pipelineLayoutPool;
+  protected:
+  // ======= BEGIN: protected misc fields =====================================
+
+  ShaderBindingArray m_shaderBindingArray_;
+
+  // ======= END: protected misc fields   =====================================
 };
 
 }  // namespace game_engine
