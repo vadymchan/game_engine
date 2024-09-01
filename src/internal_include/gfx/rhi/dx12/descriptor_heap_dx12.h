@@ -10,27 +10,49 @@ namespace game_engine {
 
 // TODO: consider moving this to a separate file
 struct DescriptorDx12 {
+  // ======= BEGIN: public static fields ======================================
+
+  static const DescriptorDx12 s_kInvalid;
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void free();
 
   bool isValid() const { return m_index_ != -1; }
 
-  static const DescriptorDx12 s_kInvalid;
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   D3D12_CPU_DESCRIPTOR_HANDLE             m_cpuHandle_ = {};
   D3D12_GPU_DESCRIPTOR_HANDLE             m_gpuHandle_ = {};
   uint32_t                                m_index_     = uint32_t(-1);
   std::weak_ptr<class DescriptorHeapDx12> m_descriptorHeap_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class DescriptorHeapDx12
     : public std::enable_shared_from_this<DescriptorHeapDx12> {
   public:
-  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
+  // ======= BEGIN: public nested types =======================================
 
   struct PendingForFree {
     uint32_t m_descriptorIndex_ = UINT_MAX;
     uint32_t m_frameIndex_      = 0;
   };
+
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public static fields ======================================
+
+  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   void initialize(EDescriptorHeapTypeDX12 heapType,
                   bool                    shaderVisible,
@@ -82,6 +104,10 @@ class DescriptorHeapDx12
   // offset, uint32_t stride, uint32_t numOfElement, ETextureFormat
   // format = ETextureFormat::MAX);
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   ComPtr<ID3D12DescriptorHeap> m_heap_;
   EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
   D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandleStart_   = {};
@@ -93,14 +119,20 @@ class DescriptorHeapDx12
 
   std::vector<PendingForFree> m_pendingFree_;
   int32_t m_canReleasePendingFreeShaderBindingInstanceFrameNumber_ = 0;
+
+  // ======= END: public misc fields   ========================================
 };
 
 struct DescriptorBlockDx12 {
+  // ======= BEGIN: public misc fields ========================================
+
   class OnlineDescriptorHeapBlocksDx12* m_descriptorHeapBlocks_ = nullptr;
   EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
   int32_t                 m_index_    = 0;
   int32_t                 m_allocatedSize_ = 0;
   std::vector<DescriptorDx12> m_descriptors_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 class OnlineDescriptorHeapDx12;
@@ -109,12 +141,7 @@ class OnlineDescriptorHeapDx12;
 // - The Block name is OnlineDescriptorHeapDx12
 class OnlineDescriptorHeapBlocksDx12 {
   public:
-  static constexpr int32_t s_kDescriptorsInBlock        = 5000;
-  static constexpr int32_t s_kTotalHeapSize             = 500'000;
-  static constexpr int32_t s_kSamplerDescriptorsInBlock = 100;
-  static constexpr int32_t s_kSamplerTotalHeapSize      = 2000;
-
-  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
+  // ======= BEGIN: public nested types =======================================
 
   struct FreeData {
     bool isValid() const { return m_index_ != -1; }
@@ -130,6 +157,21 @@ class OnlineDescriptorHeapBlocksDx12 {
     }
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public static fields ======================================
+
+  static constexpr int32_t s_kDescriptorsInBlock        = 5000;
+  static constexpr int32_t s_kTotalHeapSize             = 500'000;
+  static constexpr int32_t s_kSamplerDescriptorsInBlock = 100;
+  static constexpr int32_t s_kSamplerTotalHeapSize      = 2000;
+
+  static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
+
+  // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void initialize(EDescriptorHeapTypeDX12 heapType,
                   uint32_t                totalHeapSize,
                   uint32_t                descriptorsInBlock);
@@ -137,6 +179,10 @@ class OnlineDescriptorHeapBlocksDx12 {
 
   OnlineDescriptorHeapDx12* alloc();
   void                      free(int32_t index);
+
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   ComPtr<ID3D12DescriptorHeap> m_heap_;
   EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
@@ -150,6 +196,8 @@ class OnlineDescriptorHeapBlocksDx12 {
   std::vector<DescriptorBlockDx12>       m_descriptorBlocks_;
 
   mutable MutexLock m_descriptorBlockLock_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 // Each CommandList has its own OnlineDescriptorHeap, allocated from
@@ -158,6 +206,37 @@ class OnlineDescriptorHeapBlocksDx12 {
 // competing for allocations from the OnlineDescriptor.
 class OnlineDescriptorHeapDx12 {
   public:
+  // ======= BEGIN: public getters ============================================
+
+  int32_t getNumOfAllocated() const { return m_numOfAllocated_; }
+
+  D3D12_GPU_DESCRIPTOR_HANDLE getGPUHandle(size_t index) const {
+    return D3D12_GPU_DESCRIPTOR_HANDLE(
+        m_gpuHandle_.ptr
+        + index
+              * m_descriptorBlocks_->m_descriptorHeapBlocks_
+                    ->m_descriptorSize_);
+  }
+
+  // TODO: not used
+  D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandle() const { return m_cpuHandle_; }
+
+  // TODO: not used
+  D3D12_GPU_DESCRIPTOR_HANDLE getGPUHandle() const { return m_gpuHandle_; }
+
+  ID3D12DescriptorHeap* getHeap() const { return m_heap_; }
+
+  // TODO: not used
+  uint32_t getDescriptorSize() const {
+    assert(m_descriptorBlocks_);
+    assert(m_descriptorBlocks_->m_descriptorHeapBlocks_);
+    return m_descriptorBlocks_->m_descriptorHeapBlocks_->m_descriptorSize_;
+  }
+
+  // ======= END: public getters   ============================================
+
+  // ======= BEGIN: public misc methods =======================================
+
   void initialize(DescriptorBlockDx12* descriptorBlocks) {
     m_descriptorBlocks_ = descriptorBlocks;
     if (m_descriptorBlocks_) {
@@ -190,43 +269,26 @@ class OnlineDescriptorHeapDx12 {
         >= size;
   }
 
-  int32_t getNumOfAllocated() const { return m_numOfAllocated_; }
-
-  D3D12_GPU_DESCRIPTOR_HANDLE getGPUHandle(size_t index) const {
-    return D3D12_GPU_DESCRIPTOR_HANDLE(
-        m_gpuHandle_.ptr
-        + index
-              * m_descriptorBlocks_->m_descriptorHeapBlocks_
-                    ->m_descriptorSize_);
-  }
-  
-  // TODO: not used
-  D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandle() const { return m_cpuHandle_; }
-
-  // TODO: not used
-  D3D12_GPU_DESCRIPTOR_HANDLE getGPUHandle() const { return m_gpuHandle_; }
-
-  ID3D12DescriptorHeap* getHeap() const { return m_heap_; }
-
-  // TODO: not used
-  uint32_t getDescriptorSize() const {
-    assert(m_descriptorBlocks_);
-    assert(m_descriptorBlocks_->m_descriptorHeapBlocks_);
-    return m_descriptorBlocks_->m_descriptorHeapBlocks_->m_descriptorSize_;
-  }
+  // ======= END: public misc methods   =======================================
 
   private:
+  // ======= BEGIN: private misc fields =======================================
+
   ID3D12DescriptorHeap*       m_heap_             = nullptr;
   DescriptorBlockDx12*        m_descriptorBlocks_ = nullptr;
   D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle_        = {};
   D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle_        = {};
   int32_t                     m_numOfAllocated_   = 0;
+
+  // ======= END: private misc fields   =======================================
 };
 
 // Manages the OnlineDescriptorHeapBlock and allocates additional
 // descriptorHeapBlocks when needed.
 class OnlineDescriptorManager {
   public:
+  // ======= BEGIN: public misc methods =======================================
+
   OnlineDescriptorHeapDx12* alloc(EDescriptorHeapTypeDX12 type) {
     std::vector<OnlineDescriptorHeapBlocksDx12*>& descriptorHeapBlocks
         = m_onlineDescriptorHeapBlocks_[(int32_t)type];
@@ -297,12 +359,20 @@ class OnlineDescriptorManager {
     }
   }
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   std::vector<OnlineDescriptorHeapBlocksDx12*>
       m_onlineDescriptorHeapBlocks_[(int32_t)EDescriptorHeapTypeDX12::MAX];
+
+  // ======= END: public misc fields   ========================================
 };
 
 class OfflineDescriptorHeapDx12 {
   public:
+  // ======= BEGIN: public misc methods =======================================
+
   void initialize(EDescriptorHeapTypeDX12 heapType) {
     assert(!m_isInitialized_);
 
@@ -366,7 +436,11 @@ class OfflineDescriptorHeapDx12 {
     m_heap_.clear();
   }
 
+  // ======= END: public misc methods   =======================================
+
   private:
+  // ======= BEGIN: private misc methods ======================================
+
   std::shared_ptr<DescriptorHeapDx12> createDescriptorHeap_() {
     auto descriptorHeap = std::make_shared<DescriptorHeapDx12>();
     assert(descriptorHeap);
@@ -377,11 +451,17 @@ class OfflineDescriptorHeapDx12 {
     return descriptorHeap;
   }
 
+  // ======= END: private misc methods   ======================================
+
+  // ======= BEGIN: private misc fields =======================================
+
   bool                    m_isInitialized_ = false;
   EDescriptorHeapTypeDX12 m_heapType_ = EDescriptorHeapTypeDX12::CBV_SRV_UAV;
 
   std::shared_ptr<DescriptorHeapDx12>              m_currentHeap_;
   std::vector<std::shared_ptr<DescriptorHeapDx12>> m_heap_;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
