@@ -17,7 +17,7 @@ std::shared_ptr<Material> g_defaultMaterial = nullptr;
 
 TResourcePool<Shader, MutexRWLock> RHI::s_shaderPool;
 
-const RTClearValue RTClearValue::s_kInvalid = RTClearValue();
+const RtClearValue RtClearValue::s_kInvalid = RtClearValue();
 
 bool RHI::init(const std::shared_ptr<Window>& window) {
   return false;
