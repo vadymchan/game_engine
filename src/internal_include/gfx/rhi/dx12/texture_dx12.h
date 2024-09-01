@@ -11,6 +11,8 @@ namespace game_engine {
 
 // TODO: constructors
 struct TextureDx12 : public Texture {
+  // ======= BEGIN: public constructors =======================================
+
   TextureDx12() = default;
 
   TextureDx12(ETextureType                            type,
@@ -19,7 +21,7 @@ struct TextureDx12 : public Texture {
               int32_t                                 layerCount,
               EMSAASamples                            sampleCount,
               bool                                    sRGB,
-              const RTClearValue&                     clearValue,
+              const RtClearValue&                     clearValue,
               const std::shared_ptr<CreatedResource>& image,
               DescriptorDx12                          rtv = {},
               DescriptorDx12                          dsv = {},
@@ -34,7 +36,27 @@ struct TextureDx12 : public Texture {
       , m_uav_(uav)
       , m_layout_(imageLayout) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~TextureDx12();
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
+
+  virtual void release() override;
+
+  virtual void* getHandle() const override { return m_texture->get(); }
+
+  virtual void* getSamplerStateHandle() const override { return nullptr; }
+
+  virtual EResourceLayout getLayout() const override { return m_layout_; }
+
+  // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public misc fields ========================================
 
   std::shared_ptr<CreatedResource>  m_texture;
   EResourceLayout                   m_layout_ = EResourceLayout::UNDEFINED;
@@ -45,13 +67,7 @@ struct TextureDx12 : public Texture {
   DescriptorDx12                    m_dsv_;
   std::map<int32_t, DescriptorDx12> m_uavMipMap;
 
-  virtual void* getHandle() const override { return m_texture->get(); }
-
-  virtual void* getSamplerStateHandle() const override { return nullptr; }
-
-  virtual void release() override;
-
-  virtual EResourceLayout getLayout() const override { return m_layout_; }
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
