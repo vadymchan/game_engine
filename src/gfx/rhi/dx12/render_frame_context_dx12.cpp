@@ -17,7 +17,7 @@ void RenderFrameContextDx12::queueSubmitCurrentActiveCommandBuffer() {
     // get new commandbuffer
     m_commandBuffer_ = commandBufferManager->getOrCreateCommandBuffer();
     g_rhiDx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
-        = commandBufferDx12->m_owner_->m_fence->signalWithNextFenceValue(
+        = commandBufferDx12->m_owner_->m_fence_->signalWithNextFenceValue(
             commandBufferDx12->m_owner_->getCommandQueue().Get());
   }
 }
@@ -35,7 +35,7 @@ void RenderFrameContextDx12::submitCurrentActiveCommandBuffer(
     // get new commandbuffer
     m_commandBuffer_ = commandBufferManager->getOrCreateCommandBuffer();
     g_rhiDx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
-        = commandBufferDx12->m_owner_->m_fence->signalWithNextFenceValue(
+        = commandBufferDx12->m_owner_->m_fence_->signalWithNextFenceValue(
             commandBufferDx12->m_owner_->getCommandQueue().Get());
   }
 }
