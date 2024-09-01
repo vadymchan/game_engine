@@ -171,7 +171,7 @@ CheckOptions:
 
   # constant parameters: camelCase
   - key: readability-identifier-naming.ConstantParameterCase
-    value: camelBack
+    value: CamelCase
 
   # local variables: camelCase
   - key: readability-identifier-naming.LocalVariableCase
