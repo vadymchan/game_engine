@@ -6,17 +6,29 @@
 namespace game_engine {
 
 struct RenderFrameContextDx12 : public RenderFrameContext {
+  // ======= BEGIN: public constructors =======================================
+
   RenderFrameContextDx12() = default;
 
   RenderFrameContextDx12(CommandBuffer* commandBuffer)
       : RenderFrameContext(commandBuffer) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   virtual ~RenderFrameContextDx12() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public overridden methods =================================
 
   // TODO: seems this method is not used
   virtual void queueSubmitCurrentActiveCommandBuffer();
   virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) override;
+
+  // ======= END: public overridden methods   =================================
 };
 
 }  // namespace game_engine
