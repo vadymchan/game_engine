@@ -19,6 +19,8 @@ namespace game_engine {
 // TODO: consider renaming class (e.g. Application)
 class Game {
   public:
+  // ======= BEGIN: public nested types =======================================
+
   enum class ESpawnedType {
     None = 0,
     TestPrimitive,
@@ -27,10 +29,22 @@ class Game {
     IndirectDrawPrimitive,
   };
 
+  // ======= END: public nested types   =======================================
+
+  // ======= BEGIN: public constructors =======================================
+
   Game(std::shared_ptr<Window> window)
       : m_window_(std::move(window)) {}
 
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public destructor =========================================
+
   ~Game() {}
+
+  // ======= END: public destructor   =========================================
+
+  // ======= BEGIN: public misc methods =======================================
 
   void processInput(/*float deltaTime*/) {
     // TODO: implement
@@ -95,6 +109,10 @@ class Game {
 
   void release();
 
+  // ======= END: public misc methods   =======================================
+
+  // ======= BEGIN: public misc fields ========================================
+
   Camera* m_mainCamera_ = nullptr;
 
   std::vector<Object*> m_spawnedObjects_;
@@ -110,6 +128,8 @@ class Game {
 
   // TODO: not used
   MutexLock m_asyncLoadLock_;
+
+  // ======= END: public misc fields   ========================================
 };
 
 }  // namespace game_engine
