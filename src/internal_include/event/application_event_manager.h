@@ -11,6 +11,17 @@ namespace game_engine {
 
 class ApplicationEventManager {
   public:
+          // ======= BEGIN: public constructors =======================================
+
+
+
+  // ======= END: public constructors   =======================================
+
+  // ======= BEGIN: public misc methods =======================================
+
+
+
+  // ======= END: public misc methods   =======================================
   ApplicationEventManager(std::shared_ptr<ApplicationEventHandler> applicationHandler)
       : m_applicationHandler_(std::move(applicationHandler)) {}
 
@@ -22,6 +33,12 @@ class ApplicationEventManager {
   }
 
   private:
+        // ======= BEGIN: private misc fields =======================================
+
+
+
+  // ======= END: private misc fields   =======================================
+
   std::shared_ptr<ApplicationEventHandler> m_applicationHandler_;
 };
 
