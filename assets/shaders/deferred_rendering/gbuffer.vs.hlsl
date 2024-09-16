@@ -1,7 +1,7 @@
 #include "../common.hlsli"
 
 #if USE_SPHERICAL_MAP
-#include "../shperical_map.hlsl"
+#include "../spherical_map.hlsli"
 #endif
 
 #ifndef USE_VERTEX_COLOR
