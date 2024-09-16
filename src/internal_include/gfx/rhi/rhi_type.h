@@ -24,111 +24,92 @@ namespace game_engine {
 
 //////////////////////////////////////////////////////////////////////////
 // Auto generate type conversion code
-template <typename T1, typename T2>
-using ConversionTypePair = std::pair<T1, T2>;
-
-// get the first type of Parameter Packs
-template <typename T, typename... T1>
-using PacksType = T;
-
-
-template <typename... T1>
-constexpr auto g_generateConversionTypeArray(T1... args) {
-  static_assert(sizeof...(T1) > 0, "At least one argument is required");
-
-  using first_arg_type =
-      typename std::tuple_element<0, std::tuple<T1...>>::type;
-  using value_type = typename first_arg_type::second_type;
-
-  std::array<value_type, sizeof...(args)> newArray{};
-  auto addElementFunc = [&newArray](const auto& arg) {
-    newArray[static_cast<size_t>(arg.first)] = arg.second;
-  };
-
-  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
-  return newArray;
-}
-
-template <typename... T1>
-constexpr auto g_generateConversionTypeMap(T1... args) {
-  static_assert(sizeof...(T1) > 0, "At least one argument is required");
-
-  using first_arg_type =
-      typename std::tuple_element<0, std::tuple<T1...>>::type;
-  using key_type   = typename first_arg_type::first_type;
-  using value_type = typename first_arg_type::second_type;
-
-  std::unordered_map<key_type, value_type> newMap;
-  auto addElementFunc = [&newMap](const auto& arg) { newMap.insert(arg); };
-
-  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
-  return newMap;
-}
-
-template <typename... T1>
-constexpr auto g_generateInverseConversionTypeMap(T1... args) {
-  static_assert(sizeof...(T1) > 0, "At least one argument is required");
-
-  using first_arg_type =
-      typename std::tuple_element<0, std::tuple<T1...>>::type;
-  using key_type   = typename first_arg_type::second_type;
-  using value_type = typename first_arg_type::first_type;
-
-  std::unordered_map<key_type, value_type> newMap;
-  auto                                     addElementFunc
-      = [&newMap](const auto& arg) { newMap[arg.second] = arg.first; };
-
-  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
-  return newMap;
-}
-
-#define CONVERSION_TYPE_ELEMENT(x, y) \
-  ConversionTypePair<decltype(x), decltype(y)>(x, y)
-
-// Macro to insert the given elements into an array. This is used for converting
-// from engine types to API types. It's suitable for arrays because the range of
-// engine types is small and all integer values from 0 to N are used.
-#define GENERATE_STATIC_CONVERSION_ARRAY(...)                             \
-  {                                                                       \
-    static auto _TypeArray_ = g_generateConversionTypeArray(__VA_ARGS__); \
-    return _TypeArray_[(int64_t)type];                                    \
-  }
-
-// Macro to insert the given elements into a map. This is used for converting
-// from API types to engine types. Maps are used here because the range of
-// engine types can be large or mixed, making arrays inefficient due to memory
-// waste.
-#define GENERATE_STATIC_CONVERSION_MAP(...)                           \
-  {                                                                   \
-    static auto _TypeMap_ = g_generateConversionTypeMap(__VA_ARGS__); \
-    return _TypeMap_[type];                                           \
-  }
-#define GENERATE_STATIC_INVERSECONVERSION_MAP(...)                           \
-  {                                                                          \
-    static auto _TypeMap_ = g_generateInverseConversionTypeMap(__VA_ARGS__); \
-    return _TypeMap_[type];                                                  \
-  }
-
-// Macro to obtain the first item of a variadic macro
-#define DEDUCE_FIRST(First, ...) First
-
-// Macro to generate functions for converting between engine types and API types
-#define GENERATE_CONVERSION_FUNCTION(FunctionName, ...)                        \
-  inline auto FunctionName(                                                    \
-      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type type) {         \
-    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
-    using value_type =                                                         \
-        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
-    GENERATE_STATIC_CONVERSION_ARRAY(__VA_ARGS__)                              \
-  }                                                                            \
-  inline auto FunctionName(                                                    \
-      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type type) {        \
-    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
-    using value_type =                                                         \
-        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
-    GENERATE_STATIC_INVERSECONVERSION_MAP(__VA_ARGS__)                         \
-  }
-
+// template <typename T1, typename T2>
+// using ConversionTypePair = std::pair<T1, T2>;
+//template <typename T1, typename T2>
+//struct ConversionTypePair : std::pair<T1, T2> {
+//  using first_type  = T1;
+//  using second_type = T2;
+//
+//  ConversionTypePair(const T1& x, const T2& y)
+//      : std::pair<T1, T2>(x, y) {}
+//};
+//
+//template <typename... T1>
+//constexpr auto g_generateConversionTypeArray(T1... args) {
+//  static_assert(sizeof...(T1) > 0, "At least one argument is required");
+//
+//  using first_arg_type =
+//      typename std::tuple_element<0, std::tuple<T1...>>::type;
+//  using value_type = typename first_arg_type::second_type;
+//
+//  std::array<value_type, sizeof...(args)> newArray{};
+//  auto addElementFunc = [&newArray](const auto& arg) {
+//    newArray[static_cast<size_t>(arg.first)] = arg.second;
+//  };
+//
+//  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
+//  return newArray;
+//}
+//
+//template <typename... T1>
+//constexpr auto g_generateInverseConversionTypeMap(T1... args) {
+//  static_assert(sizeof...(T1) > 0, "At least one argument is required");
+//
+//  using first_arg_type =
+//      typename std::tuple_element<0, std::tuple<T1...>>::type;
+//  using key_type   = typename first_arg_type::second_type;
+//  using value_type = typename first_arg_type::first_type;
+//
+//  std::unordered_map<key_type, value_type> newMap;
+//  auto                                     addElementFunc
+//      = [&newMap](const auto& arg) { newMap[arg.second] = arg.first; };
+//
+//  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
+//  return newMap;
+//}
+//
+//#define CONVERSION_TYPE_ELEMENT(x, y) \
+//  ConversionTypePair<decltype(x), decltype(y)>(x, y)
+//
+//// Macro to insert the given elements into an array. This is used for converting
+//// from engine types to API types. It's suitable for arrays because the range of
+//// engine types is small and all integer values from 0 to N are used.
+//#define GENERATE_STATIC_CONVERSION_ARRAY(...)                             \
+//  {                                                                       \
+//    static auto _TypeArray_ = g_generateConversionTypeArray(__VA_ARGS__); \
+//    return _TypeArray_[(int64_t)type];                                    \
+//  }
+//
+//// Macro to insert the given elements into a map. This is used for converting
+//// from API types to engine types. Maps are used here because the range of
+//// engine types can be large or mixed, making arrays inefficient due to memory
+//// waste.
+//#define GENERATE_STATIC_INVERSECONVERSION_MAP(...)                           \
+//  {                                                                          \
+//    static auto _TypeMap_ = g_generateInverseConversionTypeMap(__VA_ARGS__); \
+//    return _TypeMap_[type];                                                  \
+//  }
+//
+//// Macro to obtain the first item of a variadic macro
+//#define DEDUCE_FIRST(First, ...) First
+//
+//// Macro to generate functions for converting between engine types and API types
+//#define GENERATE_CONVERSION_FUNCTION(FunctionName, ...)                        \
+//  inline auto FunctionName(                                                    \
+//      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type type) {         \
+//    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
+//    using value_type =                                                         \
+//        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
+//    GENERATE_STATIC_CONVERSION_ARRAY(__VA_ARGS__)                              \
+//  }                                                                            \
+//  inline auto FunctionName(                                                    \
+//      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type type) {        \
+//    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
+//    using value_type =                                                         \
+//        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
+//    GENERATE_STATIC_INVERSECONVERSION_MAP(__VA_ARGS__)                         \
+//  }
 
 template <typename EnumType>
 std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
@@ -144,10 +125,6 @@ std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
 
   return result;
 }
-
-#define MAKE_ENUM_TO_STRING_CONT(EnumType, N, EnumListString) \
-  static std::array<const char*, N> EnumType##Strings         \
-      = split(EnumListString, ',');
 
 // Macro to declare an enum class and generate a function for converting enum
 // values to strings
@@ -300,42 +277,83 @@ DECLARE_ENUM_WITH_CONVERT_TO_STRING(EFormatType,
 // clang-format off
 
 // TODO: not used
-GENERATE_CONVERSION_FUNCTION(g_getTexturePixelType,
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB8, EFormatType::UNSIGNED_BYTE),          // not support rgb8 -> rgba8
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB32F, EFormatType::HALF),                 // not support rgb32 -> rgba32
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB16F, EFormatType::HALF),                 // not support rgb16 -> rgba16
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::R11G11B10F, EFormatType::HALF),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA8, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA16F, EFormatType::HALF),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA32F, EFormatType::FLOAT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA8SI, EFormatType::INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA8UI, EFormatType::INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BGRA8, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::R8, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::R16F, EFormatType::HALF),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::R32F, EFormatType::FLOAT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::R8UI, EFormatType::INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::R32UI, EFormatType::INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RG8, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RG16F, EFormatType::HALF),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::RG32F, EFormatType::FLOAT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::D16, EFormatType::SHORT_INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::D16_S8, EFormatType::INT),                  // not support d16_s8 -> d24_s8
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::D24, EFormatType::INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::D24_S8, EFormatType::INT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::D32, EFormatType::FLOAT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::D32_S8, EFormatType::FLOAT),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC1_UNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC2_UNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC3_UNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC4_UNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC4_SNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC5_UNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC5_SNORM, EFormatType::UNSIGNED_BYTE),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC6H_UF16, EFormatType::HALF),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC6H_SF16, EFormatType::HALF),
-    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC7_UNORM, EFormatType::HALF)
-)
+//GENERATE_CONVERSION_FUNCTION(g_getTexturePixelType,
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB8, EFormatType::UNSIGNED_BYTE),          // not support rgb8 -> rgba8
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB32F, EFormatType::HALF),                 // not support rgb32 -> rgba32
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGB16F, EFormatType::HALF),                 // not support rgb16 -> rgba16
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::R11G11B10F, EFormatType::HALF),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA8, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA16F, EFormatType::HALF),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA32F, EFormatType::FLOAT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA8SI, EFormatType::INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RGBA8UI, EFormatType::INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BGRA8, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::R8, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::R16F, EFormatType::HALF),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::R32F, EFormatType::FLOAT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::R8UI, EFormatType::INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::R32UI, EFormatType::INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RG8, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RG16F, EFormatType::HALF),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::RG32F, EFormatType::FLOAT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::D16, EFormatType::SHORT_INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::D16_S8, EFormatType::INT),                  // not support d16_s8 -> d24_s8
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::D24, EFormatType::INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::D24_S8, EFormatType::INT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::D32, EFormatType::FLOAT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::D32_S8, EFormatType::FLOAT),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC1_UNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC2_UNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC3_UNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC4_UNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC4_SNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC5_UNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC5_SNORM, EFormatType::UNSIGNED_BYTE),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC6H_UF16, EFormatType::HALF),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC6H_SF16, EFormatType::HALF),
+//    CONVERSION_TYPE_ELEMENT(ETextureFormat::BC7_UNORM, EFormatType::HALF)
+//)
+
+inline EFormatType g_getTexturePixelType(ETextureFormat textureFormat) {
+    static const std::unordered_map<ETextureFormat, EFormatType> formatMapping = {
+        {ETextureFormat::RGB8,       EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::RGB32F,     EFormatType::HALF},
+        {ETextureFormat::RGB16F,     EFormatType::HALF},
+        {ETextureFormat::R11G11B10F, EFormatType::HALF},
+        {ETextureFormat::RGBA8,      EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::RGBA16F,    EFormatType::HALF},
+        {ETextureFormat::RGBA32F,    EFormatType::FLOAT},
+        {ETextureFormat::RGBA8SI,    EFormatType::INT},
+        {ETextureFormat::RGBA8UI,    EFormatType::INT},
+        {ETextureFormat::BGRA8,      EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::R8,         EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::R16F,       EFormatType::HALF},
+        {ETextureFormat::R32F,       EFormatType::FLOAT},
+        {ETextureFormat::R8UI,       EFormatType::INT},
+        {ETextureFormat::R32UI,      EFormatType::INT},
+        {ETextureFormat::RG8,        EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::RG16F,      EFormatType::HALF},
+        {ETextureFormat::RG32F,      EFormatType::FLOAT},
+        {ETextureFormat::D16,        EFormatType::SHORT_INT},
+        {ETextureFormat::D16_S8,     EFormatType::INT},
+        {ETextureFormat::D24,        EFormatType::INT},
+        {ETextureFormat::D24_S8,     EFormatType::INT},
+        {ETextureFormat::D32,        EFormatType::FLOAT},
+        {ETextureFormat::D32_S8,     EFormatType::FLOAT},
+        {ETextureFormat::BC1_UNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC2_UNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC3_UNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC4_UNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC4_SNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC5_UNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC5_SNORM,  EFormatType::UNSIGNED_BYTE},
+        {ETextureFormat::BC6H_UF16,  EFormatType::HALF},
+        {ETextureFormat::BC6H_SF16,  EFormatType::HALF},
+        {ETextureFormat::BC7_UNORM,  EFormatType::HALF}
+    };
+
+    return getEnumMapping(textureFormat, formatMapping, EFormatType::MAX);
+}
 
 // clang-format on
 
