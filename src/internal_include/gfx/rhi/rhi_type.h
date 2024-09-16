@@ -10,6 +10,7 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 
@@ -30,47 +31,54 @@ using ConversionTypePair = std::pair<T1, T2>;
 template <typename T, typename... T1>
 using PacksType = T;
 
+
 template <typename... T1>
 constexpr auto g_generateConversionTypeArray(T1... args) {
-  // Obtain the second_type of the first type in a parameter pack made of
-  // std::pairs
-  using value_type = typename PacksType<T1...>::second_type;
+  static_assert(sizeof...(T1) > 0, "At least one argument is required");
 
-  std::array<value_type, sizeof...(args)> newArray;
+  using first_arg_type =
+      typename std::tuple_element<0, std::tuple<T1...>>::type;
+  using value_type = typename first_arg_type::second_type;
+
+  std::array<value_type, sizeof...(args)> newArray{};
   auto addElementFunc = [&newArray](const auto& arg) {
-    newArray[(int64_t)arg.first] = arg.second;
+    newArray[static_cast<size_t>(arg.first)] = arg.second;
   };
 
-  int dummy[] = {0, (addElementFunc(args), 0)...};
+  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
   return newArray;
 }
 
 template <typename... T1>
 constexpr auto g_generateConversionTypeMap(T1... args) {
-  // Obtain the first_type and second_type from the first type in a parameter
-  // pack made of std::pairs
-  using key_type   = typename PacksType<T1...>::first_type;
-  using value_type = typename PacksType<T1...>::second_type;
+  static_assert(sizeof...(T1) > 0, "At least one argument is required");
+
+  using first_arg_type =
+      typename std::tuple_element<0, std::tuple<T1...>>::type;
+  using key_type   = typename first_arg_type::first_type;
+  using value_type = typename first_arg_type::second_type;
 
   std::unordered_map<key_type, value_type> newMap;
   auto addElementFunc = [&newMap](const auto& arg) { newMap.insert(arg); };
 
-  int dummy[] = {0, (addElementFunc(args), 0)...};
+  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
   return newMap;
 }
 
 template <typename... T1>
 constexpr auto g_generateInverseConversionTypeMap(T1... args) {
-  // Obtain the second_type as key and first_type as value from the first type
-  // in a parameter pack made of std::pairs
-  using key_type   = typename PacksType<T1...>::second_type;
-  using value_type = typename PacksType<T1...>::first_type;
+  static_assert(sizeof...(T1) > 0, "At least one argument is required");
+
+  using first_arg_type =
+      typename std::tuple_element<0, std::tuple<T1...>>::type;
+  using key_type   = typename first_arg_type::second_type;
+  using value_type = typename first_arg_type::first_type;
 
   std::unordered_map<key_type, value_type> newMap;
   auto                                     addElementFunc
       = [&newMap](const auto& arg) { newMap[arg.second] = arg.first; };
 
-  int dummy[] = {0, (addElementFunc(args), 0)...};
+  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
   return newMap;
 }
 
@@ -105,17 +113,22 @@ constexpr auto g_generateInverseConversionTypeMap(T1... args) {
 #define DEDUCE_FIRST(First, ...) First
 
 // Macro to generate functions for converting between engine types and API types
-#define GENERATE_CONVERSION_FUNCTION(FunctionName, ...)          \
-  using FunctionName##key_type =                                 \
-      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type;  \
-  using FunctionName##value_type =                               \
-      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type; \
-  inline auto FunctionName(FunctionName##key_type type) {        \
-    GENERATE_STATIC_CONVERSION_ARRAY(__VA_ARGS__)                \
-  }                                                              \
-  inline auto FunctionName(FunctionName##value_type type) {      \
-    GENERATE_STATIC_INVERSECONVERSION_MAP(__VA_ARGS__)           \
+#define GENERATE_CONVERSION_FUNCTION(FunctionName, ...)                        \
+  inline auto FunctionName(                                                    \
+      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type type) {         \
+    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
+    using value_type =                                                         \
+        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
+    GENERATE_STATIC_CONVERSION_ARRAY(__VA_ARGS__)                              \
+  }                                                                            \
+  inline auto FunctionName(                                                    \
+      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type type) {        \
+    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
+    using value_type =                                                         \
+        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
+    GENERATE_STATIC_INVERSECONVERSION_MAP(__VA_ARGS__)                         \
   }
+
 
 template <typename EnumType>
 std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
