@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/swapchain_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/dx12/utils_dx12.h"
 
@@ -209,3 +211,5 @@ void SwapchainDx12::releaseInternal() {
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

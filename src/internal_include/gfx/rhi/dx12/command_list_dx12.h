@@ -1,8 +1,12 @@
 #ifndef GAME_ENGINE_COMMAND_LIST_DX12_H
 #define GAME_ENGINE_COMMAND_LIST_DX12_H
 
-#include "gfx/rhi/command_buffer_manager.h"
 #include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
+#include "gfx/rhi/command_buffer_manager.h"
+
 
 namespace game_engine {
 
@@ -62,5 +66,7 @@ struct CommandBufferDx12 : public CommandBuffer {
 };
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_COMMAND_LIST_DX12_H

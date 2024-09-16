@@ -2,6 +2,10 @@
 #ifndef GAME_ENGINE_BUFFER_DX12_H
 #define GAME_ENGINE_BUFFER_DX12_H
 
+#include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/buffer.h"
 #include "gfx/rhi/dx12/descriptor_heap_dx12.h"
 #include "gfx/rhi/dx12/rhi_type_dx12.h"
@@ -321,4 +325,7 @@ struct IndexBufferDx12 : public IndexBuffer {
   // ======= END: public misc fields   ========================================
 };
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
+
 #endif  // GAME_ENGINE_BUFFER_DX12_H

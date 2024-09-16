@@ -1,5 +1,8 @@
 
 #include "gfx/rhi/dx12/rhi_type_dx12.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/rhi_dx12.h"
 
 
@@ -23,3 +26,5 @@ void CreatedResource::free() {
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

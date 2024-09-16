@@ -1,11 +1,16 @@
 #ifndef GAME_ENGINE_COMMAND_ALLOCATOR_DX12_H
 #define GAME_ENGINE_COMMAND_ALLOCATOR_DX12_H
 
+#include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
+
 #include "gfx/rhi/command_buffer_manager.h"
 #include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/dx12/fence_dx12.h"
 #include "gfx/rhi/lock.h"
-#include "platform/windows/windows_platform_setup.h"
+
 
 #include <vector>
 
@@ -92,5 +97,7 @@ class CommandBufferManagerDx12 : public ICommandBufferManager {
   // ======= END: private misc fields   =======================================
 };
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_COMMAND_ALLOCATOR_DX12_H

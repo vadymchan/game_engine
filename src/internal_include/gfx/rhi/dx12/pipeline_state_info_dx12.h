@@ -1,9 +1,13 @@
 #ifndef GAME_ENGINE_PIPELINE_STATE_INFO_DX12_H
 #define GAME_ENGINE_PIPELINE_STATE_INFO_DX12_H
 
+#include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/descriptor_heap_dx12.h"
 #include "gfx/rhi/pipeline_state_info.h"
-#include "platform/windows/windows_platform_setup.h"
+
 
 namespace game_engine {
 
@@ -243,5 +247,7 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
 };
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_PIPELINE_STATE_INFO_DX12_H

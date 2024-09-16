@@ -1,6 +1,10 @@
 #ifndef GAME_ENGINE_RENDER_FRAME_CONTEXT_DX12_H
 #define GAME_ENGINE_RENDER_FRAME_CONTEXT_DX12_H
 
+#include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/render_frame_context.h"
 
 namespace game_engine {
@@ -32,5 +36,7 @@ struct RenderFrameContextDx12 : public RenderFrameContext {
 };
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_RENDER_FRAME_CONTEXT_DX12_H

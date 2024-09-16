@@ -1,6 +1,8 @@
 #include "gfx/rhi/dx12/buffer_dx12.h"
-#include "gfx/rhi/dx12/command_list_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
+#include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/rhi.h"
 
 namespace game_engine {
@@ -16,8 +18,7 @@ bool VertexBufferDx12::initialize(
   if (!streamData) {
     return false;
   }
-
-  m_vertexStreamData_ = streamData;
+m_vertexStreamData_ = streamData;
   m_bindInfos_.reset();
   m_bindInfos_.m_startBindingIndex_ = streamData->m_bindingIndex_;
 
@@ -36,20 +37,20 @@ bool VertexBufferDx12::initialize(
     }
 
     VertexStreamDx12 stream;
-    stream.m_bufferType_      = EBufferType::Static;
-    stream.m_name_            = iter->m_name_;
-    stream.m_stride_          = iter->m_stride_;
-    stream.m_offset_          = 0;
+    stream.m_bufferType_ = EBufferType::Static;
+    stream.m_name_       = iter->m_name_;
+    stream.m_stride_     = iter->m_stride_;
+    stream.m_offset_     = 0;
 
     // Create vertex buffer
     stream.m_bufferPtr_
         = g_rhi->createRawBuffer<BufferDx12>(iter->getBufferSize(),
-                                               0,
-                                               EBufferCreateFlag::NONE,
-                                               EResourceLayout::GENERAL,
-                                               iter->getBufferData(),
-                                               iter->getBufferSize()
-                                               /*, Text("VertexBuffer")*/);
+                                             0,
+                                             EBufferCreateFlag::NONE,
+                                             EResourceLayout::GENERAL,
+                                             iter->getBufferData(),
+                                             iter->getBufferSize()
+                                             /*, Text("VertexBuffer")*/);
 
     BufferDx12* bufferDx12 = stream.getBuffer<BufferDx12>();
 
@@ -174,7 +175,8 @@ bool VertexBufferDx12::initialize(
 
       if (iter->getBufferSize() > 0) {
         m_bindInfos_.m_buffers_.push_back(bufferDx12->m_buffer->get());
-        m_bindInfos_.m_offsets_.push_back(stream.m_offset_ + bufferDx12->m_offset_);
+        m_bindInfos_.m_offsets_.push_back(stream.m_offset_
+                                          + bufferDx12->m_offset_);
       }
 
       D3D12_INPUT_ELEMENT_DESC elem;
@@ -182,7 +184,7 @@ bool VertexBufferDx12::initialize(
           = element.m_name_.getStringLength()
               ? element.m_name_.toStr()
               : iter->m_name_.toStr();  // TODO: remove iter-Name.toStr();
-      elem.SemanticIndex     = 0;    // TODO
+      elem.SemanticIndex     = 0;       // TODO
       elem.Format            = AttrFormat;
       elem.InputSlot         = bindingIndex;
       elem.AlignedByteOffset = element.m_offset_;
@@ -227,7 +229,9 @@ void VertexBufferDx12::bind(CommandBufferDx12* commandList) const {
   assert(commandList->m_commandList_);
   commandList->m_commandList_->IASetPrimitiveTopology(getTopology());
   commandList->m_commandList_->IASetVertexBuffers(
-      m_bindInfos_.m_startBindingIndex_, (uint32_t)m_VBView_.size(), &m_VBView_[0]);
+      m_bindInfos_.m_startBindingIndex_,
+      (uint32_t)m_VBView_.size(),
+      &m_VBView_[0]);
 }
 
 IBuffer* VertexBufferDx12::getBuffer(int32_t streamIndex) const {
@@ -299,3 +303,5 @@ bool IndexBufferDx12::initialize(
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

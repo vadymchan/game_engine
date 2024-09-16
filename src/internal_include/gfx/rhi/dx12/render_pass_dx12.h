@@ -1,9 +1,13 @@
 #ifndef GAME_ENGINE_RENDER_PASS_DX12_H
 #define GAME_ENGINE_RENDER_PASS_DX12_H
 
+#include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/render_pass.h"
-#include "platform/windows/windows_platform_setup.h"
+
 
 namespace game_engine {
 
@@ -130,5 +134,7 @@ class RenderPassDx12 : public RenderPass {
 };
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_RENDER_PASS_DX12_H

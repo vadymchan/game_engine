@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/shader_binding_layout_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/dx12/shader_binding_instance_dx12.h"
 
@@ -457,3 +459,5 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignature(
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

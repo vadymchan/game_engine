@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/shader_binding_instance_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/dx12/rhi_type_dx12.h"
@@ -491,3 +493,5 @@ void ShaderBindingInstanceDx12::copyToOnlineDescriptorHeap(
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

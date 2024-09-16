@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/rhi_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "file_loader/file.h"
 #include "gfx/rhi/dx12/dxc_util.h"
 #include "gfx/rhi/dx12/render_frame_context_dx12.h"
@@ -1747,3 +1749,5 @@ void PlacedResourcePool::free(const ComPtr<ID3D12Resource>& data) {
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

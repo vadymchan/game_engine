@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/pipeline_state_info_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/buffer_dx12.h"
 #include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/dx12/render_pass_dx12.h"
@@ -327,3 +329,5 @@ void PipelineStateInfoDx12::bind(CommandBufferDx12* commandList) const {
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

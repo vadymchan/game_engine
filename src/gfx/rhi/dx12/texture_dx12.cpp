@@ -1,5 +1,6 @@
 #include "gfx/rhi/dx12/texture_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
 
 namespace game_engine {
 
@@ -14,5 +15,6 @@ void TextureDx12::release() {
   m_dsv_.free();
 }
 
+}  // namespace game_engine
 
-}
+#endif  // GAME_ENGINE_RHI_DX12

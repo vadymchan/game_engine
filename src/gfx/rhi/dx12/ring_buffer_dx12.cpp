@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/ring_buffer_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/rhi_dx12.h"
 
 namespace game_engine {
@@ -60,3 +62,5 @@ void RingBufferDx12::create(uint64_t totalSize, uint32_t alignment /*= 16*/) {
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

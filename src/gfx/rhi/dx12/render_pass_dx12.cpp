@@ -1,6 +1,8 @@
 #include "gfx/rhi/dx12/render_pass_dx12.h"
-#include "gfx/rhi/dx12/texture_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
+#include "gfx/rhi/dx12/texture_dx12.h"
 
 namespace game_engine {
 
@@ -143,3 +145,5 @@ bool RenderPassDx12::createRenderPass() {
 }
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12

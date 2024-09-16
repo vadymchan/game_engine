@@ -1,8 +1,11 @@
 #ifndef GAME_ENGINE_UTILS_DX12_H
 #define GAME_ENGINE_UTILS_DX12_H
 
-#include "gfx/rhi/dx12/rhi_type_dx12.h"
 #include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
+#include "gfx/rhi/dx12/rhi_type_dx12.h"
 #include "utils/memory/align.h"
 
 #include <cassert>
@@ -165,5 +168,7 @@ void g_createDepthStencilView(TextureDx12* texture);
 void g_createRenderTargetView(TextureDx12* texture);
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_UTILS_DX12_H

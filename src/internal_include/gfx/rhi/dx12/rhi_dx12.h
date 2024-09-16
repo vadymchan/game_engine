@@ -1,6 +1,10 @@
 #ifndef GAME_ENGINE_RHI_DX12_H
 #define GAME_ENGINE_RHI_DX12_H
 
+#include "platform/windows/windows_platform_setup.h"
+
+#ifdef GAME_ENGINE_RHI_DX12
+
 #include "gfx/rhi/dx12/command_allocator_dx12.h"
 #include "gfx/rhi/dx12/fence_dx12.h"
 #include "gfx/rhi/dx12/pipeline_state_info_dx12.h"
@@ -720,5 +724,7 @@ class RhiDx12 : public RHI {
 extern RhiDx12* g_rhiDx12;
 
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_RHI_DX12
 
 #endif  // GAME_ENGINE_RHI_DX12_H

@@ -1,5 +1,7 @@
 #include "gfx/rhi/dx12/shader_dx12.h"
 
+#ifdef GAME_ENGINE_RHI_DX12
+
 
 namespace game_engine {
 
@@ -10,3 +12,5 @@ CompiledShaderDx12::~CompiledShaderDx12() {
 
 
 }
+
+#endif  // GAME_ENGINE_RHI_DX12
