@@ -59,7 +59,7 @@ FixNamespaceComments: true
 
 ShortNamespaceLines: 0
 
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: None
 
 IndentWrappedFunctionNames: true
 
