@@ -39,5 +39,17 @@ namespace game_engine {
     using T = std::underlying_type<ENUM_TYPE>::type;                             \
     return static_cast<ENUM_TYPE>(~static_cast<T>(value));                       \
   }
+
+template <typename Key, typename Value>
+Value getEnumMapping(const Key&                            key,
+                     const std::unordered_map<Key, Value>& mapping,
+                     const Value&                          defaultValue) {
+  auto it = mapping.find(key);
+  if (it != mapping.end()) {
+    return it->second;
+  }
+  return defaultValue;
+}
+
 }  // namespace game_engine
 #endif  // GAME_ENGINE_ENUM_UTIL_H
