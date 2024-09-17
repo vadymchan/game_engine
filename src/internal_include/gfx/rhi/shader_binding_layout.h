@@ -598,13 +598,14 @@ template <typename T>
 struct TShaderBinding : public ShaderBinding {
   // ======= BEGIN: public constructors =======================================
 
+  // TODO: currently isBindless is always false
   TShaderBinding(const int32_t                bindingPoint,
                  const int32_t                numOfDescriptors,
                  const EShaderBindingType     bindingType,
                  const EShaderAccessStageFlag accessStageFlags,
                  const T&                     data)
       : ShaderBinding(
-          bindingPoint, numOfDescriptors, bindingType, accessStageFlags)
+          bindingPoint, numOfDescriptors, bindingType, false, accessStageFlags)
       , m_data_(data) {}
 
   // ======= END: public constructors   =======================================
