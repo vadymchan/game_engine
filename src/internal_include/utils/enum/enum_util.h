@@ -1,6 +1,8 @@
 #ifndef GAME_ENGINE_ENUM_UTIL_H
 #define GAME_ENGINE_ENUM_UTIL_H
 
+#include <unordered_map>
+
 namespace game_engine {
 
 #define DECLARE_ENUM_BIT_OPERATORS(ENUM_TYPE)                                    \
@@ -41,14 +43,24 @@ namespace game_engine {
   }
 
 template <typename Key, typename Value>
-Value getEnumMapping(const Key&                            key,
-                     const std::unordered_map<Key, Value>& mapping,
+Value getEnumMapping(const std::unordered_map<Key, Value>& mapping,
+                     const Key&                            key,
                      const Value&                          defaultValue) {
   auto it = mapping.find(key);
   if (it != mapping.end()) {
     return it->second;
   }
   return defaultValue;
+}
+
+template <typename Key, typename Value>
+std::unordered_map<Value, Key> reverseMap(
+    const std::unordered_map<Key, Value>& map) {
+  std::unordered_map<Value, Key> reversedMap;
+  for (const auto& [key, value] : map) {
+    reversedMap[value] = key;
+  }
+  return reversedMap;
 }
 
 }  // namespace game_engine
