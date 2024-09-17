@@ -508,7 +508,7 @@ class RHI {
   virtual void* getWindow() const { return nullptr; }
 
   // TODO: not used / overriden (consider remove)
-  virtual bool getUniformbuffer(math::Matrix4d& result,
+  virtual bool getUniformbuffer(math::Matrix4d<>& result,
                                 const Name&     name,
                                 const Shader*   shader) const {
     return false;
@@ -670,7 +670,7 @@ class RHI {
 
   // TODO: not used / overriden (consider remove)
   virtual bool setUniformbuffer(const Name&           name,
-                                const math::Matrix4d& data,
+                                const math::Matrix4d<>& data,
                                 const Shader*         shader) const {
     return false;
   }

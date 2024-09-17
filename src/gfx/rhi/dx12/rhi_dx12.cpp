@@ -24,7 +24,7 @@ namespace game_engine {
 
 // TODO: seems like not used
 struct SimpleConstantBuffer {
-  math::Matrix4f m_matrix;
+  math::Matrix4f<> m_matrix;
   int32_t        m_texIndex = 0;
 };
 

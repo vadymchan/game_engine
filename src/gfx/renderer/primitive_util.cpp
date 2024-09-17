@@ -2343,13 +2343,13 @@ Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
   }
 
   {
-    auto streamParam = std::make_shared<BufferAttributeStream<math::Matrix4f>>(
+    auto streamParam = std::make_shared<BufferAttributeStream<math::Matrix4f<>>>(
         Name("Transform"),
         EBufferType::Dynamic,
-        math::Matrix4f::GetDataSize(),
+        math::Matrix4f<>::GetDataSize(),
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        std::vector<math::Matrix4f>()
+        std::vector<math::Matrix4f<>>()
         //, 1 // InstanceDivisor // TODO probably not needed, remove
     );
     vertexStreamData->m_streams_.push_back(streamParam);
@@ -2721,7 +2721,7 @@ void Graph2D::updateBuffer() {
       m_resultMatrices_.resize(m_resultPoints_.size() - 1 + 2);
 
       {
-        auto hor = math::Matrix4f::Identity();
+        auto hor = math::Matrix4f<>::Identity();
         hor.setBasisX(math::g_rightVector<float, 4>());
         hor.setBasisY(math::g_upVector<float, 4>());
         hor.setBasisZ(math::g_forwardVector<float, 4>());
@@ -2729,7 +2729,7 @@ void Graph2D::updateBuffer() {
         hor = (hor * math::g_scale(m_guardLineSize_.x(), 1.0f, 1.0f));
         m_resultMatrices_[0] = (hor);
 
-        auto ver = math::Matrix4f::Identity();
+        auto ver = math::Matrix4f<>::Identity();
         ver.setBasisX(math::g_rightVector<float, 4>());
         ver.setBasisY(math::g_upVector<float, 4>());
         ver.setBasisZ(math::g_forwardVector<float, 4>());
@@ -2749,8 +2749,8 @@ void Graph2D::updateBuffer() {
 
         auto up = right.cross(math::g_forwardVector<float, 3>()).normalized();
 
-        math::Matrix4f& tr = m_resultMatrices_[i];
-        tr                 = math::Matrix4f::Identity();
+        math::Matrix4f<>& tr = m_resultMatrices_[i];
+        tr                 = math::Matrix4f<>::Identity();
         tr.setBasisX(math::Vector4Df(right, 0.0f));
         tr.setBasisY(math::Vector4Df(up, 0.0f));
         tr.setBasisZ(math::g_forwardVector<float, 4>());
@@ -2764,12 +2764,12 @@ void Graph2D::updateBuffer() {
              m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_) {
           if (iter->m_name_ == TransformName) {
             auto matStreamParam
-                = static_cast<BufferAttributeStream<math::Matrix4f>*>(
+                = static_cast<BufferAttributeStream<math::Matrix4f<>>*>(
                     iter.get());
             matStreamParam->m_data_.resize(m_resultMatrices_.size());
             memcpy(&matStreamParam->m_data_[0],
                    &m_resultMatrices_[0],
-                   m_resultMatrices_.size() * math::Matrix4f::GetDataSize());
+                   m_resultMatrices_.size() * math::Matrix4f<>::GetDataSize());
             break;
           }
         }

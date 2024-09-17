@@ -112,8 +112,8 @@ class RenderObject {
   // ======= BEGIN: public nested types =======================================
 
   struct RenderObjectUniformBuffer {
-    math::Matrix4f m_matrix;
-    math::Matrix4f m_invMatrix;
+    math::Matrix4f<> m_matrix;
+    math::Matrix4f<> m_invMatrix;
   };
 
   // ======= END: public nested types   =======================================
@@ -247,7 +247,7 @@ class RenderObject {
 
   // ======= BEGIN: public misc fields ========================================
 
-  math::Matrix4f m_world_;
+  math::Matrix4f<> m_world_;
 
   std::shared_ptr<RenderObjectGeometryData> m_geometryDataPtr_;
 

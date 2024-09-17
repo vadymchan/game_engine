@@ -194,9 +194,9 @@ class Camera {
     return m_view_.getColumn<0>().resizedCopy<3>();
   }
 
-  math::Matrix4f getViewProjectionMatrix() const { return m_viewProjection_; }
+  math::Matrix4f<> getViewProjectionMatrix() const { return m_viewProjection_; }
 
-  math::Matrix4f getInverseViewProjectionMatrix() const {
+  math::Matrix4f<> getInverseViewProjectionMatrix() const {
     return m_invViewProjection_;
   }
 
@@ -205,7 +205,7 @@ class Camera {
 
   void getRectInNDCSpace(math::Vector3Df&      minPosition,
                          math::Vector3Df&      maxPosition,
-                         const math::Matrix4f& vp) const {
+                         const math::Matrix4f<>& vp) const {
     // TODO: consider more descriptive name
     math::Vector3Df farLt;
     math::Vector3Df farRt;
@@ -308,7 +308,7 @@ class Camera {
   // TODO: seems not used
   void getRectInScreenSpace(math::Vector3Df&       minPosition,
                             math::Vector3Df&       maxPosition,
-                            const math::Matrix4f&  vp,
+                            const math::Matrix4f<>&  vp,
                             const math::Vector2Df& screenSize
                             = math::Vector2Df(1.0f, 1.0f)) const {
     getRectInNDCSpace(minPosition, maxPosition, vp);
@@ -440,12 +440,12 @@ class Camera {
     return true;
   }
 
-  virtual math::Matrix4f createView() const {
+  virtual math::Matrix4f<> createView() const {
     // TODO: consider adding RH / LH selection logic
     return math::g_lookAtLh(m_position_, m_target_, m_up_);
   }
 
-  virtual math::Matrix4f createProjection() const {
+  virtual math::Matrix4f<> createProjection() const {
     const auto kRatio
         = static_cast<float>(m_width_) / static_cast<float>(m_height_);
     if (m_isPerspectiveProjection_) {
@@ -590,8 +590,8 @@ class Camera {
   // Camera Uniform buffer
   // struct UniformBufferCamera
   //{
-  //	math::Matrix4f VP;
-  //	math::Matrix4f V;
+  //	math::Matrix4f<> VP;
+  //	math::Matrix4f<> V;
   //	float Near;
   //	float Far;
   //};
@@ -632,12 +632,12 @@ class Camera {
 
   math::Vector3Df m_eulerAngle_ = math::g_zeroVector<float, 3>();
   float           m_distance_   = 300.0f;
-  math::Matrix4f  m_view_;
-  math::Matrix4f  m_projection_;
-  math::Matrix4f  m_viewProjection_;
-  math::Matrix4f  m_invViewProjection_;
-  math::Matrix4f  m_prevViewProjection_;
-  math::Matrix4f  m_reverseZProjection_;
+  math::Matrix4f<>  m_view_;
+  math::Matrix4f<>  m_projection_;
+  math::Matrix4f<>  m_viewProjection_;
+  math::Matrix4f<>  m_invViewProjection_;
+  math::Matrix4f<>  m_prevViewProjection_;
+  math::Matrix4f<>  m_reverseZProjection_;
   bool            m_isPerspectiveProjection_ = true;
   bool            m_isInfinityFar_           = false;
 
@@ -721,7 +721,7 @@ class OrthographicCamera : public Camera {
 
   // ======= BEGIN: public overridden methods =================================
 
-  virtual math::Matrix4f createProjection() const {
+  virtual math::Matrix4f<> createProjection() const {
     return math::g_orthoLhZo(
         m_minX_, m_maxX_, m_maxY_, m_minY_, m_Near_, m_far_);
   }

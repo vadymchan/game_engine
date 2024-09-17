@@ -370,7 +370,7 @@ class Graph2D : public Object {
   math::Vector2Df m_guardLineSize_ = math::Vector2Df(100.0f, 100.0f);
   std::vector<math::Vector2Df> m_points_;
   std::vector<math::Vector2Df> m_resultPoints_;
-  std::vector<math::Matrix4f>  m_resultMatrices_;
+  std::vector<math::Matrix4f<>>  m_resultMatrices_;
 
   // ======= END: public misc fields   ========================================
 };
