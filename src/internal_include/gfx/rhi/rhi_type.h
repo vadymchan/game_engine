@@ -15,101 +15,10 @@
 #include <unordered_map>
 
 // TODO:
-// - rename functions that GENERATE_CONVERSION_FUNCTION creates to correct
-// naming convention
-// - consider whether there's better solution to generating convertion function
+// - consider whether there's better solution to generating enum with string
 // exists (to reduce compile time, etc.)
 
 namespace game_engine {
-
-//////////////////////////////////////////////////////////////////////////
-// Auto generate type conversion code
-// template <typename T1, typename T2>
-// using ConversionTypePair = std::pair<T1, T2>;
-//template <typename T1, typename T2>
-//struct ConversionTypePair : std::pair<T1, T2> {
-//  using first_type  = T1;
-//  using second_type = T2;
-//
-//  ConversionTypePair(const T1& x, const T2& y)
-//      : std::pair<T1, T2>(x, y) {}
-//};
-//
-//template <typename... T1>
-//constexpr auto g_generateConversionTypeArray(T1... args) {
-//  static_assert(sizeof...(T1) > 0, "At least one argument is required");
-//
-//  using first_arg_type =
-//      typename std::tuple_element<0, std::tuple<T1...>>::type;
-//  using value_type = typename first_arg_type::second_type;
-//
-//  std::array<value_type, sizeof...(args)> newArray{};
-//  auto addElementFunc = [&newArray](const auto& arg) {
-//    newArray[static_cast<size_t>(arg.first)] = arg.second;
-//  };
-//
-//  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
-//  return newArray;
-//}
-//
-//template <typename... T1>
-//constexpr auto g_generateInverseConversionTypeMap(T1... args) {
-//  static_assert(sizeof...(T1) > 0, "At least one argument is required");
-//
-//  using first_arg_type =
-//      typename std::tuple_element<0, std::tuple<T1...>>::type;
-//  using key_type   = typename first_arg_type::second_type;
-//  using value_type = typename first_arg_type::first_type;
-//
-//  std::unordered_map<key_type, value_type> newMap;
-//  auto                                     addElementFunc
-//      = [&newMap](const auto& arg) { newMap[arg.second] = arg.first; };
-//
-//  (void)std::initializer_list<int>{(addElementFunc(args), 0)...};
-//  return newMap;
-//}
-//
-//#define CONVERSION_TYPE_ELEMENT(x, y) \
-//  ConversionTypePair<decltype(x), decltype(y)>(x, y)
-//
-//// Macro to insert the given elements into an array. This is used for converting
-//// from engine types to API types. It's suitable for arrays because the range of
-//// engine types is small and all integer values from 0 to N are used.
-//#define GENERATE_STATIC_CONVERSION_ARRAY(...)                             \
-//  {                                                                       \
-//    static auto _TypeArray_ = g_generateConversionTypeArray(__VA_ARGS__); \
-//    return _TypeArray_[(int64_t)type];                                    \
-//  }
-//
-//// Macro to insert the given elements into a map. This is used for converting
-//// from API types to engine types. Maps are used here because the range of
-//// engine types can be large or mixed, making arrays inefficient due to memory
-//// waste.
-//#define GENERATE_STATIC_INVERSECONVERSION_MAP(...)                           \
-//  {                                                                          \
-//    static auto _TypeMap_ = g_generateInverseConversionTypeMap(__VA_ARGS__); \
-//    return _TypeMap_[type];                                                  \
-//  }
-//
-//// Macro to obtain the first item of a variadic macro
-//#define DEDUCE_FIRST(First, ...) First
-//
-//// Macro to generate functions for converting between engine types and API types
-//#define GENERATE_CONVERSION_FUNCTION(FunctionName, ...)                        \
-//  inline auto FunctionName(                                                    \
-//      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type type) {         \
-//    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
-//    using value_type =                                                         \
-//        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
-//    GENERATE_STATIC_CONVERSION_ARRAY(__VA_ARGS__)                              \
-//  }                                                                            \
-//  inline auto FunctionName(                                                    \
-//      typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type type) {        \
-//    using key_type = typename decltype(DEDUCE_FIRST(__VA_ARGS__))::first_type; \
-//    using value_type =                                                         \
-//        typename decltype(DEDUCE_FIRST(__VA_ARGS__))::second_type;             \
-//    GENERATE_STATIC_INVERSECONVERSION_MAP(__VA_ARGS__)                         \
-//  }
 
 template <typename EnumType>
 std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
@@ -137,7 +46,6 @@ std::array<std::string, static_cast<size_t>(EnumType::MAX) + 1> split(
   inline const char* g_enumToString(EnumType value) {                        \
     return EnumType##Strings[static_cast<size_t>(value)].c_str();            \
   }
-//////////////////////////////////////////////////////////////////////////
 
 DECLARE_ENUM_WITH_CONVERT_TO_STRING(EPrimitiveType,
                                     uint8_t,
@@ -274,7 +182,6 @@ DECLARE_ENUM_WITH_CONVERT_TO_STRING(EFormatType,
                                     FLOAT,
                                     MAX);
 
-// clang-format off
 
 // TODO: not used
 //GENERATE_CONVERSION_FUNCTION(g_getTexturePixelType,
@@ -316,8 +223,6 @@ DECLARE_ENUM_WITH_CONVERT_TO_STRING(EFormatType,
 
 EFormatType getTextureFormat(ETextureFormat textureFormat);
 ETextureFormat getTextureFormat(EFormatType formatType);
-
-// clang-format on
 
 DECLARE_ENUM_WITH_CONVERT_TO_STRING(EBlendFactor,
                                     uint8_t,
