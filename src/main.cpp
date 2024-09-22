@@ -1,7 +1,5 @@
 #define SDL_MAIN_HANDLED
 
-
-
 #include "engine.h"
 
 // ----------------------------------------------
@@ -32,7 +30,7 @@
 
 #if (defined(_WIN32) || defined(_WIN64)) \
     && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
-  #include <windows.h>
+#include <windows.h>
 int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,
                     _In_ PWSTR         pCmdLine,

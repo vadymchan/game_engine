@@ -25,7 +25,7 @@ namespace game_engine {
 // TODO: seems like not used
 struct SimpleConstantBuffer {
   math::Matrix4f<> m_matrix;
-  int32_t        m_texIndex = 0;
+  int32_t          m_texIndex = 0;
 };
 
 RhiDx12*                                         g_rhiDx12 = nullptr;
@@ -33,7 +33,8 @@ std::unordered_map<size_t, ShaderBindingLayout*> RhiDx12::s_shaderBindingPool;
 TResourcePool<SamplerStateInfoDx12, MutexRWLock> RhiDx12::s_samplerStatePool;
 TResourcePool<RasterizationStateInfoDx12, MutexRWLock>
     RhiDx12::s_rasterizationStatePool;
-TResourcePool<StencilOpStateInfoDx12, MutexRWLock> RhiDx12::s_stencilOpStatePool;
+TResourcePool<StencilOpStateInfoDx12, MutexRWLock>
+    RhiDx12::s_stencilOpStatePool;
 TResourcePool<DepthStencilStateInfoDx12, MutexRWLock>
     RhiDx12::s_depthStencilStatePool;
 TResourcePool<BlendingStateInfoDx12, MutexRWLock> RhiDx12::s_blendingStatePool;
@@ -208,7 +209,7 @@ void RhiDx12::waitForGPU() const {
 
   if (m_commandBufferManager_ && m_commandBufferManager_->m_fence_) {
     m_commandBufferManager_->m_fence_->signalWithNextFenceValue(Queue.Get(),
-                                                              true);
+                                                                true);
   }
 }
 
@@ -300,8 +301,8 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
     BOOL    allowTearing = false;
     HRESULT hr_feature_support
         = m_factory_->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-                                       &allowTearing,
-                                       sizeof(allowTearing));
+                                          &allowTearing,
+                                          sizeof(allowTearing));
   }
 
   bool UseWarpDevice = false;  // Whether to use software rasterizer
@@ -401,9 +402,11 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
 
   // 2. Command
   m_commandBufferManager_ = new CommandBufferManagerDx12();
-  m_commandBufferManager_->initialize(m_device_, D3D12_COMMAND_LIST_TYPE_DIRECT);
+  m_commandBufferManager_->initialize(m_device_,
+                                      D3D12_COMMAND_LIST_TYPE_DIRECT);
   m_copyCommandBufferManager_ = new CommandBufferManagerDx12();
-  m_copyCommandBufferManager_->initialize(m_device_, D3D12_COMMAND_LIST_TYPE_COPY);
+  m_copyCommandBufferManager_->initialize(m_device_,
+                                          D3D12_COMMAND_LIST_TYPE_COPY);
 
   // 4. Heap
   m_rtvDescriptorHeaps_.initialize(EDescriptorHeapTypeDX12::RTV);
@@ -430,8 +433,8 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
   D3D12_FEATURE_DATA_D3D12_OPTIONS5 featureSupportData{};
   HRESULT                           hr_check_feature_support
       = m_device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5,
-                                    &featureSupportData,
-                                    sizeof(featureSupportData));
+                                       &featureSupportData,
+                                       sizeof(featureSupportData));
   assert(SUCCEEDED(hr_check_feature_support));
 
   if (FAILED(hr_check_feature_support)) {
@@ -623,7 +626,7 @@ ShaderBindingLayout* RhiDx12::createShaderBindings(
 
     auto NewShaderBinding = new ShaderBindingLayoutDx12();
     NewShaderBinding->initialize(shaderBindingArray);
-    NewShaderBinding->m_hash_  = hash;
+    NewShaderBinding->m_hash_ = hash;
     s_shaderBindingPool[hash] = NewShaderBinding;
 
     return NewShaderBinding;
@@ -817,10 +820,10 @@ RenderPass* RhiDx12::getOrCreateRenderPass(
     const math::Vector2Di&         offset,
     const math::Vector2Di&         extent) const {
   return s_renderPassPool.getOrCreate(RenderPassDx12(colorAttachments,
-                                                   depthAttachment,
-                                                   colorResolveAttachment,
-                                                   offset,
-                                                   extent));
+                                                     depthAttachment,
+                                                     colorResolveAttachment,
+                                                     offset,
+                                                     extent));
 }
 
 RenderPass* RhiDx12::getOrCreateRenderPass(
@@ -886,7 +889,7 @@ std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
   renderFrameContextPtr->m_sceneRenderTargetPtr_
       = std::make_shared<SceneRenderTarget>();
   renderFrameContextPtr->m_sceneRenderTargetPtr_->create(m_window_,
-                                                      currentSwapchainImage);
+                                                         currentSwapchainImage);
 
   return renderFrameContextPtr;
 }
@@ -960,8 +963,9 @@ void RhiDx12::bindGraphicsShaderBindingInstances(
       for (int32_t i = 0; i < m_shaderBindingInstanceArray.m_numOfData_; ++i) {
         ShaderBindingInstanceDx12* Instance
             = (ShaderBindingInstanceDx12*)m_shaderBindingInstanceArray[i];
-        NumOfDescriptor        += (int32_t)Instance->m_descriptors_.size();
-        NumOfSamplerDescriptor += (int32_t)Instance->m_samplerDescriptors_.size();
+        NumOfDescriptor += (int32_t)Instance->m_descriptors_.size();
+        NumOfSamplerDescriptor
+            += (int32_t)Instance->m_samplerDescriptors_.size();
       }
 
       assert(m_device_);
@@ -1022,8 +1026,8 @@ void RhiDx12::bindGraphicsShaderBindingInstances(
           ID3D12DescriptorHeap* ppHeaps[]
               = {commandBufferDx12->m_onlineDescriptorHeap_->getHeap(),
                  commandBufferDx12->m_onlineSamplerDescriptorHeap_->getHeap()};
-          commandBufferDx12->m_commandList_->SetDescriptorHeaps(_countof(ppHeaps),
-                                                             ppHeaps);
+          commandBufferDx12->m_commandList_->SetDescriptorHeaps(
+              _countof(ppHeaps), ppHeaps);
         }
       }
     }
@@ -1127,10 +1131,8 @@ void RhiDx12::bindRaytracingShaderBindingInstances(
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
     uint32_t                             firstSet) const {
-  bindComputeShaderBindingInstances(commandBuffer,
-                                    piplineState,
-                                    shaderBindingInstanceCombiner,
-                                    firstSet);
+  bindComputeShaderBindingInstances(
+      commandBuffer, piplineState, shaderBindingInstanceCombiner, firstSet);
 }
 
 std::shared_ptr<VertexBuffer> RhiDx12::createVertexBuffer(
@@ -1170,37 +1172,37 @@ std::shared_ptr<Texture> RhiDx12::create2DTexture(
     const RtClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   auto TexturePtr = g_createTexture(witdh,
-                                  height,
-                                  arrayLayers,
-                                  mipLevels,
-                                  1,
-                                  ETextureType::TEXTURE_2D,
-                                  format,
-                                  textureCreateFlag,
-                                  imageLayout,
-                                  clearValue,
-                                  resourceName);
+                                    height,
+                                    arrayLayers,
+                                    mipLevels,
+                                    1,
+                                    ETextureType::TEXTURE_2D,
+                                    format,
+                                    textureCreateFlag,
+                                    imageLayout,
+                                    clearValue,
+                                    resourceName);
   if (imageBulkData.m_imageData_.size() > 0) {
     // TODO: recycle temp buffer
     auto BufferPtr = g_createBuffer(imageBulkData.m_imageData_.size(),
-                                  0,
-                                  EBufferCreateFlag::CPUAccess,
-                                  EResourceLayout::READ_ONLY,
-                                  &imageBulkData.m_imageData_[0],
-                                  imageBulkData.m_imageData_.size());
+                                    0,
+                                    EBufferCreateFlag::CPUAccess,
+                                    EResourceLayout::READ_ONLY,
+                                    &imageBulkData.m_imageData_[0],
+                                    imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
     CommandBufferDx12* commandList = beginSingleTimeCopyCommands();
     if (imageBulkData.m_subresourceFootprints_.size() > 0) {
       g_copyBufferToTexture(commandList->get(),
-                          BufferPtr->m_buffer->get(),
-                          TexturePtr->m_texture->get(),
-                          imageBulkData.m_subresourceFootprints_);
+                            BufferPtr->m_buffer->get(),
+                            TexturePtr->m_texture->get(),
+                            imageBulkData.m_subresourceFootprints_);
     } else {
       g_copyBufferToTexture(commandList->get(),
-                          BufferPtr->m_buffer->get(),
-                          0,
-                          TexturePtr->m_texture->get());
+                            BufferPtr->m_buffer->get(),
+                            0,
+                            TexturePtr->m_texture->get());
     }
 
     endSingleTimeCopyCommands(commandList);
@@ -1219,37 +1221,37 @@ std::shared_ptr<Texture> RhiDx12::createCubeTexture(
     const RtClearValue&  clearValue,
     const wchar_t*       resourceName) const {
   auto TexturePtr = g_createTexture(witdh,
-                                  height,
-                                  6,
-                                  mipLevels,
-                                  1,
-                                  ETextureType::TEXTURE_CUBE,
-                                  format,
-                                  textureCreateFlag,
-                                  imageLayout,
-                                  clearValue,
-                                  resourceName);
+                                    height,
+                                    6,
+                                    mipLevels,
+                                    1,
+                                    ETextureType::TEXTURE_CUBE,
+                                    format,
+                                    textureCreateFlag,
+                                    imageLayout,
+                                    clearValue,
+                                    resourceName);
   if (imageBulkData.m_imageData_.size() > 0) {
     // TODO: recycle temp buffer
     auto BufferPtr = g_createBuffer(imageBulkData.m_imageData_.size(),
-                                  0,
-                                  EBufferCreateFlag::CPUAccess,
-                                  EResourceLayout::READ_ONLY,
-                                  &imageBulkData.m_imageData_[0],
-                                  imageBulkData.m_imageData_.size());
+                                    0,
+                                    EBufferCreateFlag::CPUAccess,
+                                    EResourceLayout::READ_ONLY,
+                                    &imageBulkData.m_imageData_[0],
+                                    imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
     CommandBufferDx12* commandList = beginSingleTimeCopyCommands();
     if (imageBulkData.m_subresourceFootprints_.size() > 0) {
       g_copyBufferToTexture(commandList->get(),
-                          BufferPtr->m_buffer->get(),
-                          TexturePtr->m_texture->get(),
-                          imageBulkData.m_subresourceFootprints_);
+                            BufferPtr->m_buffer->get(),
+                            TexturePtr->m_texture->get(),
+                            imageBulkData.m_subresourceFootprints_);
     } else {
       g_copyBufferToTexture(commandList->get(),
-                          BufferPtr->m_buffer->get(),
-                          0,
-                          TexturePtr->m_texture->get());
+                            BufferPtr->m_buffer->get(),
+                            0,
+                            TexturePtr->m_texture->get());
     }
 
     endSingleTimeCopyCommands(commandList);
@@ -1356,7 +1358,7 @@ void RhiDx12::drawElementsInstancedBaseVertex(
 void RhiDx12::drawIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
-    IBuffer*                                    buffer,
+    IBuffer*                                   buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   auto commandBufferDx12
@@ -1369,7 +1371,7 @@ void RhiDx12::drawIndirect(
 void RhiDx12::drawElementsIndirect(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext,
     // EPrimitiveType                              type,
-    IBuffer*                                    buffer,
+    IBuffer*                                   buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
   auto commandBufferDx12
@@ -1390,31 +1392,32 @@ void RhiDx12::dispatchCompute(
   assert(commandBufferDx12->m_commandList_);
   assert(numGroupsX * numGroupsY * numGroupsZ > 0);
 
-  commandBufferDx12->m_commandList_->Dispatch(numGroupsX, numGroupsY, numGroupsZ);
+  commandBufferDx12->m_commandList_->Dispatch(
+      numGroupsX, numGroupsY, numGroupsZ);
 }
 
 std::shared_ptr<RenderTarget> RhiDx12::createRenderTarget(
     const RenderTargetInfo& info) const {
   const uint16_t MipLevels
       = info.m_isGenerateMipmap_
-          ? static_cast<uint32_t>(std::floor(std::log2(
-                std::max<int>(info.m_extent_.width(), info.m_extent_.height()))))
+          ? static_cast<uint32_t>(std::floor(std::log2(std::max<int>(
+                info.m_extent_.width(), info.m_extent_.height()))))
                 + 1
           : 1;
 
   auto TexturePtr
       = g_createTexture(info.m_extent_.width(),
-                      info.m_extent_.height(),
-                      info.m_layerCount_,
-                      MipLevels,
-                      (uint32_t)info.m_sampleCount_,
-                      info.m_rype_,
-                      info.m_format_,
-                      (ETextureCreateFlag::RTV | info.m_textureCreateFlag_),
-                      EResourceLayout::UNDEFINED,
-                      info.m_rtClearValue,
-                      // TODO: use info.ResourceName instead of string literal
-                      L"RenderTarget");
+                        info.m_extent_.height(),
+                        info.m_layerCount_,
+                        MipLevels,
+                        (uint32_t)info.m_sampleCount_,
+                        info.m_rype_,
+                        info.m_format_,
+                        (ETextureCreateFlag::RTV | info.m_textureCreateFlag_),
+                        EResourceLayout::UNDEFINED,
+                        info.m_rtClearValue,
+                        // TODO: use info.ResourceName instead of string literal
+                        L"RenderTarget");
 
   auto RenderTargetPtr = std::make_shared<RenderTarget>();
   assert(RenderTargetPtr);
@@ -1425,9 +1428,9 @@ std::shared_ptr<RenderTarget> RhiDx12::createRenderTarget(
 }
 
 bool RhiDx12::transitionLayoutInternal(CommandBuffer*        commandBuffer,
-                                        ID3D12Resource*       resource,
-                                        D3D12_RESOURCE_STATES srcLayout,
-                                        D3D12_RESOURCE_STATES dstLayout) const {
+                                       ID3D12Resource*       resource,
+                                       D3D12_RESOURCE_STATES srcLayout,
+                                       D3D12_RESOURCE_STATES dstLayout) const {
   assert(commandBuffer);
   assert(resource);
 
@@ -1543,7 +1546,7 @@ void RhiDx12::uavBarrierImmediate(IBuffer* buffer) const {
 }
 
 bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
-                               IBuffer*         buffer,
+                               IBuffer*        buffer,
                                EResourceLayout newLayout) const {
   assert(commandBuffer);
   assert(buffer);
@@ -1561,7 +1564,7 @@ bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
       commandBuffer, bufferDx12->m_buffer->get(), SrcLayout, DstLayout);
 }
 
-bool RhiDx12::transitionLayoutImmediate(IBuffer*         buffer,
+bool RhiDx12::transitionLayoutImmediate(IBuffer*        buffer,
                                         EResourceLayout newLayout) const {
   assert(buffer);
   if (buffer->getLayout() != newLayout) {
@@ -1630,13 +1633,13 @@ std::shared_ptr<IBuffer> RhiDx12::createStructuredBuffer(
     /*, const wchar_t*    resourceName*/) const {
   auto BufferPtr
       = g_createBuffer(size,
-                     stride,
-                     bufferCreateFlag,
-                     initialState,
-                     data,
-                     dataSize,
-                     // TODO: consider why using L prefix in string constant
-                     TEXT(L"StructuredBuffer"));
+                       stride,
+                       bufferCreateFlag,
+                       initialState,
+                       data,
+                       dataSize,
+                       // TODO: consider why using L prefix in string constant
+                       TEXT(L"StructuredBuffer"));
 
   g_createShaderResourceViewStructuredBuffer(
       BufferPtr.get(), (uint32_t)stride, (uint32_t)(size / stride));
@@ -1658,12 +1661,12 @@ std::shared_ptr<IBuffer> RhiDx12::createRawBuffer(
     uint64_t          dataSize
     /*, const wchar_t*    resourceName*/) const {
   auto BufferPtr = g_createBuffer(size,
-                                alignment,
-                                bufferCreateFlag,
-                                initialState,
-                                data,
-                                dataSize,
-                                TEXT(L"RawBuffer"));
+                                  alignment,
+                                  bufferCreateFlag,
+                                  initialState,
+                                  data,
+                                  dataSize,
+                                  TEXT(L"RawBuffer"));
 
   g_createShaderResourceViewRaw(BufferPtr.get(), (uint32_t)size);
 
@@ -1684,12 +1687,12 @@ std::shared_ptr<IBuffer> RhiDx12::createFormattedBuffer(
     uint64_t          dataSize
     /*, const wchar_t*    resourceName*/) const {
   auto BufferPtr = g_createBuffer(size,
-                                alignment,
-                                bufferCreateFlag,
-                                initialState,
-                                data,
-                                dataSize,
-                                TEXT(L"FormattedBuffer"));
+                                  alignment,
+                                  bufferCreateFlag,
+                                  initialState,
+                                  data,
+                                  dataSize,
+                                  TEXT(L"FormattedBuffer"));
 
   g_createShaderResourceViewFormatted(BufferPtr.get(), format, (uint32_t)size);
 

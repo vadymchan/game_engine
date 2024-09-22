@@ -12,11 +12,11 @@ namespace game_engine {
 void View::prepareViewUniformBufferShaderBindingInstance() {
   // Prepare & get ViewUniformBuffer
   struct ViewUniformBuffer {
-    math::Matrix4f<>  m_view;
-    math::Matrix4f<>  m_projection;
-    math::Matrix4f<>  m_VP;
-    math::Vector3Df m_eyeWorld;
-    float           m_padding0;
+    math::Matrix4f<> m_view;
+    math::Matrix4f<> m_projection;
+    math::Matrix4f<> m_VP;
+    math::Vector3Df  m_eyeWorld;
+    float            m_padding0;
   };
 
   ViewUniformBuffer ubo;
