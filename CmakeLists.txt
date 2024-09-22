@@ -322,6 +322,7 @@ if(BUILD_EIGEN)
 endif()
 
 if(BUILD_MATH_LIBRARY)
+    # TODO: remove MATH_LIBRARY_USE_NORMALIZE_IN_PLACE (not used)
     set(MATH_LIBRARY_USE_NORMALIZE_IN_PLACE OFF CACHE BOOL "Use in-place normalization" FORCE)
     FetchContent_MakeAvailable(math_library)
     # if error with simd_define not generated occurs, uncomment this code
