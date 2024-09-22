@@ -202,8 +202,8 @@ if(BUILD_EASTL)
     FetchContent_Declare(
         eastl
         GIT_REPOSITORY https://github.com/electronicarts/EASTL.git
-        GIT_TAG master
-        # GIT_TAG 3.21.12
+        # GIT_TAG master
+        GIT_TAG 3.21.23
         GIT_PROGRESS TRUE
         GIT_SUBMODULES ""
     )
