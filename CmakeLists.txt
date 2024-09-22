@@ -7,22 +7,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 
 # Choose which third-party libraries to include in the build
-option(BUILD_SDL "Build the SDL library" ON)
-option(BUILD_GLFW "Build the GLFW library" OFF)
-option(BUILD_SPDLOG "Build the SPDLOG library" ON)
-option(BUILD_BULLET "Build the Bullet library" OFF)
-option(BUILD_IMGUI "Build the ImGui library" OFF)
-option(BUILD_ASSIMP "Build the Assimp library" OFF)
-option(BUILD_STB "Build the STB library" OFF)
-option(BUILD_BOOST "Build the Boost library" OFF)
-option(BUILD_EIGEN "Include the Eigen library" OFF)
-option(BUILD_MATH_LIBRARY "Build the Math Library" ON)
-option(BUILD_EASTL "Build the EASTL library" ON)
-option(BUILD_XXHASH "Build the xxHash library" ON)
+option(BUILD_SDL          "Build the SDL library"    ON)
+option(BUILD_GLFW         "Build the GLFW library"   OFF)
+option(BUILD_SPDLOG       "Build the SPDLOG library" ON)
+option(BUILD_BULLET       "Build the Bullet library" OFF)
+option(BUILD_IMGUI        "Build the ImGui library"  OFF)
+option(BUILD_ASSIMP       "Build the Assimp library" OFF)
+option(BUILD_STB          "Build the STB library"    OFF)
+option(BUILD_BOOST        "Build the Boost library"  OFF)
+option(BUILD_EIGEN        "Build the Eigen library"  OFF)
+option(BUILD_MATH_LIBRARY "Build the Math Library"   ON)
+option(BUILD_EASTL        "Build the EASTL library"  ON)
+option(BUILD_XXHASH       "Build the xxHash library" ON)
+
 
 # Choose which rendering API to use
-option(USE_VULKAN "Use Vulkan as the rendering API" ON)
-option(USE_OPENGL "Use OpenGL as the rendering API" OFF)
+option(USE_VULKAN  "Use Vulkan as the rendering API"  ON)
+option(USE_OPENGL  "Use OpenGL as the rendering API"  OFF)
 option(USE_DIRECTX "Use DirectX as the rendering API" OFF)
 
 include(CMakeDependentOption)
