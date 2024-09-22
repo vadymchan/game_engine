@@ -23,35 +23,35 @@ ETextureFormat g_getVulkanTextureFormat(VkFormat format);
 
 inline auto g_getVulkanTextureComponentCount(ETextureFormat type) {
     static const std::unordered_map<ETextureFormat, int> textureComponentCountMapping = {
-        {ETextureFormat::RGB8,           3},
-        {ETextureFormat::RGB32F,         3},
-        {ETextureFormat::RGB16F,         3},
-        {ETextureFormat::R11G11B10F,     3},
+        {ETextureFormat::RGB8,       3},
+        {ETextureFormat::RGB32F,     3},
+        {ETextureFormat::RGB16F,     3},
+        {ETextureFormat::R11G11B10F, 3},
 
-        {ETextureFormat::RGBA8,          4},
-        {ETextureFormat::RGBA16F,        4},
-        {ETextureFormat::RGBA32F,        4},
-        {ETextureFormat::RGBA8SI,        4},
-        {ETextureFormat::RGBA8UI,        4},
+        {ETextureFormat::RGBA8,      4},
+        {ETextureFormat::RGBA16F,    4},
+        {ETextureFormat::RGBA32F,    4},
+        {ETextureFormat::RGBA8SI,    4},
+        {ETextureFormat::RGBA8UI,    4},
 
-        {ETextureFormat::BGRA8,          4},
+        {ETextureFormat::BGRA8,      4},
 
-        {ETextureFormat::R8,             1},
-        {ETextureFormat::R16F,           1},
-        {ETextureFormat::R32F,           1},
-        {ETextureFormat::R8UI,           1},
-        {ETextureFormat::R32UI,          1},
+        {ETextureFormat::R8,         1},
+        {ETextureFormat::R16F,       1},
+        {ETextureFormat::R32F,       1},
+        {ETextureFormat::R8UI,       1},
+        {ETextureFormat::R32UI,      1},
 
-        {ETextureFormat::RG8,            2},
-        {ETextureFormat::RG16F,          2},
-        {ETextureFormat::RG32F,          2},
+        {ETextureFormat::RG8,        2},
+        {ETextureFormat::RG16F,      2},
+        {ETextureFormat::RG32F,      2},
 
-        {ETextureFormat::D16,            1},
-        {ETextureFormat::D16_S8,         2},
-        {ETextureFormat::D24,            1},
-        {ETextureFormat::D24_S8,         2},
-        {ETextureFormat::D32,            1},
-        {ETextureFormat::D32_S8,         2}
+        {ETextureFormat::D16,        1},
+        {ETextureFormat::D16_S8,     2},
+        {ETextureFormat::D24,        1},
+        {ETextureFormat::D24_S8,     2},
+        {ETextureFormat::D32,        1},
+        {ETextureFormat::D32_S8,     2}
     };
 
     return getEnumMapping(textureComponentCountMapping, type, 0);  
@@ -59,35 +59,35 @@ inline auto g_getVulkanTextureComponentCount(ETextureFormat type) {
 
 inline auto g_getVulkanTexturePixelSize(ETextureFormat type) {
     static const std::unordered_map<ETextureFormat, int> texturePixelSizeMapping = {
-        {ETextureFormat::RGB8,           3},
-        {ETextureFormat::RGB32F,         12},
-        {ETextureFormat::RGB16F,         6},
-        {ETextureFormat::R11G11B10F,     4},
+        {ETextureFormat::RGB8,       3},
+        {ETextureFormat::RGB32F,     12},
+        {ETextureFormat::RGB16F,     6},
+        {ETextureFormat::R11G11B10F, 4},
 
-        {ETextureFormat::RGBA8,          4},
-        {ETextureFormat::RGBA16F,        8},
-        {ETextureFormat::RGBA32F,        16},
-        {ETextureFormat::RGBA8SI,        4},
-        {ETextureFormat::RGBA8UI,        4},
+        {ETextureFormat::RGBA8,      4},
+        {ETextureFormat::RGBA16F,    8},
+        {ETextureFormat::RGBA32F,    16},
+        {ETextureFormat::RGBA8SI,    4},
+        {ETextureFormat::RGBA8UI,    4},
 
-        {ETextureFormat::BGRA8,          4},
+        {ETextureFormat::BGRA8,      4},
 
-        {ETextureFormat::R8,             1},
-        {ETextureFormat::R16F,           2},
-        {ETextureFormat::R32F,           4},
-        {ETextureFormat::R8UI,           1},
-        {ETextureFormat::R32UI,          4},
+        {ETextureFormat::R8,         1},
+        {ETextureFormat::R16F,       2},
+        {ETextureFormat::R32F,       4},
+        {ETextureFormat::R8UI,       1},
+        {ETextureFormat::R32UI,      4},
 
-        {ETextureFormat::RG8,            2},
-        {ETextureFormat::RG16F,          2},
-        {ETextureFormat::RG32F,          4},
+        {ETextureFormat::RG8,        2},
+        {ETextureFormat::RG16F,      2},
+        {ETextureFormat::RG32F,      4},
 
-        {ETextureFormat::D16,            2},
-        {ETextureFormat::D16_S8,         3},
-        {ETextureFormat::D24,            3},
-        {ETextureFormat::D24_S8,         4},
-        {ETextureFormat::D32,            4},
-        {ETextureFormat::D32_S8,         5}
+        {ETextureFormat::D16,        2},
+        {ETextureFormat::D16_S8,     3},
+        {ETextureFormat::D24,        3},
+        {ETextureFormat::D24_S8,     4},
+        {ETextureFormat::D32,        4},
+        {ETextureFormat::D32_S8,     5}
     };
 
     return getEnumMapping(texturePixelSizeMapping, type, 0); 
