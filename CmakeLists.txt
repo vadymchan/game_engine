@@ -28,6 +28,10 @@ option(USE_DIRECTX "Use DirectX as the rendering API" OFF)
 
 include(CMakeDependentOption)
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
+cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER   "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
+
+
 
 # WIP - change build directory
 # set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
@@ -483,11 +487,6 @@ if(USE_OPENGL)
         target_link_libraries(${PROJECT_NAME} PRIVATE libglew_static)
     endif()
 endif()
-
-include(CMakeDependentOption)
-
-cmake_dependent_option(USE_DIRECTX_AGILITY         "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
-cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
 
 
 # BEGIN: DirectX 12 Agility SDK
