@@ -60,15 +60,50 @@ if(USE_DIRECTX)
     set(VCPKG_PARENT_DIR "${CMAKE_SOURCE_DIR}/third_party")
     set(VCPKG_VERSION edge)
     include(cmake/vcpkg.cmake)
+    
 endif()
+    
+# -------------------------------------------------------------------------------------
+       
+project(game_engine)
+     
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  
+
+# vcpkg - setting CMAKE_PREFIX_PATH 
+# -------------------------------------------------------------------------------------
+
+# if(USE_VCPKG)
+if(USE_DIRECTX)
+
+    function(vcpkg_make_set_triplet)
+            # get platform: win/linux ONLY
+            if(WIN32)
+                set(PLATFORM "windows")
+            else()
+                set(PLATFORM "linux")
+            endif()
+
+            # get bitness: 32/64 ONLY
+            if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+                set(BITS 64)
+            else()
+                set(BITS 86)
+            endif()
+
+            set(VCPKG_TARGET_TRIPLET "x${BITS}-${PLATFORM}" PARENT_SCOPE)
+    endfunction()
+
+    # Call this script right after the project() line to ensure the correct target triplet is determined
+    vcpkg_make_set_triplet()
+    set(VCPKG_ROOT "${FETCHCONTENT_BASE_DIR}/vcpkg")
+    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share")
+
+endif()
+
 
 # -------------------------------------------------------------------------------------
 
-
-project(game_engine)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(PLATFORM "x64")
