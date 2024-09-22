@@ -25,6 +25,9 @@ option(USE_VULKAN "Use Vulkan as the rendering API" ON)
 option(USE_OPENGL "Use OpenGL as the rendering API" OFF)
 option(USE_DIRECTX "Use DirectX as the rendering API" OFF)
 
+include(CMakeDependentOption)
+cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator" ON "USE_DIRECTX" OFF)
+
 # WIP - change build directory
 # set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/bin)
@@ -218,6 +221,15 @@ if(BUILD_XXHASH)
     )
 endif()
 
+if(BUILD_D3D12_MEMORY_ALLOCATOR)
+    message(STATUS "Fetching D3D12MemoryAllocator...")
+    FetchContent_Declare(
+        D3D12MemoryAllocator
+        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git
+        GIT_TAG v2.0.1
+    )
+endif()
+
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
 file(GLOB_RECURSE INLINES "src/*.inl")
@@ -347,6 +359,11 @@ if(BUILD_XXHASH)
     target_link_libraries(${PROJECT_NAME} PRIVATE xxhash)
 endif()
 
+if(BUILD_D3D12_MEMORY_ALLOCATOR)
+    FetchContent_MakeAvailable(D3D12MemoryAllocator)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${D3D12MemoryAllocator_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} PRIVATE D3D12MemoryAllocator)
+endif()
 
 
 if(USE_VULKAN)
