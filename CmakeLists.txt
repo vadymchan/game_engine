@@ -2,9 +2,9 @@
 
 cmake_minimum_required(VERSION 3.26)
 
-set(WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
+set(WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}" CACHE PATH "Working directory for the build process")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" CACHE PATH "Directory for runtime output files")
+set(HLSL_SHADER_MODEL "6.7" CACHE STRING "HLSL shader model version")
 
 # Choose which third-party libraries to include in the build
 option(BUILD_SDL          "Build the SDL library"    ON)
@@ -270,22 +270,49 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
 file(GLOB_RECURSE INLINES "src/*.inl")
 file(GLOB_RECURSE HEADERS "include/*.h")
+file(GLOB_RECURSE HLSL_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*.hlsl")
+file(GLOB_RECURSE HLSL_INCLUDES "${CMAKE_SOURCE_DIR}/assets/shaders/*.hlsli") 
+
+list(APPEND HLSL_SHADERS ${HLSL_INCLUDES})
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include" PREFIX "include" FILES ${HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${INTERNAL_HEADERS} ${SOURCES} ${INLINES})
+source_group(TREE "${CMAKE_SOURCE_DIR}/assets/shaders" PREFIX "Shaders" FILES ${HLSL_SHADERS})
 
 option(GAME_ENGINE_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
 
+# TODO: currently Win32 is not used in this project for Windows
 if(WIN32 AND GAME_ENGINE_USE_WINDOWS_SUBSYSTEM)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES})
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} ${HLSL_SHADERS})
     target_compile_definitions(${PROJECT_NAME} PUBLIC GAME_ENGINE_WINDOWS_SUBSYSTEM)
 else()
-    add_executable(${PROJECT_NAME} ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES})
+    add_executable(${PROJECT_NAME} ${SOURCES} ${INTERNAL_HEADERS} ${HEADERS} ${INLINES} ${HLSL_SHADERS})
 endif()
+
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_EnableClangTidyCodeAnalysis true)
     set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIRECTORY}")
+
+    # Set shader model
+    foreach(SHADER_FILE ${HLSL_SHADERS})
+        set_source_files_properties(${SHADER_FILE} PROPERTIES
+            VS_SHADER_MODEL ${HLSL_SHADER_MODEL}
+        )
+    endforeach()
+
+    # Set shader types based on file extensions
+    foreach(SHADER_FILE ${HLSL_SHADERS})
+        if(SHADER_FILE MATCHES "\\.vs\\.hlsl$")
+            set_source_files_properties(${SHADER_FILE} PROPERTIES
+                VS_SHADER_TYPE Vertex
+            )
+        elseif(SHADER_FILE MATCHES "\\.ps\\.hlsl$")
+            set_source_files_properties(${SHADER_FILE} PROPERTIES
+                VS_SHADER_TYPE Pixel
+            )
+        endif()
+    endforeach()
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC  include)
