@@ -1,6 +1,6 @@
 #include "../common.hlsli"
 
-#define USE_HARDCODED_VALUES 1
+#define USE_HARDCODED_VALUES 0
 
 #if USE_HARDCODED_VALUES
 
@@ -33,25 +33,16 @@ VSOutput main(VSInput input)
 
 #else
 
-// TODO: this is for Vulkan (need somehow to get rid of it)
 struct VSInput
 {
-    [[vk::location(0)]] float3 Position : POSITION;
-    [[vk::location(1)]] float4 Color : COLOR;
-    [[vk::location(2)]] float3 Normal : NORMAL;
-    [[vk::location(3)]] float3 Tangent : TANGENT;
-    [[vk::location(4)]] float2 TexCoord : TEXCOORD;
+    /*[[vk::location(0)]] */float3 Position : POSITION;
+    /*[[vk::location(1)]] */float4 Color : COLOR;
+    /*[[vk::location(2)]] */float3 Normal : NORMAL;
+    /*[[vk::location(3)]] */float3 Tangent : TANGENT;
+    /*[[vk::location(4)]] */float2 TexCoord : TEXCOORD;
 };
 
 
-//struct VSInput
-//{
-//    float3 Position : POSITION;
-//    float4 Color : COLOR;
-//    float3 Normal : NORMAL;
-//    float3 Tangent : TANGENT;
-//    float2 TexCoord : TEXCOORD;
-//};
 
 
 cbuffer ViewParam : register(b0, space0)
@@ -77,10 +68,20 @@ VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
 
-    output.Pos = mul(ViewParam.VP, mul(RenderObjectParam.M, float4(input.Position, 1.0)));
-    output.Color = input.Color;
-    output.Normal = input.Normal;
-    output.Tangent = input.Tangent;
+    float4 objectPos = float4(input.Position, 1.0);
+    output.Pos = objectPos;
+    float4 worldPos = mul(RenderObjectParam.M, objectPos);
+    output.Pos = worldPos;
+    float4 viewPos = mul(ViewParam.V, worldPos);
+    output.Pos = viewPos;
+    float4 projPos = mul(ViewParam.P, viewPos);
+    output.Pos = projPos;
+    
+    //output.Pos = mul(ViewParam.VP, worldPos);
+    
+    output.Color    = input.Color;
+    output.Normal   = input.Normal;
+    output.Tangent  = input.Tangent;
     output.TexCoord = input.TexCoord;
 
     return output;

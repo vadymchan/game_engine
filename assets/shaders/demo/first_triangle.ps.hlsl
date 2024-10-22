@@ -1,6 +1,6 @@
 #include "../common.hlsli"
 
-#define USE_HARDCODED_VALUES 1
+#define USE_HARDCODED_VALUES 0
 
 #if USE_HARDCODED_VALUES
 
