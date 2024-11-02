@@ -3,11 +3,23 @@
 
 #include "gfx/rhi/name.h"
 #include "gfx/rhi/rhi_type.h"
+#include "resources/image.h"
 
 #include <vulkan/vulkan.h>
 
+#include <filesystem>
+
 namespace game_engine {
 
+class IImageLoader {
+  public:
+  virtual ~IImageLoader() = default;
+  virtual std::shared_ptr<Image> loadImage(
+      const std::filesystem::path& filepath)
+      = 0;
+};
+
+// TODO: consider removing code below
 struct ImageSubResourceData {
   // ======= BEGIN: public misc fields ========================================
 
