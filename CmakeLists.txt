@@ -392,7 +392,7 @@ endif()
 
 if(BUILD_STB)
     FetchContent_MakeAvailable(stb)
-    target_link_libraries(${PROJECT_NAME} PRIVATE stb)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${stb_SOURCE_DIR})
 endif()
 
 if(BUILD_EIGEN)
