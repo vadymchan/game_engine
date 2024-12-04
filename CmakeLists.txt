@@ -21,6 +21,8 @@ option(BUILD_EASTL        "Build the EASTL library"  ON)
 option(BUILD_XXHASH       "Build the xxHash library" ON)
 option(BUILD_RAPIDJSON    "Build the RapidJSON library" ON)
 option(BUILD_WATCHER      "Build the watcher library"   ON)
+option(BUILD_ENTT         "Build the EnTT library"      ON)
+
 
 
 # Choose which rendering API to use
@@ -284,6 +286,15 @@ if(BUILD_WATCHER)
     )
 endif()
 
+if(BUILD_ENTT)
+    message(STATUS "Fetching EnTT...")
+    FetchContent_Declare(
+        entt
+        GIT_REPOSITORY https://github.com/skypjack/entt.git
+        GIT_TAG v3.14.0
+    )
+endif()
+
 if(BUILD_D3D12_MEMORY_ALLOCATOR)
     message(STATUS "Fetching D3D12MemoryAllocator...")
     FetchContent_Declare(
@@ -472,6 +483,11 @@ if(BUILD_WATCHER)
     target_include_directories(wtr.hdr_watcher INTERFACE ${watcher_SOURCE_DIR}/include)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${watcher_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE wtr.hdr_watcher)
+endif()
+
+if(BUILD_ENTT)
+    FetchContent_MakeAvailable(entt)
+    target_link_libraries(${PROJECT_NAME} PRIVATE EnTT)
 endif()
 
 
