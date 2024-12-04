@@ -19,6 +19,7 @@ option(BUILD_EIGEN        "Build the Eigen library"  OFF)
 option(BUILD_MATH_LIBRARY "Build the Math Library"   ON)
 option(BUILD_EASTL        "Build the EASTL library"  ON)
 option(BUILD_XXHASH       "Build the xxHash library" ON)
+option(BUILD_RAPIDJSON    "Build the RapidJSON library" ON)
 
 
 # Choose which rendering API to use
@@ -264,6 +265,16 @@ if(BUILD_XXHASH)
     )
 endif()
 
+if(BUILD_RAPIDJSON)
+    message(STATUS "Fetching RapidJSON...")
+    FetchContent_Declare(
+        rapidjson
+        GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+        GIT_TAG v1.1.0
+    )
+endif()
+    message(STATUS "Fetching RapidJSON...")
+
 if(BUILD_D3D12_MEMORY_ALLOCATOR)
     message(STATUS "Fetching D3D12MemoryAllocator...")
     FetchContent_Declare(
@@ -438,6 +449,14 @@ if(BUILD_XXHASH)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${xxhash_SOURCE_DIR}/cmake_unofficial/..")
     target_link_libraries(${PROJECT_NAME} PRIVATE xxhash)
 endif()
+
+if(BUILD_RAPIDJSON)
+    set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+    set(RAPIDJSON_BUILD_TESTS OFF CACHE INTERNAL "")
+    FetchContent_MakeAvailable(rapidjson)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+endif()
+
 
 if(BUILD_D3D12_MEMORY_ALLOCATOR)
     FetchContent_MakeAvailable(D3D12MemoryAllocator)
