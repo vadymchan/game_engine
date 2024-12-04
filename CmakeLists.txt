@@ -7,18 +7,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" CACHE PATH "Directory f
 set(HLSL_SHADER_MODEL "6.7" CACHE STRING "HLSL shader model version")
 
 # Choose which third-party libraries to include in the build
-option(BUILD_SDL          "Build the SDL library"    ON)
-option(BUILD_GLFW         "Build the GLFW library"   OFF)
-option(BUILD_SPDLOG       "Build the SPDLOG library" ON)
-option(BUILD_BULLET       "Build the Bullet library" OFF)
-option(BUILD_IMGUI        "Build the ImGui library"  OFF)
-option(BUILD_ASSIMP       "Build the Assimp library" OFF)
-option(BUILD_STB          "Build the STB library"    OFF)
-option(BUILD_BOOST        "Build the Boost library"  OFF)
-option(BUILD_EIGEN        "Build the Eigen library"  OFF)
-option(BUILD_MATH_LIBRARY "Build the Math Library"   ON)
-option(BUILD_EASTL        "Build the EASTL library"  ON)
-option(BUILD_XXHASH       "Build the xxHash library" ON)
+option(BUILD_SDL          "Build the SDL library"       ON)
+option(BUILD_GLFW         "Build the GLFW library"      OFF)
+option(BUILD_SPDLOG       "Build the SPDLOG library"    ON)
+option(BUILD_BULLET       "Build the Bullet library"    OFF)
+option(BUILD_IMGUI        "Build the ImGui library"     OFF)
+option(BUILD_ASSIMP       "Build the Assimp library"    ON)
+option(BUILD_STB          "Build the STB library"       ON)
+option(BUILD_BOOST        "Build the Boost library"     OFF)
+option(BUILD_EIGEN        "Build the Eigen library"     OFF)
+option(BUILD_MATH_LIBRARY "Build the Math Library"      ON)
+option(BUILD_EASTL        "Build the EASTL library"     ON)
+option(BUILD_XXHASH       "Build the xxHash library"    ON)
 option(BUILD_RAPIDJSON    "Build the RapidJSON library" ON)
 option(BUILD_WATCHER      "Build the watcher library"   ON)
 option(BUILD_ENTT         "Build the EnTT library"      ON)
@@ -36,6 +36,7 @@ cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Alloca
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator" ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER   "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(USE_DIRECTX_TEX               "Fetch DirectX Tex Library" ON "USE_DIRECTX" OFF)
 
 
 
@@ -115,7 +116,6 @@ endif()
 
 # -------------------------------------------------------------------------------------
 
-
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(PLATFORM "x64")
 else()
@@ -125,7 +125,6 @@ endif()
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif()
-
 
 
 if(BUILD_SDL)
@@ -312,6 +311,7 @@ if(BUILD_VULKAN_MEMORY_ALLOCATOR)
         GIT_TAG v3.1.0
     )
 endif()
+
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE INTERNAL_HEADERS "src/*.h")
@@ -564,7 +564,7 @@ endif()
 
 
 # BEGIN: DirectX 12 Agility SDK
-#--------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 if(USE_DIRECTX_AGILITY)
 
     # BEGIN: cmake_modules (FindWindowsSDK) -> D3D12_LIB
