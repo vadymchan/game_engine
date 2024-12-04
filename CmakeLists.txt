@@ -625,6 +625,23 @@ endif()
 # END: DirectXShaderCompiler
 # -------------------------------------------------------------------------------------
 
+# BEGIN: DirectXTex
+# -------------------------------------------------------------------------------------
+if(USE_DIRECTX_TEX)
+    message(STATUS "Fetching DirectXTex...")
+    
+    find_package(directxtex QUIET)
+    if(NOT directxtex_FOUND)
+        vcpkg_add_package(directxtex)
+        find_package(directxtex CONFIG REQUIRED)
+    endif()
+    
+    target_link_libraries(${PROJECT_NAME} PRIVATE  Microsoft::DirectXTex)
+endif()
+# END: DirectXTex
+# -------------------------------------------------------------------------------------
+
+
 if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTX)
     message(FATAL_ERROR "At least one of Vulkan, OpenGL or DirectX must be selected for graphics API")
 endif()
