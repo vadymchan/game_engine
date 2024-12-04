@@ -419,6 +419,11 @@ if(BUILD_ASSIMP)
         ${assimp_BINARY_DIR}/code/../include
     )
     target_link_libraries(${PROJECT_NAME} PRIVATE assimp)
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:assimp>
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
 
 if(BUILD_STB)
