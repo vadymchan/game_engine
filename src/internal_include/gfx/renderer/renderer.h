@@ -38,15 +38,13 @@ struct SimplePushConstant {
   // bool m_padding2_[3];
 
   // ======= END: public misc fields   ========================================
-
-
 };
 
 class Renderer {
   public:
-    // ======= BEGIN: public constructors =======================================
+  // ======= BEGIN: public constructors =======================================
 
-Renderer() = default;
+  Renderer() = default;
 
   Renderer(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
            const View&                                view,
@@ -66,7 +64,6 @@ Renderer() = default;
   // ======= BEGIN: public overridden methods =================================
 
   virtual void setup() {
-    m_frameIndex_            = g_rhi->getCurrentFrameIndex();
     m_useForwardRenderer_ = m_renderFrameContextPtr_->m_useForwardRenderer_;
 
     // view.ShadowCasterLights.reserve(view.Lights.size());
@@ -95,82 +92,77 @@ Renderer() = default;
     //  }
     //}
 
-#if ASYNC_WITH_SETUP
-    ShadowPassSetupCompleteEvent
-        = std::async(std::launch::async, &Renderer::SetupShadowPass, this);
-#else
     // TODO: shadow pass setup before base pass
     Renderer::setupBasePass();
-#endif
   }
 
-
-
   virtual void basePass() {
-    const auto& screenWidth  = m_window_->getSize().width();
-    const auto& screenHeight = m_window_->getSize().height();
+    // TODO: prob not needed, remove
+    // const auto& screenWidth  = m_window_->getSize().width();
+    // const auto& screenHeight = m_window_->getSize().height();
 
-    if (m_basePassSetupCompleteEvent_.valid()) {
-      m_basePassSetupCompleteEvent_.wait();
+    // TODO: prob not needed, remove
+    // if (m_basePassSetupCompleteEvent_.valid()) {
+    //   m_basePassSetupCompleteEvent_.wait();
+    // }
+
+    if (m_useForwardRenderer_) {
+      g_rhi->transitionLayout(
+          m_renderFrameContextPtr_->getActiveCommandBuffer(),
+          // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->getTexture(),
+          m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_finalColorPtr_
+              ->getTexture(),
+          EResourceLayout::COLOR_ATTACHMENT);
+      // TODO: worked for Vulkan
+      // EResourceLayout::PRESENT_SRC);
+    } else {
+      // TODO: not used for now
+      /*for (int32_t i = 0;
+         i
+         < std::size(RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer);
+         ++i) {
+      g_rhi->transitionLayout(
+          RenderFrameContextPtr->getActiveCommandBuffer(),
+          RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i]
+              ->getTexture(),
+          EResourceLayout::COLOR_ATTACHMENT);
+    }*/
     }
 
+    // Depth only or depth stencil attachment
     {
-      if (m_useForwardRenderer_) {
-        g_rhi->transitionLayout(
-            m_renderFrameContextPtr_->getActiveCommandBuffer(),
-            // RenderFrameContextPtr->SceneRenderTargetPtr->ColorPtr->getTexture(),
-            m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_finalColorPtr_
-                ->getTexture(),
-            EResourceLayout::COLOR_ATTACHMENT);
-        // TODO: worked for Vulkan
-        // EResourceLayout::PRESENT_SRC);
-      } else {
-        // TODO: not used for now
-        /*for (int32_t i = 0;
-           i
-           < std::size(RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer);
-           ++i) {
-        g_rhi->transitionLayout(
-            RenderFrameContextPtr->getActiveCommandBuffer(),
-            RenderFrameContextPtr->SceneRenderTargetPtr->GBuffer[i]
-                ->getTexture(),
-            EResourceLayout::COLOR_ATTACHMENT);
+      auto newLayout
+          = m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
+                    ->getTexture()
+                    ->isDepthOnlyFormat()
+              ? EResourceLayout::DEPTH_ATTACHMENT
+              : EResourceLayout::DEPTH_STENCIL_ATTACHMENT;
+
+      g_rhi->transitionLayout(
+          m_renderFrameContextPtr_->getActiveCommandBuffer(),
+          m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
+              ->getTexture(),
+          newLayout);
+    }
+
+    // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->getActiveCommandBuffer());
+    if (m_baseRenderPass_
+        && m_baseRenderPass_->beginRenderPass(
+            m_renderFrameContextPtr_->getActiveCommandBuffer())) {
+      // Draw G-m_buffer : subpass 0
+      for (const auto& command : m_basePasses_) {
+        command.draw();
+      }
+
+      // TODO: not used for now
+      // Draw Light : subpass 1
+      /*if (!useForwardRenderer && gOptions.UseSubpass) {
+        g_rhi->nextSubpass(
+            RenderFrameContextPtr->getActiveCommandBuffer());
+        DeferredLightPass_TodoRefactoring(BaseRenderPass);
       }*/
-      }
 
-      {
-        auto newLayout
-            = m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
-                      ->getTexture()
-                      ->isDepthOnlyFormat()
-                ? EResourceLayout::DEPTH_ATTACHMENT
-                : EResourceLayout::DEPTH_STENCIL_ATTACHMENT;
-        g_rhi->transitionLayout(
-            m_renderFrameContextPtr_->getActiveCommandBuffer(),
-            m_renderFrameContextPtr_->m_sceneRenderTargetPtr_->m_depthPtr_
-                ->getTexture(),
-            newLayout);
-      }
-
-      // BasepassOcclusionTest.BeginQuery(RenderFrameContextPtr->getActiveCommandBuffer());
-      if (m_baseRenderPass_
-          && m_baseRenderPass_->beginRenderPass(
-              m_renderFrameContextPtr_->getActiveCommandBuffer())) {
-        // Draw G-m_buffer : subpass 0
-        for (const auto& command : m_basePasses_) {
-          command.draw();
-        }
-
-        // TODO: not used for now
-        // Draw Light : subpass 1
-        /*if (!useForwardRenderer && gOptions.UseSubpass) {
-          g_rhi->nextSubpass(
-              RenderFrameContextPtr->getActiveCommandBuffer());
-          DeferredLightPass_TodoRefactoring(BaseRenderPass);
-        }*/
-
-        m_baseRenderPass_->endRenderPass();
-      }
+      m_baseRenderPass_->endRenderPass();
     }
   }
 
@@ -192,11 +184,6 @@ Renderer() = default;
 
   // ======= END: public overridden methods   =================================
 
-
-
-
-
-     
   // ======= BEGIN: public misc methods =======================================
 
   // TODO: consider making virtual
@@ -289,13 +276,13 @@ Renderer() = default;
                                                     0.0f,
                                                     1.0f>::s_create();
     auto blendingState     = TBlendingStateInfo<false,
-                                            EBlendFactor::ONE,
-                                            EBlendFactor::ZERO,
-                                            EBlendOp::ADD,
-                                            EBlendFactor::ONE,
-                                            EBlendFactor::ZERO,
-                                            EBlendOp::ADD,
-                                            EColorMask::ALL>::s_create();
+                                                EBlendFactor::ONE,
+                                                EBlendFactor::ZERO,
+                                                EBlendOp::ADD,
+                                                EBlendFactor::ONE,
+                                                EBlendFactor::ZERO,
+                                                EBlendOp::ADD,
+                                                EColorMask::ALL>::s_create();
 
     PipelineStateFixedInfo basePassPipelineStateFixed = PipelineStateFixedInfo(
         rasterizationState,
@@ -434,19 +421,19 @@ Renderer() = default;
     //                      2,
     //                      EPipelineStageMask::COLOR_ATTACHMENT_OUTPUT_BIT,
     //                      EPipelineStageMask::FRAGMENT_SHADER_BIT);
-
+    //
     //  const int32_t kGBufferCount = kLightPassAttachmentIndex;
     //  for (int32_t i = 0; i < kGBufferCount; ++i) {
     //    subpass.InputAttachments.push_back(i);
     //  }
-
+    //
     //  subpass.OutputColorAttachments.push_back(kLightPassAttachmentIndex);
     //  subpass.OutputDepthAttachment = kDepthAttachmentIndex;
-
+    //
     //  if ((int32_t)g_rhi->getSelectedMSAASamples() > 1) {
     //    subpass.OutputResolveAttachment = kResolveAttachemntIndex;
     //  }
-
+    //
     //  renderPassInfo.Subpasses.push_back(subpass);
     //}
     //////////////////////////////////////////////////////////////////////////
@@ -558,7 +545,7 @@ Renderer() = default;
     //      //NameStatic("assets/shaders/demo/first_triangle.vs.hlsl"));
     //  shaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
     //  TranslucentPassShader.m_vertexShader_ = g_rhi->createShader(shaderInfo);
-
+    //
     //  ShaderGBufferPixelShader::ShaderPermutation ShaderPermutation;
     //  shaderPermutation.setIndex<ShaderGBufferPixelShader::USE_VERTEX_COLOR>(
     //      0);
@@ -579,38 +566,10 @@ Renderer() = default;
         = new (MemStack::get()->alloc<PushConstant>()) PushConstant(
             simplePushConstantData, EShaderAccessStageFlag::FRAGMENT);
 
-#if PARALLELFOR_WITH_PASSSETUP
-    BasePasses.resize(Object::GetStaticRenderObject().size());
-    ParallelFor::ParallelForWithTaskPerThread(
-        MaxPassSetupTaskPerThreadCount,
-        Object::GetStaticRenderObject(),
-        [&](size_t index, RenderObject* renderObject) {
-          Material* material = nullptr;
-          if (renderObject->MaterialPtr) {
-            material = renderObject->MaterialPtr.get();
-          } else {
-            if (GDefaultMaterial) {
-              material = GDefaultMaterial.get();
-            }
-          }
-
-          new (&BasePasses[index])
-              DrawCommand(RenderFrameContextPtr,
-                          &view,
-                          renderObject,
-                          BaseRenderPass,
-                          getOrCreateShaderFunc(renderObject),
-                          &basePassPipelineStateFixed,
-                          material,
-                          {},
-                          simplePushConstant);
-          BasePasses[index].prepareToDraw(false);
-        });
-#else
     m_basePasses_.resize(Object::s_getStaticRenderObject().size());
     int32_t i = 0;
     for (auto iter : Object::s_getStaticRenderObject()) {
-      Material* material = nullptr;
+      MaterialOld* material = nullptr;
       if (iter->m_materialPtr_) {
         material = iter->m_materialPtr_.get();
       } else {
@@ -620,18 +579,17 @@ Renderer() = default;
       }
 
       new (&m_basePasses_[i]) DrawCommand(m_renderFrameContextPtr_,
-                                       &m_view_,
-                                       iter,
-                                       m_baseRenderPass_,
-                                       getOrCreateShaderFunc(iter),
-                                       &basePassPipelineStateFixed,
-                                       material,
-                                       {},
-                                       simplePushConstant);
+                                          &m_view_,
+                                          iter,
+                                          m_baseRenderPass_,
+                                          getOrCreateShaderFunc(iter),
+                                          &basePassPipelineStateFixed,
+                                          material,
+                                          {},
+                                          simplePushConstant);
       m_basePasses_[i].prepareToDraw(false);
       ++i;
     }
-#endif
   }
 
   // ======= END: public misc methods   =======================================
@@ -657,14 +615,9 @@ Renderer() = default;
 
   RenderPass* m_baseRenderPass_ = nullptr;
 
-  // Current FrameIndex
-  int32_t m_frameIndex_ = 0;
-
   std::shared_ptr<Window> m_window_;
 
   // ======= END: public misc fields   ========================================
-
-
 };
 
 }  // namespace game_engine
