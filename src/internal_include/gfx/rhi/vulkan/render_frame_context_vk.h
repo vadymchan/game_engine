@@ -16,7 +16,7 @@ struct RenderFrameContextVk : public RenderFrameContext {
 
   RenderFrameContextVk() = default;
 
-  RenderFrameContextVk(CommandBuffer* commandBuffer)
+  RenderFrameContextVk(std::shared_ptr<CommandBuffer> commandBuffer)
       : RenderFrameContext(commandBuffer) {}
 
   // ======= END: public constructors   =======================================
@@ -46,7 +46,7 @@ struct RenderFrameContextVk : public RenderFrameContext {
   protected:
   // ======= BEGIN: protected misc fields =====================================
 
-  CommandBuffer* m_commandBuffer_ = nullptr;
+  std::shared_ptr<CommandBuffer> m_commandBuffer_ = nullptr;
 
   // ======= END: protected misc fields   =====================================
 };
