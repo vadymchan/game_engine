@@ -5,7 +5,7 @@
 
 namespace game_engine {
 
-Texture* Material::getTexture(EMaterialTextureType inType) const {
+Texture* MaterialOld::getTexture(EMaterialTextureType inType) const {
   assert(EMaterialTextureType::Albedo <= inType);
   assert(EMaterialTextureType::Max > inType);
 
@@ -20,7 +20,7 @@ Texture* Material::getTexture(EMaterialTextureType inType) const {
 }
 
 const std::shared_ptr<ShaderBindingInstance>&
-    Material::createShaderBindingInstance() {
+    MaterialOld::createShaderBindingInstance() {
   if (m_needToUpdateShaderBindingInstance_) {
     m_needToUpdateShaderBindingInstance_ = false;
 
