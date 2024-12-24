@@ -7,6 +7,7 @@
 #include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/rhi.h"
 #include "platform/windows/windows_platform_setup.h"
+#include "resources/image.h"
 
 namespace game_engine {
 
@@ -206,8 +207,8 @@ const D3D12_RESOURCE_DESC& g_getUploadResourceDesc(uint64_t size) {
 }
 
 ComPtr<ID3D12Resource> g_createStagingBuffer(const void* initData,
-                                           int64_t     size,
-                                           uint64_t    alignment) {
+                                             int64_t     size,
+                                             uint64_t    alignment) {
   const uint64_t AlignedSize = g_align(size, alignment);
 
   ComPtr<ID3D12Resource> UploadResourceRHI;
@@ -228,9 +229,9 @@ ComPtr<ID3D12Resource> g_createStagingBuffer(const void* initData,
 }
 
 void g_uploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
-                                const void*             initData,
-                                uint64_t                size,
-                                uint64_t                alignment) {
+                                  const void*             initData,
+                                  uint64_t                size,
+                                  uint64_t                alignment) {
   assert(DestBuffer);
 
   const uint64_t AlignedSize = g_align(size, alignment);
@@ -238,7 +239,8 @@ void g_uploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
 
   ComPtr<ID3D12Resource> StagingBuffer
       = g_createStagingBuffer(initData, size, alignment);
-  CommandBufferDx12* commandBuffer = g_rhiDx12->beginSingleTimeCopyCommands();
+  auto commandBuffer = std::static_pointer_cast<CommandBufferDx12>(
+      g_rhiDx12->beginSingleTimeCopyCommands());
   assert(commandBuffer->isValid());
   commandBuffer->get()->CopyBufferRegion(
       DestBuffer.Get(), 0, StagingBuffer.Get(), 0, AlignedSize);
@@ -246,7 +248,7 @@ void g_uploadByUsingStagingBuffer(ComPtr<ID3D12Resource>& DestBuffer,
 }
 
 D3D12_RESOURCE_DESC g_getDefaultResourceDesc(uint64_t alignedSize,
-                                           bool     isAllowUAV) {
+                                             bool     isAllowUAV) {
   static D3D12_RESOURCE_DESC Desc{
     .Dimension        = D3D12_RESOURCE_DIMENSION_BUFFER,
     .Alignment        = 0,
@@ -264,12 +266,13 @@ D3D12_RESOURCE_DESC g_getDefaultResourceDesc(uint64_t alignedSize,
   return Desc;
 }
 
-ComPtr<ID3D12Resource> g_createDefaultResource(uint64_t              alignedSize,
-                                             D3D12_RESOURCE_STATES initialState,
-                                             bool                  isAllowUAV,
-                                             bool           isCPUAccessible,
-                                             const wchar_t* name) {
-  const D3D12_RESOURCE_DESC   Desc = g_getDefaultResourceDesc(alignedSize, false);
+ComPtr<ID3D12Resource> g_createDefaultResource(
+    uint64_t              alignedSize,
+    D3D12_RESOURCE_STATES initialState,
+    bool                  isAllowUAV,
+    bool                  isCPUAccessible,
+    const wchar_t*        name) {
+  const D3D12_RESOURCE_DESC Desc = g_getDefaultResourceDesc(alignedSize, false);
   const D3D12_HEAP_PROPERTIES HeapProperties
       = isCPUAccessible ? g_getUploadHeap() : g_getDefaultHeap();
 
@@ -295,10 +298,10 @@ ComPtr<ID3D12Resource> g_createDefaultResource(uint64_t              alignedSize
 }
 
 void* g_copyInitialData(ComPtr<ID3D12Resource>& dest,
-                      const void*             initData,
-                      uint64_t                size,
-                      uint64_t                alignment,
-                      bool                    isCPUAccessible) {
+                        const void*             initData,
+                        uint64_t                size,
+                        uint64_t                alignment,
+                        bool                    isCPUAccessible) {
   if (dest) {
     if (isCPUAccessible) {
       void*       MappedPointer = nullptr;
@@ -319,7 +322,7 @@ void* g_copyInitialData(ComPtr<ID3D12Resource>& dest,
   return nullptr;
 }
 
-std::shared_ptr<CreatedResource> g_createBufferInternal(
+std::shared_ptr<CreatedResourceDx12> g_createBufferInternal(
     uint64_t              size,
     uint64_t              alignment,
     EBufferCreateFlag     bufferCreateFlag,
@@ -358,7 +361,7 @@ std::shared_ptr<CreatedResource> g_createBufferInternal(
 
   assert(g_rhiDx12);
 
-  std::shared_ptr<CreatedResource> createdResource;
+  std::shared_ptr<CreatedResourceDx12> createdResource;
   if (!!(bufferCreateFlag & EBufferCreateFlag::Readback)) {
     assert(EBufferCreateFlag::NONE
            == (bufferCreateFlag
@@ -377,7 +380,7 @@ std::shared_ptr<CreatedResource> g_createBufferInternal(
 
     assert(SUCCEEDED(hr));
 
-    createdResource = CreatedResource::s_createdFromStandalone(NewResource);
+    createdResource = CreatedResourceDx12::s_createdFromStandalone(NewResource);
   } else if (!!(bufferCreateFlag & EBufferCreateFlag::CPUAccess)) {
     assert(EBufferCreateFlag::NONE
            == (bufferCreateFlag
@@ -399,12 +402,12 @@ std::shared_ptr<CreatedResource> g_createBufferInternal(
 }
 
 std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
-                                         uint64_t          alignment,
-                                         EBufferCreateFlag bufferCreateFlag,
-                                         EResourceLayout   layout,
-                                         const void*       data,
-                                         uint64_t          dataSize,
-                                         const wchar_t*    resourceName) {
+                                           uint64_t          alignment,
+                                           EBufferCreateFlag bufferCreateFlag,
+                                           EResourceLayout   layout,
+                                           const void*       data,
+                                           uint64_t          dataSize,
+                                           const wchar_t*    resourceName) {
   // If the resource needed to be created with
   // EBufferCreateFlag::AccelerationStructure, you must initialize the buffer
   // resource state as ACCELERATION_STRUCTURE state.
@@ -428,7 +431,7 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
     InitialLayout     = EResourceLayout::READ_ONLY;
   }
 
-  std::shared_ptr<CreatedResource> BufferInternal = g_createBufferInternal(
+  std::shared_ptr<CreatedResourceDx12> BufferInternal = g_createBufferInternal(
       size, alignment, bufferCreateFlag, initialLayoutDx12, resourceName);
   if (!BufferInternal->m_resource_) {
     return nullptr;
@@ -440,9 +443,9 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
     char         szResourceName[1024];
-    size_t       length = 0;
-    size_t       origsize  = wcslen(resourceName) + 1;
-    const size_t newsize   = origsize * 2;
+    size_t       length   = 0;
+    size_t       origsize = wcslen(resourceName) + 1;
+    const size_t newsize  = origsize * 2;
     wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
     BufferPtr->m_resourceName_ = Name(szResourceName);
   }
@@ -456,13 +459,14 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
       assert(CPUAddress);
       memcpy(CPUAddress, data, dataSize);
     } else {
-      std::shared_ptr<CreatedResource> StagingBuffer = g_createBufferInternal(
-          size,
-          alignment,
-          EBufferCreateFlag::CPUAccess,
-          D3D12_RESOURCE_STATE_GENERIC_READ,
-          resourceName);  // CPU Access should be created with
-                          // 'D3D12_RESOURCE_STATE_GENERIC_READ'.
+      std::shared_ptr<CreatedResourceDx12> StagingBuffer
+          = g_createBufferInternal(
+              size,
+              alignment,
+              EBufferCreateFlag::CPUAccess,
+              D3D12_RESOURCE_STATE_GENERIC_READ,
+              resourceName);  // CPU Access should be created with
+                              // 'D3D12_RESOURCE_STATE_GENERIC_READ'.
       assert(StagingBuffer->isValid());
 
       void*       MappedPointer = nullptr;
@@ -477,8 +481,9 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
         StagingBuffer->m_resource_.get()->Get()->Unmap(0, nullptr);
       }
 
-      CommandBufferDx12* commandBuffer
-          = g_rhiDx12->beginSingleTimeCopyCommands();
+      auto commandBuffer = std::static_pointer_cast<CommandBufferDx12>(
+          g_rhiDx12->beginSingleTimeCopyCommands());
+
       assert(commandBuffer->isValid());
 
       commandBuffer->get()->CopyBufferRegion(
@@ -498,7 +503,7 @@ std::shared_ptr<BufferDx12> g_createBuffer(uint64_t          size,
   return BufferPtr;
 }
 
-std::shared_ptr<CreatedResource> g_createTexturenternal(
+std::shared_ptr<CreatedResourceDx12> g_createTexturenternal(
     uint32_t                 witdh,
     uint32_t                 height,
     uint32_t                 arrayLayers,
@@ -544,8 +549,9 @@ std::shared_ptr<CreatedResource> g_createTexturenternal(
   TexDesc.Layout    = D3D12_TEXTURE_LAYOUT_UNKNOWN;
   TexDesc.Alignment = 0;
 
-  std::shared_ptr<CreatedResource> ImageResource = g_rhiDx12->createResource(
-      &TexDesc, g_getDX12ResourceLayout(imageLayout), clearValue);
+  std::shared_ptr<CreatedResourceDx12> ImageResource
+      = g_rhiDx12->createResource(
+          &TexDesc, g_getDX12ResourceLayout(imageLayout), clearValue);
   assert(ImageResource->m_resource_);
 
   if (resourceName && ImageResource->m_resource_) {
@@ -555,17 +561,18 @@ std::shared_ptr<CreatedResource> g_createTexturenternal(
   return ImageResource;
 }
 
-std::shared_ptr<TextureDx12> g_createTexture(uint32_t           witdh,
-                                           uint32_t           height,
-                                           uint32_t           arrayLayers,
-                                           uint32_t           mipLevels,
-                                           uint32_t           numOfSamples,
-                                           ETextureType       type,
-                                           ETextureFormat     format,
-                                           ETextureCreateFlag textureCreateFlag,
-                                           EResourceLayout    imageLayout,
-                                           const RtClearValue& clearValue,
-                                           const wchar_t*      resourceName) {
+std::shared_ptr<TextureDx12> g_createTexture(
+    uint32_t            witdh,
+    uint32_t            height,
+    uint32_t            arrayLayers,
+    uint32_t            mipLevels,
+    uint32_t            numOfSamples,
+    ETextureType        type,
+    ETextureFormat      format,
+    ETextureCreateFlag  textureCreateFlag,
+    EResourceLayout     imageLayout,
+    const RtClearValue& clearValue,
+    const wchar_t*      resourceName) {
   bool              HasClearValue = false;
   D3D12_CLEAR_VALUE ClearValue{};
   if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
@@ -583,18 +590,18 @@ std::shared_ptr<TextureDx12> g_createTexture(uint32_t           witdh,
     HasClearValue = clearValue.getType() != ERTClearType::None;
   }
 
-  std::shared_ptr<CreatedResource> TextureInternal
+  std::shared_ptr<CreatedResourceDx12> TextureInternal
       = g_createTexturenternal(witdh,
-                             height,
-                             arrayLayers,
-                             mipLevels,
-                             numOfSamples,
-                             g_getDX12TextureDemension(type),
-                             g_getDX12TextureFormat(format),
-                             textureCreateFlag,
-                             imageLayout,
-                             (HasClearValue ? &ClearValue : nullptr),
-                             resourceName);
+                               height,
+                               arrayLayers,
+                               mipLevels,
+                               numOfSamples,
+                               g_getDX12TextureDemension(type),
+                               g_getDX12TextureFormat(format),
+                               textureCreateFlag,
+                               imageLayout,
+                               (HasClearValue ? &ClearValue : nullptr),
+                               resourceName);
   assert(TextureInternal->isValid());
 
   auto TexturePtr = std::make_shared<TextureDx12>(
@@ -616,9 +623,9 @@ std::shared_ptr<TextureDx12> g_createTexture(uint32_t           witdh,
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
     char         szResourceName[1024];
-    size_t       length = 0;
-    size_t       origsize  = wcslen(resourceName) + 1;
-    const size_t newsize   = origsize * 2;
+    size_t       length   = 0;
+    size_t       origsize = wcslen(resourceName) + 1;
+    const size_t newsize  = origsize * 2;
     wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
 
     TexturePtr->m_resourceName_ = Name(szResourceName);
@@ -641,11 +648,11 @@ std::shared_ptr<TextureDx12> g_createTexture(uint32_t           witdh,
 }
 
 std::shared_ptr<TextureDx12> g_createTexture(
-    const std::shared_ptr<CreatedResource>& texture,
-    ETextureCreateFlag                      textureCreateFlag,
-    EResourceLayout                         imageLayout,
-    const RtClearValue&                     clearValue,
-    const wchar_t*                          resourceName) {
+    const std::shared_ptr<CreatedResourceDx12>& texture,
+    ETextureCreateFlag                          textureCreateFlag,
+    EResourceLayout                             imageLayout,
+    const RtClearValue&                         clearValue,
+    const wchar_t*                              resourceName) {
   const auto desc       = texture->m_resource_.get()->Get()->GetDesc();
   auto       TexturePtr = std::make_shared<TextureDx12>(
       g_getDX12TextureDemension(desc.Dimension, desc.DepthOrArraySize > 1),
@@ -665,9 +672,9 @@ std::shared_ptr<TextureDx12> g_createTexture(
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
     char         szResourceName[1024];
-    size_t       length = 0;
-    size_t       origsize  = wcslen(resourceName) + 1;
-    const size_t newsize   = origsize * 2;
+    size_t       length   = 0;
+    size_t       origsize = wcslen(resourceName) + 1;
+    const size_t newsize  = origsize * 2;
     wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
 
     TexturePtr->m_resourceName_ = Name(szResourceName);
@@ -689,11 +696,12 @@ std::shared_ptr<TextureDx12> g_createTexture(
   return TexturePtr;
 }
 
-uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
-                             ID3D12Resource*             buffer,
-                             uint64_t                    bufferOffset,
-                             ID3D12Resource*             image,
-                             int32_t imageSubresourceIndex) {
+uint64_t g_copyBufferToTextureDeprecated(
+    ID3D12GraphicsCommandList4* commandBuffer,
+    ID3D12Resource*             buffer,
+    uint64_t                    bufferOffset,
+    ID3D12Resource*             image,
+    int32_t                     imageSubresourceIndex) {
   assert(commandBuffer);
 
   const auto                         imageDesc         = image->GetDesc();
@@ -721,24 +729,25 @@ uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
   return textureMemorySize;
 }
 
-uint64_t g_copyBufferToTexture(ID3D12GraphicsCommandList4* commandBuffer,
-                             ID3D12Resource*             buffer,
-                             uint64_t                    bufferOffset,
-                             ID3D12Resource*             image,
-                             int32_t numOfImageSubresources,
-                             int32_t startImageSubresources) {
+uint64_t g_copyBufferToTextureDeprecated(
+    ID3D12GraphicsCommandList4* commandBuffer,
+    ID3D12Resource*             buffer,
+    uint64_t                    bufferOffset,
+    ID3D12Resource*             image,
+    int32_t                     numOfImageSubresources,
+    int32_t                     startImageSubresources) {
   for (int32_t i = 0; i < numOfImageSubresources; ++i) {
-    bufferOffset
-        += g_copyBufferToTexture(commandBuffer, buffer, bufferOffset, image, i);
+    bufferOffset += g_copyBufferToTextureDeprecated(
+        commandBuffer, buffer, bufferOffset, image, i);
   }
   return bufferOffset;  // total size of copy data
 }
 
-void g_copyBufferToTexture(
-    ID3D12GraphicsCommandList4*              commandBuffer,
-    ID3D12Resource*                          buffer,
-    ID3D12Resource*                          image,
-    const std::vector<ImageSubResourceData>& subresourceData) {
+void g_copyBufferToTextureDeprecated(
+    ID3D12GraphicsCommandList4*                        commandBuffer,
+    ID3D12Resource*                                    buffer,
+    ID3D12Resource*                                    image,
+    const std::vector<ImageSubResourceDataDeprecated>& subresourceData) {
   for (uint64_t i = 0; i < subresourceData.size(); ++i) {
     D3D12_TEXTURE_COPY_LOCATION dst = {};
     dst.pResource                   = image;
@@ -758,12 +767,51 @@ void g_copyBufferToTexture(
   }
 }
 
+void g_copyBufferToTexture(ID3D12GraphicsCommandList4*   commandBuffer,
+                           ID3D12Resource*               buffer,
+                           ID3D12Resource*               imageResource,
+                           const std::shared_ptr<Image>& image) {
+  DXGI_FORMAT    dxgiFormat = g_getDX12TextureFormat(image->format);
+  const uint8_t* basePtr
+      = reinterpret_cast<const uint8_t*>(image->pixels.data());
+
+  for (size_t i = 0; i < image->subImages.size(); ++i) {
+    const auto& sub = image->subImages[i];
+
+    // Compute offset into pixels
+    const uint8_t* subPtr
+        = reinterpret_cast<const uint8_t*>(&(*sub.pixelBegin));
+    uint64_t offset = static_cast<uint64_t>(std::distance(basePtr, subPtr));
+    uint32_t width  = static_cast<uint32_t>(sub.width);
+    uint32_t height = static_cast<uint32_t>(sub.height);
+    uint32_t depth  = static_cast<uint32_t>(image->depth);
+
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+    dst.pResource                   = imageResource;
+    dst.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.SubresourceIndex            = static_cast<UINT>(i);
+
+    D3D12_TEXTURE_COPY_LOCATION src = {};
+    src.pResource                   = buffer;
+    src.Type                        = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+    src.PlacedFootprint.Footprint.Format   = dxgiFormat;
+    src.PlacedFootprint.Footprint.Width    = width;
+    src.PlacedFootprint.Footprint.Height   = height;
+    src.PlacedFootprint.Footprint.Depth    = depth;
+    src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(sub.rowPitch);
+    src.PlacedFootprint.Offset             = offset;
+
+    commandBuffer->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+  }
+}
+
 void g_copyBuffer(ID3D12GraphicsCommandList4* commandBuffer,
-                ID3D12Resource*             srcBuffer,
-                ID3D12Resource*             dstBuffer,
-                uint64_t                    size,
-                uint64_t                    srcOffset,
-                uint64_t                    dstOffset) {
+                  ID3D12Resource*             srcBuffer,
+                  ID3D12Resource*             dstBuffer,
+                  uint64_t                    size,
+                  uint64_t                    srcOffset,
+                  uint64_t                    dstOffset) {
   assert(commandBuffer);
   assert(srcBuffer);
   assert(dstBuffer);
@@ -773,17 +821,15 @@ void g_copyBuffer(ID3D12GraphicsCommandList4* commandBuffer,
 }
 
 void g_copyBuffer(ID3D12Resource* srcBuffer,
-                ID3D12Resource* dstBuffer,
-                uint64_t        size,
-                uint64_t        srcOffset,
-                uint64_t        dstOffset) {
-  CommandBufferDx12* commandBuffer = g_rhiDx12->beginSingleTimeCopyCommands();
-  g_copyBuffer(commandBuffer->get(),
-             srcBuffer,
-             dstBuffer,
-             size,
-             srcOffset,
-             dstOffset);
+                  ID3D12Resource* dstBuffer,
+                  uint64_t        size,
+                  uint64_t        srcOffset,
+                  uint64_t        dstOffset) {
+  auto commandBuffer = std::static_pointer_cast<CommandBufferDx12>(
+      g_rhiDx12->beginSingleTimeCopyCommands());
+
+  g_copyBuffer(
+      commandBuffer->get(), srcBuffer, dstBuffer, size, srcOffset, dstOffset);
   g_rhiDx12->endSingleTimeCopyCommands(commandBuffer);
 }
 
@@ -804,12 +850,12 @@ void g_createConstantBufferView(BufferDx12* buffer) {
   Desc.SizeInBytes    = (uint32_t)buffer->getAllocatedSize();
 
   g_rhiDx12->m_device_->CreateConstantBufferView(&Desc,
-                                                  buffer->m_cbv_.m_cpuHandle_);
+                                                 buffer->m_cbv_.m_cpuHandle_);
 }
 
 void g_createShaderResourceViewStructuredBuffer(BufferDx12* buffer,
-                                               uint32_t    stride,
-                                               uint32_t    count) {
+                                                uint32_t    stride,
+                                                uint32_t    count) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -858,8 +904,8 @@ void g_createShaderResourceViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
 }
 
 void g_createShaderResourceViewFormatted(BufferDx12*    buffer,
-                                        ETextureFormat format,
-                                        uint32_t       bufferSize) {
+                                         ETextureFormat format,
+                                         uint32_t       bufferSize) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -871,8 +917,8 @@ void g_createShaderResourceViewFormatted(BufferDx12*    buffer,
   assert(!buffer->m_srv_.isValid());
   buffer->m_srv_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
-  const uint32_t Stride
-      = g_getDX12TextureComponentCount(format) * g_getDX12TexturePixelSize(format);
+  const uint32_t Stride = g_getDX12TextureComponentCount(format)
+                        * g_getDX12TexturePixelSize(format);
 
   D3D12_SHADER_RESOURCE_VIEW_DESC Desc{};
   Desc.Format                  = g_getDX12TextureFormat(format);
@@ -886,8 +932,8 @@ void g_createShaderResourceViewFormatted(BufferDx12*    buffer,
 }
 
 void g_createUnorderedAccessViewStructuredBuffer(BufferDx12* buffer,
-                                                uint32_t    stride,
-                                                uint32_t    count) {
+                                                 uint32_t    stride,
+                                                 uint32_t    count) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -934,8 +980,8 @@ void g_createUnorderedAccessViewRaw(BufferDx12* buffer, uint32_t bufferSize) {
 }
 
 void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
-                                         ETextureFormat format,
-                                         uint32_t       bufferSize) {
+                                          ETextureFormat format,
+                                          uint32_t       bufferSize) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -947,8 +993,8 @@ void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
   assert(!buffer->m_uav_.isValid());
   buffer->m_uav_ = g_rhiDx12->m_descriptorHeaps_.alloc();
 
-  const uint32_t Stride
-      = g_getDX12TextureComponentCount(format) * g_getDX12TexturePixelSize(format);
+  const uint32_t Stride = g_getDX12TextureComponentCount(format)
+                        * g_getDX12TexturePixelSize(format);
 
   D3D12_UNORDERED_ACCESS_VIEW_DESC Desc{};
   Desc.Format              = g_getDX12TextureFormat(format);
@@ -1029,7 +1075,7 @@ void g_createDepthStencilView(TextureDx12* texture) {
   }
 
   assert(!texture->m_dsv_.isValid());
-  texture->m_dsv_ = g_rhiDx12->m_dsvDescriptorHeaps_.alloc();
+  texture->m_dsv_                    = g_rhiDx12->m_dsvDescriptorHeaps_.alloc();
   D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
 
   Desc.Format               = g_getDX12TextureFormat(texture->m_format_);
@@ -1133,7 +1179,7 @@ void g_createRenderTargetView(TextureDx12* texture) {
   texture->m_rtv_ = g_rhiDx12->m_rtvDescriptorHeaps_.alloc();
 
   D3D12_RENDER_TARGET_VIEW_DESC Desc = {};
-  Desc.Format                        = g_getDX12TextureFormat(texture->m_format_);
+  Desc.Format = g_getDX12TextureFormat(texture->m_format_);
   switch (texture->m_type_) {
     case ETextureType::TEXTURE_2D:
       Desc.ViewDimension        = D3D12_RTV_DIMENSION_TEXTURE2D;
