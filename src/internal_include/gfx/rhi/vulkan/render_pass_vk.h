@@ -31,7 +31,7 @@ class RenderPassVk : public RenderPass {
   // ======= BEGIN: public overridden methods =================================
 
   // TODO: add subpassContents param
-  bool beginRenderPass(const CommandBuffer* commandBuffer
+  bool beginRenderPass(const std::shared_ptr<CommandBuffer>& commandBuffer
                        /*, VkSubpassContents      subpassContents
                        = VK_SUBPASS_CONTENTS_INLINE*/) override;
 
@@ -70,7 +70,7 @@ class RenderPassVk : public RenderPass {
 
   // ======= BEGIN: public misc fields ========================================
 
-  const CommandBuffer* m_commandBuffer_ = nullptr;
+  std::shared_ptr<CommandBuffer> m_commandBuffer_ = nullptr;
 
   VkRenderPassBeginInfo     m_renderPassBeginInfo_{};
   // TODO: consider remove it (already have in attachment)
