@@ -16,6 +16,15 @@ MutexRWLock ShaderBindingLayoutDx12::s_rootSignatureLock;
 #define FORCE_USE_D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND \
   (1 && !FORCE_USE_DESCRIPTOR_OFFSET_BY_USING_AUTO_CALCULATION_FOR_BINDLESS)
 
+// TODO: Currently from what I see, the BindingIndex is shared across all
+// resource types (e.g., CBV, SRV, UAV, Sampler), which causes all resources to
+// be assigned consecutive binding slots, regardless of their type. This results
+// in CBVs starting from higher binding points (e.g., b3 instead of b0) if other
+// resources like SRVs or UAVs are added earlier. To separate binding points by
+// resource type (e.g., CBVs always starting from b0, SRVs from t0, UAVs from
+// u0), we should maintain separate BindingIndex counters for each resource type
+// or group resources before processing. (perhaps that's resolved using
+// RegisterSpace so we can use (b0, space0) and (b0, space1)
 void RootParameterExtractor::extract_(
     int32_t&                  outDescriptorOffset,
     int32_t&                  outSamplerDescriptorOffset,
@@ -261,9 +270,9 @@ void RootParameterExtractor::extract(
     assert(Layout);
 
     extract_(descriptorOffset,
-            samplerDescriptorOffset,
-            Layout->getShaderBindingsLayout(),
-            i);
+             samplerDescriptorOffset,
+             Layout->getShaderBindingsLayout(),
+             i);
   }
 
   m_numOfInlineRootParameter_ = (int32_t)m_rootParameters_.size();
@@ -304,9 +313,9 @@ void RootParameterExtractor::extract(
         = (ShaderBindingLayoutDx12*)Instance->m_shaderBindingsLayouts_;
     assert(Layout);
     extract_(descriptorOffset,
-            samplerDescriptorOffset,
-            Layout->getShaderBindingsLayout(),
-            i);
+             samplerDescriptorOffset,
+             Layout->getShaderBindingsLayout(),
+             i);
   }
 
   m_numOfInlineRootParameter_ = (int32_t)m_rootParameters_.size();
@@ -436,8 +445,7 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignature(
 
   return s_createRootSignatureInternal(
       hash,
-      [&bindingInstanceArray](
-          RootParameterExtractor& rootParameterExtractor) {
+      [&bindingInstanceArray](RootParameterExtractor& rootParameterExtractor) {
         rootParameterExtractor.extract(bindingInstanceArray);
       });
 }
@@ -452,8 +460,7 @@ ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignature(
 
   return s_createRootSignatureInternal(
       hash,
-      [&bindingLayoutArray](
-          RootParameterExtractor& rootParameterExtractor) {
+      [&bindingLayoutArray](RootParameterExtractor& rootParameterExtractor) {
         rootParameterExtractor.extract(bindingLayoutArray);
       });
 }
