@@ -19,18 +19,18 @@ struct TextureDx12 : public Texture {
 
   TextureDx12() = default;
 
-  TextureDx12(ETextureType                            type,
-              ETextureFormat                          format,
-              const math::Dimension2Di&               extent,
-              int32_t                                 layerCount,
-              EMSAASamples                            sampleCount,
-              bool                                    sRGB,
-              const RtClearValue&                     clearValue,
-              const std::shared_ptr<CreatedResource>& image,
-              DescriptorDx12                          rtv = {},
-              DescriptorDx12                          dsv = {},
-              DescriptorDx12                          srv = {},
-              DescriptorDx12                          uav = {},
+  TextureDx12(ETextureType                                type,
+              ETextureFormat                              format,
+              const math::Dimension2Di&                   extent,
+              int32_t                                     layerCount,
+              EMSAASamples                                sampleCount,
+              bool                                        sRGB,
+              const RtClearValue&                         clearValue,
+              const std::shared_ptr<CreatedResourceDx12>& image,
+              DescriptorDx12                              rtv = {},
+              DescriptorDx12                              dsv = {},
+              DescriptorDx12                              srv = {},
+              DescriptorDx12                              uav = {},
               EResourceLayout imageLayout = EResourceLayout::UNDEFINED)
       : Texture(type, format, extent, layerCount, sampleCount, sRGB)
       , m_texture(image)
@@ -62,14 +62,14 @@ struct TextureDx12 : public Texture {
 
   // ======= BEGIN: public misc fields ========================================
 
-  std::shared_ptr<CreatedResource>  m_texture;
-  EResourceLayout                   m_layout_ = EResourceLayout::UNDEFINED;
+  std::shared_ptr<CreatedResourceDx12> m_texture;
+  EResourceLayout                      m_layout_ = EResourceLayout::UNDEFINED;
   // TODO: consider if naming conventions is correct for srv, uav, rtv, dsv
-  DescriptorDx12                    m_srv_;
-  DescriptorDx12                    m_uav_;
-  DescriptorDx12                    m_rtv_;
-  DescriptorDx12                    m_dsv_;
-  std::map<int32_t, DescriptorDx12> m_uavMipMap;
+  DescriptorDx12                       m_srv_;
+  DescriptorDx12                       m_uav_;
+  DescriptorDx12                       m_rtv_;
+  DescriptorDx12                       m_dsv_;
+  std::map<int32_t, DescriptorDx12>    m_uavMipMap;
 
   // ======= END: public misc fields   ========================================
 };
