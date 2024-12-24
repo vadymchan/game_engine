@@ -6,7 +6,7 @@
 #include "gfx/rhi/buffer.h"
 #include "gfx/rhi/pipeline_state_info.h"
 #include "gfx/rhi/shader.h"
-#include "gfx/scene/camera.h"
+#include "gfx/scene/camera_old.h"
 #include "utils/math/plane.h"
 
 #include <math_library/vector.h>
@@ -61,7 +61,7 @@ class BillboardQuadPrimitive : public QuadPrimitive {
 
   // ======= BEGIN: public misc fields ========================================
 
-  Camera* m_camera_ = nullptr;
+  std::shared_ptr<CameraOld> m_camera_ = nullptr;
 
   // ======= END: public misc fields   ========================================
 };
@@ -71,9 +71,9 @@ class UIQuadPrimitive : public Object {
   // ======= BEGIN: public overridden methods =================================
 
   // virtual void draw(const std::shared_ptr<RenderFrameContext>&
-  // renderFrameContext, const Camera* camera, const Shader* shader, const
-  // std::list<const Light*>& lights, int32_t instanceCount = 0) const
-  // override;
+  // renderFrameContext, const std::shared_ptr<CameraOld> camera, const Shader*
+  // shader, const std::list<const Light*>& lights, int32_t instanceCount = 0)
+  // const override;
 
   // ======= END: public overridden methods   =================================
 
@@ -103,9 +103,9 @@ class FullscreenQuadPrimitive : public Object {
   // ======= BEGIN: public overridden methods =================================
 
   // virtual void draw(const std::shared_ptr<RenderFrameContext>&
-  // renderFrameContext, const Camera* camera, const Shader* shader, const
-  // std::list<const Light*>& lights, int32_t instanceCount = 0) const
-  // override;
+  // renderFrameContext, const std::shared_ptr<CameraOld> camera, const Shader*
+  // shader, const std::list<const Light*>& lights, int32_t instanceCount = 0)
+  // const override;
 
   // ======= END: public overridden methods   =================================
 
@@ -288,7 +288,7 @@ class FrustumPrimitive : public Object {
 
   FrustumPrimitive() = default;
 
-  FrustumPrimitive(const Camera* targetCamera)
+  FrustumPrimitive(const std::shared_ptr<CameraOld> targetCamera)
       : m_targetCamera_(targetCamera) {}
 
   // ======= END: public constructors   =======================================
@@ -311,21 +311,21 @@ class FrustumPrimitive : public Object {
 
   virtual void update(float deltaTime) override;
   // virtual void draw(const std::shared_ptr<RenderFrameContext>&
-  // renderFrameContext, const Camera* camera, const Shader* shader, const
-  // std::list<const Light*>& lights, int32_t instanceCount = 0) const
-  // override;
+  // renderFrameContext, const std::shared_ptr<CameraOld> camera, const Shader*
+  // shader, const std::list<const Light*>& lights, int32_t instanceCount = 0)
+  // const override;
 
   // ======= END: public overridden methods   =================================
 
   // ======= BEGIN: public misc fields ========================================
 
-  SegmentPrimitive* m_segments_[16]    = {};
-  QuadPrimitive*    m_plane_[6]        = {};
-  const Camera*     m_targetCamera_    = nullptr;
-  bool              m_postPerspective_ = false;
-  bool              m_drawPlane_       = false;
-  math::Vector3Df   m_offset_;
-  math::Vector3Df   m_scale_ = math::g_oneVector<float, 3>();
+  SegmentPrimitive*             m_segments_[16]    = {};
+  QuadPrimitive*                m_plane_[6]        = {};
+  const std::shared_ptr<CameraOld> m_targetCamera_    = nullptr;
+  bool                          m_postPerspective_ = false;
+  bool                          m_drawPlane_       = false;
+  math::Vector3Df               m_offset_;
+  math::Vector3Df               m_scale_ = math::g_oneVector<float, 3>();
 
   // ======= END: public misc fields   ========================================
 };
@@ -368,9 +368,9 @@ class Graph2D : public Object {
   bool            m_dirtyFlag_ = false;
   math::Vector2Df m_position_;
   math::Vector2Df m_guardLineSize_ = math::Vector2Df(100.0f, 100.0f);
-  std::vector<math::Vector2Df> m_points_;
-  std::vector<math::Vector2Df> m_resultPoints_;
-  std::vector<math::Matrix4f<>>  m_resultMatrices_;
+  std::vector<math::Vector2Df>  m_points_;
+  std::vector<math::Vector2Df>  m_resultPoints_;
+  std::vector<math::Matrix4f<>> m_resultMatrices_;
 
   // ======= END: public misc fields   ========================================
 };
@@ -447,11 +447,11 @@ Object* g_createSphere(const math::Vector3Df& pos,
                        bool                   isWireframe     = false,
                        bool                   createBoundInfo = true);
 
-BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df& pos,
-                                              const math::Vector3Df& size,
-                                              const math::Vector3Df& scale,
-                                              const math::Vector4Df& color,
-                                              Camera*                camera);
+BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df&  pos,
+                                              const math::Vector3Df&  size,
+                                              const math::Vector3Df&  scale,
+                                              const math::Vector4Df&  color,
+                                              std::shared_ptr<CameraOld> camera);
 
 UIQuadPrimitive* g_createUIQuad(const math::Vector2Df& pos,
                                 const math::Vector2Df& size,
@@ -476,22 +476,23 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //     const math::Vector3Df& pos,
 //     const math::Vector3Df& scale,
 //     float                  length,
-//     Camera*               targetCamera,
+//     std::shared_ptr<CameraOld>               targetCamera,
 //     DirectionalLight*     light,
 //     const char*            textureFilename);
 //
 // PointLightPrimitive* g_createPointLightDebug(const math::Vector3Df& scale,
-//                                             Camera* targetCamera,
-//                                             PointLight*           light,
+//                                             std::shared_ptr<CameraOld>
+//                                             targetCamera, PointLight* light,
 //                                             const char* textureFilename);
 //
 // SpotLightPrimitive*  g_createSpotLightDebug(const math::Vector3Df& scale,
-//                                            Camera* targetCamera, SpotLight*
-//                                            light, const char*
-//                                            textureFilename);
+//                                            std::shared_ptr<CameraOld>
+//                                            targetCamera, SpotLight* light,
+//                                            const char* textureFilename);
 //
 //////////////////////////////////////////////////////////////////////////
-FrustumPrimitive* g_createFrustumDebug(const Camera* targetCamera);
+FrustumPrimitive* g_createFrustumDebug(
+    const std::shared_ptr<CameraOld> targetCamera);
 
 Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
                          const math::Vector2Df&              size,
