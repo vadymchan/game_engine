@@ -75,9 +75,9 @@ void CalculateTangents(math::Vector4Df*       tangentArray,
     math::Vector3Df t_rejected = (t - n * t.dot(n)).normalized();
 
     tangentArray[i]     = math::Vector4Df(t_rejected.x(),
-                                         t_rejected.y(),
-                                         t_rejected.z(),
-                                         0.0f);  // Normalize(t - Dot(t, n)*n)
+                                      t_rejected.y(),
+                                      t_rejected.z(),
+                                      0.0f);  // Normalize(t - Dot(t, n)*n)
     tangentArray[i].w() = (t.cross(b).dot(n) > 0.0f) ? 1.0f : -1.0f;
   }
 
@@ -93,7 +93,8 @@ void QuadPrimitive::setPlane(const math::Plane& plane) {
 void BillboardQuadPrimitive::update(float deltaTime) {
   if (m_camera_) {
     const math::Vector3Df normalizedCameraDir
-        = (m_camera_->m_position_ - m_renderObjects_[0]->getPosition()).normalized();
+        = (m_camera_->m_position_ - m_renderObjects_[0]->getPosition())
+              .normalized();
     const math::Vector3Df eularAngleOfCameraDir
         = math::g_getEulerAngleFrom(normalizedCameraDir);
 
@@ -125,8 +126,9 @@ void FullscreenQuadPrimitive::setUniformBuffer(const Shader* shader) const {
   assert(0);
 }
 
-void FullscreenQuadPrimitive::setTexture(
-    int index, const Texture* texture, const SamplerStateInfo* samplerState) {
+void FullscreenQuadPrimitive::setTexture(int                     index,
+                                         const Texture*          texture,
+                                         const SamplerStateInfo* samplerState) {
   // Todo
   assert(0);
 }
@@ -143,26 +145,32 @@ void BoundBoxObject::updateBoundBox(const BoundBox& boundBox) {
 
 void BoundBoxObject::updateBoundBox() {
   float vertices[] = {
-    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(),
-    m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(),
-    m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
-    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(),
-    m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(),
-    m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
 
-    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(),
-    m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(),
-    m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
-    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(),
-    m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(),
-    m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
 
-    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_min_.x(),
-    m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(),
-    m_boundBox_.m_min_.z(), m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
-    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_max_.x(),
-    m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(),
-    m_boundBox_.m_max_.z(), m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_min_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_max_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_max_.y(), m_boundBox_.m_max_.z(),
+    m_boundBox_.m_min_.x(), m_boundBox_.m_min_.y(), m_boundBox_.m_max_.z(),
   };
 
   const int32_t elementCount = static_cast<int32_t>(std::size(vertices) / 3);
@@ -171,7 +179,8 @@ void BoundBoxObject::updateBoundBox() {
 
   BufferAttributeStream<float>* PositionParam
       = static_cast<BufferAttributeStream<float>*>(
-          m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0].get());
+          m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0]
+              .get());
   memcpy(&PositionParam->m_data_[0], vertices, sizeof(vertices));
 }
 
@@ -211,7 +220,7 @@ void ArrowSegmentPrimitive::setTime(float time) {
 // Utilities
 
 std::vector<float> g_generateColor(const math::Vector4Df& color,
-                                 int32_t                elementCount) {
+                                   int32_t                elementCount) {
   std::vector<float> temp;
   temp.resize(elementCount * 4);
   for (int i = 0; i < elementCount; ++i) {
@@ -274,7 +283,7 @@ BoundSphere g_generateBoundSphere(const std::vector<float>& vertices) {
 }
 
 void g_createBoundObjects(const std::vector<float>& vertices,
-                        Object*                   ownerObject) {
+                          Object*                   ownerObject) {
   ownerObject->m_boundBox_    = g_generateBoundBox(vertices);
   ownerObject->m_boundSphere_ = g_generateBoundSphere(vertices);
 
@@ -287,29 +296,35 @@ void g_createBoundObjects(const std::vector<float>& vertices,
 }
 
 BoundBoxObject* g_createBoundBox(BoundBox               boundBox,
-                               Object*                ownerObject,
-                               const math::Vector4Df& color) {
+                                 Object*                ownerObject,
+                                 const math::Vector4Df& color) {
   float vertices[] = {
-    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(),
-    boundBox.m_min_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_min_.y(),
-    boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
-    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(),
-    boundBox.m_min_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_min_.y(),
-    boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
 
-    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(),
-    boundBox.m_max_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_max_.y(),
-    boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
-    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(),
-    boundBox.m_max_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_max_.y(),
-    boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
 
-    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(), boundBox.m_min_.x(),
-    boundBox.m_max_.y(), boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_min_.y(),
-    boundBox.m_min_.z(), boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
-    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(), boundBox.m_max_.x(),
-    boundBox.m_max_.y(), boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_max_.y(),
-    boundBox.m_max_.z(), boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_min_.z(),
+    boundBox.m_max_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
+    boundBox.m_max_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_max_.y(), boundBox.m_max_.z(),
+    boundBox.m_min_.x(), boundBox.m_min_.y(), boundBox.m_max_.z(),
   };
 
   const int32_t elementCount = static_cast<int32_t>(std::size(vertices) / 3);
@@ -367,8 +382,8 @@ BoundBoxObject* g_createBoundBox(BoundBox               boundBox,
 }
 
 BoundSphereObject* g_createBoundSphere(BoundSphere            boundSphere,
-                                     Object*                ownerObject,
-                                     const math::Vector4Df& color) {
+                                       Object*                ownerObject,
+                                       const math::Vector4Df& color) {
   int32_t slice = 15;
   if (slice % 2) {
     ++slice;
@@ -448,7 +463,7 @@ BoundSphereObject* g_createBoundSphere(BoundSphere            boundSphere,
     faces.push_back(iCount + 1);
   }
 
-  auto indexStreamData          = std::make_shared<IndexStreamData>();
+  auto indexStreamData             = std::make_shared<IndexStreamData>();
   indexStreamData->m_elementCount_ = static_cast<int32_t>(faces.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
@@ -501,9 +516,9 @@ BoundSphereObject* g_createBoundSphere(BoundSphere            boundSphere,
 // Primitive Generation
 
 RenderObject* g_createQuadInternal(const math::Vector3Df& pos,
-                                  const math::Vector3Df& size,
-                                  const math::Vector3Df& scale,
-                                  const math::Vector4Df& color) {
+                                   const math::Vector3Df& size,
+                                   const math::Vector3Df& scale,
+                                   const math::Vector4Df& color) {
   auto halfSize = size / 2.0;
   auto offset   = math::g_zeroVector<float, 3>();
 
@@ -619,7 +634,7 @@ RenderObject* g_createQuadInternal(const math::Vector3Df& pos,
     vertexStreamData->m_elementCount_  = NumOfVertices;
   }
 
-  auto indexStreamData          = std::make_shared<IndexStreamData>();
+  auto indexStreamData             = std::make_shared<IndexStreamData>();
   indexStreamData->m_elementCount_ = static_cast<int32_t>(indices.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
@@ -643,9 +658,9 @@ RenderObject* g_createQuadInternal(const math::Vector3Df& pos,
 }
 
 QuadPrimitive* g_createQuad(const math::Vector3Df& pos,
-                          const math::Vector3Df& size,
-                          const math::Vector3Df& scale,
-                          const math::Vector4Df& color) {
+                            const math::Vector3Df& size,
+                            const math::Vector3Df& scale,
+                            const math::Vector4Df& color) {
   auto object       = new QuadPrimitive();
   auto RenderObject = g_createQuadInternal(pos, size, scale, color);
   object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
@@ -657,8 +672,8 @@ QuadPrimitive* g_createQuad(const math::Vector3Df& pos,
 
 //////////////////////////////////////////////////////////////////////////
 Object* g_createGizmo(const math::Vector3Df& pos,
-                    const math::Vector3Df& rot,
-                    const math::Vector3Df& scale) {
+                      const math::Vector3Df& rot,
+                      const math::Vector3Df& scale) {
   float length     = 5.0f;
   float length2    = length * 0.6f;
   float vertices[] = {
@@ -791,9 +806,9 @@ Object* g_createGizmo(const math::Vector3Df& pos,
 }
 
 Object* g_createTriangle(const math::Vector3Df& pos,
-                       const math::Vector3Df& size,
-                       const math::Vector3Df& scale,
-                       const math::Vector4Df& color) {
+                         const math::Vector3Df& size,
+                         const math::Vector3Df& scale,
+                         const math::Vector4Df& color) {
   const auto halfSize = size / 2.0f;
   const auto offset   = math::g_zeroVector<float, 3>();
   // TODO: consider another base vertex coordinates (equilateral triangle or
@@ -862,8 +877,8 @@ Object* g_createTriangle(const math::Vector3Df& pos,
     std::vector<float> normals(elementCount * 3, 0.0f);
     for (int32_t i = 0; i < elementCount; ++i) {
       normals[i * 3 + 0] = 0.0f;
-      normals[i * 3 + 1] = 1.0f;
-      normals[i * 3 + 2] = 0.0f;
+      normals[i * 3 + 1] = 0.0f;
+      normals[i * 3 + 2] = 1.0f;
     }
     auto streamParam = std::make_shared<BufferAttributeStream<float>>(
         Name("NORMAL"),
@@ -930,9 +945,9 @@ Object* g_createTriangle(const math::Vector3Df& pos,
 }
 
 Object* g_createCube(const math::Vector3Df& pos,
-                   const math::Vector3Df& size,
-                   const math::Vector3Df& scale,
-                   const math::Vector4Df& color) {
+                     const math::Vector3Df& size,
+                     const math::Vector3Df& scale,
+                     const math::Vector4Df& color) {
   const math::Vector3Df halfSize = size / 2.0f;
   const math::Vector3Df offset   = math::g_zeroVector<float, 3>();
 
@@ -1175,11 +1190,11 @@ Object* g_createCube(const math::Vector3Df& pos,
 }
 
 Object* g_createCapsule(const math::Vector3Df& pos,
-                      float                  height,
-                      float                  radius,
-                      int32_t                slice,
-                      const math::Vector3Df& scale,
-                      const math::Vector4Df& color) {
+                        float                  height,
+                        float                  radius,
+                        int32_t                slice,
+                        const math::Vector3Df& scale,
+                        const math::Vector4Df& color) {
   if (height < 0) {
     height = 0.0f;
     assert(!"capsule height must be more than or equal zero.");
@@ -1313,7 +1328,7 @@ Object* g_createCapsule(const math::Vector3Df& pos,
     }
   }
 
-  auto indexStreamData          = std::make_shared<IndexStreamData>();
+  auto indexStreamData             = std::make_shared<IndexStreamData>();
   indexStreamData->m_elementCount_ = static_cast<int32_t>(faces.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
@@ -1341,13 +1356,13 @@ Object* g_createCapsule(const math::Vector3Df& pos,
 }
 
 ConePrimitive* g_createCone(const math::Vector3Df& pos,
-                          float                  height,
-                          float                  radius,
-                          int32_t                slice,
-                          const math::Vector3Df& scale,
-                          const math::Vector4Df& color,
-                          bool                   isWireframe /*= false*/,
-                          bool                   createBoundInfo /* = true*/) {
+                            float                  height,
+                            float                  radius,
+                            int32_t                slice,
+                            const math::Vector3Df& scale,
+                            const math::Vector4Df& color,
+                            bool                   isWireframe /*= false*/,
+                            bool createBoundInfo /* = true*/) {
   const float           halfHeight = height / 2.0f;
   const math::Vector3Df topVert(0.0f, halfHeight, 0.0f);
   const math::Vector3Df bottomVert(0.0f, -halfHeight, 0.0f);
@@ -1496,11 +1511,11 @@ ConePrimitive* g_createCone(const math::Vector3Df& pos,
 }
 
 Object* g_createCylinder(const math::Vector3Df& pos,
-                       float                  height,
-                       float                  radius,
-                       int32_t                slices,
-                       const math::Vector3Df& scale,
-                       const math::Vector4Df& color) {
+                         float                  height,
+                         float                  radius,
+                         int32_t                slices,
+                         const math::Vector3Df& scale,
+                         const math::Vector4Df& color) {
   const auto            halfHeight = height / 2.0f;
   const math::Vector3Df topVert(0.0f, halfHeight, 0.0f);
   const math::Vector3Df bottomVert(0.0f, -halfHeight, 0.0f);
@@ -1520,9 +1535,9 @@ Object* g_createCylinder(const math::Vector3Df& pos,
     BaseVertex* CurrentBaseVertex = (BaseVertex*)&vertices[i * 12];
 
     // Top
-    CurrentBaseVertex->m_position_     = math::Vector3Df(topVert);
-    CurrentBaseVertex->m_normal_  = math::Vector3Df(0.0f, 1.0f, 0.0f);
-    CurrentBaseVertex->m_tangent_ = math::Vector3Df(1.0f, 0.0f, 0.0f);
+    CurrentBaseVertex->m_position_ = math::Vector3Df(topVert);
+    CurrentBaseVertex->m_normal_   = math::Vector3Df(0.0f, 1.0f, 0.0f);
+    CurrentBaseVertex->m_tangent_  = math::Vector3Df(1.0f, 0.0f, 0.0f);
     CurrentBaseVertex->m_bitangent_
         = CurrentBaseVertex->m_normal_.cross(CurrentBaseVertex->m_tangent_);
     ++CurrentBaseVertex;
@@ -1688,7 +1703,7 @@ Object* g_createCylinder(const math::Vector3Df& pos,
     vertexStreamData->m_elementCount_  = NumOfVertices;
   }
 
-  auto indexStreamData          = std::make_shared<IndexStreamData>();
+  auto indexStreamData             = std::make_shared<IndexStreamData>();
   indexStreamData->m_elementCount_ = static_cast<int32_t>(indices.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
@@ -1715,13 +1730,13 @@ Object* g_createCylinder(const math::Vector3Df& pos,
 }
 
 Object* g_createSphere(const math::Vector3Df& pos,
-                     float                  radius,
-                     uint32_t               slices,
-                     uint32_t               stacks,
-                     const math::Vector3Df& scale,
-                     const math::Vector4Df& color,
-                     bool                   isWireframe /*= false*/,
-                     bool                   createBoundInfo /*= true*/) {
+                       float                  radius,
+                       uint32_t               slices,
+                       uint32_t               stacks,
+                       const math::Vector3Df& scale,
+                       const math::Vector4Df& color,
+                       bool                   isWireframe /*= false*/,
+                       bool                   createBoundInfo /*= true*/) {
   const auto offset = math::g_zeroVector<float, 3>();
 
   if (slices < 6) {
@@ -1751,7 +1766,7 @@ Object* g_createSphere(const math::Vector3Df& pos,
     for (uint32_t j = 0; j <= slices; ++j) {
       float sectorAngle = j * sectorStep;  // sector angle in the range [0, 2π]
 
-      // Vertex position
+      // Vertex translation
       const float           x = xy * cosf(sectorAngle);
       const float           y = xy * sinf(sectorAngle);
       const math::Vector3Df pos(x, z, y);  // swap z, y, because z is up vector.
@@ -1858,7 +1873,7 @@ Object* g_createSphere(const math::Vector3Df& pos,
     vertexStreamData->m_elementCount_ = NumOfVertices;
   }
 
-  auto indexStreamData          = std::make_shared<IndexStreamData>();
+  auto indexStreamData             = std::make_shared<IndexStreamData>();
   indexStreamData->m_elementCount_ = static_cast<int32_t>(indices.size());
   {
     auto streamParam = new BufferAttributeStream<uint32_t>(
@@ -1888,11 +1903,11 @@ Object* g_createSphere(const math::Vector3Df& pos,
   return object;
 }
 
-BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df& pos,
-                                            const math::Vector3Df& size,
-                                            const math::Vector3Df& scale,
-                                            const math::Vector4Df& color,
-                                            Camera*                camera) {
+BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df&  pos,
+                                              const math::Vector3Df&  size,
+                                              const math::Vector3Df&  scale,
+                                              const math::Vector4Df&  color,
+                                              std::shared_ptr<CameraOld> camera) {
   auto object       = new BillboardQuadPrimitive();
   auto RenderObject = g_createQuadInternal(pos, size, scale, color);
   object->m_renderObjectGeometryDataPtr_ = RenderObject->m_geometryDataPtr_;
@@ -1903,8 +1918,8 @@ BillboardQuadPrimitive* g_createBillobardQuad(const math::Vector3Df& pos,
 }
 
 UIQuadPrimitive* g_createUIQuad(const math::Vector2Df& pos,
-                              const math::Vector2Df& size,
-                              Texture*              texture) {
+                                const math::Vector2Df& size,
+                                Texture*               texture) {
   float vertices[] = {
     0.0f,
     1.0f,
@@ -1948,8 +1963,8 @@ UIQuadPrimitive* g_createUIQuad(const math::Vector2Df& pos,
       = std::make_shared<RenderObjectGeometryData>(vertexStreamData, nullptr);
   renderObject->createRenderObject(object->m_renderObjectGeometryDataPtr_);
   object->m_renderObjects_.push_back(renderObject);
-  object->m_position_  = pos;
-  object->m_size_ = size;
+  object->m_position_ = pos;
+  object->m_size_     = size;
 
   return object;
 }
@@ -1985,9 +2000,9 @@ FullscreenQuadPrimitive* g_createFullscreenQuad(Texture* texture) {
 }
 
 SegmentPrimitive* g_createSegment(const math::Vector3Df& start,
-                                const math::Vector3Df& end,
-                                float                  time,
-                                const math::Vector4Df& color) {
+                                  const math::Vector3Df& end,
+                                  float                  time,
+                                  const math::Vector4Df& color) {
   math::Vector3Df currentEnd(math::g_zeroVector<float, 3>());
   if (time < 1.0) {
     float t    = std::clamp(time, 0.0f, 1.0f);
@@ -2058,28 +2073,29 @@ SegmentPrimitive* g_createSegment(const math::Vector3Df& start,
 }
 
 ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
-                                          const math::Vector3Df& end,
-                                          float                  time,
-                                          float                  coneHeight,
-                                          float                  coneRadius,
-                                          const math::Vector4Df& color) {
-  auto object            = new ArrowSegmentPrimitive();
+                                            const math::Vector3Df& end,
+                                            float                  time,
+                                            float                  coneHeight,
+                                            float                  coneRadius,
+                                            const math::Vector4Df& color) {
+  auto object               = new ArrowSegmentPrimitive();
   object->m_segmentObject_  = g_createSegment(start, end, time, color);
   object->m_coneObject_     = g_createCone(math::g_zeroVector<float, 3>(),
-                                  coneHeight,
-                                  coneRadius,
-                                  10,
-                                  math::g_oneVector<float, 3>(),
-                                  color);
+                                       coneHeight,
+                                       coneRadius,
+                                       10,
+                                       math::g_oneVector<float, 3>(),
+                                       color);
   object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
     auto thisArrowSegmentObject
         = static_cast<ArrowSegmentPrimitive*>(thisObject);
     thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->setPosition(
-        thisArrowSegmentObject->m_segmentObject_->m_renderObjects_[0]->getPosition()
+        thisArrowSegmentObject->m_segmentObject_->m_renderObjects_[0]
+            ->getPosition()
         + thisArrowSegmentObject->m_segmentObject_->getCurrentEnd());
     thisArrowSegmentObject->m_coneObject_->m_renderObjects_[0]->setRotation(
-        math::g_getEulerAngleFrom(
-            thisArrowSegmentObject->m_segmentObject_->getDirectionNormalized()));
+        math::g_getEulerAngleFrom(thisArrowSegmentObject->m_segmentObject_
+                                      ->getDirectionNormalized()));
   };
 
   return object;
@@ -2089,12 +2105,12 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //     const math::Vector3Df& pos,
 //     const math::Vector3Df& scale,
 //     float                  length,
-//     Camera*               targetCamera,
+//     std::shared_ptr<CameraOld>               targetCamera,
 //     DirectionalLight*     light,
 //     const char*            textureFilename) {
 //   DirectionalLightPrimitive* object = new DirectionalLightPrimitive();
 //
-//   std::weak_ptr<ImageData> data
+//   std::weak_ptr<ImageDataDeprecated> data
 //       = ImageFileLoader::s_getInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   object->BillboardObject = g_createBillobardQuad(pos,
@@ -2102,7 +2118,7 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //                                                 3>(), scale,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
-//   if (data.lock()->imageBulkData.ImageData.size() > 0) {
+//   if (data.lock()->imageBulkData.ImageDataDeprecated.size() > 0) {
 //     Texture* texture = ImageFileLoader::s_getInstance()
 //                              .LoadTextureFromFile(Name(textureFilename))
 //                              .lock()
@@ -2147,12 +2163,12 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 // }
 //
 // PointLightPrimitive* CreatePointLightDebug(const math::Vector3Df& scale,
-//                                             Camera* targetCamera,
-//                                             PointLight*           light,
+//                                             std::shared_ptr<CameraOld>
+//                                             targetCamera, PointLight* light,
 //                                             const char* textureFilename) {
 //   PointLightPrimitive* object = new PointLightPrimitive();
 //
-//   std::weak_ptr<ImageData> data
+//   std::weak_ptr<ImageDataDeprecated> data
 //       = ImageFileLoader::s_getInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   const PointLightUniformBufferData& LightData = light->GetLightData();
@@ -2161,7 +2177,7 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //                                                 3>(), scale,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
-//   if (data.lock()->imageBulkData.ImageData.size() > 0) {
+//   if (data.lock()->imageBulkData.ImageDataDeprecated.size() > 0) {
 //     auto texture = ImageFileLoader::s_getInstance()
 //                        .LoadTextureFromFile(Name(textureFilename))
 //                        .lock()
@@ -2204,12 +2220,13 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 // }
 //
 // SpotLightPrimitive* CreateSpotLightDebug(const math::Vector3Df& scale,
-//                                           Camera* targetCamera, SpotLight*
-//                                           light, const char* textureFilename)
+//                                           std::shared_ptr<CameraOld>
+//                                           targetCamera, SpotLight* light,
+//                                           const char* textureFilename)
 //                                           {
 //   SpotLightPrimitive* object = new SpotLightPrimitive();
 //
-//   std::weak_ptr<ImageData> data
+//   std::weak_ptr<ImageDataDeprecated> data
 //       = ImageFileLoader::s_getInstance().LoadImageDataFromFile(
 //           Name(textureFilename));
 //   const SpotLightUniformBufferData& LightData = light->GetLightData();
@@ -2218,7 +2235,7 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //                                                 3>(), scale,
 //                                                 math::Vector4Df(1.0f),
 //                                                 targetCamera);
-//   if (data.lock()->imageBulkData.ImageData.size() > 0) {
+//   if (data.lock()->imageBulkData.ImageDataDeprecated.size() > 0) {
 //     auto texture = ImageFileLoader::s_getInstance()
 //                        .LoadTextureFromFile(Name(textureFilename))
 //                        .lock()
@@ -2254,9 +2271,10 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //           0.5f),
 //       true,
 //       false);
-//   object->PenumbraConeObject->m_renderObjects_[0]->m_isHiddenBoundBox_ = true;
-//   object->Light                                                  = light;
-//   object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime) {
+//   object->PenumbraConeObject->m_renderObjects_[0]->m_isHiddenBoundBox_ =
+//   true; object->Light                                                  =
+//   light; object->m_postUpdateFunc_ = [](Object* thisObject, float deltaTime)
+//   {
 //     auto spotLightObject = static_cast<SpotLightPrimitive*>(thisObject);
 //     const SpotLightUniformBufferData& LightData
 //         = spotLightObject->Light->GetLightData();
@@ -2295,30 +2313,31 @@ ArrowSegmentPrimitive* g_createArrowSegment(const math::Vector3Df& start,
 //   return object;
 // }
 
-FrustumPrimitive* g_createFrustumDebug(const Camera* targetCamera) {
+FrustumPrimitive* g_createFrustumDebug(
+    const std::shared_ptr<CameraOld> targetCamera) {
   FrustumPrimitive* frustumPrimitive = new FrustumPrimitive(targetCamera);
   for (int32_t i = 0; i < 16; ++i) {
     frustumPrimitive->m_segments_[i]
         = g_createSegment(math::g_zeroVector<float, 3>(),
-                        math::g_zeroVector<float, 3>(),
-                        1.0f,
-                        math::Vector4Df(1.0f));
+                          math::g_zeroVector<float, 3>(),
+                          1.0f,
+                          math::Vector4Df(1.0f));
     frustumPrimitive->m_segments_[i]->m_isPostUpdate_ = false;
   }
 
   for (int32_t i = 0; i < 6; ++i) {
     frustumPrimitive->m_plane_[i] = g_createQuad(math::g_zeroVector<float, 3>(),
-                                            math::g_oneVector<float, 3>(),
-                                            math::g_oneVector<float, 3>(),
-                                            math::Vector4Df(1.0f));
+                                                 math::g_oneVector<float, 3>(),
+                                                 math::g_oneVector<float, 3>(),
+                                                 math::Vector4Df(1.0f));
   }
 
   return frustumPrimitive;
 }
 
 Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
-                       const math::Vector2Df&              size,
-                       const std::vector<math::Vector2Df>& points) {
+                         const math::Vector2Df&              size,
+                         const std::vector<math::Vector2Df>& points) {
   const math::Vector2Df point[4] = {
     {0.0f, 0.0f},
     {1.0f, 0.0f},
@@ -2343,15 +2362,17 @@ Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
   }
 
   {
-    auto streamParam = std::make_shared<BufferAttributeStream<math::Matrix4f<>>>(
-        Name("Transform"),
-        EBufferType::Dynamic,
-        math::Matrix4f<>::GetDataSize(),
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        std::vector<math::Matrix4f<>>()
-        //, 1 // InstanceDivisor // TODO probably not needed, remove
-    );
+    auto streamParam
+        = std::make_shared<BufferAttributeStream<math::Matrix4f<>>>(
+            Name("Transform"),
+            EBufferType::Dynamic,
+            math::Matrix4f<>::GetDataSize(),
+            std::vector<IBufferAttribute::Attribute>{
+              IBufferAttribute::Attribute(
+                  EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
+            std::vector<math::Matrix4f<>>()
+            //, 1 // InstanceDivisor // TODO probably not needed, remove
+        );
     vertexStreamData->m_streams_.push_back(streamParam);
   }
 
@@ -2396,7 +2417,8 @@ Graph2D* g_createGraph2D(const math::Vector2Df&              pos,
 // }
 
 void SegmentPrimitive::updateSegment() {
-  if (m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_.size() < 2) {
+  if (m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_.size()
+      < 2) {
     assert(0);
     return;
   }
@@ -2422,7 +2444,8 @@ void SegmentPrimitive::updateSegment() {
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
         std::vector<float>(std::begin(vertices), std::end(vertices)));
-    m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0] = streamParam;
+    m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[0]
+        = streamParam;
   }
 
   {
@@ -2433,7 +2456,8 @@ void SegmentPrimitive::updateSegment() {
         std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
             EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
         g_generateColor(m_color_, 2));
-    m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[1] = streamParam;
+    m_renderObjectGeometryDataPtr_->m_vertexStreamPtr_->m_streams_[1]
+        = streamParam;
   }
 }
 
@@ -2466,17 +2490,18 @@ void FrustumPrimitive::update(float deltaTime) {
   math::Vector3Df near_rb;
 
   const auto  origin = m_targetCamera_->m_position_;
-  const float n      = m_targetCamera_->m_Near_;
+  const float n      = m_targetCamera_->m_near_;
   const float f      = m_targetCamera_->m_far_;
 
-  if (m_targetCamera_->m_isPerspectiveProjection_) {
-    const float InvAspect
-        = ((float)m_targetCamera_->m_width_ / (float)m_targetCamera_->m_height_);
-    const float     length    = tanf(m_targetCamera_->m_FOVRad_ * 0.5f);
-    math::Vector3Df targetVec = m_targetCamera_->getForwardVector().normalized();
+  if (m_targetCamera_->m_type_ == ECameraTypeDeprecated::Perspective) {
+    const float     InvAspect = ((float)m_targetCamera_->m_width_
+                             / (float)m_targetCamera_->m_height_);
+    const float     length    = tanf(m_targetCamera_->m_fov_ * 0.5f);
+    math::Vector3Df targetVec
+        = m_targetCamera_->getForward().normalized();
     math::Vector3Df rightVec
-        = m_targetCamera_->getRightVector() * length * InvAspect;
-    math::Vector3Df upVec = m_targetCamera_->getUpVector() * length;
+        = m_targetCamera_->getRight() * length * InvAspect;
+    math::Vector3Df upVec = m_targetCamera_->getUp() * length;
 
     math::Vector3Df rightUp   = (targetVec + rightVec + upVec);
     math::Vector3Df leftUp    = (targetVec - rightVec + upVec);
@@ -2510,9 +2535,10 @@ void FrustumPrimitive::update(float deltaTime) {
     const float w = (float)m_targetCamera_->m_width_;
     const float h = (float)m_targetCamera_->m_height_;
 
-    math::Vector3Df targetVec = m_targetCamera_->getForwardVector().normalized();
-    math::Vector3Df rightVec  = m_targetCamera_->getRightVector().normalized();
-    math::Vector3Df upVec     = m_targetCamera_->getUpVector().normalized();
+    math::Vector3Df targetVec
+        = m_targetCamera_->getForward().normalized();
+    math::Vector3Df rightVec = m_targetCamera_->getRight().normalized();
+    math::Vector3Df upVec    = m_targetCamera_->getUp().normalized();
 
     far_lt = origin + targetVec * f - rightVec * w * 0.5f + upVec * h * 0.5f;
     far_rt = origin + targetVec * f + rightVec * w * 0.5f + upVec * h * 0.5f;
@@ -2526,7 +2552,7 @@ void FrustumPrimitive::update(float deltaTime) {
   }
 
   const math::Vector4Df baseColor
-      = (m_targetCamera_->m_isPerspectiveProjection_
+      = (m_targetCamera_->m_type_ == ECameraTypeDeprecated::Perspective
              ? math::Vector4Df(1.0f)
              : math::Vector4Df(0.0f, 0.0f, 1.0f, 1.0f));
   m_segments_[0]->updateSegment(near_rt, far_rt, baseColor);
@@ -2611,8 +2637,8 @@ void FrustumPrimitive::update(float deltaTime) {
           sizeof(float) * 4,
           std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
               EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-          g_generateColor(color, elementCount)  // Assuming this function returns
-                                              // std::vector<float>
+          g_generateColor(color, elementCount)  // Assuming this function
+                                                // returns std::vector<float>
       );
       vertexStreamData->m_streams_.push_back(streamParam);
     }
@@ -2698,7 +2724,7 @@ void Graph2D::update(float deltaTime) {
 void Graph2D::sethPosition(const math::Vector2Df& pos) {
   if (m_position_ != pos) {
     m_dirtyFlag_ = true;
-    m_position_       = pos;
+    m_position_  = pos;
   }
 }
 
@@ -2714,7 +2740,7 @@ void Graph2D::updateBuffer() {
     m_resultPoints_.resize(m_points_.size());
     for (int32_t i = 0; i < m_resultPoints_.size(); ++i) {
       m_resultPoints_[i] = math::Vector2Df(m_points_[i].x(), -m_points_[i].y())
-                      + math::Vector2Df(m_position_.x(), m_position_.y());
+                         + math::Vector2Df(m_position_.x(), m_position_.y());
     }
 
     if (m_resultPoints_.size() > 1) {
@@ -2744,13 +2770,13 @@ void Graph2D::updateBuffer() {
         auto        right      = math::Vector3Df(p2 - p1, 0.0f);
         const float lineLength = right.magnitude();
         right = right.normalized();  // here in-place normalize method would be
-                                    // better
+                                     // better
         right.z() = 0.0f;
 
         auto up = right.cross(math::g_forwardVector<float, 3>()).normalized();
 
         math::Matrix4f<>& tr = m_resultMatrices_[i];
-        tr                 = math::Matrix4f<>::Identity();
+        tr                   = math::Matrix4f<>::Identity();
         tr.setBasisX(math::Vector4Df(right, 0.0f));
         tr.setBasisY(math::Vector4Df(up, 0.0f));
         tr.setBasisZ(math::g_forwardVector<float, 4>());
