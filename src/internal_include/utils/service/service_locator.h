@@ -25,6 +25,12 @@ class ServiceLocator {
     return s_getServiceContainer<T>();
   }
 
+  // TODO: test
+  template <typename T>
+  static void s_remove() {
+    s_getServiceContainer<T>().reset();
+  }
+
   private:
   template <typename T>
   static std::shared_ptr<T>& s_getServiceContainer() {
