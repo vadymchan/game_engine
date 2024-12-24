@@ -132,7 +132,7 @@ struct RingBufferDx12 : public IBuffer {
 
   uint64_t                         m_ringBufferOffset_ = 0;
   uint32_t                         m_alignment_        = 16;
-  std::shared_ptr<CreatedResource> m_buffer_;
+  std::shared_ptr<CreatedResourceDx12> m_buffer_;
   uint64_t                         m_ringBufferSize_ = 0;
   void*                            m_mappedPointer_  = nullptr;
 
