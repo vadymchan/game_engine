@@ -95,8 +95,8 @@ bool SwapchainDx12::create(const std::shared_ptr<Window>& window) {
     }
 
 
-    std::shared_ptr<CreatedResource> RenderTargetResource
-        = CreatedResource::s_createdFromSwapchain(NewResource);
+    std::shared_ptr<CreatedResourceDx12> RenderTargetResource
+        = CreatedResourceDx12::s_createdFromSwapchain(NewResource);
 
     m_images_[i] = swapchainImage;
 
@@ -175,8 +175,8 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
     }
 
 
-    std::shared_ptr<CreatedResource> RenderTargetResource
-        = CreatedResource::s_createdFromSwapchain(NewResource);
+    std::shared_ptr<CreatedResourceDx12> RenderTargetResource
+        = CreatedResourceDx12::s_createdFromSwapchain(NewResource);
 
     auto TextureDX12Ptr = std::make_shared<TextureDx12>(
         ETextureType::TEXTURE_2D,
