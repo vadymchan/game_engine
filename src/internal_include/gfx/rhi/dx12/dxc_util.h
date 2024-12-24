@@ -11,8 +11,6 @@
 #include "platform/windows/windows_platform_setup.h"
 #include "utils/logger/global_logger.h"
 
-#include <windows.h>
-
 #include <filesystem>
 #include <fstream>
 #include <sstream>
