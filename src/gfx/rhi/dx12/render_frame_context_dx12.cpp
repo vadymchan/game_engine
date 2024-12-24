@@ -2,16 +2,15 @@
 
 #ifdef GAME_ENGINE_RHI_DX12
 
-#include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/dx12/command_allocator_dx12.h"
-
+#include "gfx/rhi/dx12/rhi_dx12.h"
 
 namespace game_engine {
 
 void RenderFrameContextDx12::queueSubmitCurrentActiveCommandBuffer() {
   if (m_commandBuffer_) {
-    CommandBufferDx12* commandBufferDx12
-        = (CommandBufferDx12*)m_commandBuffer_;
+    auto commandBufferDx12
+        = std::static_pointer_cast<CommandBufferDx12>(m_commandBuffer_);
 
     auto commandBufferManager = g_rhiDx12->getCommandBufferManager();
     commandBufferManager->executeCommandList(commandBufferDx12);
@@ -28,8 +27,8 @@ void RenderFrameContextDx12::queueSubmitCurrentActiveCommandBuffer() {
 void RenderFrameContextDx12::submitCurrentActiveCommandBuffer(
     ECurrentRenderPass currentRenderPass) {
   if (m_commandBuffer_) {
-    CommandBufferDx12* commandBufferDx12
-        = (CommandBufferDx12*)m_commandBuffer_;
+    auto commandBufferDx12
+        = std::static_pointer_cast<CommandBufferDx12>(m_commandBuffer_);
 
     auto commandBufferManager = g_rhiDx12->getCommandBufferManager();
     commandBufferManager->executeCommandList(commandBufferDx12);
