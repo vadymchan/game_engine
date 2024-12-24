@@ -14,9 +14,9 @@ namespace game_engine {
 // callback function for Vulkan debug messages
 VKAPI_ATTR VkBool32 VKAPI_CALL
     g_debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
-                  VkDebugUtilsMessageTypeFlagsEXT             messageType,
-                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                  void*                                       pUserData) {
+                    VkDebugUtilsMessageTypeFlagsEXT             messageType,
+                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                    void*                                       pUserData) {
   // message severity is at least a warning
   if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
     // TODO: implement some logic
@@ -30,7 +30,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL
 }
 
 SwapChainSupportDetails g_querySwapChainSupport(VkPhysicalDevice device,
-                                              VkSurfaceKHR     surface) {
+                                                VkSurfaceKHR     surface) {
   SwapChainSupportDetails details;
 
   // Retrieve the basic surface capabilities.
@@ -87,7 +87,7 @@ VkPresentModeKHR g_chooseSwapPresentMode(
 }
 
 QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device,
-                                     VkSurfaceKHR     surface) {
+                                       VkSurfaceKHR     surface) {
   QueueFamilyIndices indices;
 
   uint32_t queueFamilyCount = 0;
@@ -132,8 +132,7 @@ VkSemaphore g_createSemaphore() {
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
   VkSemaphore semaphore;
-  if (vkCreateSemaphore(
-          g_rhiVk->m_device_, &semaphoreInfo, nullptr, &semaphore)
+  if (vkCreateSemaphore(g_rhiVk->m_device_, &semaphoreInfo, nullptr, &semaphore)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create semaphore");
   }
@@ -186,24 +185,24 @@ bool g_isDepthOnlyFormat(VkFormat format) {
 }
 
 bool g_isTextureCube(VkImageViewType    imageViewType,
-                   uint32_t           layerCount,
-                   VkImageCreateFlags flags) {
+                     uint32_t           layerCount,
+                     VkImageCreateFlags flags) {
   return imageViewType == VK_IMAGE_VIEW_TYPE_CUBE
       || imageViewType == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY
              && (flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 }
 
 bool g_isTexture2DArray(VkImageViewType    imageViewType,
-                      uint32_t           layerCount,
-                      VkImageCreateFlags flags) {
+                        uint32_t           layerCount,
+                        VkImageCreateFlags flags) {
   return (imageViewType == VK_IMAGE_VIEW_TYPE_2D_ARRAY) && layerCount > 1
       && !(flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
 }
 
 VkImageView g_createTextureView(VkImage            image,
-                              VkFormat           format,
-                              VkImageAspectFlags aspectMask,
-                              uint32_t           mipLevels) {
+                                VkFormat           format,
+                                VkImageAspectFlags aspectMask,
+                                uint32_t           mipLevels) {
   VkImageViewCreateInfo viewInfo = {};
 
   viewInfo.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -232,10 +231,10 @@ VkImageView g_createTextureView(VkImage            image,
 }
 
 VkImageView g_createTexture2DArrayView(VkImage            image,
-                                     uint32_t           layerCount,
-                                     VkFormat           format,
-                                     VkImageAspectFlags aspectMask,
-                                     uint32_t           mipLevels) {
+                                       uint32_t           layerCount,
+                                       VkFormat           format,
+                                       VkImageAspectFlags aspectMask,
+                                       uint32_t           mipLevels) {
   VkImageViewCreateInfo viewInfo = {};
 
   viewInfo.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -264,9 +263,9 @@ VkImageView g_createTexture2DArrayView(VkImage            image,
 }
 
 VkImageView g_createTextureCubeView(VkImage            image,
-                                  VkFormat           format,
-                                  VkImageAspectFlags aspectMask,
-                                  uint32_t           mipLevels) {
+                                    VkFormat           format,
+                                    VkImageAspectFlags aspectMask,
+                                    uint32_t           mipLevels) {
   VkImageViewCreateInfo viewInfo = {};
 
   viewInfo.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -295,9 +294,9 @@ VkImageView g_createTextureCubeView(VkImage            image,
 }
 
 VkImageView g_createTextureViewForSpecificMipMap(VkImage            image,
-                                               VkFormat           format,
-                                               VkImageAspectFlags aspectMask,
-                                               uint32_t mipLevelIndex) {
+                                                 VkFormat           format,
+                                                 VkImageAspectFlags aspectMask,
+                                                 uint32_t mipLevelIndex) {
   VkImageViewCreateInfo viewInfo = {};
 
   viewInfo.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -396,18 +395,18 @@ VkImageView g_createTextureCubeViewForSpecificMipMap(
 }
 
 bool g_createTexture2DArrayLowLevel(uint32_t              width,
-                                   uint32_t              height,
-                                   uint32_t              arrayLayers,
-                                   uint32_t              mipLevels,
-                                   VkSampleCountFlagBits numSamples,
-                                   VkFormat              format,
-                                   VkImageTiling         tiling,
-                                   VkImageUsageFlags     usage,
-                                   VkMemoryPropertyFlags properties,
-                                   VkImageLayout         imageLayout,
-                                   VkImageCreateFlagBits imageCreateFlagBits,
-                                   VkImage&              image,
-                                   VkDeviceMemory&       imageMemory) {
+                                    uint32_t              height,
+                                    uint32_t              arrayLayers,
+                                    uint32_t              mipLevels,
+                                    VkSampleCountFlagBits numSamples,
+                                    VkFormat              format,
+                                    VkImageTiling         tiling,
+                                    VkImageUsageFlags     usage,
+                                    VkMemoryPropertyFlags properties,
+                                    VkImageLayout         imageLayout,
+                                    VkImageCreateFlagBits imageCreateFlagBits,
+                                    VkImage&              image,
+                                    VkDeviceMemory&       imageMemory) {
   VkImageCreateInfo imageInfo = {};
   imageInfo.sType             = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imageInfo.imageType         = VK_IMAGE_TYPE_2D;
@@ -466,18 +465,18 @@ std::shared_ptr<TextureVk> g_createTexture2DArray(
     VkImageLayout         imageLayout) {
   auto TexturePtr = std::make_shared<TextureVk>();
   if (g_createTexture2DArrayLowLevel(width,
-                                    height,
-                                    arrayLayers,
-                                    mipLevels,
-                                    numSamples,
-                                    format,
-                                    tiling,
-                                    usage,
-                                    properties,
-                                    imageLayout,
-                                    imageCreateFlags,
-                                    TexturePtr->m_image_,
-                                    TexturePtr->m_deviceMemory_)) {
+                                     height,
+                                     arrayLayers,
+                                     mipLevels,
+                                     numSamples,
+                                     format,
+                                     tiling,
+                                     usage,
+                                     properties,
+                                     imageLayout,
+                                     imageCreateFlags,
+                                     TexturePtr->m_image_,
+                                     TexturePtr->m_deviceMemory_)) {
     TexturePtr->m_type_            = ETextureType::TEXTURE_2D_ARRAY;
     TexturePtr->m_extent_.width()  = width;
     TexturePtr->m_extent_.height() = height;
@@ -500,30 +499,30 @@ std::shared_ptr<TextureVk> g_createTexture2DArray(
 }
 
 bool g_create2DTextureLowLevel(uint32_t              width,
-                              uint32_t              height,
-                              uint32_t              mipLevels,
-                              VkSampleCountFlagBits numSamples,
-                              VkFormat              format,
-                              VkImageTiling         tiling,
-                              VkImageUsageFlags     usage,
-                              VkMemoryPropertyFlags properties,
-                              VkImageLayout         imageLayout,
-                              VkImageCreateFlagBits imageCreateFlags,
-                              VkImage&              image,
-                              VkDeviceMemory&       imageMemory) {
+                               uint32_t              height,
+                               uint32_t              mipLevels,
+                               VkSampleCountFlagBits numSamples,
+                               VkFormat              format,
+                               VkImageTiling         tiling,
+                               VkImageUsageFlags     usage,
+                               VkMemoryPropertyFlags properties,
+                               VkImageLayout         imageLayout,
+                               VkImageCreateFlagBits imageCreateFlags,
+                               VkImage&              image,
+                               VkDeviceMemory&       imageMemory) {
   return g_createTexture2DArrayLowLevel(width,
-                                       height,
-                                       1,
-                                       mipLevels,
-                                       numSamples,
-                                       format,
-                                       tiling,
-                                       usage,
-                                       properties,
-                                       imageLayout,
-                                       imageCreateFlags,
-                                       image,
-                                       imageMemory);
+                                        height,
+                                        1,
+                                        mipLevels,
+                                        numSamples,
+                                        format,
+                                        tiling,
+                                        usage,
+                                        properties,
+                                        imageLayout,
+                                        imageCreateFlags,
+                                        image,
+                                        imageMemory);
 }
 
 std::shared_ptr<TextureVk> g_create2DTexture(
@@ -539,17 +538,17 @@ std::shared_ptr<TextureVk> g_create2DTexture(
     VkImageLayout         imageLayout) {
   auto TexturePtr = std::make_shared<TextureVk>();
   if (g_create2DTextureLowLevel(width,
-                               height,
-                               mipLevels,
-                               numSamples,
-                               format,
-                               tiling,
-                               usage,
-                               properties,
-                               imageLayout,
-                               imageCreateFlags,
-                               TexturePtr->m_image_,
-                               TexturePtr->m_deviceMemory_)) {
+                                height,
+                                mipLevels,
+                                numSamples,
+                                format,
+                                tiling,
+                                usage,
+                                properties,
+                                imageLayout,
+                                imageCreateFlags,
+                                TexturePtr->m_image_,
+                                TexturePtr->m_deviceMemory_)) {
     TexturePtr->m_type_            = ETextureType::TEXTURE_2D;
     TexturePtr->m_extent_.width()  = width;
     TexturePtr->m_extent_.height() = height;
@@ -570,17 +569,17 @@ std::shared_ptr<TextureVk> g_create2DTexture(
 }
 
 bool g_createCubeTextureLowLevel(uint32_t              width,
-                                uint32_t              height,
-                                uint32_t              mipLevels,
-                                VkSampleCountFlagBits numSamples,
-                                VkFormat              format,
-                                VkImageTiling         tiling,
-                                VkImageUsageFlags     usage,
-                                VkMemoryPropertyFlags properties,
-                                VkImageCreateFlagBits imageCreateFlags,
-                                VkImageLayout         imageLayout,
-                                VkImage&              image,
-                                VkDeviceMemory&       imageMemory) {
+                                 uint32_t              height,
+                                 uint32_t              mipLevels,
+                                 VkSampleCountFlagBits numSamples,
+                                 VkFormat              format,
+                                 VkImageTiling         tiling,
+                                 VkImageUsageFlags     usage,
+                                 VkMemoryPropertyFlags properties,
+                                 VkImageCreateFlagBits imageCreateFlags,
+                                 VkImageLayout         imageLayout,
+                                 VkImage&              image,
+                                 VkDeviceMemory&       imageMemory) {
   return g_createTexture2DArrayLowLevel(
       width,
       height,
@@ -611,17 +610,17 @@ std::shared_ptr<TextureVk> g_createCubeTexture(
     VkImageLayout         imageLayout) {
   auto TexturePtr = std::make_shared<TextureVk>();
   if (g_createCubeTextureLowLevel(width,
-                                 height,
-                                 mipLevels,
-                                 numSamples,
-                                 format,
-                                 tiling,
-                                 usage,
-                                 properties,
-                                 imageCreateFlags,
-                                 imageLayout,
-                                 TexturePtr->m_image_,
-                                 TexturePtr->m_deviceMemory_)) {
+                                  height,
+                                  mipLevels,
+                                  numSamples,
+                                  format,
+                                  tiling,
+                                  usage,
+                                  properties,
+                                  imageCreateFlags,
+                                  imageLayout,
+                                  TexturePtr->m_image_,
+                                  TexturePtr->m_deviceMemory_)) {
     TexturePtr->m_type_            = ETextureType::TEXTURE_CUBE;
     TexturePtr->m_extent_.width()  = width;
     TexturePtr->m_extent_.height() = height;
@@ -644,8 +643,8 @@ std::shared_ptr<TextureVk> g_createCubeTexture(
 }
 
 uint32_t g_findMemoryType(VkPhysicalDevice      physicalDevice,
-                        uint32_t              typeFilter,
-                        VkMemoryPropertyFlags properties) {
+                          uint32_t              typeFilter,
+                          VkMemoryPropertyFlags properties) {
   VkPhysicalDeviceMemoryProperties memProperties;
   vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
@@ -662,11 +661,11 @@ uint32_t g_findMemoryType(VkPhysicalDevice      physicalDevice,
 }
 
 size_t g_createBufferLowLevel(EVulkanBufferBits usage,
-                             EVulkanMemoryBits properties,
-                             uint64_t          size,
-                             VkBuffer&         buffer,
-                             VkDeviceMemory&   bufferMemory,
-                             uint64_t&         allocateSize) {
+                              EVulkanMemoryBits properties,
+                              uint64_t          size,
+                              VkBuffer&         buffer,
+                              VkDeviceMemory&   bufferMemory,
+                              uint64_t&         allocateSize) {
   assert(size);
   VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -681,19 +680,17 @@ size_t g_createBufferLowLevel(EVulkanBufferBits usage,
   }
 
   VkMemoryRequirements memRequirements;
-  vkGetBufferMemoryRequirements(
-      g_rhiVk->m_device_, buffer, &memRequirements);
+  vkGetBufferMemoryRequirements(g_rhiVk->m_device_, buffer, &memRequirements);
 
   VkMemoryAllocateInfo allocInfo = {};
   allocInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize       = memRequirements.size;
   allocInfo.memoryTypeIndex
       = g_findMemoryType(g_rhiVk->m_physicalDevice_,
-                       memRequirements.memoryTypeBits,
-                       g_getVulkanMemoryPropertyFlagBits(properties));
+                         memRequirements.memoryTypeBits,
+                         g_getVulkanMemoryPropertyFlagBits(properties));
 
-  if (!vkAllocateMemory(
-          g_rhiVk->m_device_, &allocInfo, nullptr, &bufferMemory)
+  if (!vkAllocateMemory(g_rhiVk->m_device_, &allocInfo, nullptr, &bufferMemory)
       == VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to allocate buffer memory");
     return 0;
@@ -709,10 +706,10 @@ size_t g_createBufferLowLevel(EVulkanBufferBits usage,
 }
 
 std::shared_ptr<BufferVk> g_createBuffer(EVulkanBufferBits usage,
-                                       EVulkanMemoryBits properties,
-                                       uint64_t          size,
-                                       EResourceLayout   resourceLayout) {
-  auto BufferPtr            = std::make_shared<BufferVk>();
+                                         EVulkanMemoryBits properties,
+                                         uint64_t          size,
+                                         EResourceLayout   resourceLayout) {
+  auto BufferPtr               = std::make_shared<BufferVk>();
   BufferPtr->m_realBufferSize_ = size;
 #if USE_VK_MEMORY_POOL
   assert(g_rhi->getMemoryPool());
@@ -721,13 +718,13 @@ std::shared_ptr<BufferVk> g_createBuffer(EVulkanBufferBits usage,
   BufferPtr->initializeWithMemory(m_memory);
 #else
   if (!g_createBufferLowLevel(g_rhiVk->m_device_,
-                             g_rhiVk->m_physicalDevice_,
-                             usage,
-                             properties,
-                             size,
-                             BufferPtr->m_buffer,
-                             BufferPtr->m_deviceMemory,
-                             BufferPtr->AllocatedSize)) {
+                              g_rhiVk->m_physicalDevice_,
+                              usage,
+                              properties,
+                              size,
+                              BufferPtr->m_buffer,
+                              BufferPtr->m_deviceMemory,
+                              BufferPtr->AllocatedSize)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create buffer");
     return nullptr;
   }
@@ -761,11 +758,11 @@ std::shared_ptr<BufferVk> g_createBuffer(EVulkanBufferBits usage,
 // }
 
 void g_copyBuffer(VkCommandBuffer commandBuffer,
-                VkBuffer        srcBuffer,
-                VkBuffer        dstBuffer,
-                VkDeviceSize    size,
-                VkDeviceSize    srcOffset,
-                VkDeviceSize    dstOffset) {
+                  VkBuffer        srcBuffer,
+                  VkBuffer        dstBuffer,
+                  VkDeviceSize    size,
+                  VkDeviceSize    srcOffset,
+                  VkDeviceSize    dstOffset) {
   VkBufferCopy copyRegion = {};
   copyRegion.srcOffset    = srcOffset;  // Optional
   copyRegion.dstOffset    = dstOffset;  // Optional
@@ -774,26 +771,27 @@ void g_copyBuffer(VkCommandBuffer commandBuffer,
 }
 
 void g_copyBuffer(VkCommandBuffer commandBuffer,
-                const BufferVk& srcBuffer,
-                const BufferVk& dstBuffer,
-                VkDeviceSize    size) {
-  assert(srcBuffer.m_allocatedSize_ >= size && dstBuffer.m_allocatedSize_ >= size);
+                  const BufferVk& srcBuffer,
+                  const BufferVk& dstBuffer,
+                  VkDeviceSize    size) {
+  assert(srcBuffer.m_allocatedSize_ >= size
+         && dstBuffer.m_allocatedSize_ >= size);
   g_copyBuffer(commandBuffer,
-             srcBuffer.m_buffer_,
-             dstBuffer.m_buffer_,
-             size,
-             srcBuffer.m_offset_,
-             dstBuffer.m_offset_);
+               srcBuffer.m_buffer_,
+               dstBuffer.m_buffer_,
+               size,
+               srcBuffer.m_offset_,
+               dstBuffer.m_offset_);
 }
 
 void g_copyBufferToTexture(VkCommandBuffer commandBuffer,
-                         VkBuffer        buffer,
-                         uint64_t        bufferOffset,
-                         VkImage         image,
-                         uint32_t        width,
-                         uint32_t        height,
-                         int32_t         miplevel,
-                         int32_t         layerIndex) {
+                           VkBuffer        buffer,
+                           uint64_t        bufferOffset,
+                           VkImage         image,
+                           uint32_t        width,
+                           uint32_t        height,
+                           int32_t         miplevel,
+                           int32_t         layerIndex) {
   VkBufferImageCopy region               = {};
   region.bufferOffset                    = bufferOffset;
   region.bufferRowLength                 = width;
@@ -813,50 +811,54 @@ void g_copyBufferToTexture(VkCommandBuffer commandBuffer,
 }
 
 void g_copyBuffer(VkBuffer     srcBuffer,
-                VkBuffer     dstBuffer,
-                VkDeviceSize size,
-                VkDeviceSize srcOffset,
-                VkDeviceSize dstOffset) {
-  auto* commandBuffer = g_rhiVk->beginSingleTimeCommands();
+                  VkBuffer     dstBuffer,
+                  VkDeviceSize size,
+                  VkDeviceSize srcOffset,
+                  VkDeviceSize dstOffset) {
+  auto commandBuffer = std::static_pointer_cast<CommandBufferVk>(
+      g_rhiVk->beginSingleTimeCommands());
   g_copyBuffer(commandBuffer->getRef(),
-             srcBuffer,
-             dstBuffer,
-             size,
-             srcOffset,
-             dstOffset);
+               srcBuffer,
+               dstBuffer,
+               size,
+               srcOffset,
+               dstOffset);
   g_rhiVk->endSingleTimeCommands(commandBuffer);
 }
 
 void g_copyBuffer(const BufferVk& srcBuffer,
-                const BufferVk& dstBuffer,
-                VkDeviceSize    size) {
-  assert(srcBuffer.m_allocatedSize_ >= size && dstBuffer.m_allocatedSize_ >= size);
-  auto* commandBuffer = g_rhiVk->beginSingleTimeCommands();
+                  const BufferVk& dstBuffer,
+                  VkDeviceSize    size) {
+  assert(srcBuffer.m_allocatedSize_ >= size
+         && dstBuffer.m_allocatedSize_ >= size);
+  auto commandBuffer = std::static_pointer_cast<CommandBufferVk>(
+      g_rhiVk->beginSingleTimeCommands());
   g_copyBuffer(commandBuffer->getRef(),
-             srcBuffer.m_buffer_,
-             dstBuffer.m_buffer_,
-             size,
-             srcBuffer.m_offset_,
-             dstBuffer.m_offset_);
+               srcBuffer.m_buffer_,
+               dstBuffer.m_buffer_,
+               size,
+               srcBuffer.m_offset_,
+               dstBuffer.m_offset_);
   g_rhiVk->endSingleTimeCommands(commandBuffer);
 }
 
 void g_copyBufferToTexture(VkBuffer buffer,
-                         uint64_t bufferOffset,
-                         VkImage  image,
-                         uint32_t width,
-                         uint32_t height,
-                         int32_t  miplevel,
-                         int32_t  layerIndex) {
-  auto* commandBuffer = g_rhiVk->beginSingleTimeCommands();
+                           uint64_t bufferOffset,
+                           VkImage  image,
+                           uint32_t width,
+                           uint32_t height,
+                           int32_t  miplevel,
+                           int32_t  layerIndex) {
+  auto commandBuffer = std::static_pointer_cast<CommandBufferVk>(
+      g_rhiVk->beginSingleTimeCommands());
   g_copyBufferToTexture(commandBuffer->getRef(),
-                      buffer,
-                      bufferOffset,
-                      image,
-                      width,
-                      height,
-                      miplevel,
-                      layerIndex);
+                        buffer,
+                        bufferOffset,
+                        image,
+                        width,
+                        height,
+                        miplevel,
+                        layerIndex);
   g_rhiVk->endSingleTimeCommands(commandBuffer);
 }
 
