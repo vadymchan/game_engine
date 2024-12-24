@@ -3,6 +3,8 @@
 
 #include "gfx/rhi/fence_manager.h"
 
+#include <memory>
+
 namespace game_engine {
 
 class CommandBuffer {
@@ -44,8 +46,9 @@ class ICommandBufferManager {
 
   virtual void release() = 0;
 
-  virtual void           returnCommandBuffer(CommandBuffer* commandBuffer) = 0;
-  virtual CommandBuffer* getOrCreateCommandBuffer()                        = 0;
+  virtual void returnCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer)
+      = 0;
+  virtual std::shared_ptr<CommandBuffer> getOrCreateCommandBuffer() = 0;
 
   // ======= END: public overridden methods   =================================
 };
