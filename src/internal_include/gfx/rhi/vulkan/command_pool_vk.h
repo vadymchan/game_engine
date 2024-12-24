@@ -36,9 +36,9 @@ class CommandBufferManagerVk : public ICommandBufferManager {
 
   virtual void release() override { releaseInternal(); }
 
-  void returnCommandBuffer(CommandBuffer* commandBuffer) override;
+  void returnCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer) override;
 
-  virtual CommandBuffer* getOrCreateCommandBuffer() override;
+  virtual std::shared_ptr<CommandBuffer> getOrCreateCommandBuffer() override;
 
   // ======= END: public overridden methods   =================================
 
@@ -60,8 +60,8 @@ class CommandBufferManagerVk : public ICommandBufferManager {
   VkCommandPool m_commandPool_;
   MutexLock     m_commandListLock_;
 
-  std::vector<CommandBufferVk*> m_usingCommandBuffers_;
-  std::vector<CommandBufferVk*> m_availableCommandBuffers_;
+  std::vector<std::shared_ptr<CommandBufferVk>> m_usingCommandBuffers_;
+  std::vector<std::shared_ptr<CommandBufferVk>> m_availableCommandBuffers_;
 
   // ======= END: private misc fields   =======================================
 };
