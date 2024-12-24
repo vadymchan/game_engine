@@ -23,7 +23,7 @@ struct RenderFrameContext
 
   RenderFrameContext() = default;
 
-  RenderFrameContext(CommandBuffer* commandBuffer)
+  RenderFrameContext(std::shared_ptr<CommandBuffer> commandBuffer)
       : m_commandBuffer_(commandBuffer) {}
 
   // ======= END: public constructors   =======================================
@@ -43,7 +43,7 @@ struct RenderFrameContext
   virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) {}
 
-  virtual CommandBuffer* getActiveCommandBuffer() const {
+  virtual std::shared_ptr<CommandBuffer> getActiveCommandBuffer() const {
     return m_commandBuffer_;
   }
 
@@ -62,7 +62,7 @@ struct RenderFrameContext
   protected:
   // ======= BEGIN: protected misc fields =====================================
 
-  CommandBuffer* m_commandBuffer_ = nullptr;
+  std::shared_ptr<CommandBuffer> m_commandBuffer_ = nullptr;
 
   // ======= END: protected misc fields   =====================================
 };
