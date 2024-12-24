@@ -20,7 +20,8 @@ void RenderPassDx12::release() {
   // }
 }
 
-bool RenderPassDx12::beginRenderPass(const CommandBuffer* commandBuffer) {
+bool RenderPassDx12::beginRenderPass(
+    const std::shared_ptr<CommandBuffer>& commandBuffer) {
   bool isValidCommandBuffer = commandBuffer != nullptr;
   assert(isValidCommandBuffer);
 
@@ -28,8 +29,7 @@ bool RenderPassDx12::beginRenderPass(const CommandBuffer* commandBuffer) {
     return false;
   }
 
-
-  m_commandBuffer_ = (const CommandBufferDx12*)commandBuffer;
+  m_commandBuffer_ = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
 
   if (m_rtvCPUHandles_.size() > 0) {
     m_commandBuffer_->m_commandList_->OMSetRenderTargets(
@@ -39,7 +39,10 @@ bool RenderPassDx12::beginRenderPass(const CommandBuffer* commandBuffer) {
         (m_dsvCPUDHandle_.ptr ? &m_dsvCPUDHandle_ : nullptr));
   } else {
     m_commandBuffer_->m_commandList_->OMSetRenderTargets(
-        0, nullptr, false, (m_dsvCPUDHandle_.ptr ? &m_dsvCPUDHandle_ : nullptr));
+        0,
+        nullptr,
+        false,
+        (m_dsvCPUDHandle_.ptr ? &m_dsvCPUDHandle_ : nullptr));
   }
 
   for (int32_t i = 0; i < m_rtvClears_.size(); ++i) {
@@ -106,7 +109,8 @@ void RenderPassDx12::initialize() {
 bool RenderPassDx12::createRenderPass() {
   // Create kRenderPass
   {
-    for (int32_t i = 0; i < (int32_t)m_renderPassInfo_.m_attachments_.size(); ++i) {
+    for (int32_t i = 0; i < (int32_t)m_renderPassInfo_.m_attachments_.size();
+         ++i) {
       const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
       assert(attachment.isValid());
 
@@ -124,9 +128,9 @@ bool RenderPassDx12::createRenderPass() {
 
         m_dsvDepthClear_   = HasClear;
         m_dsvStencilClear_ = (attachment.m_stencilLoadStoreOp_
-                               == EAttachmentLoadStoreOp::CLEAR_STORE
-                           || attachment.m_stencilLoadStoreOp_
-                                  == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
+                                  == EAttachmentLoadStoreOp::CLEAR_STORE
+                              || attachment.m_stencilLoadStoreOp_
+                                     == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
 
         m_dsvCPUDHandle_ = TextureDX12->m_dsv_.m_cpuHandle_;
       } else {
