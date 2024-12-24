@@ -221,12 +221,16 @@ class RhiDx12 : public RHI {
                                uint32_t height,
                                bool     isMinimized) override;
 
-  virtual CommandBufferDx12* beginSingleTimeCommands() const override;
-  virtual void               endSingleTimeCommands(
-                    CommandBuffer* commandBuffer) const override;
+  virtual std::shared_ptr<CommandBuffer> beginSingleTimeCommands()
+      const override;
+  virtual void endSingleTimeCommands(
+      std::shared_ptr<CommandBuffer> commandBuffer) const override;
+
+  virtual std::shared_ptr<Texture> createTextureFromDataDeprecated(
+      const ImageDataDeprecated* imageData) const override;
 
   virtual std::shared_ptr<Texture> createTextureFromData(
-      const ImageData* imageData) const override;
+      const std::shared_ptr<Image>& image) const override;
 
   virtual ShaderBindingLayout* createShaderBindings(
       const ShaderBindingArray& shaderBindingArray) const override;
@@ -267,17 +271,17 @@ class RhiDx12 : public RHI {
                                   renderFrameContextPtr) override;
 
   virtual void bindGraphicsShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
+      const std::shared_ptr<CommandBuffer> commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       uint32_t                             firstSet) const override;
   virtual void bindComputeShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
+      const std::shared_ptr<CommandBuffer> commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       uint32_t                             firstSet) const override;
   virtual void bindRaytracingShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
+      const std::shared_ptr<CommandBuffer> commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       uint32_t                             firstSet) const override;
@@ -347,31 +351,32 @@ class RhiDx12 : public RHI {
       const RenderTargetInfo& info) const override;
 
   // Resource Barrier
-  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                Texture*        texture,
+  virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                                Texture*                       texture,
                                 EResourceLayout newLayout) const override;
   virtual bool transitionLayoutImmediate(
       Texture* texture, EResourceLayout newLayout) const override;
-  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                IBuffer*        buffer,
+  virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                                IBuffer*                       buffer,
                                 EResourceLayout newLayout) const override;
   virtual bool transitionLayoutImmediate(
       IBuffer* buffer, EResourceLayout newLayout) const override;
 
-  virtual void uavBarrier(CommandBuffer* commandBuffer,
-                          Texture*       texture) const override;
+  virtual void uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
+                          Texture* texture) const override;
   virtual void uavBarrierImmediate(Texture* texture) const override;
-  virtual void uavBarrier(CommandBuffer* commandBuffer,
-                          IBuffer*       buffer) const override;
+  virtual void uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
+                          IBuffer*                       buffer) const override;
   virtual void uavBarrierImmediate(IBuffer* buffer) const override;
 
   // TODO: implement
-  // virtual void beginDebugEvent(CommandBuffer*        commandBuffer,
+  // virtual void beginDebugEvent(std::shared_ptr<CommandBuffer> commandBuffer,
   //                             const char*            name,
   //                             const math::Vector4Df& color
   //                             = math::g_kColorGreen) const override;
 
-  // virtual void endDebugEvent(CommandBuffer* commandBuffer) const override;
+  // virtual void endDebugEvent(std::shared_ptr<CommandBuffer> commandBuffer)
+  // const override;
 
   virtual void flush() const override;
   virtual void finish() const override;
@@ -415,27 +420,39 @@ class RhiDx12 : public RHI {
 
   // Create Images
   virtual std::shared_ptr<Texture> create2DTexture(
-      uint32_t             witdh,
-      uint32_t             height,
-      uint32_t             arrayLayers,
-      uint32_t             mipLevels,
-      ETextureFormat       format,
-      ETextureCreateFlag   textureCreateFlag,
-      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& imageBulkData = {},
-      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*       resourceName  = nullptr) const override;
+      uint32_t                      width,
+      uint32_t                      height,
+      uint32_t                      arrayLayers,
+      uint32_t                      mipLevels,
+      ETextureFormat                format,
+      ETextureCreateFlag            textureCreateFlag,
+      EResourceLayout               imageLayout  = EResourceLayout::UNDEFINED,
+      const std::shared_ptr<Image>& image        = nullptr,
+      const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
+      const wchar_t*                resourceName = nullptr) const override;
 
-  virtual std::shared_ptr<Texture> createCubeTexture(
-      uint32_t             witdh,
-      uint32_t             height,
-      uint32_t             mipLevels,
-      ETextureFormat       format,
-      ETextureCreateFlag   textureCreateFlag,
-      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& imageBulkData = {},
-      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*       resourceName  = nullptr) const override;
+  virtual std::shared_ptr<Texture> create2DTextureDeprecated(
+      uint32_t                       witdh,
+      uint32_t                       height,
+      uint32_t                       arrayLayers,
+      uint32_t                       mipLevels,
+      ETextureFormat                 format,
+      ETextureCreateFlag             textureCreateFlag,
+      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkDataDeprecated& imageBulkData = {},
+      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
+      const wchar_t*                 resourceName  = nullptr) const override;
+
+  virtual std::shared_ptr<Texture> createCubeTextureDeprecated(
+      uint32_t                       witdh,
+      uint32_t                       height,
+      uint32_t                       mipLevels,
+      ETextureFormat                 format,
+      ETextureCreateFlag             textureCreateFlag,
+      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkDataDeprecated& imageBulkData = {},
+      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
+      const wchar_t*                 resourceName  = nullptr) const override;
 
   virtual bool isSupportVSync() const override;
 
@@ -500,7 +517,7 @@ class RhiDx12 : public RHI {
   // ======= BEGIN: public misc methods =======================================
 
   template <typename T>
-  std::shared_ptr<CreatedResource> createResource(
+  std::shared_ptr<CreatedResourceDx12> createResource(
       T&&                   desc,
       D3D12_RESOURCE_STATES resourceState,
       D3D12_CLEAR_VALUE*    clearValue = nullptr) {
@@ -513,7 +530,7 @@ class RhiDx12 : public RHI {
       PlacedResource ReusePlacedResource
           = m_placedResourcePool_.alloc(info.SizeInBytes, false);
       if (ReusePlacedResource.isValid()) {
-        return CreatedResource::s_createdFromResourcePool(
+        return CreatedResourceDx12::s_createdFromResourcePool(
             ReusePlacedResource.m_placedSubResource_);
       } else {
         ScopedLock s(&m_placedPlacedResourceDefaultHeapOffsetLock_);
@@ -544,7 +561,7 @@ class RhiDx12 : public RHI {
           NewPlacedResource.m_size_              = info.SizeInBytes;
           m_placedResourcePool_.addUsingPlacedResource(NewPlacedResource);
 
-          return CreatedResource::s_createdFromResourcePool(
+          return CreatedResourceDx12::s_createdFromResourcePool(
               NewPlacedResource.m_placedSubResource_);
         }
       }
@@ -560,11 +577,11 @@ class RhiDx12 : public RHI {
                                                     clearValue,
                                                     IID_PPV_ARGS(&NewResource));
     assert(SUCCEEDED(hr));
-    return CreatedResource::s_createdFromStandalone(NewResource);
+    return CreatedResourceDx12::s_createdFromStandalone(NewResource);
   }
 
   template <typename T>
-  std::shared_ptr<CreatedResource> createUploadResource(
+  std::shared_ptr<CreatedResourceDx12> createUploadResource(
       T&&                   desc,
       D3D12_RESOURCE_STATES resourceState,
       D3D12_CLEAR_VALUE*    clearValue = nullptr) {
@@ -577,7 +594,7 @@ class RhiDx12 : public RHI {
       PlacedResource ReusePlacedUploadResource
           = m_placedResourcePool_.alloc(info.SizeInBytes, true);
       if (ReusePlacedUploadResource.isValid()) {
-        return CreatedResource::s_createdFromResourcePool(
+        return CreatedResourceDx12::s_createdFromResourcePool(
             ReusePlacedUploadResource.m_placedSubResource_);
       } else {
         ScopedLock s(&m_placedResourceDefaultUploadOffsetLock_);
@@ -608,7 +625,7 @@ class RhiDx12 : public RHI {
           NewPlacedResource.m_size_              = info.SizeInBytes;
           m_placedResourcePool_.addUsingPlacedResource(NewPlacedResource);
 
-          return CreatedResource::s_createdFromResourcePool(NewResource);
+          return CreatedResourceDx12::s_createdFromResourcePool(NewResource);
         }
       }
     }
@@ -624,17 +641,18 @@ class RhiDx12 : public RHI {
                                                     IID_PPV_ARGS(&NewResource));
 
     assert(SUCCEEDED(hr));
-    return CreatedResource::s_createdFromStandalone(NewResource);
+    return CreatedResourceDx12::s_createdFromStandalone(NewResource);
   }
 
-  CommandBufferDx12* beginSingleTimeCopyCommands() const;
-  void endSingleTimeCopyCommands(CommandBufferDx12* commandBuffer) const;
+  std::shared_ptr<CommandBuffer> beginSingleTimeCopyCommands() const;
+  void                           endSingleTimeCopyCommands(
+                                std::shared_ptr<CommandBufferDx12> commandBuffer) const;
 
   // Resource Barrier
-  bool transitionLayoutInternal(CommandBuffer*        commandBuffer,
-                                ID3D12Resource*       resource,
-                                D3D12_RESOURCE_STATES srcLayout,
-                                D3D12_RESOURCE_STATES dstLayout) const;
+  bool transitionLayoutInternal(std::shared_ptr<CommandBuffer> commandBuffer,
+                                ID3D12Resource*                resource,
+                                D3D12_RESOURCE_STATES          srcLayout,
+                                D3D12_RESOURCE_STATES          dstLayout) const;
 
   void waitForGPU() const;
 
