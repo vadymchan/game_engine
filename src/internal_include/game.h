@@ -3,10 +3,11 @@
 
 #include "gfx/renderer/primitive_util.h"
 #include "gfx/renderer/renderer.h"
-#include "gfx/scene/camera.h"
+#include "gfx/scene/camera_old.h"
 #include "gfx/scene/object.h"
 #include "gfx/scene/view.h"
 
+#include <bitset>
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
@@ -15,6 +16,8 @@
 #include <vector>
 
 namespace game_engine {
+
+class Engine;
 
 // TODO: consider renaming class (e.g. Application)
 class Game {
@@ -29,12 +32,21 @@ class Game {
     IndirectDrawPrimitive,
   };
 
+  enum class Action {
+    MoveForward,
+    MoveBackward,
+    MoveLeft,
+    MoveRight,
+    MoveUp,
+    MoveDown,
+    Count,
+  };
+
   // ======= END: public nested types   =======================================
 
   // ======= BEGIN: public constructors =======================================
 
-  Game(std::shared_ptr<Window> window)
-      : m_window_(std::move(window)) {}
+  Game() {}
 
   // ======= END: public constructors   =======================================
 
@@ -97,15 +109,9 @@ class Game {
 
   void update(float deltaTime);
 
-  void draw();
+  void linkWithEngine(const Engine& engine);
 
-  // TODO: not used
-  void onMouseButton() {}
-
-  // TODO: not used
   void onMouseMove(int32_t xOffset, int32_t yOffset);
-
-  void resize(int32_t width, int32_t height);
 
   void release();
 
@@ -113,13 +119,23 @@ class Game {
 
   // ======= BEGIN: public misc fields ========================================
 
-  Camera* m_mainCamera_ = nullptr;
+  // std::shared_ptr<CameraOld> m_mainCamera_ = nullptr;
 
   std::vector<Object*> m_spawnedObjects_;
 
   ESpawnedType m_spawnedType_ = ESpawnedType::None;
 
   std::shared_ptr<Window> m_window_;
+
+  float m_movingSpeed_ = 10.0f;
+  // TODO: add key bindings for sensitivity change
+  float m_mouseSensitivity_ = 0.1f;
+
+  std::bitset<static_cast<size_t>(Action::Count)> m_actionStates_;
+
+  float m_yaw_                       = 0.0f;
+  float m_pitch_                     = 0.0f;
+  bool  m_isRightMouseButtonPressed_ = false;
 
   // TODO: not used
   std::future<void>    m_resourceLoadCompleteEvent_;
@@ -130,6 +146,20 @@ class Game {
   MutexLock m_asyncLoadLock_;
 
   // ======= END: public misc fields   ========================================
+
+  private:
+  // ======= BEGIN: private static fields =====================================
+
+  static constexpr float s_speedChangeStep = 0.5f;
+  static constexpr float s_minMovingSpeed  = 0.1f;
+
+  // ======= END: private static fields   =====================================
+
+  // ======= BEGIN: private misc fields =======================================
+
+  std::shared_ptr<Scene> m_scene_;
+
+  // ======= END: private misc fields   =======================================
 };
 
 }  // namespace game_engine
