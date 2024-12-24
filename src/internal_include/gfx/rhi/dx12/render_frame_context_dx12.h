@@ -14,7 +14,7 @@ struct RenderFrameContextDx12 : public RenderFrameContext {
 
   RenderFrameContextDx12() = default;
 
-  RenderFrameContextDx12(CommandBuffer* commandBuffer)
+  RenderFrameContextDx12(std::shared_ptr<CommandBuffer> commandBuffer)
       : RenderFrameContext(commandBuffer) {}
 
   // ======= END: public constructors   =======================================
