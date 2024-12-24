@@ -29,7 +29,7 @@ class DrawCommand {
               RenderPass*                                renderPass,
               GraphicsPipelineShader                     shader,
               PipelineStateFixedInfo*                    pipelineStateFixed,
-              Material*                                  material,
+              MaterialOld*                               material,
               const ShaderBindingInstanceArray& shaderBindingInstanceArray,
               const PushConstant*               pushConstant,
               const VertexBuffer*               overrideInstanceData = nullptr,
@@ -48,34 +48,13 @@ class DrawCommand {
     assert(m_renderObject_);
   }
 
-  // TODO: no need (used for light / shadows)
-  /*DrawCommand(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-      const ViewLight*                            viewLight,
-      RenderObject*                                renderObject,
-      RenderPass*                                renderPass,
-      GraphicsPipelineShader                       shader,
-      PipelineStateFixedInfo*                    pipelineStateFixed,
-      Material*                                    material,
-      const ShaderBindingInstanceArray& shaderBindingInstanceArray, const
-  PushConstant*                        pushConstant, const VertexBuffer*
-  overrideInstanceData, int32_t subpassIndex) :
-  RenderFrameContextPtr(renderFrameContextPtr) , viewLight(viewLight) ,
-  RenderObject(renderObject) , kRenderPass(renderPass) , Shader(shader) ,
-  PipelineStateFixed(pipelineStateFixed) , Material(material) ,
-  kPushConstant(pushConstant) ,
-  m_shaderBindingInstanceArray(shaderBindingInstanceArray) ,
-  OverrideInstanceData(overrideInstanceData) , SubpassIndex(subpassIndex) {
-    assert(RenderObject);
-    IsViewLight = true;
-  }*/
-
+  // TODO: seems not used
   DrawCommand(const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
               RenderObject*                              renderObject,
               RenderPass*                                renderPass,
               GraphicsPipelineShader                     shader,
               PipelineStateFixedInfo*                    pipelineStateFixed,
-              Material*                                  material,
+              MaterialOld*                               material,
               const ShaderBindingInstanceArray& shaderBindingInstanceArray,
               const PushConstant*               pushConstant,
               const VertexBuffer*               overrideInstanceData = nullptr,
@@ -121,35 +100,16 @@ class DrawCommand {
   RenderObject*           m_renderObject_             = nullptr;
   PipelineStateFixedInfo* m_pipelineStateFixed_       = nullptr;
   PipelineStateInfo*      m_currentPipelineStateInfo_ = nullptr;
-  Material*               m_material_                 = nullptr;
+  MaterialOld*            m_material_                 = nullptr;
 
   std::shared_ptr<RenderFrameContext> m_renderFrameContextPtr_;
   bool                                m_isPositionOnly_ = false;
   int32_t                             m_subpassIndex_   = 0;
-  bool                                m_test_           = false;
 
   std::shared_ptr<ShaderBindingInstance> m_oneRenderObjectUniformBuffer_;
 
   // ======= END: public misc fields   ========================================
-
-
 };
-
-// TODO: not used (used for light draw commands)
-// class DrawCommandGenerator {
-//  public:
-//  virtual ~DrawCommandGenerator() {}
-//
-//  virtual void initialize(int32_t rtWidth, int32_t rtHeight) = 0;
-//  virtual void generateDrawCommand(
-//      DrawCommand*                                 destDrawCommand,
-//      const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
-//      const View*                                 view,
-//      const ViewLight&                            lightView,
-//      RenderPass*                                renderPass,
-//      int32_t                                      subpassIndex)
-//      = 0;
-//};
 
 }  // namespace game_engine
 
