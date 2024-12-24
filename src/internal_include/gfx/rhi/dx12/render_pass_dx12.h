@@ -8,7 +8,6 @@
 #include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/render_pass.h"
 
-
 namespace game_engine {
 
 class RenderPassDx12 : public RenderPass {
@@ -27,7 +26,8 @@ class RenderPassDx12 : public RenderPass {
 
   // ======= BEGIN: public overridden methods =================================
 
-  virtual bool beginRenderPass(const CommandBuffer* commandBuffer) override;
+  virtual bool beginRenderPass(
+      const std::shared_ptr<CommandBuffer>& commandBuffer) override;
   virtual void endRenderPass() override;
 
   // ======= END: public overridden methods   =================================
@@ -50,8 +50,8 @@ class RenderPassDx12 : public RenderPass {
 
   // Remove this. After organizing the relationship between CommandBufferDx12
   // and CommandBuffer.
-  bool beginRenderPass(const CommandBufferDx12*    commandBuffer,
-                       D3D12_CPU_DESCRIPTOR_HANDLE tempRTV) {
+  bool beginRenderPass(const std::shared_ptr<CommandBufferDx12>& commandBuffer,
+                       D3D12_CPU_DESCRIPTOR_HANDLE               tempRTV) {
     assert(commandBuffer);
     if (!commandBuffer) {
       return false;
@@ -116,7 +116,7 @@ class RenderPassDx12 : public RenderPass {
 
   // ======= BEGIN: private misc fields =======================================
 
-  const CommandBufferDx12* m_commandBuffer_ = nullptr;
+  std::shared_ptr<CommandBufferDx12> m_commandBuffer_ = nullptr;
 
   // TODO: consider if this is the appropriate naming convention
   std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_rtvCPUHandles_;
