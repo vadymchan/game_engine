@@ -300,14 +300,14 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
 
 void PipelineStateInfoDx12::bind(
     const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   bind(commandBufferDx12);
 }
 
-void PipelineStateInfoDx12::bind(CommandBufferDx12* commandList) const {
+void PipelineStateInfoDx12::bind(std::shared_ptr<CommandBufferDx12> commandList) const {
   assert(commandList->m_commandList_);
   if (m_pipelineType_ == PipelineStateInfo::EPipelineType::Graphics) {
     assert(m_pipelineState_);
