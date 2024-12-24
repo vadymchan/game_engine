@@ -28,6 +28,7 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
   m_root_.Parse(fileContent->c_str());
 
   if (m_root_.HasParseError()) {
+    // TODO: use logger
     std::cerr << "Error: Failed to parse JSON in file " << filePath
               << std::endl;
     return false;
@@ -39,6 +40,7 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 std::string Config::toString() const {
   asyncLoadComplete_();
   if (!m_root_.IsObject()) {
+    // TODO: use logger
     std::cerr << "Error: Configuration not loaded or root is not an object."
               << std::endl;
     return "";
@@ -64,6 +66,7 @@ void Config::asyncLoadComplete_() const {
 const ConfigValue& Config::getMember_(const std::string& key) const {
   if (!m_root_.HasMember(key.c_str())) {
     static ConfigValue nullValue(rapidjson::kNullType);
+    // TODO: use logger
     std::cerr << "Error: Key \"" << key << "\" not found." << std::endl;
     return nullValue;
   }
