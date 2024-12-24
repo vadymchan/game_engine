@@ -126,11 +126,16 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
           assert(tbor && tbor->kTexture);
 
           if (tbor && tbor->kTexture) {
-            TextureDx12* TexDX12 = (TextureDx12*)tbor->kTexture;
-            m_descriptors_.push_back(
-                {.m_descriptor_   = TexDX12->m_srv_,
-                 .m_resourceName_ = TexDX12->m_resourceName_,
-                 .m_resource_     = TexDX12});
+            TextureDx12*   TexDX12 = (TextureDx12*)tbor->kTexture;
+            DescriptorData descriptorData;
+            descriptorData.m_descriptor_   = TexDX12->m_srv_;
+            descriptorData.m_resourceName_ = TexDX12->m_resourceName_;
+            descriptorData.m_resource_     = TexDX12;
+            m_descriptors_.push_back(descriptorData);
+            // m_descriptors_.push_back(
+            //     {.m_descriptor_   = TexDX12->m_srv_,
+            //      .m_resourceName_ = TexDX12->m_resourceName_,
+            //      .m_resource_     = TexDX12});
 
             if (tbor->m_samplerState_) {
               SamplerStateInfoDx12* SamplerDX12
@@ -376,8 +381,9 @@ void ShaderBindingInstanceDx12::free() {
   }
 }
 
-void ShaderBindingInstanceDx12::bindGraphics(CommandBufferDx12* commandList,
-                                             int32_t& outStartIndex) const {
+void ShaderBindingInstanceDx12::bindGraphics(
+    std::shared_ptr<CommandBufferDx12> commandList,
+    int32_t&                           outStartIndex) const {
   assert(commandList);
 
   auto CommandList = commandList->get();
@@ -389,26 +395,23 @@ void ShaderBindingInstanceDx12::bindGraphics(CommandBufferDx12* commandList,
     switch (m_rootParameterInlines_[index].m_type_) {
       case InlineRootParamType::CBV:
         CommandList->SetGraphicsRootConstantBufferView(
-            outStartIndex,
-            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
+            outStartIndex, m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::SRV:
         CommandList->SetGraphicsRootShaderResourceView(
-            outStartIndex,
-            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
+            outStartIndex, m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::UAV:
         CommandList->SetGraphicsRootUnorderedAccessView(
-            outStartIndex,
-            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
+            outStartIndex, m_rootParameterInlines_[index].m_gpuVirtualAddress_);
       default:
         break;
     }
   }
 }
 
-void ShaderBindingInstanceDx12::bindCompute(CommandBufferDx12* commandList,
-                                            int32_t& outStartIndex) {
+void ShaderBindingInstanceDx12::bindCompute(
+    std::shared_ptr<CommandBufferDx12> commandList, int32_t& outStartIndex) {
   assert(commandList);
 
   auto CommandList = commandList->get();
@@ -420,18 +423,15 @@ void ShaderBindingInstanceDx12::bindCompute(CommandBufferDx12* commandList,
     switch (m_rootParameterInlines_[index].m_type_) {
       case InlineRootParamType::CBV:
         CommandList->SetComputeRootConstantBufferView(
-            outStartIndex,
-            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
+            outStartIndex, m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::SRV:
         CommandList->SetComputeRootShaderResourceView(
-            outStartIndex,
-            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
+            outStartIndex, m_rootParameterInlines_[index].m_gpuVirtualAddress_);
         break;
       case InlineRootParamType::UAV:
         CommandList->SetComputeRootUnorderedAccessView(
-            outStartIndex,
-            m_rootParameterInlines_[index].m_gpuVirtualAddress_);
+            outStartIndex, m_rootParameterInlines_[index].m_gpuVirtualAddress_);
       default:
         break;
     }
@@ -439,7 +439,7 @@ void ShaderBindingInstanceDx12::bindCompute(CommandBufferDx12* commandList,
 }
 
 void ShaderBindingInstanceDx12::copyToOnlineDescriptorHeap(
-    CommandBufferDx12* commandList) {
+    std::shared_ptr<CommandBufferDx12> commandList) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
