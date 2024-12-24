@@ -440,7 +440,8 @@ class RenderPass {
 
   // ======= BEGIN: public misc methods =======================================
 
-  virtual bool beginRenderPass(const CommandBuffer* commandBuffer) {
+  virtual bool beginRenderPass(
+      const std::shared_ptr<CommandBuffer>& commandBuffer) {
     return false;
   }
 
