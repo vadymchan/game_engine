@@ -78,10 +78,10 @@ struct ShaderBindingInstanceDx12 : public ShaderBindingInstance {
 
   // ======= BEGIN: public misc methods =======================================
 
-  void bindGraphics(CommandBufferDx12* commandList,
+  void bindGraphics(std::shared_ptr<CommandBufferDx12> commandList,
                     std::int32_t&      startIndex) const;
-  void bindCompute(CommandBufferDx12* commandList, std::int32_t& startIndex);
-  void copyToOnlineDescriptorHeap(CommandBufferDx12* commandList);
+  void bindCompute(std::shared_ptr<CommandBufferDx12> commandList, std::int32_t& startIndex);
+  void copyToOnlineDescriptorHeap(std::shared_ptr<CommandBufferDx12> commandList);
 
   // ======= END: public misc methods   =======================================
 
