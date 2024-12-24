@@ -346,7 +346,29 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
                  desc.Description);
       OutputDebugStringW(buff);
 
+      // Existing debug setup call if any
       SetupDebugLayerSettings(m_device_.Get());
+
+      // Add debug info queue setup here
+      {
+        ComPtr<ID3D12InfoQueue> infoQueue;
+        if (SUCCEEDED(m_device_.As(&infoQueue))) {
+          infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION,
+                                        TRUE);
+          infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+          infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+
+          // Optionally filter out spammy messages
+          D3D12_MESSAGE_ID hideMessages[]
+              = {D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
+                 D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE};
+
+          D3D12_INFO_QUEUE_FILTER filter = {};
+          filter.DenyList.NumIDs         = _countof(hideMessages);
+          filter.DenyList.pIDList        = hideMessages;
+          infoQueue->PushStorageFilter(&filter);
+        }
+      }
 #endif
     }
   }
@@ -545,33 +567,77 @@ bool RhiDx12::onHandleResized(uint32_t witdh,
   return true;
 }
 
-CommandBufferDx12* RhiDx12::beginSingleTimeCommands() const {
+std::shared_ptr<CommandBuffer> RhiDx12::beginSingleTimeCommands() const {
   assert(m_commandBufferManager_);
   return m_commandBufferManager_->getOrCreateCommandBuffer();
 }
 
-void RhiDx12::endSingleTimeCommands(CommandBuffer* commandBuffer) const {
-  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
+void RhiDx12::endSingleTimeCommands(
+    std::shared_ptr<CommandBuffer> commandBuffer) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
 
   assert(m_commandBufferManager_);
   m_commandBufferManager_->executeCommandList(commandBufferDx12, true);
   m_commandBufferManager_->returnCommandBuffer(commandBufferDx12);
 }
 
-CommandBufferDx12* RhiDx12::beginSingleTimeCopyCommands() const {
+std::shared_ptr<CommandBuffer> RhiDx12::beginSingleTimeCopyCommands() const {
   assert(m_copyCommandBufferManager_);
   return m_copyCommandBufferManager_->getOrCreateCommandBuffer();
 }
 
 void RhiDx12::endSingleTimeCopyCommands(
-    CommandBufferDx12* commandBuffer) const {
+    std::shared_ptr<CommandBufferDx12> commandBuffer) const {
   assert(m_copyCommandBufferManager_);
   m_copyCommandBufferManager_->executeCommandList(commandBuffer, true);
   m_copyCommandBufferManager_->returnCommandBuffer(commandBuffer);
 }
 
 std::shared_ptr<Texture> RhiDx12::createTextureFromData(
-    const ImageData* imageData) const {
+    const std::shared_ptr<Image>& image) const {
+  assert(image->width > 0 && image->height > 0 && image->mipLevels > 0
+         && image->arraySize > 0);
+
+  const EResourceLayout        layout = EResourceLayout::GENERAL;
+  std::shared_ptr<TextureDx12> TexturePtr;
+
+  // Create the texture resource depending on dimension
+  if (image->dimension == ETextureType::TEXTURE_CUBE) {
+    // TODO: implement
+    // TexturePtr = g_rhi->createCubeTexture<TextureDx12>(
+    //    static_cast<uint32_t>(image->width),
+    //    static_cast<uint32_t>(image->height),
+    //    static_cast<uint32_t>(image->mipLevels),
+    //    image->format,
+    //    ETextureCreateFlag::UAV,
+    //    layout,
+    //    RtClearValue::s_kInvalid,
+    //    nullptr);
+  } else {
+    TexturePtr = g_rhi->create2DTexture<TextureDx12>(
+        static_cast<uint32_t>(image->width),
+        static_cast<uint32_t>(image->height),
+        static_cast<uint32_t>(image->arraySize),
+        static_cast<uint32_t>(image->mipLevels),
+        image->format,
+        ETextureCreateFlag::NONE,
+        // ETextureCreateFlag::UAV,
+        layout,
+        image,
+        RtClearValue::s_kInvalid,
+        nullptr);
+  }
+
+  // If sRGB is tracked separately (not shown in current struct), set it here if
+  // needed: TexturePtr->m_sRGB_ = image->isSRGB; // if such a field existed in
+  // Image
+
+  return TexturePtr;
+}
+
+std::shared_ptr<Texture> RhiDx12::createTextureFromDataDeprecated(
+    const ImageDataDeprecated* imageData) const {
   assert(imageData);
 
   const int32_t         MipLevel = imageData->m_mipLevel_;
@@ -579,24 +645,24 @@ std::shared_ptr<Texture> RhiDx12::createTextureFromData(
 
   std::shared_ptr<TextureDx12> TexturePtr;
   if (imageData->m_textureType_ == ETextureType::TEXTURE_CUBE) {
-    TexturePtr
-        = g_rhi->createCubeTexture<TextureDx12>(imageData->m_width_,
-                                                imageData->m_height_,
-                                                MipLevel,
-                                                imageData->m_format_,
-                                                ETextureCreateFlag::UAV,
-                                                Layout,
-                                                imageData->m_imageBulkData_);
+    TexturePtr = g_rhi->createCubeTextureDeprecated<TextureDx12>(
+        imageData->m_width_,
+        imageData->m_height_,
+        MipLevel,
+        imageData->m_format_,
+        ETextureCreateFlag::UAV,
+        Layout,
+        imageData->m_imageBulkData_);
   } else {
-    TexturePtr
-        = g_rhi->create2DTexture<TextureDx12>(imageData->m_width_,
-                                              imageData->m_height_,
-                                              imageData->m_layerCount_,
-                                              MipLevel,
-                                              imageData->m_format_,
-                                              ETextureCreateFlag::UAV,
-                                              Layout,
-                                              imageData->m_imageBulkData_);
+    TexturePtr = g_rhi->create2DTextureDeprecated<TextureDx12>(
+        imageData->m_width_,
+        imageData->m_height_,
+        imageData->m_layerCount_,
+        MipLevel,
+        imageData->m_format_,
+        ETextureCreateFlag::UAV,
+        Layout,
+        imageData->m_imageBulkData_);
   }
   TexturePtr->m_sRGB_ = imageData->m_sRGB_;
   return TexturePtr;
@@ -778,6 +844,7 @@ bool RhiDx12::createShaderInternal(Shader*           shader,
 
       auto& dxcUtil = game_engine::DxcUtil::s_getInstance();
       if (FAILED(dxcUtil.initialize())) {
+        // TODO: use logger
         std::cerr << "Failed to initialize DxcUtil" << std::endl;
         return false;
       }
@@ -878,8 +945,8 @@ std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
 
   getOneFrameUniformRingBuffer()->reset();
 
-  CommandBufferDx12* commandBuffer
-      = (CommandBufferDx12*)m_commandBufferManager_->getOrCreateCommandBuffer();
+  auto commandBuffer = std::static_pointer_cast<CommandBufferDx12>(
+      m_commandBufferManager_->getOrCreateCommandBuffer());
 
   auto renderFrameContextPtr
       = std::make_shared<RenderFrameContextDx12>(commandBuffer);
@@ -898,8 +965,8 @@ void RhiDx12::endRenderFrame(
     const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {
   // SCOPE_CPU_PROFILE(endRenderFrame);
 
-  CommandBufferDx12* commandBuffer
-      = (CommandBufferDx12*)renderFrameContextPtr->getActiveCommandBuffer();
+  auto commandBuffer = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContextPtr->getActiveCommandBuffer());
 
   SwapchainImageDx12* CurrentSwapchainImage
       = (SwapchainImageDx12*)m_swapchain_->getCurrentSwapchainImage();
@@ -938,13 +1005,14 @@ std::shared_ptr<IUniformBufferBlock> RhiDx12::createUniformBufferBlock(
 }
 
 void RhiDx12::bindGraphicsShaderBindingInstances(
-    const CommandBuffer*                 commandBuffer,
+    const std::shared_ptr<CommandBuffer> commandBuffer,
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
     uint32_t                             firstSet) const {
   // This part will use the previously created one if it is structured.
   if (shaderBindingInstanceCombiner.m_shaderBindingInstanceArray) {
-    auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
+    auto commandBufferDx12
+        = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
     assert(commandBufferDx12);
 
     const ShaderBindingInstanceArray& m_shaderBindingInstanceArray
@@ -1068,13 +1136,14 @@ void RhiDx12::bindGraphicsShaderBindingInstances(
 }
 
 void RhiDx12::bindComputeShaderBindingInstances(
-    const CommandBuffer*                 commandBuffer,
+    const std::shared_ptr<CommandBuffer> commandBuffer,
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
     uint32_t                             firstSet) const {
   // This part will use the previously created one if it is structured.
   if (shaderBindingInstanceCombiner.m_shaderBindingInstanceArray) {
-    auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
+    auto commandBufferDx12
+        = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
     assert(commandBufferDx12);
 
     const ShaderBindingInstanceArray& m_shaderBindingInstanceArray
@@ -1127,7 +1196,7 @@ void RhiDx12::bindComputeShaderBindingInstances(
 }
 
 void RhiDx12::bindRaytracingShaderBindingInstances(
-    const CommandBuffer*                 commandBuffer,
+    const std::shared_ptr<CommandBuffer> commandBuffer,
     const PipelineStateInfo*             piplineState,
     const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
     uint32_t                             firstSet) const {
@@ -1161,16 +1230,67 @@ std::shared_ptr<IndexBuffer> RhiDx12::createIndexBuffer(
 }
 
 std::shared_ptr<Texture> RhiDx12::create2DTexture(
-    uint32_t             witdh,
-    uint32_t             height,
-    uint32_t             arrayLayers,
-    uint32_t             mipLevels,
-    ETextureFormat       format,
-    ETextureCreateFlag   textureCreateFlag,
-    EResourceLayout      imageLayout,
-    const ImageBulkData& imageBulkData,
-    const RtClearValue&  clearValue,
-    const wchar_t*       resourceName) const {
+    uint32_t                      width,
+    uint32_t                      height,
+    uint32_t                      arrayLayers,
+    uint32_t                      mipLevels,
+    ETextureFormat                format,
+    ETextureCreateFlag            textureCreateFlag,
+    EResourceLayout               imageLayout,
+    const std::shared_ptr<Image>& image,
+    const RtClearValue&           clearValue,
+    const wchar_t*                resourceName) const {
+  // Just create an empty texture resource here.
+  auto TexturePtr = g_createTexture(width,
+                                    height,
+                                    arrayLayers,
+                                    mipLevels,
+                                    1,
+                                    ETextureType::TEXTURE_2D,
+                                    format,
+                                    textureCreateFlag,
+                                    imageLayout,
+                                    clearValue,
+                                    resourceName);
+
+  // If we have pixel data, upload it
+  if (!image->pixels.empty() && !image->subImages.empty()) {
+    // Create a staging buffer for pixel data
+    auto BufferPtr = g_createBuffer(image->pixels.size(),
+                                    0,
+                                    EBufferCreateFlag::CPUAccess,
+                                    EResourceLayout::READ_ONLY,
+                                    image->pixels.data(),
+                                    image->pixels.size());
+    assert(BufferPtr);
+
+    // Begin copy commands
+    auto commandList = std::static_pointer_cast<CommandBufferDx12>(
+        beginSingleTimeCopyCommands());
+
+    // Copy buffer to texture using image & subImages directly
+    g_copyBufferToTexture(commandList->get(),
+                          BufferPtr->m_buffer->get(),
+                          TexturePtr->m_texture->get(),
+                          image);
+
+    endSingleTimeCopyCommands(commandList);
+  }
+
+  return TexturePtr;
+}
+
+std::shared_ptr<Texture> RhiDx12::create2DTextureDeprecated(
+    uint32_t                       witdh,
+    uint32_t                       height,
+    uint32_t                       arrayLayers,
+    uint32_t                       mipLevels,
+    ETextureFormat                 format,
+    ETextureCreateFlag             textureCreateFlag,
+    EResourceLayout                imageLayout,
+    const ImageBulkDataDeprecated& imageBulkData,
+    const RtClearValue&            clearValue,
+    const wchar_t*                 resourceName) const {
   auto TexturePtr = g_createTexture(witdh,
                                     height,
                                     arrayLayers,
@@ -1191,18 +1311,18 @@ std::shared_ptr<Texture> RhiDx12::create2DTexture(
                                     &imageBulkData.m_imageData_[0],
                                     imageBulkData.m_imageData_.size());
     assert(BufferPtr);
-
-    CommandBufferDx12* commandList = beginSingleTimeCopyCommands();
+    auto commandList = std::static_pointer_cast<CommandBufferDx12>(
+        beginSingleTimeCopyCommands());
     if (imageBulkData.m_subresourceFootprints_.size() > 0) {
-      g_copyBufferToTexture(commandList->get(),
-                            BufferPtr->m_buffer->get(),
-                            TexturePtr->m_texture->get(),
-                            imageBulkData.m_subresourceFootprints_);
+      g_copyBufferToTextureDeprecated(commandList->get(),
+                                      BufferPtr->m_buffer->get(),
+                                      TexturePtr->m_texture->get(),
+                                      imageBulkData.m_subresourceFootprints_);
     } else {
-      g_copyBufferToTexture(commandList->get(),
-                            BufferPtr->m_buffer->get(),
-                            0,
-                            TexturePtr->m_texture->get());
+      g_copyBufferToTextureDeprecated(commandList->get(),
+                                      BufferPtr->m_buffer->get(),
+                                      0,
+                                      TexturePtr->m_texture->get());
     }
 
     endSingleTimeCopyCommands(commandList);
@@ -1210,16 +1330,16 @@ std::shared_ptr<Texture> RhiDx12::create2DTexture(
   return TexturePtr;
 }
 
-std::shared_ptr<Texture> RhiDx12::createCubeTexture(
-    uint32_t             witdh,
-    uint32_t             height,
-    uint32_t             mipLevels,
-    ETextureFormat       format,
-    ETextureCreateFlag   textureCreateFlag,
-    EResourceLayout      imageLayout,
-    const ImageBulkData& imageBulkData,
-    const RtClearValue&  clearValue,
-    const wchar_t*       resourceName) const {
+std::shared_ptr<Texture> RhiDx12::createCubeTextureDeprecated(
+    uint32_t                       witdh,
+    uint32_t                       height,
+    uint32_t                       mipLevels,
+    ETextureFormat                 format,
+    ETextureCreateFlag             textureCreateFlag,
+    EResourceLayout                imageLayout,
+    const ImageBulkDataDeprecated& imageBulkData,
+    const RtClearValue&            clearValue,
+    const wchar_t*                 resourceName) const {
   auto TexturePtr = g_createTexture(witdh,
                                     height,
                                     6,
@@ -1241,17 +1361,18 @@ std::shared_ptr<Texture> RhiDx12::createCubeTexture(
                                     imageBulkData.m_imageData_.size());
     assert(BufferPtr);
 
-    CommandBufferDx12* commandList = beginSingleTimeCopyCommands();
+    auto commandList = std::static_pointer_cast<CommandBufferDx12>(
+        beginSingleTimeCopyCommands());
     if (imageBulkData.m_subresourceFootprints_.size() > 0) {
-      g_copyBufferToTexture(commandList->get(),
-                            BufferPtr->m_buffer->get(),
-                            TexturePtr->m_texture->get(),
-                            imageBulkData.m_subresourceFootprints_);
+      g_copyBufferToTextureDeprecated(commandList->get(),
+                                      BufferPtr->m_buffer->get(),
+                                      TexturePtr->m_texture->get(),
+                                      imageBulkData.m_subresourceFootprints_);
     } else {
-      g_copyBufferToTexture(commandList->get(),
-                            BufferPtr->m_buffer->get(),
-                            0,
-                            TexturePtr->m_texture->get());
+      g_copyBufferToTextureDeprecated(commandList->get(),
+                                      BufferPtr->m_buffer->get(),
+                                      0,
+                                      TexturePtr->m_texture->get());
     }
 
     endSingleTimeCopyCommands(commandList);
@@ -1273,8 +1394,8 @@ void RhiDx12::drawArrays(
     // EPrimitiveType                              type,
     int32_t                                    vertStartIndex,
     int32_t                                    vertCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawInstanced(
@@ -1287,8 +1408,8 @@ void RhiDx12::drawArraysInstanced(
     int32_t                                    vertStartIndex,
     int32_t                                    vertCount,
     int32_t                                    instanceCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawInstanced(
@@ -1301,8 +1422,8 @@ void RhiDx12::drawElements(
     int32_t                                    elementSize,
     int32_t                                    startIndex,
     int32_t                                    indexCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1316,8 +1437,8 @@ void RhiDx12::drawElementsInstanced(
     int32_t                                    startIndex,
     int32_t                                    indexCount,
     int32_t                                    instanceCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1331,8 +1452,8 @@ void RhiDx12::drawElementsBaseVertex(
     int32_t                                    startIndex,
     int32_t                                    indexCount,
     int32_t                                    baseVertexIndex) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1347,8 +1468,8 @@ void RhiDx12::drawElementsInstancedBaseVertex(
     int32_t                                    indexCount,
     int32_t                                    baseVertexIndex,
     int32_t                                    instanceCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1361,8 +1482,8 @@ void RhiDx12::drawIndirect(
     IBuffer*                                   buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   assert(0);
@@ -1374,8 +1495,8 @@ void RhiDx12::drawElementsIndirect(
     IBuffer*                                   buffer,
     int32_t                                    startIndex,
     int32_t                                    drawCount) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
 
   assert(0);
@@ -1386,8 +1507,8 @@ void RhiDx12::dispatchCompute(
     uint32_t                                   numGroupsX,
     uint32_t                                   numGroupsY,
     uint32_t                                   numGroupsZ) const {
-  auto commandBufferDx12
-      = (CommandBufferDx12*)renderFrameContext->getActiveCommandBuffer();
+  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
+      renderFrameContext->getActiveCommandBuffer());
   assert(commandBufferDx12);
   assert(commandBufferDx12->m_commandList_);
   assert(numGroupsX * numGroupsY * numGroupsZ > 0);
@@ -1427,10 +1548,11 @@ std::shared_ptr<RenderTarget> RhiDx12::createRenderTarget(
   return RenderTargetPtr;
 }
 
-bool RhiDx12::transitionLayoutInternal(CommandBuffer*        commandBuffer,
-                                       ID3D12Resource*       resource,
-                                       D3D12_RESOURCE_STATES srcLayout,
-                                       D3D12_RESOURCE_STATES dstLayout) const {
+bool RhiDx12::transitionLayoutInternal(
+    std::shared_ptr<CommandBuffer> commandBuffer,
+    ID3D12Resource*                resource,
+    D3D12_RESOURCE_STATES          srcLayout,
+    D3D12_RESOURCE_STATES          dstLayout) const {
   assert(commandBuffer);
   assert(resource);
 
@@ -1438,7 +1560,8 @@ bool RhiDx12::transitionLayoutInternal(CommandBuffer*        commandBuffer,
     return true;
   }
 
-  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
 
   D3D12_RESOURCE_BARRIER barrier = {};
   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -1454,9 +1577,9 @@ bool RhiDx12::transitionLayoutInternal(CommandBuffer*        commandBuffer,
   return true;
 }
 
-bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
-                               Texture*        texture,
-                               EResourceLayout newLayout) const {
+bool RhiDx12::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                               Texture*                       texture,
+                               EResourceLayout                newLayout) const {
   assert(commandBuffer);
   assert(texture);
 
@@ -1483,7 +1606,7 @@ bool RhiDx12::transitionLayoutImmediate(Texture*        texture,
       return true;
     }
 
-    CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
+    auto commandBuffer = beginSingleTimeCommands();
     assert(commandBuffer);
 
     if (commandBuffer) {
@@ -1499,10 +1622,12 @@ bool RhiDx12::transitionLayoutImmediate(Texture*        texture,
   return false;
 }
 
-void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
+void RhiDx12::uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
+                         Texture*                       texture) const {
   assert(commandBuffer);
-  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
-  auto texture_dx12      = (TextureDx12*)texture;
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
+  auto texture_dx12 = (TextureDx12*)texture;
   assert(texture_dx12->m_texture);
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
@@ -1512,10 +1637,12 @@ void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, Texture* texture) const {
   commandBufferDx12->m_commandList_->ResourceBarrier(1, &uavBarrier);
 }
 
-void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, IBuffer* buffer) const {
+void RhiDx12::uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
+                         IBuffer*                       buffer) const {
   assert(commandBuffer);
-  auto commandBufferDx12 = (CommandBufferDx12*)commandBuffer;
-  auto buffer_dx12       = (BufferDx12*)buffer;
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
+  auto buffer_dx12 = (BufferDx12*)buffer;
   assert(buffer_dx12->m_buffer);
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
@@ -1526,7 +1653,7 @@ void RhiDx12::uavBarrier(CommandBuffer* commandBuffer, IBuffer* buffer) const {
 }
 
 void RhiDx12::uavBarrierImmediate(Texture* texture) const {
-  CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
+  auto commandBuffer = beginSingleTimeCommands();
   assert(commandBuffer);
 
   if (commandBuffer) {
@@ -1536,7 +1663,7 @@ void RhiDx12::uavBarrierImmediate(Texture* texture) const {
 }
 
 void RhiDx12::uavBarrierImmediate(IBuffer* buffer) const {
-  CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
+  auto commandBuffer = beginSingleTimeCommands();
   assert(commandBuffer);
 
   if (commandBuffer) {
@@ -1545,9 +1672,9 @@ void RhiDx12::uavBarrierImmediate(IBuffer* buffer) const {
   }
 }
 
-bool RhiDx12::transitionLayout(CommandBuffer*  commandBuffer,
-                               IBuffer*        buffer,
-                               EResourceLayout newLayout) const {
+bool RhiDx12::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                               IBuffer*                       buffer,
+                               EResourceLayout                newLayout) const {
   assert(commandBuffer);
   assert(buffer);
   assert(buffer->getLayout() != newLayout);
@@ -1575,7 +1702,7 @@ bool RhiDx12::transitionLayoutImmediate(IBuffer*        buffer,
       return true;
     }
 
-    CommandBufferDx12* commandBuffer = beginSingleTimeCommands();
+    auto commandBuffer = beginSingleTimeCommands();
     assert(commandBuffer);
 
     if (commandBuffer) {
@@ -1592,11 +1719,11 @@ bool RhiDx12::transitionLayoutImmediate(IBuffer*        buffer,
 }
 
 // void RhiDx12::beginDebugEvent(
-//     CommandBuffer* commandBuffer,
+//     std::shared_ptr<CommandBuffer> commandBuffer,
 //     const char*     name,
 //     const Vector4&  color /*= Vector4::g_kColorGreen*/) const {
-//   CommandBufferDx12* CommandList = (CommandBufferDx12*)commandBuffer;
-//   assert(CommandList);
+//   std::shared_ptr<CommandBufferDx12> CommandList =
+//   std::static_pointer_cast<CommandBufferDx12>(; assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
 //   PIXBeginEvent(CommandList->get(),
@@ -1606,9 +1733,10 @@ bool RhiDx12::transitionLayoutImmediate(IBuffer*        buffer,
 //                 name);
 // }
 //
-// void RhiDx12::endDebugEvent(CommandBuffer* commandBuffer) const {
-//   CommandBufferDx12* CommandList = (CommandBufferDx12*)commandBuffer;
-//   assert(CommandList);
+// void RhiDx12::endDebugEvent(std::shared_ptr<CommandBuffer> commandBuffer)
+// const {
+//   std::shared_ptr<CommandBufferDx12> CommandList =
+//   std::static_pointer_cast<CommandBufferDx12>(;//   assert(CommandList);
 //   assert(!CommandList->IsClosed);
 //
 //   PIXEndEvent(CommandList->get());
