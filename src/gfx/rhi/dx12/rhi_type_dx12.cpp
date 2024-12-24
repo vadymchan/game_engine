@@ -469,17 +469,17 @@ EResourceLayout g_getDX12ResourceLayout(D3D12_RESOURCE_STATES resourceState) {
 
 // clang-format on
 
-void CreatedResource::free() {
+void CreatedResourceDx12::free() {
   if (m_resource_) {
-    if (m_resourceType_ == CreatedResource::EType::Standalone) {
+    if (m_resourceType_ == CreatedResourceDx12::EType::Standalone) {
       if (g_rhiDx12) {
         g_rhiDx12->m_deallocatorMultiFrameStandaloneResource_.free(m_resource_);
       }
-    } else if (m_resourceType_ == CreatedResource::EType::ResourcePool) {
+    } else if (m_resourceType_ == CreatedResourceDx12::EType::ResourcePool) {
       if (g_rhiDx12) {
         g_rhiDx12->m_deallocatorMultiFramePlacedResource_.free(m_resource_);
       }
-    } else if (m_resourceType_ == CreatedResource::EType::Swapchain) {
+    } else if (m_resourceType_ == CreatedResourceDx12::EType::Swapchain) {
       // Nothing to do
     } else {
       assert(0);
