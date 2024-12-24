@@ -5,7 +5,7 @@
 #define GAME_ENGINE_RHI_VK_H
 
 #ifndef NDEBUG  // DEBUG
-  #define ENABLE_VALIDATION_LAYERS
+#define ENABLE_VALIDATION_LAYERS
 #endif
 
 #define VALIDATION_LAYER_VERBOSE 0
@@ -104,7 +104,10 @@ class RhiVk : public RHI {
       const std::shared_ptr<IndexStreamData>& streamData) const override;
 
   virtual std::shared_ptr<Texture> createTextureFromData(
-      const ImageData* imageData) const override;
+      const std::shared_ptr<Image>& image) const override;
+
+  virtual std::shared_ptr<Texture> createTextureFromDataDeprecated(
+      const ImageDataDeprecated* imageData) const override;
 
   virtual bool createShaderInternal(
       Shader* shader, const ShaderInfo& shaderInfo) const override;
@@ -214,27 +217,39 @@ class RhiVk : public RHI {
 
   // Create Images
   virtual std::shared_ptr<Texture> create2DTexture(
-      uint32_t             witdh,
-      uint32_t             height,
-      uint32_t             arrayLayers,
-      uint32_t             mipLevels,
-      ETextureFormat       format,
-      ETextureCreateFlag   textureCreateFlag,
-      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& imageBulkData = {},
-      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*       resourceName  = nullptr) const override;
+      uint32_t                      width,
+      uint32_t                      height,
+      uint32_t                      arrayLayers,
+      uint32_t                      mipLevels,
+      ETextureFormat                format,
+      ETextureCreateFlag            textureCreateFlag,
+      EResourceLayout               imageLayout  = EResourceLayout::UNDEFINED,
+      const std::shared_ptr<Image>& image        = nullptr,
+      const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
+      const wchar_t*                resourceName = nullptr) const override;
 
-  virtual std::shared_ptr<Texture> createCubeTexture(
-      uint32_t             witdh,
-      uint32_t             height,
-      uint32_t             mipLevels,
-      ETextureFormat       format,
-      ETextureCreateFlag   textureCreateFlag,
-      EResourceLayout      imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkData& imageBulkData = {},
-      const RtClearValue&  clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*       resourceName  = nullptr) const override;
+  virtual std::shared_ptr<Texture> create2DTextureDeprecated(
+      uint32_t                       witdh,
+      uint32_t                       height,
+      uint32_t                       arrayLayers,
+      uint32_t                       mipLevels,
+      ETextureFormat                 format,
+      ETextureCreateFlag             textureCreateFlag,
+      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkDataDeprecated& imageBulkData = {},
+      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
+      const wchar_t*                 resourceName  = nullptr) const override;
+
+  virtual std::shared_ptr<Texture> createCubeTextureDeprecated(
+      uint32_t                       witdh,
+      uint32_t                       height,
+      uint32_t                       mipLevels,
+      ETextureFormat                 format,
+      ETextureCreateFlag             textureCreateFlag,
+      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
+      const ImageBulkDataDeprecated& imageBulkData = {},
+      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
+      const wchar_t*                 resourceName  = nullptr) const override;
 
   virtual bool onHandleResized(uint32_t witdh,
                                uint32_t height,
@@ -338,28 +353,31 @@ class RhiVk : public RHI {
   virtual void endRenderFrame(const std::shared_ptr<RenderFrameContext>&
                                   renderFrameContextPtr) override;
 
-  virtual CommandBufferVk* beginSingleTimeCommands() const override;
+  virtual std::shared_ptr<CommandBuffer> beginSingleTimeCommands()
+      const override;
 
-  void endSingleTimeCommands(CommandBuffer* commandBuffer) const override;
+  void endSingleTimeCommands(
+      std::shared_ptr<CommandBuffer> commandBuffer) const override;
 
-  virtual bool transitionLayout(CommandBuffer*  commandBuffer,
-                                Texture*        texture,
+  virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                                Texture*                       texture,
                                 EResourceLayout newLayout) const override;
 
   virtual void bindGraphicsShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
+      const std::shared_ptr<CommandBuffer> commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const override;
 
   virtual void bindComputeShaderBindingInstances(
-      const CommandBuffer*                 commandBuffer,
+      const std::shared_ptr<CommandBuffer> commandBuffer,
       const PipelineStateInfo*             piplineState,
       const ShaderBindingInstanceCombiner& shaderBindingInstanceCombiner,
       std::uint32_t                        firstSet) const override;
 
   // TODO: currently not used
-  virtual void nextSubpass(const CommandBuffer* commandBuffer) const override;
+  virtual void nextSubpass(
+      const std::shared_ptr<CommandBuffer> commandBuffer) const override;
 
   virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,
