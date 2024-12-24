@@ -12,8 +12,9 @@ namespace game_engine {
 
 class InputManager {
   public:
-  InputManager(const std::shared_ptr<KeyboardEventHandler>& keyboardHandler = nullptr,
-               const std::shared_ptr<MouseEventHandler>&    mouseHandler    = nullptr)
+  InputManager(const std::shared_ptr<KeyboardEventHandler>& keyboardHandler
+               = nullptr,
+               const std::shared_ptr<MouseEventHandler>& mouseHandler = nullptr)
       : m_keyboardHandler_(keyboardHandler)
       , m_mouseHandler_(mouseHandler) {}
 
@@ -49,6 +50,16 @@ class InputManager {
                           "Received an unhandled event type.");
         break;
     }
+  }
+
+  [[nodiscard]] auto getKeyboardHandler() const
+      -> std::shared_ptr<KeyboardEventHandler> {
+    return m_keyboardHandler_;
+  }
+
+  [[nodiscard]] auto getMouseHandler() const
+      -> std::shared_ptr<MouseEventHandler> {
+    return m_mouseHandler_;
   }
 
   private:
