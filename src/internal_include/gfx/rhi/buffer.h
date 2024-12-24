@@ -110,8 +110,10 @@ class BufferAttributeStream : public IBufferAttribute {
                         //, VkVertexInputRate             inputRate
                         //  = VK_VERTEX_INPUT_RATE_VERTEX
                         )
-      : IBufferAttribute(
-          name, bufferType, /*bufferUsage,*/ stride, attributes /*, inputRate*/)
+      : IBufferAttribute(name,
+                         bufferType,
+                         /*bufferUsage,*/ stride,
+                         attributes /*, inputRate*/)
       , m_data_(data) {}
 
   // ======= END: public constructors   =======================================
