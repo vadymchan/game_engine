@@ -226,7 +226,7 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
 
   // ======= END: public misc methods   =======================================
 
-  void bind(CommandBufferDx12* commandList) const;
+  void bind(std::shared_ptr<CommandBufferDx12> commandList) const;
 
   void release();
 
