@@ -8,7 +8,7 @@
 
 #include "gfx/rhi/i_uniform_buffer_block.h"
 #include "gfx/rhi/shader_binding_layout.h"
-#include "gfx/scene/camera.h"
+#include "gfx/scene/camera_old.h"
 
 #include <vector>
 
@@ -20,7 +20,8 @@ class View {
 
   View() = default;
 
-  View(const Camera* camera /*, const std::vector<Light*>& lights*/)
+  View(const std::shared_ptr<CameraOld>
+           camera /*, const std::vector<Light*>& lights*/)
       : m_camera_(camera) {
     assert(camera);
     /*lights.resize(lights.size());
@@ -52,7 +53,7 @@ class View {
 
   // ======= BEGIN: public misc fields ========================================
 
-  const Camera*                        m_camera_ = nullptr;
+  const std::shared_ptr<CameraOld>     m_camera_ = nullptr;
   // std::vector<ViewLight>            m_lights_;
   // std::vector<ViewLight>            m_shadowCasterLights_;
   std::shared_ptr<IUniformBufferBlock> m_viewUniformBufferPtr_;
