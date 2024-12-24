@@ -259,7 +259,7 @@ class RenderObject {
   bool m_isTwoSided_       = false;
   bool m_isHiddenBoundBox_ = false;
 
-  std::shared_ptr<Material> m_materialPtr_;
+  std::shared_ptr<MaterialOld> m_materialPtr_;
   // TODO: consider removing
   std::shared_ptr<IBuffer>  m_testUniformBuffer_;
 
