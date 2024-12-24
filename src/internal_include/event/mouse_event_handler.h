@@ -52,30 +52,25 @@ class MouseEventHandler {
   class MotionEventHandler {
     public:
     struct EventInfo {
-      EventType        m_type;  // SDL_MOUSEMOTION
-      MouseMotionState m_state;
+      EventType m_type;  // SDL_MOUSEMOTION
     };
 
     using EventCallback = std::function<void(const MouseMotionEvent&)>;
 
     void subscribe(const EventInfo& eventInfo, const EventCallback& callback) {
       if (eventInfo.m_type == SDL_MOUSEMOTION) {
-        m_mouseMotionSubscribers_[eventInfo.m_state].emplace_back(callback);
+        m_mouseMotionSubscribers_.emplace_back(callback);
       }
     }
 
     void dispatch(const MouseMotionEvent& event) {
-      auto it = m_mouseMotionSubscribers_.find(event.state);
-      if (it != m_mouseMotionSubscribers_.end()) {
-        for (auto& callback : it->second) {
-          callback(event);
-        }
+      for (auto& callback : m_mouseMotionSubscribers_) {
+        callback(event);
       }
     }
 
     private:
-    std::unordered_map<MouseMotionState, std::vector<EventCallback>>
-        m_mouseMotionSubscribers_;
+    std::vector<EventCallback> m_mouseMotionSubscribers_;
   };
 
   class WheelEventHandler {
@@ -133,10 +128,7 @@ class MouseEventHandler {
     m_wheelEventHandler_.dispatch(event);
   }
 
-
   // ======= END: public misc methods   =======================================
-
-
 
   private:
   // ======= BEGIN: private misc fields =======================================
@@ -146,9 +138,6 @@ class MouseEventHandler {
   WheelEventHandler  m_wheelEventHandler_;
 
   // ======= END: private misc fields   =======================================
-
-
-
 };
 
 }  // namespace game_engine
