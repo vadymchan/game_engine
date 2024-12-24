@@ -15,22 +15,23 @@ void CommandBufferManagerDx12::release() {
   for (auto& iter : m_usingCommandBuffers_) {
     iter->getFence()->waitForFence();
     g_rhi->getFenceManager()->returnFence(iter->getFence());
-    delete iter;
+    // delete iter;
   }
   m_usingCommandBuffers_.clear();
 
   for (auto& iter : m_availableCommandLists_) {
     iter->getFence()->waitForFence();
     g_rhi->getFenceManager()->returnFence(iter->getFence());
-    delete iter;
+    // delete iter;
   }
   m_availableCommandLists_.clear();
 }
 
-CommandBufferDx12* CommandBufferManagerDx12::getOrCreateCommandBuffer() {
+std::shared_ptr<CommandBuffer>
+    CommandBufferManagerDx12::getOrCreateCommandBuffer() {
   ScopedLock s(&m_commandListLock_);
 
-  CommandBufferDx12* SelectedCmdBuffer = nullptr;
+  std::shared_ptr<CommandBufferDx12> SelectedCmdBuffer = nullptr;
   for (int32_t i = 0; i < m_availableCommandLists_.size(); ++i) {
     if (m_availableCommandLists_[i]->isCompleteForWaitFence()) {
       SelectedCmdBuffer = m_availableCommandLists_[i];
@@ -50,14 +51,15 @@ CommandBufferDx12* CommandBufferManagerDx12::getOrCreateCommandBuffer() {
 }
 
 void CommandBufferManagerDx12::returnCommandBuffer(
-    CommandBuffer* commandBuffer) {
+    std::shared_ptr<CommandBuffer> commandBuffer) {
   ScopedLock s(&m_commandListLock_);
 
   for (int32_t i = 0; i < m_usingCommandBuffers_.size(); ++i) {
     if (m_usingCommandBuffers_[i]->getNativeHandle()
         == commandBuffer->getNativeHandle()) {
       m_usingCommandBuffers_.erase(m_usingCommandBuffers_.begin() + i);
-      m_availableCommandLists_.push_back((CommandBufferDx12*)commandBuffer);
+      m_availableCommandLists_.push_back(
+          std::static_pointer_cast<CommandBufferDx12>(commandBuffer));
       return;
     }
   }
@@ -78,7 +80,7 @@ bool CommandBufferManagerDx12::initialize(ComPtr<ID3D12Device>    device,
     commandQueueDesc.NodeMask = 0;
 
     if (FAILED(m_device_->CreateCommandQueue(&commandQueueDesc,
-                                          IID_PPV_ARGS(&m_commandQueue_)))) {
+                                             IID_PPV_ARGS(&m_commandQueue_)))) {
       return false;
     }
   }
@@ -89,7 +91,8 @@ bool CommandBufferManagerDx12::initialize(ComPtr<ID3D12Device>    device,
 }
 
 void CommandBufferManagerDx12::executeCommandList(
-    CommandBufferDx12* commandList, bool waitUntilExecuteComplete) {
+    std::shared_ptr<CommandBufferDx12> commandList,
+    bool                               waitUntilExecuteComplete) {
   if (!commandList->end()) {
     return;
   }
@@ -106,17 +109,18 @@ void CommandBufferManagerDx12::executeCommandList(
   }
 }
 
-CommandBufferDx12* CommandBufferManagerDx12::createCommandList_() const {
-  CommandBufferDx12* commandBuffer = new CommandBufferDx12();
-  commandBuffer->m_owner_             = this;
-  commandBuffer->m_commandAllocator_  = createCommandAllocator_();
+std::shared_ptr<CommandBufferDx12>
+    CommandBufferManagerDx12::createCommandList_() const {
+  auto commandBuffer                 = std::make_shared<CommandBufferDx12>();
+  commandBuffer->m_owner_            = this;
+  commandBuffer->m_commandAllocator_ = createCommandAllocator_();
   if (FAILED(m_device_->CreateCommandList(
           0,
           m_commandListType_,
           commandBuffer->m_commandAllocator_.Get(),
           nullptr,
           IID_PPV_ARGS(&commandBuffer->m_commandList_)))) {
-    delete commandBuffer;
+    // delete commandBuffer;
     return nullptr;
   }
 
