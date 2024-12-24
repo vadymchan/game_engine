@@ -16,8 +16,9 @@ bool CommandBufferDx12::begin() const {
   assert(m_onlineDescriptorHeap_ && m_onlineSamplerDescriptorHeap_
          || (!m_onlineDescriptorHeap_ && !m_onlineSamplerDescriptorHeap_));
   if (m_onlineDescriptorHeap_ && m_onlineSamplerDescriptorHeap_) {
-    ID3D12DescriptorHeap* ppHeaps[] = {m_onlineDescriptorHeap_->getHeap(),
-                                       m_onlineSamplerDescriptorHeap_->getHeap()};
+    ID3D12DescriptorHeap* ppHeaps[]
+        = {m_onlineDescriptorHeap_->getHeap(),
+           m_onlineSamplerDescriptorHeap_->getHeap()};
     m_commandList_->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
   }
 
@@ -51,7 +52,7 @@ void CommandBufferDx12::reset() const {
     }
     m_isClosed_ = false;
 
-    GlobalLogger::Log(LogLevel::Info, "Command buffer reset successfully.");
+    // GlobalLogger::Log(LogLevel::Info, "Command buffer reset successfully.");
   }
 }
 
@@ -77,8 +78,8 @@ bool CommandBufferDx12::end() const {
     return true;
   }
 
-  m_isClosed_   = true;
-  HRESULT hr = m_commandList_->Close();
+  m_isClosed_ = true;
+  HRESULT hr  = m_commandList_->Close();
   assert(SUCCEEDED(hr));
 
   if (FAILED(hr)) {
