@@ -504,7 +504,7 @@ struct ShaderBinding {
   bool                   m_isInline_         = false;
   bool                   m_isBindless_       = false;
   int32_t                m_bindingPoint_     = 0;
-  int32_t                m_numOfDescriptors_ = 1;
+  int32_t                m_numOfDescriptors_ = 1;  // TODO:: Seems like always 1
   EShaderBindingType     m_bindingType_ = EShaderBindingType::UNIFORMBUFFER;
   EShaderAccessStageFlag m_accessStageFlags_
       = EShaderAccessStageFlag::ALL_GRAPHICS;
@@ -604,8 +604,11 @@ struct TShaderBinding : public ShaderBinding {
                  const EShaderBindingType     bindingType,
                  const EShaderAccessStageFlag accessStageFlags,
                  const T&                     data)
-      : ShaderBinding(
-          bindingPoint, numOfDescriptors, bindingType, false, accessStageFlags)
+      : ShaderBinding(bindingPoint,
+                      numOfDescriptors,
+                      bindingType,
+                      false,
+                      accessStageFlags)
       , m_data_(data) {}
 
   // ======= END: public constructors   =======================================
