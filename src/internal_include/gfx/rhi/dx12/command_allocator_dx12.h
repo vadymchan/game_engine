@@ -5,12 +5,10 @@
 
 #ifdef GAME_ENGINE_RHI_DX12
 
-
 #include "gfx/rhi/command_buffer_manager.h"
 #include "gfx/rhi/dx12/command_list_dx12.h"
 #include "gfx/rhi/dx12/fence_dx12.h"
 #include "gfx/rhi/lock.h"
-
 
 #include <vector>
 
@@ -36,9 +34,10 @@ class CommandBufferManagerDx12 : public ICommandBufferManager {
   // ======= BEGIN: public overridden methods =================================
 
   virtual void release() override;
-  virtual void returnCommandBuffer(CommandBuffer* commandBuffer) override;
+  virtual void returnCommandBuffer(
+      std::shared_ptr<CommandBuffer> commandBuffer) override;
 
-  virtual CommandBufferDx12* getOrCreateCommandBuffer() override;
+  virtual std::shared_ptr<CommandBuffer> getOrCreateCommandBuffer() override;
 
   // ======= END: public overridden methods   =================================
 
@@ -55,8 +54,8 @@ class CommandBufferManagerDx12 : public ICommandBufferManager {
                   = D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   // CommandList
-  void executeCommandList(CommandBufferDx12* commandList,
-                          bool               waitUntilExecuteComplete = false);
+  void executeCommandList(std::shared_ptr<CommandBufferDx12> commandList,
+                          bool waitUntilExecuteComplete = false);
 
   // ======= END: public misc methods   =======================================
 
@@ -80,15 +79,16 @@ class CommandBufferManagerDx12 : public ICommandBufferManager {
     return commandAllocator;
   }
 
-  CommandBufferDx12* createCommandList_() const;
+  std::shared_ptr<CommandBufferDx12> createCommandList_() const;
 
   // ======= END: private misc methods   ======================================
 
   // ======= BEGIN: private misc fields =======================================
 
-  MutexLock                               m_commandListLock_;
-  std::vector<CommandBufferDx12*>         m_availableCommandLists_;
-  mutable std::vector<CommandBufferDx12*> m_usingCommandBuffers_;
+  MutexLock                                       m_commandListLock_;
+  std::vector<std::shared_ptr<CommandBufferDx12>> m_availableCommandLists_;
+  mutable std::vector<std::shared_ptr<CommandBufferDx12>>
+      m_usingCommandBuffers_;
 
   D3D12_COMMAND_LIST_TYPE m_commandListType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
   ComPtr<ID3D12Device>    m_device_;
