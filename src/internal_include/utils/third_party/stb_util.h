@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <functional>
+#include <unordered_set>
 
 namespace game_engine {
 
@@ -14,13 +15,12 @@ class STBImageLoader : public IImageLoader {
   public:
   std::shared_ptr<Image> loadImage(
       const std::filesystem::path& filepath) override;
+  bool supportsFormat(const std::string& extension) const override;
 
   private:
   using LoaderFunc = std::function<void*(
       const std::filesystem::path&, int32_t*, int32_t*, int32_t*, int32_t)>;
   using FreeFunc   = std::function<void(void*)>;
-
-  bool isSupportedImageFormat_(const std::filesystem::path& filepath) const;
 
   static void* loadHdr_(const std::filesystem::path& filepath,
                         int32_t*                     x,
@@ -45,6 +45,12 @@ class STBImageLoader : public IImageLoader {
                                         FreeFunc                     freeFunc,
                                         int32_t bitsPerChannel,
                                         bool    isHdr);
+
+  ETextureFormat determineFormat_(int32_t channels,
+                                  int32_t bitsPerChannel,
+                                  bool    isHdr);
+
+  static const std::unordered_set<std::string> supportedExtensions_;
 };
 
 }  // namespace game_engine
