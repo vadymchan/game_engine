@@ -377,7 +377,7 @@ EResourceLayout g_getDX12ResourceLayout(D3D12_RESOURCE_STATES resourceState);
 
 
 // Generated from CreateResource, CreateUploadResource
-struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
+struct CreatedResourceDx12 : public std::enable_shared_from_this<CreatedResourceDx12> {
   // ======= BEGIN: public nested types =======================================
 
   enum class EType : uint8_t {
@@ -390,29 +390,29 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
 
   // ======= BEGIN: public static methods =====================================
 
-  static std::shared_ptr<CreatedResource> s_createdFromStandalone(
+  static std::shared_ptr<CreatedResourceDx12> s_createdFromStandalone(
       const ComPtr<ID3D12Resource>& resource) {
-    return std::shared_ptr<CreatedResource>(
-        new CreatedResource(EType::Standalone, resource));
+    return std::shared_ptr<CreatedResourceDx12>(
+        new CreatedResourceDx12(EType::Standalone, resource));
   }
 
-  static std::shared_ptr<CreatedResource> s_createdFromResourcePool(
+  static std::shared_ptr<CreatedResourceDx12> s_createdFromResourcePool(
       const ComPtr<ID3D12Resource>& resource) {
-    return std::shared_ptr<CreatedResource>(
-        new CreatedResource(EType::ResourcePool, resource));
+    return std::shared_ptr<CreatedResourceDx12>(
+        new CreatedResourceDx12(EType::ResourcePool, resource));
   }
 
-  static std::shared_ptr<CreatedResource> s_createdFromSwapchain(
+  static std::shared_ptr<CreatedResourceDx12> s_createdFromSwapchain(
       const ComPtr<ID3D12Resource>& resource) {
-    return std::shared_ptr<CreatedResource>(
-        new CreatedResource(EType::Swapchain, resource));
+    return std::shared_ptr<CreatedResourceDx12>(
+        new CreatedResourceDx12(EType::Swapchain, resource));
   }
 
   // ======= END: public static methods   =====================================
 
   // ======= BEGIN: public destructor =========================================
 
-  ~CreatedResource() { free(); }
+  ~CreatedResourceDx12() { free(); }
 
   // ======= END: public destructor   =========================================
 
@@ -450,20 +450,20 @@ struct CreatedResource : public std::enable_shared_from_this<CreatedResource> {
   private:
   // ======= BEGIN: private constructors ======================================
 
-  CreatedResource() {}
+  CreatedResourceDx12() {}
 
-  CreatedResource(EType type, const ComPtr<ID3D12Resource>& resource)
+  CreatedResourceDx12(EType type, const ComPtr<ID3D12Resource>& resource)
       : m_resourceType_(type)
       , m_resource_(std::make_shared<ComPtr<ID3D12Resource>>(resource)) {}
 
   // prevent copying
-  CreatedResource(const CreatedResource&) = delete;
+  CreatedResourceDx12(const CreatedResourceDx12&) = delete;
 
   // ======= END: private constructors   ======================================
 
   // ======= BEGIN: private overloaded operators ==============================
 
-  CreatedResource& operator=(const CreatedResource&) = delete;
+  CreatedResourceDx12& operator=(const CreatedResourceDx12&) = delete;
 
   // ======= END: private overloaded operators   ==============================
 };
