@@ -18,6 +18,9 @@ test_fs_support_CASE_sensitivity
 CppDependOut/
 *.cdproj
 
+# Ignore Maya files
+.mayaSwatches/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
