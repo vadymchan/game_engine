@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MATERIAL_H
-#define GAME_ENGINE_MATERIAL_H
+#ifndef GAME_ENGINE_MATERIAL_OLD_H
+#define GAME_ENGINE_MATERIAL_OLD_H
 
 #include "gfx/rhi/name.h"
 #include "gfx/rhi/shader_binding_layout.h"
@@ -9,7 +9,7 @@
 
 namespace game_engine {
 
-class Material {
+class MaterialOld {
   public:
   // ======= BEGIN: public nested types =======================================
 
@@ -34,7 +34,7 @@ class Material {
 
   // ======= BEGIN: public destructor =========================================
 
-  virtual ~Material() {}
+  virtual ~MaterialOld() {}
 
   // ======= END: public destructor   =========================================
 
@@ -81,4 +81,4 @@ class Material {
 
 }  // namespace game_engine
 
-#endif  // GAME_ENGINE_MATERIAL_H
+#endif  // GAME_ENGINE_MATERIAL_OLD_H
