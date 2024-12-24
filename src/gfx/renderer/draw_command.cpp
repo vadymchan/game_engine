@@ -7,23 +7,21 @@
 namespace game_engine {
 
 void DrawCommand::prepareToDraw(bool isPositionOnly) {
-  if (!m_test_) {
-    // GetShaderBindings
-    if (m_view_) {
-      m_view_->getShaderBindingInstance(
-          m_shaderBindingInstanceArray_,
-          m_renderFrameContextPtr_->m_useForwardRenderer_);
-    }
+  // GetShaderBindings
+  if (m_view_) {
+    m_view_->getShaderBindingInstance(
+        m_shaderBindingInstanceArray_,
+        m_renderFrameContextPtr_->m_useForwardRenderer_);
+  }
 
-    // GetShaderBindings
-    m_oneRenderObjectUniformBuffer_
-        = m_renderObject_->createShaderBindingInstance();
-    m_shaderBindingInstanceArray_.add(m_oneRenderObjectUniformBuffer_.get());
+  // GetShaderBindings
+  m_oneRenderObjectUniformBuffer_
+      = m_renderObject_->createShaderBindingInstance();
+  m_shaderBindingInstanceArray_.add(m_oneRenderObjectUniformBuffer_.get());
 
-    if (m_material_) {
-      m_shaderBindingInstanceArray_.add(
-          m_material_->createShaderBindingInstance().get());
-    }
+  if (m_material_) {
+    m_shaderBindingInstanceArray_.add(
+        m_material_->createShaderBindingInstance().get());
   }
 
   // Gather ShaderBindings
