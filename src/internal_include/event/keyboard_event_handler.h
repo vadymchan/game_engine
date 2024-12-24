@@ -14,9 +14,11 @@ class KeyboardEventHandler {
   public:
   // ======= BEGIN: public nested types =======================================
 
+  // TODO: implement both virtual (for writing text) and physical (for control)
+  // keys
   struct EventInfo {
-    KeyType    m_type;  // SDL_KEYDOWN or SDL_KEYUP
-    VirtualKey m_key;
+    KeyType     m_type;  // SDL_KEYDOWN or SDL_KEYUP
+    PhysicalKey m_key;
   };
 
   // ======= END: public nested types   =======================================
@@ -39,7 +41,7 @@ class KeyboardEventHandler {
   void dispatch(const KeyboardEvent& event) {
     auto& subscribers = (event.type == SDL_KEYDOWN) ? m_keyDownSubscribers_
                                                     : m_keyUpSubscribers_;
-    auto  it          = subscribers.find(event.keysym.sym);
+    auto  it          = subscribers.find(event.keysym.scancode);
     if (it != subscribers.end()) {
       for (auto& callback : it->second) {
         handleEvent_(event, callback);
@@ -61,9 +63,9 @@ class KeyboardEventHandler {
 
   // ======= BEGIN: private misc fields =======================================
 
-  std::unordered_map<VirtualKey, std::vector<EventCallback>>
+  std::unordered_map<PhysicalKey, std::vector<EventCallback>>
       m_keyUpSubscribers_;
-  std::unordered_map<VirtualKey, std::vector<EventCallback>>
+  std::unordered_map<PhysicalKey, std::vector<EventCallback>>
       m_keyDownSubscribers_;
 
   // ======= END: private misc fields   =======================================
