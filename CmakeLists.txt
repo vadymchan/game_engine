@@ -11,7 +11,7 @@ option(BUILD_SDL          "Build the SDL library"       ON)
 option(BUILD_GLFW         "Build the GLFW library"      OFF)
 option(BUILD_SPDLOG       "Build the SPDLOG library"    ON)
 option(BUILD_BULLET       "Build the Bullet library"    OFF)
-option(BUILD_IMGUI        "Build the ImGui library"     OFF)
+option(BUILD_IMGUI        "Build the ImGui library"     ON)
 option(BUILD_ASSIMP       "Build the Assimp library"    ON)
 option(BUILD_STB          "Build the STB library"       ON)
 option(BUILD_BOOST        "Build the Boost library"     OFF)
@@ -172,7 +172,8 @@ if(BUILD_IMGUI)
     FetchContent_Declare(
         imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG v1.82
+        # GIT_TAG v1.91.6
+        GIT_TAG v1.91.6-docking
     )
 endif()
 
@@ -409,7 +410,61 @@ endif()
 
 if(BUILD_IMGUI)
     FetchContent_MakeAvailable(imgui)
-    target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
+    
+    # add src files
+    set(IMGUI_SOURCES
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    )
+
+    if(USE_VULKAN)
+        list(APPEND IMGUI_SOURCES ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp)
+    endif()
+
+    if(USE_DIRECTX)
+        list(APPEND IMGUI_SOURCES ${imgui_SOURCE_DIR}/backends/imgui_impl_dx12.cpp)
+    endif()
+
+    if(BUILD_SDL)
+        list(APPEND IMGUI_SOURCES ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp)
+        # list(APPEND IMGUI_SOURCES ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp)
+    endif()
+
+    add_library(imgui_library STATIC ${IMGUI_SOURCES})
+    
+    # add dependencies
+    if(USE_VULKAN)
+        find_package(Vulkan REQUIRED)
+        target_include_directories(imgui_library PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(imgui_library PRIVATE Vulkan::Vulkan)
+    endif()
+
+    if(USE_DIRECTX)
+        target_include_directories(imgui_library PRIVATE ${WINDOWS_SDK_INCLUDE_DIR})
+        target_link_libraries(imgui_library PRIVATE d3d12 dxgi)
+    endif()
+
+    if(BUILD_SDL)
+        target_include_directories(imgui_library PRIVATE ${SDL_INCLUDE_DIRS})
+        target_link_libraries(imgui_library PRIVATE SDL2)
+    endif()
+
+    target_include_directories(imgui_library PRIVATE
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+    )
+
+    # link imgui library to main project
+    target_link_libraries(${PROJECT_NAME} PRIVATE imgui_library)
+
+    target_include_directories(${PROJECT_NAME}
+        SYSTEM PRIVATE
+            ${imgui_SOURCE_DIR}
+            ${imgui_SOURCE_DIR}/backends
+    )
+
 endif()
 
 if(BUILD_ASSIMP)
@@ -494,6 +549,8 @@ endif()
 if(BUILD_ENTT)
     FetchContent_MakeAvailable(entt)
     target_link_libraries(${PROJECT_NAME} PRIVATE EnTT)
+    message(${entt_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${entt_SOURCE_DIR}/src)
 endif()
 
 
