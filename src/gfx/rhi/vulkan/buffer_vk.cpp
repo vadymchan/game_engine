@@ -173,7 +173,9 @@ bool VertexBufferVk::initialize(
   m_bindInfos_.m_startBindingIndex_ = streamData->m_bindingIndex_;
 
   std::list<uint32_t> buffers;
-  int32_t             locationIndex = streamData->m_startLocation_;
+  // TODO: there's an error for locationIndex. Refactor the code in future
+  // int32_t             locationIndex = streamData->m_startLocation_;
+  int32_t             locationIndex = streamData->m_bindingIndex_;
   int32_t             bindingIndex  = streamData->m_bindingIndex_;
   for (const auto& iter : streamData->m_streams_) {
     if (iter->m_stride_ <= 0) {
@@ -446,11 +448,11 @@ void VertexBufferVk::s_createVertexInputState(
     const auto& bindInfo
         = ((const VertexBufferVk*)vertexBufferArray[i])->m_bindInfos_;
     bindingDescriptions.insert(bindingDescriptions.end(),
-                                  bindInfo.m_inputBindingDescriptions_.begin(),
-                                  bindInfo.m_inputBindingDescriptions_.end());
+                               bindInfo.m_inputBindingDescriptions_.begin(),
+                               bindInfo.m_inputBindingDescriptions_.end());
     attributeDescriptions.insert(attributeDescriptions.end(),
-                                    bindInfo.m_attributeDescriptions_.begin(),
-                                    bindInfo.m_attributeDescriptions_.end());
+                                 bindInfo.m_attributeDescriptions_.begin(),
+                                 bindInfo.m_attributeDescriptions_.end());
   }
 
   vertexInputInfo.sType
@@ -460,8 +462,7 @@ void VertexBufferVk::s_createVertexInputState(
   vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
   vertexInputInfo.vertexAttributeDescriptionCount
       = (uint32_t)attributeDescriptions.size();
-  vertexInputInfo.pVertexAttributeDescriptions
-      = attributeDescriptions.data();
+  vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 }
 
 // IndexBufferVk

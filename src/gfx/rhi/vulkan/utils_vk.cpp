@@ -792,10 +792,13 @@ void g_copyBufferToTexture(VkCommandBuffer commandBuffer,
                            uint32_t        height,
                            int32_t         miplevel,
                            int32_t         layerIndex) {
-  VkBufferImageCopy region               = {};
-  region.bufferOffset                    = bufferOffset;
-  region.bufferRowLength                 = width;
-  region.bufferImageHeight               = height;
+  VkBufferImageCopy region = {};
+  region.bufferOffset      = bufferOffset;
+  // region.bufferRowLength                 = width;
+  // region.bufferImageHeight               = height;
+  // let Vulkan decide the right alignment (useful for bc compressed formats)
+  region.bufferRowLength                 = 0;
+  region.bufferImageHeight               = 0;
   region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
   region.imageSubresource.mipLevel       = miplevel;
   region.imageSubresource.baseArrayLayer = layerIndex;
