@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_CONSOLE_LOGGER_H
 #define GAME_ENGINE_CONSOLE_LOGGER_H
 
-#include "i_logger.h"
+#include "utils/logger/i_logger.h"
 
 #include <spdlog/spdlog.h>
 
