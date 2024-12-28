@@ -21,7 +21,7 @@ struct CompiledShaderDx12 : public CompiledShader {
 
   // ======= BEGIN: public misc fields ========================================
 
-  ComPtr<IDxcBlob> m_shaderBlob_;
+  std::shared_ptr<IDxcBlob> m_shaderBlob_;
 
   // ======= END: public misc fields   ========================================
 };

@@ -842,15 +842,13 @@ bool RhiDx12::createShaderInternal(Shader*           shader,
       const std::wstring EntryPoint
           = g_convertToWchar(shaderInfo.getEntryPoint());
 
-      auto& dxcUtil = game_engine::DxcUtil::s_getInstance();
-      if (FAILED(dxcUtil.initialize())) {
-        // TODO: use logger
-        std::cerr << "Failed to initialize DxcUtil" << std::endl;
-        return false;
-      }
+      auto& dxcUtil = game_engine::DxcUtil::s_get();
 
       CurCompiledShader->m_shaderBlob_
-          = dxcUtil.compileHlslCodeToDxil(ShaderText, ShadingModel, EntryPoint);
+          = dxcUtil.compileHlslCode(ShaderText,
+                                    shaderInfo.getShaderType(),
+                                    EntryPoint,
+                                    ShaderBackend::DXIL);
 
       if (!CurCompiledShader->m_shaderBlob_) {
         return false;

@@ -2,15 +2,13 @@
 
 #ifdef GAME_ENGINE_RHI_DX12
 
-
 namespace game_engine {
 
 CompiledShaderDx12::~CompiledShaderDx12() {
-  m_shaderBlob_.Reset();
+  m_shaderBlob_.reset();
   m_shaderBlob_ = nullptr;
 }
 
-
-}
+}  // namespace game_engine
 
 #endif  // GAME_ENGINE_RHI_DX12

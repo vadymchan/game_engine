@@ -1,5 +1,6 @@
 #include "gfx/rhi/vulkan/rhi_vk.h"
 
+#include "gfx/rhi/dx12/dxc_util.h"
 #include "gfx/rhi/frame_buffer_pool.h"
 #include "gfx/rhi/render_target_pool.h"
 #include "utils/memory/align.h"
@@ -685,10 +686,14 @@ std::shared_ptr<Texture> RhiVk::createTextureFromData(
         static_cast<uint32_t>(image->arraySize),
         static_cast<uint32_t>(image->mipLevels),
         image->format,
-        ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
-            | ETextureCreateFlag::UAV,
-        EResourceLayout::SHADER_READ_ONLY,
-        image  // We'll use the new signature that accepts an Image directly
+        // ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
+        //     | ETextureCreateFlag::UAV,
+        // EResourceLayout::SHADER_READ_ONLY,
+        ETextureCreateFlag::TransferDst,
+        // ETextureCreateFlag::NONE,
+        EResourceLayout::GENERAL,
+        image
+
     );
   }
 
@@ -898,67 +903,40 @@ bool RhiVk::createShaderInternal(Shader*           shader,
         IncludeShaderFile.closeFile();
       }
 
-      // const wchar_t* ShadingModel = nullptr;
-      // switch (shaderInfo.getShaderType()) {
-      //   case EShaderAccessStageFlag::VERTEX:
-      //     ShadingModel = Text("vs_6_6");
-      //     break;
-      //   case EShaderAccessStageFlag::GEOMETRY:
-      //     ShadingModel = Text("gs_6_6");
-      //     break;
-      //   case EShaderAccessStageFlag::FRAGMENT:
-      //     ShadingModel = Text("ps_6_6");
-      //     break;
-      //   case EShaderAccessStageFlag::COMPUTE:
-      //     ShadingModel = Text("cs_6_6");
-      //     break;
-      //   case EShaderAccessStageFlag::RAYTRACING:
-      //   case EShaderAccessStageFlag::RAYTRACING_RAYGEN:
-      //   case EShaderAccessStageFlag::RAYTRACING_MISS:
-      //   case EShaderAccessStageFlag::RAYTRACING_CLOSESTHIT:
-      //   case EShaderAccessStageFlag::RAYTRACING_ANYHIT:
-      //     ShadingModel = Text("lib_6_6");
-      //     break;
-      //   default:
-      //     assert(0);
-      //     break;
-      // }
+      // Convert entry point from std::string to std::wstring
+      std::wstring entryPointW;
+      {
+        const std::string entryStr = shaderInfo.getEntryPoint().toStr();
+        entryPointW.assign(entryStr.begin(), entryStr.end());
+      }
 
-      // const std::wstring EntryPoint
-      //     = g_convertToWchar(shaderInfo.getEntryPoint());
-      // auto ShaderBlob = ShaderCompilerDx12::get().Compile(
-      //     ShaderText.c_str(),
-      //     (uint32_t)ShaderText.length(),
-      //     ShadingModel,
-      //     EntryPoint.c_str(),
-      //     false,
-      //     {Text("-spirv"),
-      //      Text("-fspv-target-env=vulkan1.1spirv1.4"),
-      //      Text("-fvk-use-scalar-layout"),
-      //      Text("-fspv-extension=SPV_EXT_descriptor_indexing"),
-      //      Text("-fspv-extension=SPV_KHR_ray_tracing"),
-      //      Text("-fspv-extension=SPV_KHR_ray_query"),
-      //      Text("-fspv-extension=SPV_EXT_shader_viewport_index_layer")});
+      auto dxcBlob
+          = DxcUtil::s_get().compileHlslCode(ShaderText,
+                                             shaderInfo.getShaderType(),
+                                             entryPointW,
+                                             ShaderBackend::SPIRV);
 
-      // std::vector<uint8_t> SpirvCode;
-      // if (ShaderBlob->getBufferSize() > 0) {
-      //   SpirvCode.resize(ShaderBlob->getBufferSize());
-      //   memcpy(SpirvCode.data(),
-      //          ShaderBlob->GetBufferPointer(),
-      //          ShaderBlob->getBufferSize());
-      // }
+      if (!dxcBlob) {
+        GlobalLogger::Log(LogLevel::Error, "Failed to compile shader");
+        return false;
+      }
 
-      auto SpirvCode = SpirvUtil::s_compileHlslCodeToSpirv(
+      std::vector<uint32_t> spirvCode(
+          reinterpret_cast<uint32_t*>(dxcBlob->GetBufferPointer()),
+          reinterpret_cast<uint32_t*>(
+              reinterpret_cast<uint8_t*>(dxcBlob->GetBufferPointer())
+              + dxcBlob->GetBufferSize()));
+
+      /*auto spirvCode = SpirvUtil::s_compileHlslCodeToSpirv(
           ShaderText,
           SpirvUtil::s_getShadercShaderKind(shaderInfo.getShaderType()),
-          shaderInfo.getEntryPoint().toStr());
+          shaderInfo.getEntryPoint().toStr());*/
 
       {
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = SpirvCode.size() * sizeof(uint32_t);
-
-        createInfo.pCode = reinterpret_cast<const uint32_t*>(SpirvCode.data());
+        createInfo.codeSize = spirvCode.size() * sizeof(uint32_t);
+        createInfo.pCode    = spirvCode.data();
 
         assert(
             vkCreateShaderModule(m_device_, &createInfo, nullptr, &shaderModule)
