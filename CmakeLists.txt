@@ -636,6 +636,7 @@ endif()
 
 # BEGIN: DirectXShaderCompiler
 # -------------------------------------------------------------------------------------
+# TODO: this is currently used not only for DirectX 12 but for Vulkan as well
 if(USE_DIRECTX_SHADER_COMPILER)
     message(STATUS "Fetching directx-dxc...")
 
