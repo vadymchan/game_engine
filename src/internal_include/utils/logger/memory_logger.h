@@ -1,0 +1,39 @@
+#ifndef GAME_ENGINE_MEMORY_LOGGER_H
+#define GAME_ENGINE_MEMORY_LOGGER_H
+
+#include "i_logger.h"
+
+#include <chrono>
+#include <string>
+#include <vector>
+
+namespace game_engine {
+
+struct LogEntry {
+  std::chrono::system_clock::time_point timestamp;
+  LogLevel                              level;
+  std::string                           message;
+};
+
+class MemoryLogger : public ILogger {
+  public:
+  // maxEntries = 0 means no limit
+  MemoryLogger(std::string loggerName, size_t maxEntries = 0)
+      : ILogger(std::move(loggerName))
+      , m_maxEntries_(maxEntries) {}
+
+  void log(LogLevel logLevel, const std::string& message) override;
+
+  const std::vector<LogEntry>& getLogEntries() const;
+
+  void                 setMaxEntries(size_t maxEntries);
+  [[nodiscard]] size_t getMaxEntries() const;
+
+  private:
+  std::vector<LogEntry> m_entries_;
+  size_t                m_maxEntries_{0};
+};
+
+}  // namespace game_engine
+
+#endif  // GAME_ENGINE_MEMORY_LOGGER_H
