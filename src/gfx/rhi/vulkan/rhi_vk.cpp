@@ -705,61 +705,6 @@ std::shared_ptr<Texture> RhiVk::createTextureFromData(
   return texturePtr;
 }
 
-std::shared_ptr<Texture> RhiVk::createTextureFromDataDeprecated(
-    const ImageDataDeprecated* imageData) const {
-  assert(imageData);
-
-  int32_t MipLevel = imageData->m_mipLevel_;
-  if ((MipLevel == 1) && (imageData->m_createMipmapIfPossible_)) {
-    MipLevel
-        = TextureVk::s_getMipLevels(imageData->m_width_, imageData->m_height_);
-  }
-
-  auto stagingBufferPtr = g_createBuffer(
-      EVulkanBufferBits::TRANSFER_SRC,
-      EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-      imageData->m_imageBulkData_.m_imageData_.size(),
-      EResourceLayout::TRANSFER_SRC);
-
-  stagingBufferPtr->updateBuffer(
-      &imageData->m_imageBulkData_.m_imageData_[0],
-      imageData->m_imageBulkData_.m_imageData_.size());
-
-  std::shared_ptr<TextureVk> TexturePtr;
-  if (imageData->m_textureType_ == ETextureType::TEXTURE_CUBE) {
-    TexturePtr = g_rhi->createCubeTextureDeprecated<TextureVk>(
-        (uint32_t)imageData->m_width_,
-        (uint32_t)imageData->m_height_,
-        MipLevel,
-        imageData->m_format_,
-        ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
-            | ETextureCreateFlag::UAV,
-        EResourceLayout::SHADER_READ_ONLY,
-        imageData->m_imageBulkData_);
-    if (!TexturePtr) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create cube texture");
-      return nullptr;
-    }
-  } else {
-    TexturePtr = g_rhi->create2DTextureDeprecated<TextureVk>(
-        (uint32_t)imageData->m_width_,
-        (uint32_t)imageData->m_height_,
-        (uint32_t)imageData->m_layerCount_,
-        MipLevel,
-        imageData->m_format_,
-        ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
-            | ETextureCreateFlag::UAV,
-        EResourceLayout::SHADER_READ_ONLY,
-        imageData->m_imageBulkData_);
-    if (!TexturePtr) {
-      GlobalLogger::Log(LogLevel::Error, "Failed to create 2D texture");
-      return nullptr;
-    }
-  }
-
-  return TexturePtr;
-}
-
 bool RhiVk::createShaderInternal(Shader*           shader,
                                  const ShaderInfo& shaderInfo) const {
   auto CreateShaderModule
@@ -1122,14 +1067,13 @@ std::shared_ptr<RenderTarget> RhiVk::createRenderTarget(
 
   switch (info.m_rype_) {
     case ETextureType::TEXTURE_2D:
-      TexturePtr = g_rhi->create2DTextureDeprecated<TextureVk>(
-          info.m_extent_.width(),
-          info.m_extent_.height(),
-          1,
-          mipLevels,
-          info.m_format_,
-          TextureCreateFlag,
-          EResourceLayout::GENERAL);
+      TexturePtr = g_rhi->create2DTexture<TextureVk>(info.m_extent_.width(),
+                                                     info.m_extent_.height(),
+                                                     1,
+                                                     mipLevels,
+                                                     info.m_format_,
+                                                     TextureCreateFlag,
+                                                     EResourceLayout::GENERAL);
       // TODO: remove (currently not needed)
       /*imageViewForMipMap[0] = TexturePtr->imageView;
 
@@ -1140,14 +1084,13 @@ std::shared_ptr<RenderTarget> RhiVk::createRenderTarget(
         }*/
       break;
     case ETextureType::TEXTURE_2D_ARRAY:
-      TexturePtr = g_rhi->create2DTextureDeprecated<TextureVk>(
-          info.m_extent_.width(),
-          info.m_extent_.height(),
-          info.m_layerCount_,
-          mipLevels,
-          info.m_format_,
-          TextureCreateFlag,
-          EResourceLayout::GENERAL);
+      TexturePtr = g_rhi->create2DTexture<TextureVk>(info.m_extent_.width(),
+                                                     info.m_extent_.height(),
+                                                     info.m_layerCount_,
+                                                     mipLevels,
+                                                     info.m_format_,
+                                                     TextureCreateFlag,
+                                                     EResourceLayout::GENERAL);
       // TODO: remove (currently not needed)
       /*imageViewForMipMap[0] = TexturePtr->imageView;
 
@@ -1163,13 +1106,16 @@ std::shared_ptr<RenderTarget> RhiVk::createRenderTarget(
       break;
     case ETextureType::TEXTURE_CUBE:
       assert(info.m_layerCount_ == 6);
-      TexturePtr = g_rhi->createCubeTextureDeprecated<TextureVk>(
-          info.m_extent_.width(),
-          info.m_extent_.height(),
-          mipLevels,
-          info.m_format_,
-          TextureCreateFlag,
-          EResourceLayout::GENERAL);
+      // TODO: implement createCubeTexture
+      assert(0);
+      // TexturePtr = g_rhi->createCubeTextureDeprecated<TextureVk>(
+      //    info.m_extent_.width(),
+      //    info.m_extent_.height(),
+      //    mipLevels,
+      //    info.m_format_,
+      //    TextureCreateFlag,
+      //    EResourceLayout::GENERAL);
+
       // TODO: remove (currently not needed)
       // Create for Shader Resource (TextureCube)
       //{
@@ -1587,7 +1533,7 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
                                        VK_IMAGE_LAYOUT_UNDEFINED);
 
   // If we have pixel data, upload it
-  if (!image->pixels.empty()) {
+  if (image != nullptr && !image->pixels.empty()) {
     // Create staging buffer
     auto stagingBufferPtr = g_createBuffer(
         EVulkanBufferBits::TRANSFER_SRC,
@@ -1634,167 +1580,6 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
   }
 
   return texturePtr;
-}
-
-std::shared_ptr<Texture> RhiVk::create2DTextureDeprecated(
-    uint32_t                       witdh,
-    uint32_t                       height,
-    uint32_t                       arrayLayers,
-    uint32_t                       mipLevels,
-    ETextureFormat                 format,
-    ETextureCreateFlag             textureCreateFlag,
-    EResourceLayout                imageLayout,
-    const ImageBulkDataDeprecated& imageBulkData,
-    const RtClearValue&            clearValue,
-    const wchar_t*                 resourceName) const {
-  VkImageCreateFlagBits          ImageCreateFlags{};
-  const VkMemoryPropertyFlagBits PropertyFlagBits
-      = getMemoryPropertyFlagBits(textureCreateFlag);
-  const VkImageUsageFlags UsageFlag = getImageUsageFlags(textureCreateFlag);
-  assert(!s_isDepthFormat(format)
-         || (s_isDepthFormat(format)
-             && (UsageFlag & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
-
-  auto TexturePtr
-      = game_engine::g_create2DTexture(witdh,
-                                       height,
-                                       mipLevels,
-                                       VK_SAMPLE_COUNT_1_BIT,
-                                       g_getVulkanTextureFormat(format),
-                                       VK_IMAGE_TILING_OPTIMAL,
-                                       UsageFlag,
-                                       PropertyFlagBits,
-                                       ImageCreateFlags,
-                                       VK_IMAGE_LAYOUT_UNDEFINED);
-
-  if (imageBulkData.m_imageData_.size() > 0) {
-    // todo : recycle temp buffer
-    auto stagingBufferPtr = g_createBuffer(
-        EVulkanBufferBits::TRANSFER_SRC,
-        EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-        imageBulkData.m_imageData_.size(),
-        EResourceLayout::TRANSFER_SRC);
-
-    stagingBufferPtr->updateBuffer(&imageBulkData.m_imageData_[0],
-                                   imageBulkData.m_imageData_.size());
-
-    auto commandBuffer
-        = std::static_pointer_cast<CommandBufferVk>(beginSingleTimeCommands());
-    assert(transitionLayout(
-        commandBuffer, TexturePtr.get(), EResourceLayout::TRANSFER_DST));
-
-    if (imageBulkData.m_subresourceFootprints_.size() > 0) {
-      for (int32_t i = 0;
-           i < (int32_t)imageBulkData.m_subresourceFootprints_.size();
-           ++i) {
-        const ImageSubResourceDataDeprecated SubResourceData
-            = imageBulkData.m_subresourceFootprints_[i];
-
-        g_copyBufferToTexture(
-            commandBuffer->getRef(),
-            stagingBufferPtr->m_buffer_,
-            stagingBufferPtr->m_offset_ + SubResourceData.m_offset_,
-            TexturePtr->m_image_,
-            SubResourceData.m_width_,
-            SubResourceData.m_height_,
-            SubResourceData.m_mipLevel_,
-            SubResourceData.m_depth_);
-      }
-    } else {
-      g_copyBufferToTexture(commandBuffer->getRef(),
-                            stagingBufferPtr->m_buffer_,
-                            stagingBufferPtr->m_offset_,
-                            TexturePtr->m_image_,
-                            witdh,
-                            height);
-    }
-
-    assert(transitionLayout(commandBuffer, TexturePtr.get(), imageLayout));
-
-    endSingleTimeCommands(commandBuffer);
-  }
-
-  return TexturePtr;
-}
-
-std::shared_ptr<Texture> RhiVk::createCubeTextureDeprecated(
-    uint32_t                       witdh,
-    uint32_t                       height,
-    uint32_t                       mipLevels,
-    ETextureFormat                 format,
-    ETextureCreateFlag             textureCreateFlag,
-    EResourceLayout                imageLayout,
-    const ImageBulkDataDeprecated& imageBulkData,
-    const RtClearValue&            clearValue,
-    const wchar_t*                 resourceName) const {
-  VkImageCreateFlagBits ImageCreateFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-  const VkMemoryPropertyFlagBits PropertyFlagBits
-      = getMemoryPropertyFlagBits(textureCreateFlag);
-  const VkImageUsageFlags UsageFlag = getImageUsageFlags(textureCreateFlag);
-  assert(!s_isDepthFormat(format)
-         || (s_isDepthFormat(format)
-             && (UsageFlag & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
-
-  auto TexturePtr
-      = game_engine::g_createCubeTexture(witdh,
-                                         height,
-                                         mipLevels,
-                                         VK_SAMPLE_COUNT_1_BIT,
-                                         g_getVulkanTextureFormat(format),
-                                         VK_IMAGE_TILING_OPTIMAL,
-                                         UsageFlag,
-                                         PropertyFlagBits,
-                                         ImageCreateFlags,
-                                         VK_IMAGE_LAYOUT_UNDEFINED);
-
-  if (imageBulkData.m_imageData_.size() > 0) {
-    // todo : recycle temp buffer
-    auto stagingBufferPtr = game_engine::g_createBuffer(
-        EVulkanBufferBits::TRANSFER_SRC,
-        EVulkanMemoryBits::HOST_VISIBLE | EVulkanMemoryBits::HOST_COHERENT,
-        imageBulkData.m_imageData_.size(),
-        EResourceLayout::TRANSFER_SRC);
-
-    stagingBufferPtr->updateBuffer(&imageBulkData.m_imageData_[0],
-                                   imageBulkData.m_imageData_.size());
-
-    auto commandBuffer
-        = std::static_pointer_cast<CommandBufferVk>(beginSingleTimeCommands());
-    assert(transitionLayout(
-        commandBuffer, TexturePtr.get(), EResourceLayout::TRANSFER_DST));
-
-    if (imageBulkData.m_subresourceFootprints_.size() > 0) {
-      for (int32_t i = 0;
-           i < (int32_t)imageBulkData.m_subresourceFootprints_.size();
-           ++i) {
-        const ImageSubResourceDataDeprecated SubResourceData
-            = imageBulkData.m_subresourceFootprints_[i];
-
-        g_copyBufferToTexture(
-            commandBuffer->getRef(),
-            stagingBufferPtr->m_buffer_,
-            stagingBufferPtr->m_offset_ + SubResourceData.m_offset_,
-            TexturePtr->m_image_,
-            SubResourceData.m_width_,
-            SubResourceData.m_height_,
-            SubResourceData.m_mipLevel_,
-            SubResourceData.m_depth_);
-      }
-    } else {
-      g_copyBufferToTexture(commandBuffer->getRef(),
-                            stagingBufferPtr->m_buffer_,
-                            stagingBufferPtr->m_offset_,
-                            TexturePtr->m_image_,
-                            witdh,
-                            height);
-    }
-
-    assert(transitionLayout(commandBuffer, TexturePtr.get(), imageLayout));
-
-    endSingleTimeCommands(commandBuffer);
-  }
-
-  return TexturePtr;
 }
 
 void RhiVk::drawArrays(

@@ -2,7 +2,6 @@
 #define GAME_ENGINE_RHI_H
 
 #include "file_loader/image_file_loader.h"  // TODO: may case circular dependency
-#include "gfx/renderer/material.h"
 #include "gfx/rhi/buffer.h"
 #include "gfx/rhi/frame_buffer.h"
 #include "gfx/rhi/i_uniform_buffer_block.h"
@@ -27,12 +26,6 @@ namespace game_engine {
 extern std::int32_t g_maxCheckCountForRealTimeShaderUpdate;
 extern std::int32_t g_sleepMSForRealTimeShaderUpdate;
 extern bool         g_useRealTimeShaderUpdate;
-
-extern std::shared_ptr<Texture>     g_whiteTexture;
-extern std::shared_ptr<Texture>     g_blackTexture;
-extern std::shared_ptr<Texture>     g_whiteCubeTexture;
-extern std::shared_ptr<Texture>     g_normalTexture;
-extern std::shared_ptr<MaterialOld> g_defaultMaterial;
 
 struct Shader;
 struct ShaderInfo;
@@ -169,11 +162,6 @@ class RHI {
 
   virtual std::shared_ptr<Texture> createTextureFromData(
       const std::shared_ptr<Image>& image) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<Texture> createTextureFromDataDeprecated(
-      const ImageDataDeprecated* imageData) const {
     return nullptr;
   }
 
@@ -462,34 +450,6 @@ class RHI {
       const std::shared_ptr<Image>& image        = nullptr,
       const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
       const wchar_t*                resourceName = nullptr) const {
-    return nullptr;
-  }
-
-  // Create Images
-  virtual std::shared_ptr<Texture> create2DTextureDeprecated(
-      std::uint32_t                  witdh,
-      std::uint32_t                  height,
-      std::uint32_t                  arrayLayers,
-      std::uint32_t                  mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageBulkData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const {
-    return nullptr;
-  }
-
-  virtual std::shared_ptr<Texture> createCubeTextureDeprecated(
-      std::uint32_t                  witdh,
-      std::uint32_t                  height,
-      std::uint32_t                  mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageBulkData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const {
     return nullptr;
   }
 
@@ -936,54 +896,6 @@ class RHI {
                                                        image,
                                                        clearValue,
                                                        resourceName));
-  }
-
-  template <typename T>
-  std::shared_ptr<T> create2DTextureDeprecated(
-      std::uint32_t                  witdh,
-      std::uint32_t                  height,
-      std::uint32_t                  arrayLayers,
-      std::uint32_t                  mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageCopyData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const {
-    return std::static_pointer_cast<T>(
-        create2DTextureDeprecated(witdh,
-                                  height,
-                                  arrayLayers,
-                                  mipLevels,
-                                  format,
-                                  textureCreateFlag,
-                                  imageLayout,
-                                  imageCopyData,
-                                  clearValue,
-                                  resourceName));
-  }
-
-  template <typename T>
-  std::shared_ptr<T> createCubeTextureDeprecated(
-      std::uint32_t                  witdh,
-      std::uint32_t                  height,
-      std::uint32_t                  mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageCopyData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const {
-    return std::static_pointer_cast<T>(
-        createCubeTextureDeprecated(witdh,
-                                    height,
-                                    mipLevels,
-                                    format,
-                                    textureCreateFlag,
-                                    imageLayout,
-                                    imageCopyData,
-                                    clearValue,
-                                    resourceName));
   }
 
   // ======= END: public misc methods   =======================================

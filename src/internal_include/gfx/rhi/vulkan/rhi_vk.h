@@ -12,7 +12,6 @@
 
 #include "file_loader/file.h"
 #include "file_loader/image_file_loader.h"
-#include "gfx/renderer/material.h"
 #include "gfx/rhi/lock.h"
 #include "gfx/rhi/resource_pool.h"
 #include "gfx/rhi/rhi.h"
@@ -105,9 +104,6 @@ class RhiVk : public RHI {
 
   virtual std::shared_ptr<Texture> createTextureFromData(
       const std::shared_ptr<Image>& image) const override;
-
-  virtual std::shared_ptr<Texture> createTextureFromDataDeprecated(
-      const ImageDataDeprecated* imageData) const override;
 
   virtual bool createShaderInternal(
       Shader* shader, const ShaderInfo& shaderInfo) const override;
@@ -227,29 +223,6 @@ class RhiVk : public RHI {
       const std::shared_ptr<Image>& image        = nullptr,
       const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
       const wchar_t*                resourceName = nullptr) const override;
-
-  virtual std::shared_ptr<Texture> create2DTextureDeprecated(
-      uint32_t                       witdh,
-      uint32_t                       height,
-      uint32_t                       arrayLayers,
-      uint32_t                       mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageBulkData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const override;
-
-  virtual std::shared_ptr<Texture> createCubeTextureDeprecated(
-      uint32_t                       witdh,
-      uint32_t                       height,
-      uint32_t                       mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageBulkData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const override;
 
   virtual bool onHandleResized(uint32_t witdh,
                                uint32_t height,

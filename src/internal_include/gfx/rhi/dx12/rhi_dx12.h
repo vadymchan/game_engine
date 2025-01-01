@@ -226,9 +226,6 @@ class RhiDx12 : public RHI {
   virtual void endSingleTimeCommands(
       std::shared_ptr<CommandBuffer> commandBuffer) const override;
 
-  virtual std::shared_ptr<Texture> createTextureFromDataDeprecated(
-      const ImageDataDeprecated* imageData) const override;
-
   virtual std::shared_ptr<Texture> createTextureFromData(
       const std::shared_ptr<Image>& image) const override;
 
@@ -430,29 +427,6 @@ class RhiDx12 : public RHI {
       const std::shared_ptr<Image>& image        = nullptr,
       const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
       const wchar_t*                resourceName = nullptr) const override;
-
-  virtual std::shared_ptr<Texture> create2DTextureDeprecated(
-      uint32_t                       witdh,
-      uint32_t                       height,
-      uint32_t                       arrayLayers,
-      uint32_t                       mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageBulkData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const override;
-
-  virtual std::shared_ptr<Texture> createCubeTextureDeprecated(
-      uint32_t                       witdh,
-      uint32_t                       height,
-      uint32_t                       mipLevels,
-      ETextureFormat                 format,
-      ETextureCreateFlag             textureCreateFlag,
-      EResourceLayout                imageLayout   = EResourceLayout::UNDEFINED,
-      const ImageBulkDataDeprecated& imageBulkData = {},
-      const RtClearValue&            clearValue    = RtClearValue::s_kInvalid,
-      const wchar_t*                 resourceName  = nullptr) const override;
 
   virtual bool isSupportVSync() const override;
 

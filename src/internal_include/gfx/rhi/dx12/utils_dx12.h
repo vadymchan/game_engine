@@ -16,7 +16,7 @@ namespace game_engine {
 
 struct BufferDx12;
 struct TextureDx12;
-struct ImageSubResourceDataDeprecated;
+
 struct Image;
 
 // TODO: why need anonymous namespace in header?
@@ -108,24 +108,6 @@ std::shared_ptr<TextureDx12> g_createTexture(
     const RtClearValue&                         clearValue,
     const wchar_t*                              resourceName);
 
-uint64_t g_copyBufferToTextureDeprecated(
-    ID3D12GraphicsCommandList4* commandBuffer,
-    ID3D12Resource*             buffer,
-    uint64_t                    bufferOffset,
-    ID3D12Resource*             image,
-    int32_t                     imageSubresourceIndex = 0);
-uint64_t g_copyBufferToTextureDeprecated(
-    ID3D12GraphicsCommandList4* commandBuffer,
-    ID3D12Resource*             buffer,
-    uint64_t                    bufferOffset,
-    ID3D12Resource*             image,
-    int32_t                     numOfImageSubresources,
-    int32_t                     startImageSubresources);
-void g_copyBufferToTextureDeprecated(
-    ID3D12GraphicsCommandList4*                        commandBuffer,
-    ID3D12Resource*                                    buffer,
-    ID3D12Resource*                                    image,
-    const std::vector<ImageSubResourceDataDeprecated>& subresourceData);
 void g_copyBufferToTexture(ID3D12GraphicsCommandList4*   commandBuffer,
                            ID3D12Resource*               buffer,
                            ID3D12Resource*               imageResource,
