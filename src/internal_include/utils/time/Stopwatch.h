@@ -19,6 +19,7 @@ class Stopwatch {
   template <typename Type, typename Period = std::ratio<1>>
   using DurationCustom = std::chrono::duration<Type, Period>;
 
+  // std::ratio<1> is seconds - nominator = 1, denominator = 1
   template <typename Period = std::ratio<1>>
   using DurationFloat = DurationCustom<float, Period>;
 
