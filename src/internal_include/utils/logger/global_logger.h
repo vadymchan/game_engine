@@ -16,6 +16,8 @@ class GlobalLogger {
 
   static void Log(LogLevel logLevel, const std::string& message);
 
+  static std::shared_ptr<ILogger> GetLogger(const std::string& name);
+
   // ======= END: public static fields   ======================================
 
   private:

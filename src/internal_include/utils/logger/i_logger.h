@@ -19,7 +19,9 @@ class ILogger {
   public:
   // ======= BEGIN: public constructors =======================================
 
-  ILogger()               = default;
+  ILogger(std::string loggerName)
+      : loggerName(std::move(loggerName)) {}
+
   ILogger(const ILogger&) = delete;
   ILogger(ILogger&&)      = delete;
 
@@ -43,6 +45,15 @@ class ILogger {
   virtual void log(LogLevel logLevel, const std::string& message) = 0;
 
   // ======= END: public overridden methods   =================================
+
+  // ======= BEGIN: public getters ============================================
+
+  auto getLoggerName() const -> const std::string& { return loggerName; }
+
+  // ======= END: public getters   ============================================
+
+  private:
+  std::string loggerName;
 };
 
 }  // namespace game_engine

@@ -52,7 +52,8 @@ FileLogger::FileLogger(const std::string& loggerName,
                        const std::string& filePath,
                        bool               multiThreaded,
                        bool               truncateOnOpen)
-    : m_logger_(
+    : ILogger(loggerName)
+    , m_logger_(
           createFileLogger(loggerName, filePath, multiThreaded, truncateOnOpen))
     , m_pattern_(pattern)
     , m_filePath_(filePath)

@@ -13,10 +13,10 @@ auto createStdOutLogger(const std::string& loggerName,
                         bool colored) -> std::shared_ptr<spdlog::logger> {
   if (colored) {
     return multiThreaded ? spdlog::stdout_color_mt(loggerName)
-                          : spdlog::stdout_color_st(loggerName);
+                         : spdlog::stdout_color_st(loggerName);
   }
   return multiThreaded ? spdlog::stdout_logger_mt(loggerName)
-                        : spdlog::stdout_logger_st(loggerName);
+                       : spdlog::stdout_logger_st(loggerName);
 }
 
 auto createStdErrLogger(const std::string& loggerName,
@@ -24,10 +24,10 @@ auto createStdErrLogger(const std::string& loggerName,
                         bool colored) -> std::shared_ptr<spdlog::logger> {
   if (colored) {
     return multiThreaded ? spdlog::stderr_color_mt(loggerName)
-                          : spdlog::stderr_color_st(loggerName);
+                         : spdlog::stderr_color_st(loggerName);
   }
   return multiThreaded ? spdlog::stderr_logger_mt(loggerName)
-                        : spdlog::stderr_logger_st(loggerName);
+                       : spdlog::stderr_logger_st(loggerName);
 }
 
 auto createLogger(const std::string& loggerName,
@@ -73,8 +73,9 @@ ConsoleLogger::ConsoleLogger(const std::string& loggerName,
                              ConsoleStreamType  consoleType,
                              bool               isMultithreaded,
                              bool               isColored)
-    : m_logger_(
-        createLogger(loggerName, consoleType, isMultithreaded, isColored))
+    : ILogger(loggerName)
+    , m_logger_(
+          createLogger(loggerName, consoleType, isMultithreaded, isColored))
     , m_logLevel_(logLevel)
     , m_pattern_(pattern)
     , m_consoleType_(consoleType)
