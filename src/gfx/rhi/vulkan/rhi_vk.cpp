@@ -18,12 +18,13 @@ TResourcePool<StencilOpStateInfoVk, MutexRWLock> RhiVk::s_stencilOpStatePool;
 TResourcePool<DepthStencilStateInfoVk, MutexRWLock>
                                                 RhiVk::s_depthStencilStatePool;
 TResourcePool<BlendingStateInfoVk, MutexRWLock> RhiVk::s_blendingStatePool;
-std::unordered_map<uint64_t, ShaderBindingLayoutVk*> RhiVk::s_shaderBindingPool;
+std::unordered_map<uint64_t, std::shared_ptr<ShaderBindingLayoutVk>>
+    RhiVk::s_shaderBindingPool;
 
 // TODO: consider whether need it
 struct FrameBufferVk : public FrameBuffer {
-  bool                                   m_isInitialized = false;
-  std::vector<std::shared_ptr<Texture> > m_allTextures;
+  bool                                  m_isInitialized = false;
+  std::vector<std::shared_ptr<Texture>> m_allTextures;
 
   virtual Texture* getTexture(std::int32_t index = 0) const {
     return m_allTextures[index].get();
@@ -571,9 +572,10 @@ void RhiVk::release() {
 
   {
     ScopeWriteLock s(&m_shaderBindingPoolLock_);
-    for (auto& iter : s_shaderBindingPool) {
-      delete iter.second;
-    }
+    // TODO: remove this (now using std::shared_ptr)
+    // for (auto& iter : s_shaderBindingPool) {
+    //  delete iter.second;
+    //}
     s_shaderBindingPool.clear();
   }
 
@@ -1316,7 +1318,7 @@ std::shared_ptr<RenderTarget> RhiVk::createRenderTarget(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ShaderBindingLayout* RhiVk::createShaderBindings(
+std::shared_ptr<ShaderBindingLayout> RhiVk::createShaderBindings(
     const ShaderBindingArray& shaderBindingArray) const {
   size_t hash = shaderBindingArray.getHash();
 
@@ -1338,7 +1340,7 @@ ShaderBindingLayout* RhiVk::createShaderBindings(
       return it_find->second;
     }
 
-    auto NewShaderBinding = new ShaderBindingLayoutVk();
+    auto NewShaderBinding = std::make_shared<ShaderBindingLayoutVk>();
     NewShaderBinding->initialize(shaderBindingArray);
     NewShaderBinding->m_hash_ = hash;
     s_shaderBindingPool[hash] = NewShaderBinding;
@@ -1349,11 +1351,12 @@ ShaderBindingLayout* RhiVk::createShaderBindings(
 
 std::shared_ptr<ShaderBindingInstance> RhiVk::createShaderBindingInstance(
     const ShaderBindingArray&       shaderBindingArray,
-    const ShaderBindingInstanceType type) const {
+    const ShaderBindingInstanceType type) {
   auto shaderBindingsLayout = createShaderBindings(shaderBindingArray);
   assert(shaderBindingsLayout);
-  return shaderBindingsLayout->createShaderBindingInstance(shaderBindingArray,
-                                                           type);
+  auto result = shaderBindingsLayout->createShaderBindingInstance(
+      shaderBindingArray, type);
+  return result;
 }
 
 std::shared_ptr<IBuffer> RhiVk::createBufferInternal(
@@ -1582,16 +1585,11 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
   return texturePtr;
 }
 
-void RhiVk::drawArrays(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    int32_t                                    vertStartIndex,
-    int32_t                                    vertCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDraw((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                ->getNativeHandle(),
+void RhiVk::drawArrays(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                       int32_t                               vertStartIndex,
+                       int32_t                               vertCount) const {
+  assert(commandBuffer);
+  vkCmdDraw((VkCommandBuffer)commandBuffer->getNativeHandle(),
             vertCount,
             1,
             vertStartIndex,
@@ -1599,33 +1597,23 @@ void RhiVk::drawArrays(
 }
 
 void RhiVk::drawArraysInstanced(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    int32_t                                    vertStartIndex,
-    int32_t                                    vertCount,
-    int32_t                                    instanceCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDraw((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                ->getNativeHandle(),
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               vertStartIndex,
+    int32_t                               vertCount,
+    int32_t                               instanceCount) const {
+  assert(commandBuffer);
+  vkCmdDraw((VkCommandBuffer)commandBuffer->getNativeHandle(),
             vertCount,
             instanceCount,
             vertStartIndex,
             0);
 }
 
-void RhiVk::drawElements(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                       ->getNativeHandle(),
+void RhiVk::drawElements(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                         int32_t                               startIndex,
+                         int32_t indexCount) const {
+  assert(commandBuffer);
+  vkCmdDrawIndexed((VkCommandBuffer)commandBuffer->getNativeHandle(),
                    indexCount,
                    1,
                    startIndex,
@@ -1634,17 +1622,12 @@ void RhiVk::drawElements(
 }
 
 void RhiVk::drawElementsInstanced(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount,
-    int32_t                                    instanceCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                       ->getNativeHandle(),
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               startIndex,
+    int32_t                               indexCount,
+    int32_t                               instanceCount) const {
+  assert(commandBuffer);
+  vkCmdDrawIndexed((VkCommandBuffer)commandBuffer->getNativeHandle(),
                    indexCount,
                    instanceCount,
                    startIndex,
@@ -1653,17 +1636,12 @@ void RhiVk::drawElementsInstanced(
 }
 
 void RhiVk::drawElementsBaseVertex(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount,
-    int32_t                                    baseVertexIndex) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                       ->getNativeHandle(),
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               startIndex,
+    int32_t                               indexCount,
+    int32_t                               baseVertexIndex) const {
+  assert(commandBuffer);
+  vkCmdDrawIndexed((VkCommandBuffer)commandBuffer->getNativeHandle(),
                    indexCount,
                    1,
                    startIndex,
@@ -1672,18 +1650,13 @@ void RhiVk::drawElementsBaseVertex(
 }
 
 void RhiVk::drawElementsInstancedBaseVertex(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount,
-    int32_t                                    baseVertexIndex,
-    int32_t                                    instanceCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDrawIndexed((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                       ->getNativeHandle(),
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               startIndex,
+    int32_t                               indexCount,
+    int32_t                               baseVertexIndex,
+    int32_t                               instanceCount) const {
+  assert(commandBuffer);
+  vkCmdDrawIndexed((VkCommandBuffer)commandBuffer->getNativeHandle(),
                    indexCount,
                    instanceCount,
                    startIndex,
@@ -1691,51 +1664,37 @@ void RhiVk::drawElementsInstancedBaseVertex(
                    0);
 }
 
-void RhiVk::drawIndirect(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    IBuffer*                                   buffer,
-    int32_t                                    startIndex,
-    int32_t                                    drawCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDrawIndirect(
-      (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-          ->getNativeHandle(),
-      (VkBuffer)buffer->getHandle(),
-      startIndex * sizeof(VkDrawIndirectCommand),
-      drawCount,
-      sizeof(VkDrawIndirectCommand));
+void RhiVk::drawIndirect(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                         IBuffer*                              buffer,
+                         int32_t                               startIndex,
+                         int32_t drawCount) const {
+  assert(commandBuffer);
+  vkCmdDrawIndirect((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                    (VkBuffer)buffer->getHandle(),
+                    startIndex * sizeof(VkDrawIndirectCommand),
+                    drawCount,
+                    sizeof(VkDrawIndirectCommand));
 }
 
 void RhiVk::drawElementsIndirect(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    /*EPrimitiveType                               type, - deprecated (used in
-       previous rendering api)*/
-    IBuffer*                                   buffer,
-    int32_t                                    startIndex,
-    int32_t                                    drawCount) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDrawIndexedIndirect(
-      (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-          ->getNativeHandle(),
-      (VkBuffer)buffer->getHandle(),
-      startIndex * sizeof(VkDrawIndexedIndirectCommand),
-      drawCount,
-      sizeof(VkDrawIndexedIndirectCommand));
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    IBuffer*                              buffer,
+    int32_t                               startIndex,
+    int32_t                               drawCount) const {
+  assert(commandBuffer);
+  vkCmdDrawIndexedIndirect((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                           (VkBuffer)buffer->getHandle(),
+                           startIndex * sizeof(VkDrawIndexedIndirectCommand),
+                           drawCount,
+                           sizeof(VkDrawIndexedIndirectCommand));
 }
 
-void RhiVk::dispatchCompute(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    uint32_t                                   numGroupsX,
-    uint32_t                                   numGroupsY,
-    uint32_t                                   numGroupsZ) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdDispatch((VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-                    ->getNativeHandle(),
+void RhiVk::dispatchCompute(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                            uint32_t                              numGroupsX,
+                            uint32_t                              numGroupsY,
+                            uint32_t numGroupsZ) const {
+  assert(commandBuffer);
+  vkCmdDispatch((VkCommandBuffer)commandBuffer->getNativeHandle(),
                 numGroupsX,
                 numGroupsY,
                 numGroupsZ);

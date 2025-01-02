@@ -28,8 +28,9 @@ struct SimpleConstantBuffer {
   int32_t          m_texIndex = 0;
 };
 
-RhiDx12*                                         g_rhiDx12 = nullptr;
-std::unordered_map<size_t, ShaderBindingLayout*> RhiDx12::s_shaderBindingPool;
+RhiDx12* g_rhiDx12 = nullptr;
+std::unordered_map<size_t, std::shared_ptr<ShaderBindingLayout>>
+                                                 RhiDx12::s_shaderBindingPool;
 TResourcePool<SamplerStateInfoDx12, MutexRWLock> RhiDx12::s_samplerStatePool;
 TResourcePool<RasterizationStateInfoDx12, MutexRWLock>
     RhiDx12::s_rasterizationStatePool;
@@ -507,9 +508,10 @@ void RhiDx12::release() {
 
   {
     ScopeWriteLock s(&m_shaderBindingPoolLock_);
-    for (auto& iter : s_shaderBindingPool) {
-      delete iter.second;
-    }
+    // TODO: remove (we use shared_ptr now)
+    // for (auto& iter : s_shaderBindingPool) {
+    //   delete iter.second;
+    // }
     s_shaderBindingPool.clear();
   }
 
@@ -636,7 +638,7 @@ std::shared_ptr<Texture> RhiDx12::createTextureFromData(
   return TexturePtr;
 }
 
-ShaderBindingLayout* RhiDx12::createShaderBindings(
+std::shared_ptr<ShaderBindingLayout> RhiDx12::createShaderBindings(
     const ShaderBindingArray& shaderBindingArray) const {
   size_t hash = shaderBindingArray.getHash();
 
@@ -658,7 +660,7 @@ ShaderBindingLayout* RhiDx12::createShaderBindings(
       return it_find->second;
     }
 
-    auto NewShaderBinding = new ShaderBindingLayoutDx12();
+    auto NewShaderBinding = std::make_shared<ShaderBindingLayoutDx12>();
     NewShaderBinding->initialize(shaderBindingArray);
     NewShaderBinding->m_hash_ = hash;
     s_shaderBindingPool[hash] = NewShaderBinding;
@@ -916,9 +918,7 @@ std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
 
   auto renderFrameContextPtr
       = std::make_shared<RenderFrameContextDx12>(commandBuffer);
-  // TODO: remove constant for UseForwardRenderer
-  renderFrameContextPtr->m_useForwardRenderer_ = true;
-  renderFrameContextPtr->m_frameIndex_         = m_currentFrameIndex_;
+  renderFrameContextPtr->m_frameIndex_ = m_currentFrameIndex_;
   renderFrameContextPtr->m_sceneRenderTargetPtr_
       = std::make_shared<SceneRenderTarget>();
   renderFrameContextPtr->m_sceneRenderTargetPtr_->create(m_window_,
@@ -947,11 +947,13 @@ void RhiDx12::endRenderFrame(
           m_commandBufferManager_->getCommandQueue().Get());
 
   HRESULT hr = S_OK;
-  if (g_rhi->isSupportVSync()) {
-    // Wait for VSync, the application will sleep until the next VSync.
-    // This is done to save cycles of frames that do not appear on the screen.
-    hr = m_swapchain_->m_swapChain_->Present(1, 0);
-  } else {
+  // TODO: implement VSync
+  // if (g_rhi->isSupportVSync()) {
+  //   // Wait for VSync, the application will sleep until the next VSync.
+  //   // This is done to save cycles of frames that do not appear on the
+  //   screen. hr = m_swapchain_->m_swapChain_->Present(1, 0);
+  // } else
+  {
     hr = m_swapchain_->m_swapChain_->Present(0, DXGI_PRESENT_ALLOW_TEARING);
   }
 
@@ -1077,8 +1079,9 @@ void RhiDx12::bindGraphicsShaderBindingInstances(
     for (int32_t i = 0; i < m_shaderBindingInstanceArray.m_numOfData_; ++i) {
       ShaderBindingInstanceDx12* Instance
           = (ShaderBindingInstanceDx12*)m_shaderBindingInstanceArray[i];
-      ShaderBindingLayoutDx12* Layout
-          = (ShaderBindingLayoutDx12*)(Instance->m_shaderBindingsLayouts_);
+      // TODO: seems not used
+      auto Layout = std::static_pointer_cast<ShaderBindingLayoutDx12>(
+          Instance->m_shaderBindingsLayouts_);
 
       Instance->copyToOnlineDescriptorHeap(commandBufferDx12);
       Instance->bindGraphics(commandBufferDx12, RootParameterIndex);
@@ -1133,8 +1136,9 @@ void RhiDx12::bindComputeShaderBindingInstances(
     for (int32_t i = 0; i < m_shaderBindingInstanceArray.m_numOfData_; ++i) {
       ShaderBindingInstanceDx12* Instance
           = (ShaderBindingInstanceDx12*)m_shaderBindingInstanceArray[i];
-      ShaderBindingLayoutDx12* Layout
-          = (ShaderBindingLayoutDx12*)(Instance->m_shaderBindingsLayouts_);
+      // TODO: seems not used
+      auto Layout = std::static_pointer_cast<ShaderBindingLayoutDx12>(
+          Instance->m_shaderBindingsLayouts_);
 
       Instance->copyToOnlineDescriptorHeap(commandBufferDx12);
 
@@ -1248,20 +1252,18 @@ std::shared_ptr<Texture> RhiDx12::create2DTexture(
 
 std::shared_ptr<ShaderBindingInstance> RhiDx12::createShaderBindingInstance(
     const ShaderBindingArray&       shaderBindingArray,
-    const ShaderBindingInstanceType type) const {
+    const ShaderBindingInstanceType type) {
   auto shaderBindingsLayout = createShaderBindings(shaderBindingArray);
   assert(shaderBindingsLayout);
   return shaderBindingsLayout->createShaderBindingInstance(shaderBindingArray,
                                                            type);
 }
 
-void RhiDx12::drawArrays(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    int32_t                                    vertStartIndex,
-    int32_t                                    vertCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+void RhiDx12::drawArrays(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                         int32_t                               vertStartIndex,
+                         int32_t vertCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawInstanced(
@@ -1269,27 +1271,23 @@ void RhiDx12::drawArrays(
 }
 
 void RhiDx12::drawArraysInstanced(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    int32_t                                    vertStartIndex,
-    int32_t                                    vertCount,
-    int32_t                                    instanceCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               vertStartIndex,
+    int32_t                               vertCount,
+    int32_t                               instanceCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawInstanced(
       vertCount, instanceCount, vertStartIndex, 0);
 }
 
-void RhiDx12::drawElements(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+void RhiDx12::drawElements(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                           int32_t                               startIndex,
+                           int32_t indexCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1297,14 +1295,12 @@ void RhiDx12::drawElements(
 }
 
 void RhiDx12::drawElementsInstanced(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount,
-    int32_t                                    instanceCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               startIndex,
+    int32_t                               indexCount,
+    int32_t                               instanceCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1312,14 +1308,12 @@ void RhiDx12::drawElementsInstanced(
 }
 
 void RhiDx12::drawElementsBaseVertex(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount,
-    int32_t                                    baseVertexIndex) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               startIndex,
+    int32_t                               indexCount,
+    int32_t                               baseVertexIndex) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
@@ -1327,54 +1321,49 @@ void RhiDx12::drawElementsBaseVertex(
 }
 
 void RhiDx12::drawElementsInstancedBaseVertex(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    int32_t                                    elementSize,
-    int32_t                                    startIndex,
-    int32_t                                    indexCount,
-    int32_t                                    baseVertexIndex,
-    int32_t                                    instanceCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    int32_t                               startIndex,
+    int32_t                               indexCount,
+    int32_t                               baseVertexIndex,
+    int32_t                               instanceCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   commandBufferDx12->m_commandList_->DrawIndexedInstanced(
       indexCount, instanceCount, startIndex, baseVertexIndex, 0);
 }
 
-void RhiDx12::drawIndirect(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    IBuffer*                                   buffer,
-    int32_t                                    startIndex,
-    int32_t                                    drawCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+void RhiDx12::drawIndirect(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                           IBuffer*                              buffer,
+                           int32_t                               startIndex,
+                           int32_t drawCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   assert(0);
 }
 
 void RhiDx12::drawElementsIndirect(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    // EPrimitiveType                              type,
-    IBuffer*                                   buffer,
-    int32_t                                    startIndex,
-    int32_t                                    drawCount) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    IBuffer*                              buffer,
+    int32_t                               startIndex,
+    int32_t                               drawCount) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
 
   assert(0);
 }
 
 void RhiDx12::dispatchCompute(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-    uint32_t                                   numGroupsX,
-    uint32_t                                   numGroupsY,
-    uint32_t                                   numGroupsZ) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    uint32_t                              numGroupsX,
+    uint32_t                              numGroupsY,
+    uint32_t                              numGroupsZ) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
   assert(commandBufferDx12->m_commandList_);
   assert(numGroupsX * numGroupsY * numGroupsZ > 0);
@@ -1696,10 +1685,6 @@ std::shared_ptr<IBuffer> RhiDx12::createFormattedBuffer(
   }
 
   return BufferPtr;
-}
-
-bool RhiDx12::isSupportVSync() const {
-  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////

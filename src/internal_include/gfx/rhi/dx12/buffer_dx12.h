@@ -25,8 +25,8 @@ struct BufferDx12 : public IBuffer {
   BufferDx12() = default;
 
   BufferDx12(std::shared_ptr<CreatedResourceDx12> buffer,
-             uint64_t                         size,
-             uint64_t                         alignment,
+             uint64_t                             size,
+             uint64_t                             alignment,
              EBufferCreateFlag bufferCreateFlag = EBufferCreateFlag::NONE)
       : m_buffer(buffer)
       , m_size_(size)
@@ -136,10 +136,10 @@ struct BufferDx12 : public IBuffer {
   uint8_t*          m_cpuAddress_       = nullptr;
   // TODO: consider renaming to CreatedRedource
   std::shared_ptr<CreatedResourceDx12> m_buffer;
-  DescriptorDx12                   m_cbv_;
-  DescriptorDx12                   m_srv_;
-  DescriptorDx12                   m_uav_;
-  EResourceLayout                  m_layout_ = EResourceLayout::UNDEFINED;
+  DescriptorDx12                       m_cbv_;
+  DescriptorDx12                       m_srv_;
+  DescriptorDx12                       m_uav_;
+  EResourceLayout                      m_layout_ = EResourceLayout::UNDEFINED;
 
   // ======= END: public misc fields   ========================================
 };
@@ -241,9 +241,8 @@ struct VertexBufferDx12 : public VertexBuffer {
 
   virtual bool initialize(
       const std::shared_ptr<VertexStreamData>& streamData) override;
-  virtual void bind(const std::shared_ptr<RenderFrameContext>&
-                        renderFrameContext) const override;
-  virtual void bind(std::shared_ptr<CommandBufferDx12> commandList) const;
+  virtual void bind(
+      const std::shared_ptr<CommandBuffer>& commandList) const override;
 
   virtual IBuffer* getBuffer(int32_t streamIndex) const override;
 
@@ -298,9 +297,9 @@ struct VertexBufferDx12 : public VertexBuffer {
 struct IndexBufferDx12 : public IndexBuffer {
   // ======= BEGIN: public overridden methods =================================
 
-  virtual void bind(const std::shared_ptr<RenderFrameContext>&
-                        renderFrameContext) const override;
-  virtual void bind(std::shared_ptr<CommandBufferDx12> commandList) const;
+  virtual void bind(
+      const std::shared_ptr<CommandBuffer>& commandList) const override;
+
   virtual bool initialize(
       const std::shared_ptr<IndexStreamData>& streamData) override;
 

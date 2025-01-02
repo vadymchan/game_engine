@@ -57,7 +57,7 @@ struct ShaderBindingLayoutDx12 : public ShaderBindingLayout {
       const ShaderBindingArray& shaderBindingArray) override;
   virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
-      const ShaderBindingInstanceType type) const override;
+      const ShaderBindingInstanceType type) override;
 
   virtual void* getHandle() const { return nullptr; }
 

@@ -217,7 +217,8 @@ void WriteDescriptorSet::setWriteDescriptorInfo(
                                 ? (VkSampler)tbor->m_samplerState_->getHandle()
                                 : nullptr;
           if (!imageInfo.sampler) {
-            imageInfo.sampler = TextureVk::s_createDefaultSamplerState();  // todo
+            imageInfo.sampler
+                = TextureVk::s_createDefaultSamplerState();  // todo
           }
           assert(imageInfo.imageView);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
@@ -667,7 +668,7 @@ bool ShaderBindingLayoutVk::initialize(
 std::shared_ptr<ShaderBindingInstance>
     ShaderBindingLayoutVk::createShaderBindingInstance(
         const ShaderBindingArray&       shaderBindingArray,
-        const ShaderBindingInstanceType type) const {
+        const ShaderBindingInstanceType type) {
   DescriptorPoolVk* DescriptorPool = nullptr;
   switch (type) {
     case ShaderBindingInstanceType::SingleFrame:
@@ -687,13 +688,14 @@ std::shared_ptr<ShaderBindingInstance>
 
   assert(DescriptorSet && "DescriptorSet allocation failed");
 
+  // TODO: consider removing this
   if (!DescriptorSet) {
     DescriptorSet
         = DescriptorPool->allocateDescriptorSet(m_descriptorSetLayout_);
     return nullptr;
   }
 
-  DescriptorSet->m_shaderBindingsLayouts_ = this;
+  DescriptorSet->m_shaderBindingsLayouts_ = shared_from_this();
   DescriptorSet->initialize(shaderBindingArray);
   DescriptorSet->setType(type);
   return DescriptorSet;
@@ -723,8 +725,8 @@ std::vector<VkDescriptorPoolSize>
 
   if (!m_shaderBindingArray_.m_numOfData_) {
     uint32_t         NumOfSameType = 0;
-    VkDescriptorType PrevType
-        = g_getVulkanShaderBindingType(m_shaderBindingArray_[0]->m_bindingType_);
+    VkDescriptorType PrevType      = g_getVulkanShaderBindingType(
+        m_shaderBindingArray_[0]->m_bindingType_);
     for (int32_t i = 0; i < m_shaderBindingArray_.m_numOfData_; ++i) {
       if (PrevType
           == g_getVulkanShaderBindingType(
@@ -904,10 +906,8 @@ VkPipelineLayout ShaderBindingLayoutVk::s_createPipelineLayout(
       pipelineLayoutInfo.pPushConstantRanges = PushConstantRanges.data();
     }
     assert(g_rhiVk->m_device_);
-    if (vkCreatePipelineLayout(g_rhiVk->m_device_,
-                               &pipelineLayoutInfo,
-                               nullptr,
-                               &vkPipelineLayout)
+    if (vkCreatePipelineLayout(
+            g_rhiVk->m_device_, &pipelineLayoutInfo, nullptr, &vkPipelineLayout)
         != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline layout");
       return nullptr;

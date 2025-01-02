@@ -219,8 +219,7 @@ struct VertexBuffer {
     return false;
   }
 
-  virtual void bind(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+  virtual void bind(const std::shared_ptr<CommandBuffer>& commandList) const {}
 
   // virtual bool IsSupportRaytracing() const { return false; }
 
@@ -272,8 +271,7 @@ struct IndexBuffer {
     return false;
   }
 
-  virtual void bind(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+  virtual void bind(const std::shared_ptr<CommandBuffer>& commandList) const {}
 
   virtual Name getName() const { return Name::s_kInvalid; }
 

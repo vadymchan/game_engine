@@ -11,8 +11,9 @@ namespace game_engine {
 
 void SamplerStateInfoVk::initialize() {
   getHash();
-  m_samplerStateInfo_.sType     = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  m_samplerStateInfo_.magFilter = g_getVulkanTextureFilterType(m_magnification_);
+  m_samplerStateInfo_.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  m_samplerStateInfo_.magFilter
+      = g_getVulkanTextureFilterType(m_magnification_);
   m_samplerStateInfo_.minFilter = g_getVulkanTextureFilterType(m_minification_);
 
   m_samplerStateInfo_.addressModeU = g_getVulkanTextureAddressMode(m_addressU_);
@@ -28,7 +29,7 @@ void SamplerStateInfoVk::initialize() {
   m_samplerStateInfo_.compareOp     = g_getVulkanCompareOp(m_comparisonFunc_);
 
   m_samplerStateInfo_.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-  m_samplerStateInfo_.mipLodBias = 0.0f;    // Optional
+  m_samplerStateInfo_.mipLodBias = 0.0f;       // Optional
   m_samplerStateInfo_.minLod     = m_minLOD_;  // Optional
   m_samplerStateInfo_.maxLod     = m_maxLOD_;
 
@@ -66,19 +67,20 @@ void RasterizationStateInfoVk::initialize() {
   m_rasterizationStateInfo_ = {};
   m_rasterizationStateInfo_.sType
       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-  m_rasterizationStateInfo_.depthClampEnable        = m_depthClampEnable_;
-  m_rasterizationStateInfo_.rasterizerDiscardEnable = m_rasterizerDiscardEnable_;
+  m_rasterizationStateInfo_.depthClampEnable = m_depthClampEnable_;
+  m_rasterizationStateInfo_.rasterizerDiscardEnable
+      = m_rasterizerDiscardEnable_;
   m_rasterizationStateInfo_.polygonMode
       = g_getVulkanPolygonMode(m_polygonMode_);  // FILL, LINE, POINT
-  m_rasterizationStateInfo_.lineWidth       = m_lineWidth_;
-  m_rasterizationStateInfo_.cullMode        = g_getVulkanCullMode(m_cullMode_);
-  m_rasterizationStateInfo_.frontFace       = g_getVulkanFrontFace(m_frontFace_);
+  m_rasterizationStateInfo_.lineWidth = m_lineWidth_;
+  m_rasterizationStateInfo_.cullMode  = g_getVulkanCullMode(m_cullMode_);
+  m_rasterizationStateInfo_.frontFace = g_getVulkanFrontFace(m_frontFace_);
   m_rasterizationStateInfo_.depthBiasEnable = m_depthBiasEnable_;
   m_rasterizationStateInfo_.depthBiasConstantFactor
-      = m_depthBiasConstantFactor_;                           // Optional
+      = m_depthBiasConstantFactor_;                              // Optional
   m_rasterizationStateInfo_.depthBiasClamp = m_depthBiasClamp_;  // Optional
   m_rasterizationStateInfo_.depthBiasSlopeFactor
-      = m_depthBiasSlopeFactor_;                              // Optional
+      = m_depthBiasSlopeFactor_;                                 // Optional
 
   // VkPipelineRasterizationStateCreateFlags flags;
 
@@ -94,7 +96,7 @@ void RasterizationStateInfoVk::initialize() {
 #endif
   m_multisampleStateInfo_.minSampleShading = m_minSampleShading_;
   m_multisampleStateInfo_.alphaToCoverageEnable
-      = m_alphaToCoverageEnable_;                               // Optional
+      = m_alphaToCoverageEnable_;                                  // Optional
   m_multisampleStateInfo_.alphaToOneEnable = m_alphaToOneEnable_;  // Optional
 }
 
@@ -123,11 +125,12 @@ void DepthStencilStateInfoVk::initialize() {
       = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   m_depthStencilStateInfo_.depthTestEnable  = m_depthTestEnable_;
   m_depthStencilStateInfo_.depthWriteEnable = m_depthWriteEnable_;
-  m_depthStencilStateInfo_.depthCompareOp   = g_getVulkanCompareOp(m_depthCompareOp_);
+  m_depthStencilStateInfo_.depthCompareOp
+      = g_getVulkanCompareOp(m_depthCompareOp_);
   m_depthStencilStateInfo_.depthBoundsTestEnable = m_depthBoundsTestEnable_;
-  m_depthStencilStateInfo_.minDepthBounds        = m_minDepthBounds_;  // Optional
-  m_depthStencilStateInfo_.maxDepthBounds        = m_maxDepthBounds_;  // Optional
-  m_depthStencilStateInfo_.stencilTestEnable     = m_stencilTestEnable_;
+  m_depthStencilStateInfo_.minDepthBounds    = m_minDepthBounds_;  // Optional
+  m_depthStencilStateInfo_.maxDepthBounds    = m_maxDepthBounds_;  // Optional
+  m_depthStencilStateInfo_.stencilTestEnable = m_stencilTestEnable_;
   if (m_front_) {
     m_depthStencilStateInfo_.front
         = ((StencilOpStateInfoVk*)m_front_)->m_stencilOpStateInfo_;
@@ -143,16 +146,21 @@ void DepthStencilStateInfoVk::initialize() {
 
 void BlendingStateInfoVk::initialize() {
   getHash();
-  m_colorBlendAttachmentInfo_                     = {};
-  m_colorBlendAttachmentInfo_.blendEnable         = m_blendEnable_;
-  m_colorBlendAttachmentInfo_.srcColorBlendFactor = g_getVulkanBlendFactor(m_src_);
-  m_colorBlendAttachmentInfo_.dstColorBlendFactor = g_getVulkanBlendFactor(m_dest_);
-  m_colorBlendAttachmentInfo_.colorBlendOp        = g_getVulkanBlendOp(m_blendOp_);
-  m_colorBlendAttachmentInfo_.srcAlphaBlendFactor = g_getVulkanBlendFactor(m_srcAlpha_);
+  m_colorBlendAttachmentInfo_             = {};
+  m_colorBlendAttachmentInfo_.blendEnable = m_blendEnable_;
+  m_colorBlendAttachmentInfo_.srcColorBlendFactor
+      = g_getVulkanBlendFactor(m_src_);
+  m_colorBlendAttachmentInfo_.dstColorBlendFactor
+      = g_getVulkanBlendFactor(m_dest_);
+  m_colorBlendAttachmentInfo_.colorBlendOp = g_getVulkanBlendOp(m_blendOp_);
+  m_colorBlendAttachmentInfo_.srcAlphaBlendFactor
+      = g_getVulkanBlendFactor(m_srcAlpha_);
   m_colorBlendAttachmentInfo_.dstAlphaBlendFactor
       = g_getVulkanBlendFactor(m_destAlpha_);
-  m_colorBlendAttachmentInfo_.alphaBlendOp   = g_getVulkanBlendOp(m_alphaBlendOp_);
-  m_colorBlendAttachmentInfo_.colorWriteMask = g_getVulkanColorMask(m_colorWriteMask_);
+  m_colorBlendAttachmentInfo_.alphaBlendOp
+      = g_getVulkanBlendOp(m_alphaBlendOp_);
+  m_colorBlendAttachmentInfo_.colorWriteMask
+      = g_getVulkanColorMask(m_colorWriteMask_);
 }
 
 // PipelineStateFixedInfoVk
@@ -275,9 +283,9 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   VertexBufferVk::s_createVertexInputState(vertexInputInfo,
-                                         bindingDescriptions,
-                                         attributeDescriptions,
-                                         m_vertexBufferArray_);
+                                           bindingDescriptions,
+                                           attributeDescriptions,
+                                           m_vertexBufferArray_);
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly
       = ((VertexBufferVk*)m_vertexBufferArray_[0])->createInputAssemblyState();
@@ -337,8 +345,9 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   for (int32_t i = 0;
        i < (int32_t)SelectedSubpass.m_outputColorAttachments_.size();
        ++i) {
-    const int32_t AttachmentIndex = SelectedSubpass.m_outputColorAttachments_[i];
-    const bool    IsColorAttachment
+    const int32_t AttachmentIndex
+        = SelectedSubpass.m_outputColorAttachments_[i];
+    const bool IsColorAttachment
         = !kRenderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
                .isDepthAttachment()
        && !kRenderPass->m_renderPassInfo_.m_attachments_[AttachmentIndex]
@@ -376,10 +385,11 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   if (kPipelineStateFixed->m_dynamicStates_.size() > 0) {
     dynamicStates.resize(kPipelineStateFixed->m_dynamicStates_.size());
 
-    for (int32_t i = 0; i < (int32_t)kPipelineStateFixed->m_dynamicStates_.size();
+    for (int32_t i = 0;
+         i < (int32_t)kPipelineStateFixed->m_dynamicStates_.size();
          ++i) {
-      dynamicStates[i]
-          = g_getVulkanPipelineDynamicState(kPipelineStateFixed->m_dynamicStates_[i]);
+      dynamicStates[i] = g_getVulkanPipelineDynamicState(
+          kPipelineStateFixed->m_dynamicStates_[i]);
     }
 
     dynamicState.dynamicStateCount = (uint32_t)dynamicStates.size();
@@ -398,18 +408,21 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   uint32_t                        ShaderStageIndex = 0;
   if (kGraphicsShader.m_vertexShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)kGraphicsShader.m_vertexShader_->getCompiledShader())
+        = ((CompiledShaderVk*)
+               kGraphicsShader.m_vertexShader_->getCompiledShader())
               ->m_shaderStage_;
   }
   if (kGraphicsShader.m_geometryShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)kGraphicsShader.m_geometryShader_)->m_shaderStage_;
+        = ((CompiledShaderVk*)kGraphicsShader.m_geometryShader_)
+              ->m_shaderStage_;
   }
   if (kGraphicsShader.m_pixelShader_) {
     ShaderStages[ShaderStageIndex++]
         //= ((CompiledShaderVk*)GraphicsShader.m_pixelShader_)->m_shaderStage_;
-        = ((CompiledShaderVk*)kGraphicsShader.m_pixelShader_->getCompiledShader())
-			  ->m_shaderStage_;
+        = ((CompiledShaderVk*)
+               kGraphicsShader.m_pixelShader_->getCompiledShader())
+              ->m_shaderStage_;
   }
 
   assert(ShaderStageIndex > 0);
@@ -433,7 +446,7 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   pipelineInfo.pDynamicState    = &dynamicState;
   pipelineInfo.layout           = m_pipelineLayout_;
   pipelineInfo.renderPass       = (VkRenderPass)kRenderPass->getRenderPass();
-  pipelineInfo.subpass          = m_subpassIndex_;      // index of subpass
+  pipelineInfo.subpass          = m_subpassIndex_;   // index of subpass
 
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;  // Optional
   pipelineInfo.basePipelineIndex  = -1;              // Optional
@@ -520,7 +533,8 @@ void* PipelineStateInfoVk::createComputePipelineState() {
   computePipelineCreateInfo.layout = m_pipelineLayout_;
   computePipelineCreateInfo.flags  = 0;
   computePipelineCreateInfo.stage
-      = ((CompiledShaderVk*)kComputeShader->getCompiledShader())->m_shaderStage_;
+      = ((CompiledShaderVk*)kComputeShader->getCompiledShader())
+            ->m_shaderStage_;
 
   if (vkCreateComputePipelines(g_rhiVk->m_device_,
                                g_rhiVk->m_pipelineCache_,
@@ -545,20 +559,16 @@ void* PipelineStateInfoVk::createComputePipelineState() {
 }
 
 void PipelineStateInfoVk::bind(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
+    const std::shared_ptr<CommandBuffer>& commandBuffer) const {
   assert(m_pipeline_);
   if (m_pipelineType_ == EPipelineType::Graphics) {
-    vkCmdBindPipeline(
-        (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-            ->getNativeHandle(),
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        m_pipeline_);
+    vkCmdBindPipeline((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      m_pipeline_);
   } else if (m_pipelineType_ == EPipelineType::Compute) {
-    vkCmdBindPipeline(
-        (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-            ->getNativeHandle(),
-        VK_PIPELINE_BIND_POINT_COMPUTE,
-        m_pipeline_);
+    vkCmdBindPipeline((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                      m_pipeline_);
   } else if (m_pipelineType_ == EPipelineType::RayTracing) {
     // TODO: implement
     assert(0);

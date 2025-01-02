@@ -29,7 +29,7 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   assert(!m_descriptorPool_);
 
   m_maxDescriptorSets_ = maxDescriptorSets;
-  
+
   // TODO: remove (old version)
   // constexpr int32_t    NumOfPoolSize = std::size(g_kDefaultPoolSizes);
   // VkDescriptorPoolSize Types[NumOfPoolSize];
@@ -78,14 +78,13 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
 
   m_deallocateMultiframeShaderBindingInstance_.m_freeDelegate_ = std::bind(
       &DescriptorPoolVk::freedFromPendingDelegate, this, std::placeholders::_1);
-
 }
 
 void DescriptorPoolVk::reset() {
   {
 #if USE_RESET_DESCRIPTOR_POOL
-    verify(VK_SUCCESS
-           == vkResetDescriptorPool(g_rhiVk->m_device_, DescriptorPool, 0));
+    assert(VK_SUCCESS
+           == vkResetDescriptorPool(g_rhiVk->m_device_, m_descriptorPool_, 0));
 #else
     ScopedLock s(&m_descriptorPoolLock_);
     m_pendingDescriptorSets_ = m_allocatedDescriptorSets_;
@@ -119,17 +118,16 @@ std::shared_ptr<ShaderBindingInstance> DescriptorPoolVk::allocateDescriptorSet(
 
   VkDescriptorSet NewDescriptorSet = nullptr;
 
-  if (vkAllocateDescriptorSets(
-          g_rhiVk->m_device_, &DescriptorSetAllocateInfo, &NewDescriptorSet)
-      != VK_SUCCESS) {
+  auto result = vkAllocateDescriptorSets(
+      g_rhiVk->m_device_, &DescriptorSetAllocateInfo, &NewDescriptorSet);
+
+  if (result != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to allocate descriptor set");
     return nullptr;
   }
 
-  auto NewShaderBindingInstanceVk           = new ShaderBindingInstanceVk();
-  NewShaderBindingInstanceVk->m_descriptorSet_ = NewDescriptorSet;
-  std::shared_ptr<ShaderBindingInstanceVk> NewCachedDescriptorSet
-      = std::shared_ptr<ShaderBindingInstanceVk>(NewShaderBindingInstanceVk);
+  auto NewCachedDescriptorSet = std::make_shared<ShaderBindingInstanceVk>();
+  NewCachedDescriptorSet->m_descriptorSet_ = NewDescriptorSet;
 
 #if !USE_RESET_DESCRIPTOR_POOL
   m_allocatedDescriptorSets_[layout].push_back(NewCachedDescriptorSet);
@@ -228,7 +226,10 @@ void DescriptorPoolVk::freedFromPendingDelegate(
   const VkDescriptorSetLayout DescriptorSetLayout
       = (VkDescriptorSetLayout)
             shaderBindingInstanceVk->m_shaderBindingsLayouts_->getHandle();
-  m_pendingDescriptorSets_[DescriptorSetLayout].push_back(shaderBindingInstance);
+#if !USE_RESET_DESCRIPTOR_POOL
+  m_pendingDescriptorSets_[DescriptorSetLayout].push_back(
+      shaderBindingInstance);
+#endif
 }
 
 }  // namespace game_engine

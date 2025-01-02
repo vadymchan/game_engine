@@ -220,19 +220,12 @@ bool VertexBufferDx12::initialize(
 }
 
 void VertexBufferDx12::bind(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandList) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandList);
   assert(commandBufferDx12);
-
-  bind(commandBufferDx12);
-}
-
-void VertexBufferDx12::bind(
-    std::shared_ptr<CommandBufferDx12> commandList) const {
-  assert(commandList->m_commandList_);
-  commandList->m_commandList_->IASetPrimitiveTopology(getTopology());
-  commandList->m_commandList_->IASetVertexBuffers(
+  commandBufferDx12->m_commandList_->IASetPrimitiveTopology(getTopology());
+  commandBufferDx12->m_commandList_->IASetVertexBuffers(
       m_bindInfos_.m_startBindingIndex_,
       (uint32_t)m_VBView_.size(),
       &m_VBView_[0]);
@@ -244,18 +237,11 @@ IBuffer* VertexBufferDx12::getBuffer(int32_t streamIndex) const {
 }
 
 void IndexBufferDx12::bind(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandList) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandList);
   assert(commandBufferDx12);
-
-  bind(commandBufferDx12);
-}
-
-void IndexBufferDx12::bind(
-    std::shared_ptr<CommandBufferDx12> commandList) const {
-  assert(commandList->m_commandList_);
-  commandList->m_commandList_->IASetIndexBuffer(&m_IBView_);
+  commandBufferDx12->m_commandList_->IASetIndexBuffer(&m_IBView_);
 }
 
 bool IndexBufferDx12::initialize(

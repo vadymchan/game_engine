@@ -299,32 +299,25 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
 }
 
 void PipelineStateInfoDx12::bind(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
-  auto commandBufferDx12 = std::static_pointer_cast<CommandBufferDx12>(
-      renderFrameContext->getActiveCommandBuffer());
+    const std::shared_ptr<CommandBuffer>& commandBuffer) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
   assert(commandBufferDx12);
-
-  bind(commandBufferDx12);
-}
-
-void PipelineStateInfoDx12::bind(std::shared_ptr<CommandBufferDx12> commandList) const {
-  assert(commandList->m_commandList_);
+  assert(commandBufferDx12->m_commandList_);
   if (m_pipelineType_ == PipelineStateInfo::EPipelineType::Graphics) {
     assert(m_pipelineState_);
-    commandList->m_commandList_->SetPipelineState(m_pipelineState_.Get());
+    commandBufferDx12->m_commandList_->SetPipelineState(m_pipelineState_.Get());
 
-    commandList->m_commandList_->RSSetViewports((uint32_t)m_viewports_.size(),
-                                                m_viewports_.data());
-    commandList->m_commandList_->RSSetScissorRects((uint32_t)m_scissors_.size(),
-                                                   m_scissors_.data());
+    commandBufferDx12->m_commandList_->RSSetViewports(
+        (uint32_t)m_viewports_.size(), m_viewports_.data());
+    commandBufferDx12->m_commandList_->RSSetScissorRects(
+        (uint32_t)m_scissors_.size(), m_scissors_.data());
   } else if (m_pipelineType_ == PipelineStateInfo::EPipelineType::Compute) {
     assert(m_pipelineState_);
-    commandList->m_commandList_->SetPipelineState(m_pipelineState_.Get());
+    commandBufferDx12->m_commandList_->SetPipelineState(m_pipelineState_.Get());
   } else if (m_pipelineType_ == PipelineStateInfo::EPipelineType::RayTracing) {
     // TODO: currently not implemented
-    // assert(m_raytracingStateObject_);
-    // commandList->m_commandList_->SetPipelineState1(
-    //     m_raytracingStateObject_.Get());
+    assert(0);
   }
 }
 

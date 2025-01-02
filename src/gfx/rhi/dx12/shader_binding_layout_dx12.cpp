@@ -309,8 +309,8 @@ void RootParameterExtractor::extract(
     assert(Instance);
     assert(Instance->m_shaderBindingsLayouts_);
 
-    ShaderBindingLayoutDx12* Layout
-        = (ShaderBindingLayoutDx12*)Instance->m_shaderBindingsLayouts_;
+    auto Layout = std::static_pointer_cast<ShaderBindingLayoutDx12>(
+        Instance->m_shaderBindingsLayouts_);
     assert(Layout);
     extract_(descriptorOffset,
              samplerDescriptorOffset,
@@ -351,13 +351,13 @@ bool ShaderBindingLayoutDx12::initialize(
 std::shared_ptr<ShaderBindingInstance>
     ShaderBindingLayoutDx12::createShaderBindingInstance(
         const ShaderBindingArray&       shaderBindingArray,
-        const ShaderBindingInstanceType type) const {
-  auto shaderBindingInstance = new ShaderBindingInstanceDx12();
-  shaderBindingInstance->m_shaderBindingsLayouts_ = this;
+        const ShaderBindingInstanceType type) {
+  auto shaderBindingInstance = std::make_shared<ShaderBindingInstanceDx12>();
+  shaderBindingInstance->m_shaderBindingsLayouts_ = shared_from_this();
   shaderBindingInstance->initialize(shaderBindingArray);
   shaderBindingInstance->setType(type);
 
-  return std::shared_ptr<ShaderBindingInstance>(shaderBindingInstance);
+  return shaderBindingInstance;
 }
 
 ID3D12RootSignature* ShaderBindingLayoutDx12::s_createRootSignatureInternal(

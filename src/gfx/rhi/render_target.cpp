@@ -11,40 +11,39 @@ void RenderTarget::returnRt() {
 }
 
 void SceneRenderTarget::create(std::shared_ptr<Window> window,
-                               const ISwapchainImage*   swapchain) {
+                               const ISwapchainImage*  swapchain) {
   constexpr EMSAASamples MsaaSamples         = EMSAASamples::COUNT_1;
   constexpr uint32_t     layerCount          = 1;
   constexpr bool         IsGenerateMipmap    = false;
   constexpr bool         IsUseAsSubpassInput = false;
   constexpr bool         IsMemoryless        = false;
 
-  RenderTargetInfo ColorRTInfo = {
-    ETextureType::TEXTURE_2D,
-    ETextureFormat::R11G11B10F,  // VK_FORMAT_B10G11R11_UFLOAT_PACK32 for HDR
-    window->getSize(),
-    layerCount,
-    IsGenerateMipmap,
-    MsaaSamples,  // SampleCount
-    IsUseAsSubpassInput,
-    IsMemoryless,
-    RtClearValue(0.0f, 0.0f, 0.0f, 1.0f)
-    //, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT  // TODO: remove
+  RenderTargetInfo ColorRTInfo = {ETextureType::TEXTURE_2D,
+                                  ETextureFormat::R11G11B10F,
+                                  window->getSize(),
+                                  layerCount,
+                                  IsGenerateMipmap,
+                                  MsaaSamples,  // SampleCount
+                                  IsUseAsSubpassInput,
+                                  IsMemoryless,
+                                  RtClearValue(0.0f, 0.0f, 0.0f, 1.0f)
+
   };
   // ColorRTInfo.ResourceName = Text("ColorPtr");
   m_colorPtr_ = RenderTargetPool::s_getRenderTarget(ColorRTInfo);
 
-  RenderTargetInfo DepthRTInfo = {
-    ETextureType::TEXTURE_2D,
-    ETextureFormat::D24_S8,  // Assuming D24_S8 format
-    window->getSize(),
-    layerCount,
-    IsGenerateMipmap,
-    MsaaSamples,  // SampleCount
-    IsUseAsSubpassInput,
-    IsMemoryless,
-    RtClearValue(1.0f, 0)
-    //, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT  // TODO: remove
-  };
+  RenderTargetInfo DepthRTInfo
+      = {ETextureType::TEXTURE_2D,
+         ETextureFormat::D24_S8,  // Assuming D24_S8 format
+         window->getSize(),
+         layerCount,
+         IsGenerateMipmap,
+         MsaaSamples,  // SampleCount
+         IsUseAsSubpassInput,
+         IsMemoryless,
+         RtClearValue(1.0f, 0)
+
+      };
   // DepthRTInfo.ResourceName = Text("DepthPtr");
   m_depthPtr_ = RenderTargetPool::s_getRenderTarget(DepthRTInfo);
 

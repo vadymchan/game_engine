@@ -55,9 +55,12 @@ class BasePass : public RenderStage {
   }
 
   void execute() override {
+    auto commandBuffer
+        = m_renderContext_->renderFrameContext->getActiveCommandBuffer();
+
     // Transition Resource Layouts
     g_rhi->transitionLayout(
-        m_renderContext_->renderFrameContext->getActiveCommandBuffer(),
+        commandBuffer,
         m_renderContext_->renderFrameContext->m_sceneRenderTargetPtr_
             ->m_finalColorPtr_->getTexture(),
         EResourceLayout::COLOR_ATTACHMENT);
@@ -70,15 +73,14 @@ class BasePass : public RenderStage {
             : EResourceLayout::DEPTH_STENCIL_ATTACHMENT;
 
     g_rhi->transitionLayout(
-        m_renderContext_->renderFrameContext->getActiveCommandBuffer(),
+        commandBuffer,
         m_renderContext_->renderFrameContext->m_sceneRenderTargetPtr_
             ->m_depthPtr_->getTexture(),
         newLayout);
 
-    if (renderPass_->beginRenderPass(
-            m_renderContext_->renderFrameContext->getActiveCommandBuffer())) {
+    if (renderPass_->beginRenderPass(commandBuffer)) {
       for (const auto& drawData : drawDataList_) {
-        drawData.pipelineStateInfo_->bind(m_renderContext_->renderFrameContext);
+        drawData.pipelineStateInfo_->bind(commandBuffer);
 
         ShaderBindingInstanceArray shaderBindingInstanceArray;
         shaderBindingInstanceArray.add(viewShaderBindingInstance_.get());
@@ -128,20 +130,18 @@ class BasePass : public RenderStage {
         //   //     drawData.materialShaderBindingInstance_->getHandle());
         // }
 
-        g_rhi->bindGraphicsShaderBindingInstances(
-            m_renderContext_->renderFrameContext->getActiveCommandBuffer(),
-            drawData.pipelineStateInfo_,
-            shaderBindingInstanceCombiner,
-            0);
+        g_rhi->bindGraphicsShaderBindingInstances(commandBuffer,
+                                                  drawData.pipelineStateInfo_,
+                                                  shaderBindingInstanceCombiner,
+                                                  0);
 
         const auto& gpuMesh = drawData.renderGeometryMesh_;
-        gpuMesh->vertexBuffer->bind(m_renderContext_->renderFrameContext);
-        drawData.instanceBuffer_->bind(m_renderContext_->renderFrameContext);
+        gpuMesh->vertexBuffer->bind(commandBuffer);
+        drawData.instanceBuffer_->bind(commandBuffer);
 
-        gpuMesh->indexBuffer->bind(m_renderContext_->renderFrameContext);
+        gpuMesh->indexBuffer->bind(commandBuffer);
 
-        g_rhi->drawElementsInstanced(m_renderContext_->renderFrameContext,
-                                     0,
+        g_rhi->drawElementsInstanced(commandBuffer,
                                      0,
                                      gpuMesh->indexBuffer->getElementCount(),
                                      drawData.instanceCount);
@@ -160,13 +160,19 @@ class BasePass : public RenderStage {
     // shaders_.m_vertexShader_ delete
 
     // delete renderPass_;
+
+    // viewShaderBindingInstance_.reset();
+    // directionalLightShaderBindingInstance_.reset();
+    // pointLightShaderBindingInstance_.reset();
+    // spotLightShaderBindingInstance_.reset();
+
     drawDataList_.clear();
   }
 
   private:
   void setupPipelineStates() {
     auto rasterizationState
-        = TRasterizationStateInfo<EPolygonMode::LINE,
+        = TRasterizationStateInfo<EPolygonMode::FILL,
                                   ECullMode::BACK,
                                   EFrontFace::CCW,
                                   false,
@@ -343,7 +349,7 @@ class BasePass : public RenderStage {
 
       viewUniformBuffer_ = std::shared_ptr<IUniformBufferBlock>(
           g_rhi->createUniformBufferBlock(Name("ViewUniformParameters"),
-                                          LifeTimeType::MultiFrame,
+                                          LifeTimeType::OneFrame,
                                           sizeof(ubo)));
       viewUniformBuffer_->updateBufferData(&ubo, sizeof(ubo));
 
@@ -359,8 +365,12 @@ class BasePass : public RenderStage {
                         resourceAllocator.alloc<UniformBufferResource>(
                             viewUniformBuffer_.get())));
 
+      if (viewShaderBindingInstance_) {
+        viewShaderBindingInstance_->free();
+      }
+
       viewShaderBindingInstance_ = g_rhi->createShaderBindingInstance(
-          shaderBindingArray, ShaderBindingInstanceType::MultiFrame);
+          shaderBindingArray, ShaderBindingInstanceType::SingleFrame);
     }
 
     // Directional Light
@@ -393,7 +403,7 @@ class BasePass : public RenderStage {
 
         directionalLightUniformBuffer_ = std::shared_ptr<IUniformBufferBlock>(
             g_rhi->createUniformBufferBlock(Name("DirectionalLightBuffer"),
-                                            LifeTimeType::MultiFrame,
+                                            LifeTimeType::OneFrame,
                                             sizeof(dld)));
         directionalLightUniformBuffer_->updateBufferData(&dld, sizeof(dld));
 
@@ -408,9 +418,13 @@ class BasePass : public RenderStage {
                           dirLightResAlloc.alloc<UniformBufferResource>(
                               directionalLightUniformBuffer_.get())));
 
+        if (directionalLightShaderBindingInstance_) {
+          directionalLightShaderBindingInstance_->free();
+        }
+
         directionalLightShaderBindingInstance_
             = g_rhi->createShaderBindingInstance(
-                directionalLightSBA, ShaderBindingInstanceType::MultiFrame);
+                directionalLightSBA, ShaderBindingInstanceType::SingleFrame);
       } else {
         directionalLightShaderBindingInstance_ = nullptr;
       }
@@ -444,9 +458,8 @@ class BasePass : public RenderStage {
         pld.position[2] = transform.translation.z();
 
         pointLightUniformBuffer_ = std::shared_ptr<IUniformBufferBlock>(
-            g_rhi->createUniformBufferBlock(Name("PointLightBuffer"),
-                                            LifeTimeType::MultiFrame,
-                                            sizeof(pld)));
+            g_rhi->createUniformBufferBlock(
+                Name("PointLightBuffer"), LifeTimeType::OneFrame, sizeof(pld)));
         pointLightUniformBuffer_->updateBufferData(&pld, sizeof(pld));
 
         ShaderBindingArray                   pointLightSBA;
@@ -460,8 +473,12 @@ class BasePass : public RenderStage {
                           pointLightResAlloc.alloc<UniformBufferResource>(
                               pointLightUniformBuffer_.get())));
 
+        if (pointLightShaderBindingInstance_) {
+          pointLightShaderBindingInstance_->free();
+        }
+
         pointLightShaderBindingInstance_ = g_rhi->createShaderBindingInstance(
-            pointLightSBA, ShaderBindingInstanceType::MultiFrame);
+            pointLightSBA, ShaderBindingInstanceType::SingleFrame);
       } else {
         pointLightShaderBindingInstance_ = nullptr;
       }
@@ -516,9 +533,8 @@ class BasePass : public RenderStage {
         sld.padding[2]   = 0.0f;
 
         spotLightUniformBuffer_ = std::shared_ptr<IUniformBufferBlock>(
-            g_rhi->createUniformBufferBlock(Name("SpotLightBuffer"),
-                                            LifeTimeType::MultiFrame,
-                                            sizeof(sld)));
+            g_rhi->createUniformBufferBlock(
+                Name("SpotLightBuffer"), LifeTimeType::OneFrame, sizeof(sld)));
         spotLightUniformBuffer_->updateBufferData(&sld, sizeof(sld));
 
         ShaderBindingArray                   spotLightSBA;
@@ -532,8 +548,12 @@ class BasePass : public RenderStage {
                           spotLightResAlloc.alloc<UniformBufferResource>(
                               spotLightUniformBuffer_.get())));
 
+        if (spotLightShaderBindingInstance_) {
+          spotLightShaderBindingInstance_->free();
+        }
+
         spotLightShaderBindingInstance_ = g_rhi->createShaderBindingInstance(
-            spotLightSBA, ShaderBindingInstanceType::MultiFrame);
+            spotLightSBA, ShaderBindingInstanceType::SingleFrame);
       } else {
         spotLightShaderBindingInstance_ = nullptr;
       }
@@ -598,7 +618,7 @@ class BasePass : public RenderStage {
         ShaderBindingLayoutArray shaderBindingLayoutArray;
         for (int32_t i = 0; i < shaderBindingInstanceArray.m_numOfData_; ++i) {
           shaderBindingLayoutArray.add(
-              shaderBindingInstanceArray[i]->m_shaderBindingsLayouts_);
+              shaderBindingInstanceArray[i]->m_shaderBindingsLayouts_.get());
         }
 
         VertexBufferArray vertexBufferArray;
@@ -703,7 +723,7 @@ class BasePass : public RenderStage {
     }
 
     return g_rhi->createShaderBindingInstance(
-        shaderBindingArray, ShaderBindingInstanceType::MultiFrame);
+        shaderBindingArray, ShaderBindingInstanceType::SingleFrame);
   }
 
   std::shared_ptr<RenderContext> m_renderContext_;
@@ -735,6 +755,12 @@ class BasePass : public RenderStage {
     std::shared_ptr<VertexBuffer>          instanceBuffer_;
     uint32_t                               instanceCount = 0;
     std::shared_ptr<ShaderBindingInstance> materialShaderBindingInstance_;
+
+    ~DrawData() {
+      // if (materialShaderBindingInstance_) {
+      //   materialShaderBindingInstance_->free();
+      // }
+    }
   };
 
   std::vector<DrawData> drawDataList_;

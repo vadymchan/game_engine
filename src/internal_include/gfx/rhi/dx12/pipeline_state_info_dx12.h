@@ -8,7 +8,6 @@
 #include "gfx/rhi/dx12/descriptor_heap_dx12.h"
 #include "gfx/rhi/pipeline_state_info.h"
 
-
 namespace game_engine {
 
 struct CommandBufferDx12;
@@ -210,9 +209,8 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
 
   virtual void* createGraphicsPipelineState() override;
   virtual void* createComputePipelineState() override;
-  // virtual void* createRaytracingPipelineState() override;
-  virtual void  bind(const std::shared_ptr<RenderFrameContext>&
-                         renderFrameContext) const override;
+  virtual void  bind(
+       const std::shared_ptr<CommandBuffer>& commandBuffer) const override;
 
   virtual void* getHandle() const override { return nullptr; }
 
@@ -222,11 +220,7 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
 
   // ======= BEGIN: public misc methods =======================================
 
-
-
   // ======= END: public misc methods   =======================================
-
-  void bind(std::shared_ptr<CommandBufferDx12> commandList) const;
 
   void release();
 
@@ -237,13 +231,9 @@ struct PipelineStateInfoDx12 : public PipelineStateInfo {
   std::vector<D3D12_RECT>     m_scissors_;
 
   // TODO: currently not used
-  //ComPtr<ID3D12StateObject> m_raytracingStateObject_;
+  // ComPtr<ID3D12StateObject> m_raytracingStateObject_;
 
   // ======= END: public misc fields   ========================================
-
-
-
-
 };
 
 }  // namespace game_engine

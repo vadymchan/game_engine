@@ -150,16 +150,14 @@ VkPipelineVertexInputStateCreateInfo
 }
 
 void VertexBufferVk::bind(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
-  vkCmdBindVertexBuffers(
-      (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-          ->getNativeHandle(),
-      m_bindInfos_.m_startBindingIndex_,
-      (uint32_t)m_bindInfos_.m_buffers_.size(),
-      &m_bindInfos_.m_buffers_[0],
-      &m_bindInfos_.m_offsets_[0]);
+    const std::shared_ptr<CommandBuffer>& commandBuffer) const {
+  assert(commandBuffer);
+
+  vkCmdBindVertexBuffers((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                         m_bindInfos_.m_startBindingIndex_,
+                         (uint32_t)m_bindInfos_.m_buffers_.size(),
+                         &m_bindInfos_.m_buffers_[0],
+                         &m_bindInfos_.m_offsets_[0]);
 }
 
 bool VertexBufferVk::initialize(
@@ -468,48 +466,17 @@ void VertexBufferVk::s_createVertexInputState(
 // IndexBufferVk
 // ================================================================================
 void IndexBufferVk::bind(
-    const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {
-  // TODO: old code (remove)
-  // assert(indexStreamData->stream->Attributes.size() != 0);
-  // VkIndexType IndexType
-  //     = VK_INDEX_TYPE_UINT16;  // TODO: consider remove default enum constant
-  // switch (indexStreamData->stream->Attributes[0].format) {
-  //   case VK_FORMAT_R8_UINT:
-  //     IndexType = VK_INDEX_TYPE_UINT8_EXT;  // TODO: check that
-  //                                           // VK_EXT_index_type_uint8
-  //                                           // extension is available
-  //     break;
-  //   case VK_FORMAT_R16_UINT:
-  //     IndexType = VK_INDEX_TYPE_UINT16;
-  //     break;
-  //   case VK_FORMAT_R32_UINT:
-  //     IndexType = VK_INDEX_TYPE_UINT32;
-  //     break;
-  //   default:
-  //     // TODO: log error
-  //     break;
-  // }
-  // assert(renderFrameContext);
-  // assert(renderFrameContext->getActiveCommandBuffer());
-  // vkCmdBindIndexBuffer(
-  //     (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-  //         ->getNativeHandle(),
-  //     BufferPtr->m_buffer,
-  //     BufferPtr->Offset,
-  //     IndexType);
-
+    const std::shared_ptr<CommandBuffer>& commandBuffer) const {
   assert(m_indexStreamData_->m_stream_->m_attributes_.size() != 0);
 
-  assert(renderFrameContext);
-  assert(renderFrameContext->getActiveCommandBuffer());
+  assert(commandBuffer);
+
   const VkIndexType IndexType = getVulkanIndexFormat(
       m_indexStreamData_->m_stream_->m_attributes_[0].m_underlyingType_);
-  vkCmdBindIndexBuffer(
-      (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
-          ->getNativeHandle(),
-      m_bufferPtr_->m_buffer_,
-      m_bufferPtr_->m_offset_,
-      IndexType);
+  vkCmdBindIndexBuffer((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                       m_bufferPtr_->m_buffer_,
+                       m_bufferPtr_->m_offset_,
+                       IndexType);
 }
 
 VkIndexType IndexBufferVk::getVulkanIndexFormat(EBufferElementType type) const {

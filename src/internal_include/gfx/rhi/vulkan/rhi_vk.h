@@ -17,12 +17,9 @@
 #include "gfx/rhi/rhi.h"
 #include "gfx/rhi/vulkan/command_pool_vk.h"
 #include "gfx/rhi/vulkan/descriptor_pool_vk.h"
-#include "gfx/rhi/vulkan/frame_buffer_pool_vk.h"
 #include "gfx/rhi/vulkan/memory_pool_vk.h"
 #include "gfx/rhi/vulkan/pipeline_state_info_vk.h"
 #include "gfx/rhi/vulkan/render_frame_context_vk.h"
-#include "gfx/rhi/vulkan/render_target_pool_vk.h"
-#include "gfx/rhi/vulkan/render_target_vk.h"
 #include "gfx/rhi/vulkan/rhi_type_vk.h"
 #include "gfx/rhi/vulkan/ring_buffer_vk.h"
 #include "gfx/rhi/vulkan/semaphore_vk.h"
@@ -60,8 +57,9 @@ class RhiVk : public RHI {
 
   // ======= BEGIN: public static fields ======================================
 
-  static std::unordered_map<size_t, ShaderBindingLayoutVk*> s_shaderBindingPool;
-  static TResourcePool<SamplerStateInfoVk, MutexRWLock>     s_samplerStatePool;
+  static std::unordered_map<size_t, std::shared_ptr<ShaderBindingLayoutVk>>
+                                                        s_shaderBindingPool;
+  static TResourcePool<SamplerStateInfoVk, MutexRWLock> s_samplerStatePool;
   static TResourcePool<RasterizationStateInfoVk, MutexRWLock>
       s_rasterizationStatePool;
   static TResourcePool<StencilOpStateInfoVk, MutexRWLock> s_stencilOpStatePool;
@@ -139,12 +137,12 @@ class RhiVk : public RHI {
     return s_blendingStatePool.getOrCreate(initializer);
   }
 
-  virtual ShaderBindingLayout* createShaderBindings(
+  virtual std::shared_ptr<ShaderBindingLayout> createShaderBindings(
       const ShaderBindingArray& shaderBindingArray) const override;
 
   virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
-      const ShaderBindingInstanceType type) const override;
+      const ShaderBindingInstanceType type) override;
 
   virtual PipelineStateInfo* createPipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
@@ -239,77 +237,52 @@ class RhiVk : public RHI {
 
   virtual void incrementFrameNumber() override { ++m_currentFrameNumber_; }
 
-  void drawArrays(const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-                  /*EPrimitiveType                               type, -
-                     deprecated (used in previous rendering api)*/
-                  int32_t                                    vertStartIndex,
+  void drawArrays(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                  int32_t                               vertStartIndex,
                   int32_t vertCount) const override;
 
-  void drawArraysInstanced(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      int32_t                                    vertStartIndex,
-      int32_t                                    vertCount,
-      int32_t                                    instanceCount) const override;
+  void drawArraysInstanced(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                           int32_t                               vertStartIndex,
+                           int32_t                               vertCount,
+                           int32_t instanceCount) const override;
 
-  void drawElements(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount) const override;
+  void drawElements(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                    int32_t                               startIndex,
+                    int32_t indexCount) const override;
 
   void drawElementsInstanced(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount,
-      int32_t                                    instanceCount) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               startIndex,
+      int32_t                               indexCount,
+      int32_t                               instanceCount) const override;
 
   void drawElementsBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount,
-      int32_t baseVertexIndex) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               startIndex,
+      int32_t                               indexCount,
+      int32_t                               baseVertexIndex) const override;
 
   void drawElementsInstancedBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount,
-      int32_t                                    baseVertexIndex,
-      int32_t                                    instanceCount) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               startIndex,
+      int32_t                               indexCount,
+      int32_t                               baseVertexIndex,
+      int32_t                               instanceCount) const override;
 
-  void drawIndirect(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      IBuffer*                                   buffer,
-      int32_t                                    startIndex,
-      int32_t                                    drawCount) const override;
+  void drawIndirect(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                    IBuffer*                              buffer,
+                    int32_t                               startIndex,
+                    int32_t drawCount) const override;
 
-  void drawElementsIndirect(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      /*EPrimitiveType                               type, - deprecated (used in
-         previous rendering api)*/
-      IBuffer*                                   buffer,
-      int32_t                                    startIndex,
-      int32_t                                    drawCount) const override;
+  void drawElementsIndirect(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                            IBuffer*                              buffer,
+                            int32_t                               startIndex,
+                            int32_t drawCount) const override;
 
-  void dispatchCompute(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      uint32_t                                   numGroupsX,
-      uint32_t                                   numGroupsY,
-      uint32_t                                   numGroupsZ) const override;
+  void dispatchCompute(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                       uint32_t                              numGroupsX,
+                       uint32_t                              numGroupsY,
+                       uint32_t numGroupsZ) const override;
 
   void flush() const override;
 

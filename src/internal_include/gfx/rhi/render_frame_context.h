@@ -51,10 +51,8 @@ struct RenderFrameContext
 
   // ======= BEGIN: public misc fields ========================================
 
-  // RaytracingScene*                m_raytracingScene_            = nullptr;
   std::shared_ptr<SceneRenderTarget> m_sceneRenderTargetPtr_       = nullptr;
   uint32_t                           m_frameIndex_                 = -1;
-  bool                               m_useForwardRenderer_         = true;
   bool                               m_isBeginActiveCommandbuffer_ = false;
 
   // ======= END: public misc fields   ========================================

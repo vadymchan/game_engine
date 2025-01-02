@@ -58,8 +58,7 @@ std::shared_ptr<CommandBuffer>
       const VkResult Result = vkGetFenceStatus(
           g_rhiVk->m_device_,
           (VkFence)m_availableCommandBuffers_[i]->getFenceHandle());
-      if (Result == VK_SUCCESS)  // VK_SUCCESS Signaled
-      {
+      if (Result == VK_SUCCESS) {
         std::shared_ptr<CommandBufferVk> commandBuffer
             = m_availableCommandBuffers_[i];
         m_availableCommandBuffers_.erase(m_availableCommandBuffers_.begin()
@@ -72,12 +71,6 @@ std::shared_ptr<CommandBuffer>
       }
     }
   }
-
-  // GlobalLogger::Log(
-  //     LogLevel::Debug,
-  //     "Value of SelectedCommandBuffer: "
-  //         +
-  //         std::to_string(reinterpret_cast<uintptr_t>(SelectedCommandBuffer)));
 
   if (!SelectedCommandBuffer) {
     // TODO: separate to function alloc

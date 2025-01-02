@@ -73,7 +73,6 @@ struct WriteDescriptorSet {
   // ======= END: public misc fields   ========================================
 };
 
-// TODO: move to Vulkan folder
 struct ShaderBindingInstanceVk : public ShaderBindingInstance {
   // ======= BEGIN: public static methods =====================================
 
@@ -118,12 +117,6 @@ struct ShaderBindingInstanceVk : public ShaderBindingInstance {
 
   // ======= END: public overridden methods   =================================
 
-  // ======= BEGIN: public constants ==========================================
-
-  const struct ShaderBindingLayoutVk* m_shaderBindingsLayouts_ = nullptr;
-
-  // ======= END: public constants   ==========================================
-
   // ======= BEGIN: public misc fields ========================================
 
   // When the DescriptorPool is released, everything can be handled, so it is
@@ -140,8 +133,6 @@ struct ShaderBindingInstanceVk : public ShaderBindingInstance {
 
   // ======= END: private misc fields   =======================================
 };
-
-struct ShaderBindingLayoutVk;
 
 struct ShaderBindingLayoutVk : public ShaderBindingLayout {
   // ======= BEGIN: public static methods =====================================
@@ -181,7 +172,7 @@ struct ShaderBindingLayoutVk : public ShaderBindingLayout {
 
   virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
-      const ShaderBindingInstanceType type) const override;
+      const ShaderBindingInstanceType type) override;
 
   virtual size_t getHash() const override;
 

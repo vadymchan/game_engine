@@ -6,7 +6,6 @@
 #include "gfx/rhi/shader_bindable_resource.h"
 #include "gfx/rhi/vulkan/buffer_vk.h"
 #include "gfx/rhi/vulkan/render_pass_vk.h"
-#include "gfx/rhi/vulkan/render_target_vk.h"
 #include "gfx/rhi/vulkan/shader_binding_layout_vk.h"
 #include "gfx/rhi/vulkan/shader_vk.h"
 
@@ -221,8 +220,8 @@ struct PipelineStateInfoVk : public PipelineStateInfo {
   virtual void* createComputePipelineState() override;
   // TODO: implement
   // virtual void* createRaytracingPipelineState() override;
-  virtual void  bind(const std::shared_ptr<RenderFrameContext>&
-                         renderFrameContext) const override;
+  virtual void  bind(
+       const std::shared_ptr<CommandBuffer>& commandBuffer) const override;
 
   virtual void* getHandle() const override { return m_pipeline_; }
 

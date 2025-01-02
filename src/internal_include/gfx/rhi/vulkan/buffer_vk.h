@@ -228,8 +228,8 @@ struct VertexBufferVk : public VertexBuffer {
   virtual bool initialize(
       const std::shared_ptr<VertexStreamData>& streamData) override;
 
-  virtual void bind(const std::shared_ptr<RenderFrameContext>&
-                        renderFrameContext) const override;
+  virtual void bind(
+      const std::shared_ptr<CommandBuffer>& commandBuffer) const override;
 
   virtual int32_t getElementCount() const {
     return m_vertexStreamData_ ? m_vertexStreamData_->m_elementCount_ : 0;
@@ -315,8 +315,8 @@ struct IndexBufferVk : public IndexBuffer {
   virtual bool initialize(
       const std::shared_ptr<IndexStreamData>& streamData) override;
 
-  virtual void bind(const std::shared_ptr<RenderFrameContext>&
-                        renderFrameContext) const override;
+  virtual void bind(
+      const std::shared_ptr<CommandBuffer>& commandBuffer) const override;
 
   virtual BufferVk* getBuffer() const override { return m_bufferPtr_.get(); }
 

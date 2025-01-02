@@ -655,6 +655,8 @@ enum class ShaderBindingInstanceType : uint8_t {
   Max
 };
 
+struct ShaderBindingLayout;
+
 struct ShaderBindingInstance
     : public std::enable_shared_from_this<ShaderBindingInstance> {
   // ======= BEGIN: public destructor =========================================
@@ -684,12 +686,12 @@ struct ShaderBindingInstance
 
   // ======= END: public overridden methods   =================================
 
-  // ======= BEGIN: public constants ==========================================
+  // ======= BEGIN: public misc fields ========================================
 
   // TODO: check according to naming conventions
-  const struct ShaderBindingLayout* m_shaderBindingsLayouts_ = nullptr;
+  std::shared_ptr<ShaderBindingLayout> m_shaderBindingsLayouts_ = nullptr;
 
-  // ======= END: public constants   ==========================================
+  // ======= END: public misc fields   ========================================
 
   private:
   // ======= BEGIN: private misc fields =======================================
@@ -706,7 +708,8 @@ using ShaderBindingInstanceArray
 using ShaderBindingInstancePtrArray
     = std::vector<std::shared_ptr<ShaderBindingInstance>>;
 
-struct ShaderBindingLayout {
+struct ShaderBindingLayout
+    : public std::enable_shared_from_this<ShaderBindingLayout> {
   // ======= BEGIN: public destructor =========================================
 
   virtual ~ShaderBindingLayout() {}
@@ -721,7 +724,7 @@ struct ShaderBindingLayout {
 
   virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
-      const ShaderBindingInstanceType type) const {
+      const ShaderBindingInstanceType type) {
     return nullptr;
   }
 

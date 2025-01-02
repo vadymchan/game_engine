@@ -3,7 +3,6 @@
 
 #include "gfx/rhi/render_pass.h"
 #include "gfx/rhi/vulkan/command_buffer_vk.h"
-#include "gfx/rhi/vulkan/render_target_vk.h"
 #include "utils/third_party/xxhash_util.h"
 
 #include <math_library/vector.h>

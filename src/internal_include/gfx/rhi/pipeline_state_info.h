@@ -861,8 +861,8 @@ struct PipelineStateInfo {
   // TODO: implement in the future
   // virtual void* createRaytracingPipelineState() { return nullptr; }
 
-  virtual void bind(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext) const {}
+  virtual void bind(const std::shared_ptr<CommandBuffer>& commandBuffer) const {
+  }
 
   // ======= END: public overridden methods   =================================
 

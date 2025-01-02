@@ -184,7 +184,8 @@ class RhiDx12 : public RHI {
   static constexpr uint64_t s_kPlacedResourceSizeThreshold = 512 * 512 * 4;
   static constexpr bool     s_kIsUsePlacedResource         = true;
 
-  static std::unordered_map<size_t, ShaderBindingLayout*> s_shaderBindingPool;
+  static std::unordered_map<size_t, std::shared_ptr<ShaderBindingLayout>>
+                      s_shaderBindingPool;
   mutable MutexRWLock m_shaderBindingPoolLock_;
 
   static TResourcePool<SamplerStateInfoDx12, MutexRWLock> s_samplerStatePool;
@@ -229,7 +230,7 @@ class RhiDx12 : public RHI {
   virtual std::shared_ptr<Texture> createTextureFromData(
       const std::shared_ptr<Image>& image) const override;
 
-  virtual ShaderBindingLayout* createShaderBindings(
+  virtual std::shared_ptr<ShaderBindingLayout> createShaderBindings(
       const ShaderBindingArray& shaderBindingArray) const override;
 
   virtual SamplerStateInfo* createSamplerState(
@@ -285,64 +286,49 @@ class RhiDx12 : public RHI {
 
   virtual std::shared_ptr<ShaderBindingInstance> createShaderBindingInstance(
       const ShaderBindingArray&       shaderBindingArray,
-      const ShaderBindingInstanceType type) const override;
+      const ShaderBindingInstanceType type) override;
 
-  virtual void drawArrays(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      int32_t                                    vertStartIndex,
-      int32_t                                    vertCount) const override;
+  virtual void drawArrays(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                          int32_t                               vertStartIndex,
+                          int32_t vertCount) const override;
   virtual void drawArraysInstanced(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      int32_t                                    vertStartIndex,
-      int32_t                                    vertCount,
-      int32_t                                    instanceCount) const override;
-  virtual void drawElements(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               vertStartIndex,
+      int32_t                               vertCount,
+      int32_t                               instanceCount) const override;
+  virtual void drawElements(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                            int32_t                               startIndex,
+                            int32_t indexCount) const override;
   virtual void drawElementsInstanced(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount,
-      int32_t                                    instanceCount) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               startIndex,
+      int32_t                               indexCount,
+      int32_t                               instanceCount) const override;
   virtual void drawElementsBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount,
-      int32_t baseVertexIndex) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               startIndex,
+      int32_t                               indexCount,
+      int32_t                               baseVertexIndex) const override;
   virtual void drawElementsInstancedBaseVertex(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      int32_t                                    elementSize,
-      int32_t                                    startIndex,
-      int32_t                                    indexCount,
-      int32_t                                    baseVertexIndex,
-      int32_t                                    instanceCount) const override;
-  virtual void drawIndirect(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      IBuffer*                                   buffer,
-      int32_t                                    startIndex,
-      int32_t                                    drawCount) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      int32_t                               startIndex,
+      int32_t                               indexCount,
+      int32_t                               baseVertexIndex,
+      int32_t                               instanceCount) const override;
+  virtual void drawIndirect(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                            IBuffer*                              buffer,
+                            int32_t                               startIndex,
+                            int32_t drawCount) const override;
   virtual void drawElementsIndirect(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      // EPrimitiveType                          type,
-      IBuffer*                                   buffer,
-      int32_t                                    startIndex,
-      int32_t                                    drawCount) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      IBuffer*                              buffer,
+      int32_t                               startIndex,
+      int32_t                               drawCount) const override;
   virtual void dispatchCompute(
-      const std::shared_ptr<RenderFrameContext>& renderFrameContext,
-      uint32_t                                   numGroupsX,
-      uint32_t                                   numGroupsY,
-      uint32_t                                   numGroupsZ) const override;
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      uint32_t                              numGroupsX,
+      uint32_t                              numGroupsY,
+      uint32_t                              numGroupsZ) const override;
 
   virtual std::shared_ptr<RenderTarget> createRenderTarget(
       const RenderTargetInfo& info) const override;
@@ -427,8 +413,6 @@ class RhiDx12 : public RHI {
       const std::shared_ptr<Image>& image        = nullptr,
       const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
       const wchar_t*                resourceName = nullptr) const override;
-
-  virtual bool isSupportVSync() const override;
 
   virtual RenderPass* getOrCreateRenderPass(
       const std::vector<Attachment>& colorAttachments,

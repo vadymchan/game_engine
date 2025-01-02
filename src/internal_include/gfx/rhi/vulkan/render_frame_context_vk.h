@@ -4,7 +4,6 @@
 #include "gfx/rhi/render_frame_context.h"
 #include "gfx/rhi/semaphore_manager.h"
 #include "gfx/rhi/vulkan/command_buffer_vk.h"
-#include "gfx/rhi/vulkan/render_target_vk.h"
 
 #include <memory>
 

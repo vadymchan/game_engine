@@ -10,26 +10,12 @@
 #include <map>
 #include <unordered_map>
 
-#define USE_RESET_DESCRIPTOR_POOL 0
+#define USE_RESET_DESCRIPTOR_POOL 1
 
 namespace game_engine {
 
-// TODO: check whether it works correctly
-// const float g_kDefaultPoolSizes[] = {
-//  2,        // VK_DESCRIPTOR_TYPE_SAMPLER
-//  2,        // VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-//  2,        // VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
-//  1 / 2.0,  // VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
-//  1 / 4.0,  // VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-//  4,        // VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
-//  1 / 8.0,  // VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
-//};
+// TODO: currently multiframe descriptor sets are not supported (need to add
+// correct handler)
 
 const std::unordered_map<VkDescriptorType, float> g_kDefaultPoolSizes = {
   {               VK_DESCRIPTOR_TYPE_SAMPLER,       2},
@@ -44,7 +30,7 @@ const std::unordered_map<VkDescriptorType, float> g_kDefaultPoolSizes = {
   {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 / 8.0},
   {      VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 / 8.0},
   {  VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK, 1 / 8.0},
- //{VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 / 8.0},
+  //{VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1 / 8.0},
 };
 
 struct DescriptorPoolVk {
