@@ -36,11 +36,6 @@ auto main(int argc, char* argv[]) -> int {
 
   engine.run();
 
-  engine.release();
-
-  // TODO: move to other place
-  game_engine::g_rhi->release();
-
   SDL_Quit();
 
   return EXIT_SUCCESS;
