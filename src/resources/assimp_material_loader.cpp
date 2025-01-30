@@ -130,7 +130,6 @@ std::string AssimpMaterialLoader::aiTextureTypeToString(aiTextureType type) {
 
 std::shared_ptr<Texture> AssimpMaterialLoader::createTextureFromImage(
     const std::shared_ptr<Image>& image) {
-  // TODO: Implement actual texture creation logic
   return g_rhi->createTextureFromData(image);
 }
 
