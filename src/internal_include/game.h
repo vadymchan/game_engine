@@ -1,11 +1,11 @@
 #ifndef GAME_ENGINE_GAME_H
 #define GAME_ENGINE_GAME_H
 
-#include "gfx/renderer/primitive_util.h"
+// #include "gfx/renderer/primitive_util.h"
 #include "gfx/renderer/renderer.h"
-#include "gfx/scene/camera_old.h"
-#include "gfx/scene/object.h"
-#include "gfx/scene/view.h"
+// #include "gfx/scene/camera_old.h"
+// #include "gfx/scene/object.h"
+// #include "gfx/scene/view.h"
 
 #include <bitset>
 #include <cassert>
@@ -93,20 +93,6 @@ class Game {
 
   void setup();
 
-  void spawnObjects(ESpawnedType spawnType);
-
-  void removeSpawnedObjects();
-
-  void spawnTestPrimitives();
-
-  void spawnGraphTestFunc();
-
-  void spawnCubePrimitives();
-
-  void spawnInstancingPrimitives();
-
-  void spawnIndirectDrawPrimitives();
-
   void update(float deltaTime);
 
   void linkWithEngine(const Engine& engine);
@@ -118,10 +104,6 @@ class Game {
   // ======= END: public misc methods   =======================================
 
   // ======= BEGIN: public misc fields ========================================
-
-  // std::shared_ptr<CameraOld> m_mainCamera_ = nullptr;
-
-  std::vector<Object*> m_spawnedObjects_;
 
   ESpawnedType m_spawnedType_ = ESpawnedType::None;
 
@@ -137,14 +119,6 @@ class Game {
   float m_pitch_                     = 0.0f;
   bool  m_isRightMouseButtonPressed_ = false;
 
-  // TODO: not used
-  std::future<void>    m_resourceLoadCompleteEvent_;
-  // TODO: not used
-  std::vector<Object*> m_completedAsyncLoadObjects_;
-
-  // TODO: not used
-  MutexLock m_asyncLoadLock_;
-
   // ======= END: public misc fields   ========================================
 
   private:
@@ -157,7 +131,7 @@ class Game {
 
   // ======= BEGIN: private misc fields =======================================
 
-  std::shared_ptr<Scene> m_scene_;
+  std::weak_ptr<Scene> m_scene_;
 
   // ======= END: private misc fields   =======================================
 };
