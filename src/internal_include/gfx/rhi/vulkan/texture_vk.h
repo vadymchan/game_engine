@@ -31,9 +31,10 @@ class TextureVk : public Texture {
             ETextureFormat            format,
             const math::Dimension2Di& extent,
             uint32_t                  layerCount  = 1,
+            EResourceLayout           layout      = EResourceLayout::UNDEFINED,
             EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
             bool                      sRGB        = false)
-      : Texture(type, format, extent, layerCount, sampleCount, sRGB) {}
+      : Texture(type, format, extent, layerCount, layout, sampleCount, sRGB) {}
 
   // ======= END: public constructors   =======================================
 
@@ -51,8 +52,6 @@ class TextureVk : public Texture {
 
   virtual void* getSamplerStateHandle() const override { return m_sampler_; }
 
-  virtual EResourceLayout getLayout() const override { return m_imageLayout_; }
-
   // ======= END: public overridden methods   =================================
 
   // ======= BEGIN: public misc methods =======================================
@@ -66,9 +65,8 @@ class TextureVk : public Texture {
   VkImage     m_image_ = VK_NULL_HANDLE;  // TODO: consider using pool
   VkImageView m_imageView_
       = VK_NULL_HANDLE;  // TODO: consider several image views per VkImage
-  VkSampler       m_sampler_      = VK_NULL_HANDLE;
-  EResourceLayout m_imageLayout_  = EResourceLayout::UNDEFINED;
-  VkDeviceMemory  m_deviceMemory_ = VK_NULL_HANDLE;
+  VkSampler      m_sampler_      = VK_NULL_HANDLE;
+  VkDeviceMemory m_deviceMemory_ = VK_NULL_HANDLE;
 
   // TODO:
   // - UAV image view

@@ -8,6 +8,39 @@
 
 namespace game_engine {
 
+class Scene;
+struct RenderFrameContext;
+
+// TODO: move this to a separate file (editor related)
+enum class RenderMode {
+  Solid,
+  Wireframe,
+  NormalMapVisualization,
+  VertexNormalVisualization,
+  ShaderOverdraw,
+};
+
+enum class PostProcessMode {
+  None,
+  Grayscale,
+  ColorInversion
+};
+
+struct EditorRenderParams {
+  RenderMode         renderMode;
+  PostProcessMode    postProcessMode;
+  // TODO: use value from config
+  math::Dimension2Di editorViewportDimension = math::Dimension2Di(1, 1);
+};
+
+// TODO: Move this to a separate file
+struct RenderContext {
+  std::shared_ptr<Scene>              scene;
+  std::shared_ptr<RenderFrameContext> renderFrameContext;
+  math::Dimension2Di                  viewportDimension;
+  EditorRenderParams                  editorRenderParams;
+};
+
 struct RenderFrameContext
     : public std::enable_shared_from_this<RenderFrameContext> {
   // ======= BEGIN: public nested types =======================================
@@ -37,8 +70,6 @@ struct RenderFrameContext
   // ======= BEGIN: public overridden methods =================================
 
   virtual void destroy();
-  virtual bool beginActiveCommandBuffer();
-  virtual bool endActiveCommandBuffer();
 
   virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) {}
@@ -51,9 +82,8 @@ struct RenderFrameContext
 
   // ======= BEGIN: public misc fields ========================================
 
-  std::shared_ptr<SceneRenderTarget> m_sceneRenderTargetPtr_       = nullptr;
-  uint32_t                           m_frameIndex_                 = -1;
-  bool                               m_isBeginActiveCommandbuffer_ = false;
+  std::shared_ptr<SceneRenderTarget> m_sceneRenderTarget_ = nullptr;
+  uint32_t                           m_frameIndex_        = -1;
 
   // ======= END: public misc fields   ========================================
 

@@ -37,8 +37,6 @@ struct IUniformBufferBlock : public ShaderBindableResource {
   virtual void init(size_t size) = 0;
   virtual void release()         = 0;
 
-  virtual void bind(const Shader* shader) const {}
-
   virtual void updateBufferData(const void* newData, size_t size) = 0;
   virtual void clearBuffer(int32_t clearValue = 0)                = 0;
 

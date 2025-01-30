@@ -9,8 +9,6 @@
 #include <memory>
 
 namespace game_engine {
-// extern std::shared_ptr<RenderTarget> g_EyeAdaptationARTPtr;
-// extern std::shared_ptr<RenderTarget> g_EyeAdaptationBRTPtr;
 
 class RenderTargetPool {
   public:
@@ -18,7 +16,7 @@ class RenderTargetPool {
 
   struct RenderTargetPoolResource {
     bool                          m_isUsing_ = false;
-    std::shared_ptr<RenderTarget> m_renderTargetPtr_;
+    std::shared_ptr<RenderTarget> m_renderTarget_;
   };
 
   // ======= END: public nested types   =======================================
@@ -33,23 +31,12 @@ class RenderTargetPool {
   }
 
   static void s_release() {
-    // if (g_EyeAdaptationARTPtr) {
-    //   g_EyeAdaptationARTPtr->Return();
-    //   g_EyeAdaptationARTPtr.reset();
-    // }
-    // if (g_EyeAdaptationBRTPtr) {
-    //   g_EyeAdaptationBRTPtr->Return();
-    //   g_EyeAdaptationBRTPtr.reset();
-    // }
-
     m_renderTargetResourceMap_.clear();
     m_renderTargetHashVariableMap_.clear();
   }
 
   static std::shared_ptr<RenderTarget> s_getRenderTarget(
       const RenderTargetInfo& info);
-
-  // static struct Texture* s_getNullTexture(ETextureType type);
 
   // ======= END: public static methods   =====================================
 

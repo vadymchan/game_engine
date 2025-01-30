@@ -255,6 +255,22 @@ void g_copyBufferToTexture(VkBuffer buffer,
                            int32_t  miplevel   = 0,
                            int32_t  layerIndex = 0);
 
+void g_copyImage(VkCommandBuffer commandBuffer,
+                 VkImage         srcImage,
+                 VkImageLayout   srcLayout,
+                 VkImage         dstImage,
+                 VkImageLayout   dstLayout,
+                 uint32_t        srcWidth,
+                 uint32_t        srcHeight,
+                 uint32_t        dstWidth,
+                 uint32_t        dstHeight,
+                 uint32_t        srcLayerCount = 1,
+                 uint32_t        dstLayerCount = 1);
+
+void g_copyTexture(VkCommandBuffer                   commandBuffer,
+                   const std::shared_ptr<TextureVk>& srcTexture,
+                   const std::shared_ptr<TextureVk>& dstTexture);
+
 }  // namespace game_engine
 
 #endif  // GAME_ENGINE_UTILS_VK_H

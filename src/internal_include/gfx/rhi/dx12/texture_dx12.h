@@ -23,6 +23,7 @@ struct TextureDx12 : public Texture {
               ETextureFormat                              format,
               const math::Dimension2Di&                   extent,
               int32_t                                     layerCount,
+              EResourceLayout                             layout,
               EMSAASamples                                sampleCount,
               bool                                        sRGB,
               const RtClearValue&                         clearValue,
@@ -30,15 +31,13 @@ struct TextureDx12 : public Texture {
               DescriptorDx12                              rtv = {},
               DescriptorDx12                              dsv = {},
               DescriptorDx12                              srv = {},
-              DescriptorDx12                              uav = {},
-              EResourceLayout imageLayout = EResourceLayout::UNDEFINED)
-      : Texture(type, format, extent, layerCount, sampleCount, sRGB)
+              DescriptorDx12                              uav = {})
+      : Texture(type, format, extent, layerCount, layout, sampleCount, sRGB)
       , m_texture(image)
       , m_rtv_(rtv)
       , m_dsv_(dsv)
       , m_srv_(srv)
-      , m_uav_(uav)
-      , m_layout_(imageLayout) {}
+      , m_uav_(uav) {}
 
   // ======= END: public constructors   =======================================
 
@@ -56,20 +55,18 @@ struct TextureDx12 : public Texture {
 
   virtual void* getSamplerStateHandle() const override { return nullptr; }
 
-  virtual EResourceLayout getLayout() const override { return m_layout_; }
-
   // ======= END: public overridden methods   =================================
 
   // ======= BEGIN: public misc fields ========================================
 
   std::shared_ptr<CreatedResourceDx12> m_texture;
-  EResourceLayout                      m_layout_ = EResourceLayout::UNDEFINED;
+
   // TODO: consider if naming conventions is correct for srv, uav, rtv, dsv
-  DescriptorDx12                       m_srv_;
-  DescriptorDx12                       m_uav_;
-  DescriptorDx12                       m_rtv_;
-  DescriptorDx12                       m_dsv_;
-  std::map<int32_t, DescriptorDx12>    m_uavMipMap;
+  DescriptorDx12                    m_srv_;
+  DescriptorDx12                    m_uav_;
+  DescriptorDx12                    m_rtv_;
+  DescriptorDx12                    m_dsv_;
+  std::map<int32_t, DescriptorDx12> m_uavMipMap;
 
   // ======= END: public misc fields   ========================================
 };

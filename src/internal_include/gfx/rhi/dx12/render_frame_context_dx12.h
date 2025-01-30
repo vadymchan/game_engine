@@ -27,8 +27,6 @@ struct RenderFrameContextDx12 : public RenderFrameContext {
 
   // ======= BEGIN: public overridden methods =================================
 
-  // TODO: seems this method is not used
-  virtual void queueSubmitCurrentActiveCommandBuffer();
   virtual void submitCurrentActiveCommandBuffer(
       ECurrentRenderPass currentRenderPass) override;
 

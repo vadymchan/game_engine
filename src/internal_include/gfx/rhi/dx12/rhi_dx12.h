@@ -247,7 +247,8 @@ class RhiDx12 : public RHI {
   virtual void incrementFrameNumber() { ++m_currentFrameNumber_; }
 
   virtual bool createShaderInternal(
-      Shader* shader, const ShaderInfo& shaderInfo) const override;
+      std::shared_ptr<Shader> shader,
+      const ShaderInfo&       shaderInfo) const override;
 
   virtual PipelineStateInfo* createPipelineStateInfo(
       const PipelineStateFixedInfo*   pipelineStateFixed,
@@ -258,13 +259,14 @@ class RhiDx12 : public RHI {
       const PushConstant*             pushConstant,
       int32_t                         subpassIndex) const override;
   virtual PipelineStateInfo* createComputePipelineStateInfo(
-      const Shader*                   shader,
+      const std::shared_ptr<Shader>   shader,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const override;
 
   virtual void removePipelineStateInfo(size_t hash) override;
 
-  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() override;
+  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame(
+      const math::Dimension2Di& viewportDimension) override;
   virtual void endRenderFrame(const std::shared_ptr<RenderFrameContext>&
                                   renderFrameContextPtr) override;
 
@@ -334,20 +336,24 @@ class RhiDx12 : public RHI {
       const RenderTargetInfo& info) const override;
 
   // Resource Barrier
-  virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
-                                Texture*                       texture,
-                                EResourceLayout newLayout) const override;
+  virtual bool transitionLayout(
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      const std::shared_ptr<Texture>&       texture,
+      EResourceLayout                       newLayout) const override;
   virtual bool transitionLayoutImmediate(
-      Texture* texture, EResourceLayout newLayout) const override;
+      const std::shared_ptr<Texture>& texture,
+      EResourceLayout                 newLayout) const override;
   virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
                                 IBuffer*                       buffer,
                                 EResourceLayout newLayout) const override;
   virtual bool transitionLayoutImmediate(
       IBuffer* buffer, EResourceLayout newLayout) const override;
 
-  virtual void uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
-                          Texture* texture) const override;
-  virtual void uavBarrierImmediate(Texture* texture) const override;
+  virtual void uavBarrier(
+      std::shared_ptr<CommandBuffer>  commandBuffer,
+      const std::shared_ptr<Texture>& texture) const override;
+  virtual void uavBarrierImmediate(
+      const std::shared_ptr<Texture>& texture) const override;
   virtual void uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
                           IBuffer*                       buffer) const override;
   virtual void uavBarrierImmediate(IBuffer* buffer) const override;
@@ -363,6 +369,11 @@ class RhiDx12 : public RHI {
 
   virtual void flush() const override;
   virtual void finish() const override;
+
+  virtual void copyTexture(
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      const std::shared_ptr<Texture>&       srcTexture,
+      const std::shared_ptr<Texture>&       dstTexture) const override;
 
   // Create Buffers
   virtual std::shared_ptr<IBuffer> createStructuredBuffer(
@@ -458,7 +469,8 @@ class RhiDx12 : public RHI {
     return m_swapchain_;
   }
 
-  virtual ISwapchainImage* getSwapchainImage(int32_t index) const override {
+  virtual std::shared_ptr<ISwapchainImage> getSwapchainImage(
+      int32_t index) const override {
     return m_swapchain_->getSwapchainImage(index);
   }
 
@@ -607,10 +619,15 @@ class RhiDx12 : public RHI {
                                 std::shared_ptr<CommandBufferDx12> commandBuffer) const;
 
   // Resource Barrier
-  bool transitionLayoutInternal(std::shared_ptr<CommandBuffer> commandBuffer,
-                                ID3D12Resource*                resource,
-                                D3D12_RESOURCE_STATES          srcLayout,
-                                D3D12_RESOURCE_STATES          dstLayout) const;
+  bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                        ID3D12Resource*                resource,
+                        D3D12_RESOURCE_STATES          srcLayout,
+                        D3D12_RESOURCE_STATES          dstLayout) const;
+
+  bool transitionLayout(ID3D12GraphicsCommandList* commandBuffer,
+                        ID3D12Resource*            resource,
+                        D3D12_RESOURCE_STATES      srcLayout,
+                        D3D12_RESOURCE_STATES      dstLayout) const;
 
   void waitForGPU() const;
 

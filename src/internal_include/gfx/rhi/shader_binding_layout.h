@@ -130,11 +130,11 @@ struct TextureResource : public SamplerResource {
 
   TextureResource() = default;
 
-  TextureResource(const Texture*          texture,
+  TextureResource(Texture*                texture,
                   const SamplerStateInfo* samplerState,
                   int32_t                 mipLevel = 0)
       : SamplerResource(samplerState)
-      , kTexture(texture)
+      , m_texture_(texture)
       , kMipLevel(mipLevel) {}
 
   // ======= END: public constructors   =======================================
@@ -147,14 +147,14 @@ struct TextureResource : public SamplerResource {
 
   // ======= BEGIN: public overridden methods =================================
 
-  virtual const void* getResource() const override { return kTexture; }
+  virtual const void* getResource() const override { return m_texture_; }
 
   // ======= END: public overridden methods   =================================
 
   // ======= BEGIN: public constants ==========================================
 
-  const Texture* kTexture  = nullptr;
-  const int32_t  kMipLevel = 0;
+  Texture*      m_texture_ = nullptr;
+  const int32_t kMipLevel  = 0;
 
   // ======= END: public constants   ==========================================
 };
@@ -306,16 +306,16 @@ struct TextureResourceBindless : public ShaderBindingResource {
   struct TextureBindData {
     TextureBindData() = default;
 
-    TextureBindData(Texture*          texture,
-                    SamplerStateInfo* samplerState,
-                    int32_t           mipLevel = 0)
-        : m_texture(texture)
+    TextureBindData(std::shared_ptr<Texture> texture,
+                    SamplerStateInfo*        samplerState,
+                    int32_t                  mipLevel = 0)
+        : m_texture(std::move(texture))
         , m_samplerState_(samplerState)
         , m_mipLevel_(mipLevel) {}
 
-    Texture*          m_texture       = nullptr;
-    SamplerStateInfo* m_samplerState_ = nullptr;
-    int32_t           m_mipLevel_     = 0;
+    std::shared_ptr<Texture> m_texture       = nullptr;
+    SamplerStateInfo*        m_samplerState_ = nullptr;
+    int32_t                  m_mipLevel_     = 0;
   };
 
   // ======= END: public nested types   =======================================

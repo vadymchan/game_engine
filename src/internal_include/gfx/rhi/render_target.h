@@ -71,7 +71,7 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
   RenderTarget() = default;
 
   RenderTarget(const std::shared_ptr<Texture>& texturePtr)
-      : m_texturePtr_(texturePtr) {
+      : m_texture_(texturePtr) {
     if (texturePtr) {
       m_info_.m_rype_        = texturePtr->m_type_;
       m_info_.m_format_      = texturePtr->m_format_;
@@ -105,11 +105,10 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
   }
 
   EResourceLayout getLayout() const {
-    return m_texturePtr_ ? m_texturePtr_->getLayout()
-                         : EResourceLayout::UNDEFINED;
+    return m_texture_ ? m_texture_->getLayout() : EResourceLayout::UNDEFINED;
   }
 
-  Texture* getTexture() const { return m_texturePtr_.get(); }
+  std::shared_ptr<Texture> getTexture() const { return m_texture_; }
 
   // ======= END: public getters   ============================================
 
@@ -120,12 +119,10 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
 
   // ======= END: public misc methods   =======================================
 
-
-
   // ======= BEGIN: public misc fields ========================================
 
   RenderTargetInfo         m_info_;
-  std::shared_ptr<Texture> m_texturePtr_;
+  std::shared_ptr<Texture> m_texture_;
 
   mutable size_t m_hash_                          = 0;
   bool           m_isCreatedFromRenderTargetPool_ = false;
@@ -138,7 +135,8 @@ struct RenderTarget final : public std::enable_shared_from_this<RenderTarget> {
 struct SceneRenderTarget {
   // ======= BEGIN: public misc methods =======================================
 
-  void create(std::shared_ptr<Window> window, const ISwapchainImage* swapchain);
+  void create(math::Dimension2Di                      dimensions,
+              const std::shared_ptr<ISwapchainImage>& swapchain);
 
   void returnRt();
 
@@ -147,12 +145,12 @@ struct SceneRenderTarget {
   // ======= BEGIN: public misc fields ========================================
 
   // ======= END: public misc fields   ========================================
-  std::shared_ptr<RenderTarget> m_colorPtr_;
-  std::shared_ptr<RenderTarget> m_depthPtr_;
-  std::shared_ptr<RenderTarget> m_resolvePtr_;
+  std::shared_ptr<RenderTarget> m_colorBuffer_;
+  std::shared_ptr<RenderTarget> m_depthBuffer_;
+  // std::shared_ptr<RenderTarget> m_resolvePtr_;
 
   // Final rendered image, post-processed
-  std::shared_ptr<RenderTarget> m_finalColorPtr_;
+  std::shared_ptr<RenderTarget> m_backBuffer_;
 };
 
 }  // namespace game_engine

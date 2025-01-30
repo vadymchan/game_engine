@@ -75,7 +75,8 @@ class SwapchainVk : public ISwapchain {
 
   const math::Dimension2Di& getExtent() const override { return m_extent_; }
 
-  SwapchainImageVk* getSwapchainImage(int32_t index) const override {
+  std::shared_ptr<ISwapchainImage> getSwapchainImage(
+      int32_t index) const override {
     // Ensure index is within range
     assert(m_images_.size() > index);
     return m_images_[index];
@@ -96,10 +97,10 @@ class SwapchainVk : public ISwapchain {
   private:
   // ======= BEGIN: private misc fields =======================================
 
-  VkSwapchainKHR                 m_swapChain_ = nullptr;
-  ETextureFormat                 m_format_    = ETextureFormat::RGB8;
-  math::Dimension2Di             m_extent_;
-  std::vector<SwapchainImageVk*> m_images_;
+  VkSwapchainKHR     m_swapChain_ = nullptr;
+  ETextureFormat     m_format_    = ETextureFormat::RGB8;
+  math::Dimension2Di m_extent_;
+  std::vector<std::shared_ptr<SwapchainImageVk>> m_images_;
 
   bool m_isVSyncEnabled_ = {false};
 

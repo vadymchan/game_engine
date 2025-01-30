@@ -13,6 +13,7 @@
 #include "gfx/rhi/resource_pool.h"
 #include "gfx/rhi/rhi_type.h"
 #include "gfx/rhi/semaphore_manager.h"
+#include "gfx/rhi/shader.h"
 #include "gfx/rhi/shader_binding_instance_combiner.h"
 #include "gfx/rhi/texture.h"
 #include "platform/common/window.h"
@@ -22,15 +23,8 @@
 #include <memory>
 
 namespace game_engine {
-// TODO: move in other place
-extern std::int32_t g_maxCheckCountForRealTimeShaderUpdate;
-extern std::int32_t g_sleepMSForRealTimeShaderUpdate;
-extern bool         g_useRealTimeShaderUpdate;
 
-struct Shader;
-struct ShaderInfo;
-
-// struct ImageDataDeprecated; // #include "file_loader/image_file_loader.h"
+struct RenderFrameContext;
 
 // TODO:
 // - consider whether to name RHI or Rhi
@@ -39,7 +33,7 @@ class RHI {
   public:
   // ======= BEGIN: public static fields ======================================
 
-  static TResourcePool<Shader, MutexRWLock> s_shaderPool;
+  // static TResourcePool<Shader, MutexRWLock> s_shaderPool;
 
   // ======= END: public static fields   ======================================
 
@@ -135,8 +129,8 @@ class RHI {
                                EPolygonMode polygonMode
                                = EPolygonMode::FILL) const {}
 
-  virtual bool createShaderInternal(Shader*           shader,
-                                    const ShaderInfo& shaderInfo) const {
+  virtual bool createShaderInternal(std::shared_ptr<Shader> shader,
+                                    const ShaderInfo&       shaderInfo) const {
     return false;
   }
 
@@ -160,7 +154,8 @@ class RHI {
 
   virtual void finish() const {}
 
-  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() {
+  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame(
+      const math::Dimension2Di& viewportDimension) {
     return nullptr;
   }
 
@@ -203,7 +198,7 @@ class RHI {
   }
 
   virtual PipelineStateInfo* createComputePipelineStateInfo(
-      const Shader*                   shader,
+      const std::shared_ptr<Shader>   shader,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const {
     return nullptr;
@@ -234,14 +229,16 @@ class RHI {
   }
 
   // ResourceBarrier
-  virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
-                                Texture*                       texture,
-                                EResourceLayout newLayout) const {
+  virtual bool transitionLayout(
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      const std::shared_ptr<Texture>&       texture,
+      EResourceLayout                       newLayout) const {
     return true;
   }
 
-  virtual bool transitionLayoutImmediate(Texture*        texture,
-                                         EResourceLayout newLayout) const {
+  virtual bool transitionLayoutImmediate(
+      const std::shared_ptr<Texture>& texture,
+      EResourceLayout                 newLayout) const {
     return true;
   }
 
@@ -256,10 +253,11 @@ class RHI {
     return true;
   }
 
-  virtual void uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
-                          Texture*                       texture) const {}
+  virtual void uavBarrier(std::shared_ptr<CommandBuffer>  commandBuffer,
+                          const std::shared_ptr<Texture>& texture) const {}
 
-  virtual void uavBarrierImmediate(Texture* texture) const {}
+  virtual void uavBarrierImmediate(
+      const std::shared_ptr<Texture>& texture) const {}
 
   virtual void uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
                           IBuffer*                       buffer) const {}
@@ -271,8 +269,8 @@ class RHI {
   virtual void recreateSwapChain() {}
 
   virtual void bindShadingRateImage(
-      std::shared_ptr<CommandBuffer> commandBuffer, Texture* vrstexture) const {
-  }
+      std::shared_ptr<CommandBuffer>  commandBuffer,
+      const std::shared_ptr<Texture>& vrstexture) const {}
 
   virtual void nextSubpass(
       const std::shared_ptr<CommandBuffer> commandBuffer) const {}
@@ -309,6 +307,15 @@ class RHI {
 
   virtual void endSingleTimeCommands(
       std::shared_ptr<CommandBuffer> commandBuffer) const {}
+
+  virtual void copyBuffer(std::shared_ptr<CommandBuffer> commandBuffer,
+                          IBuffer*                       srcBuffer,
+                          IBuffer*                       dstBuffer,
+                          std::uint64_t                  size) const {}
+
+  virtual void copyTexture(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                           const std::shared_ptr<Texture>&       srcTexture,
+                           const std::shared_ptr<Texture>& dstTexture) const {}
 
   // CreateBuffers
   virtual std::shared_ptr<IBuffer> createStructuredBuffer(
@@ -421,7 +428,8 @@ class RHI {
 
   virtual std::shared_ptr<ISwapchain> getSwapchain() const { return nullptr; }
 
-  virtual class ISwapchainImage* getSwapchainImage(std::int32_t index) const {
+  virtual std::shared_ptr<ISwapchainImage> getSwapchainImage(
+      std::int32_t index) const {
     return nullptr;
   }
 
@@ -447,28 +455,34 @@ class RHI {
 
   // ======= BEGIN: public getters ============================================
 
-  std::vector<Shader*> getAllShaders() {
-    std::vector<Shader*> output;
-    s_shaderPool.getAllResource(output);
-    return output;
-  }
+  // std::vector<Shader*> getAllShaders() {
+  //   std::vector<Shader*> output;
+  //   s_shaderPool.getAllResource(output);
+  //   return output;
+  // }
 
   // ======= END: public getters   ============================================
 
   // ======= BEGIN: public misc methods =======================================
 
-  template <typename T = Shader>
-  T* createShader(const ShaderInfo& shaderInfo) const {
-    return (T*)s_shaderPool.getOrCreate<ShaderInfo, T>(shaderInfo);
+  // template <typename T = Shader>
+  // T* createShader(const ShaderInfo& shaderInfo) const {
+  //   return (T*)s_shaderPool.getOrCreate<ShaderInfo, T>(shaderInfo);
+  // }
+
+  std::shared_ptr<Shader> createShader(const ShaderInfo& shaderInfo) const {
+    auto shader = std::make_shared<Shader>(shaderInfo);
+    shader->initialize();
+    return shader;
   }
 
-  void addShader(const ShaderInfo& shaderInfo, Shader* shader) {
-    return s_shaderPool.add(shaderInfo, shader);
-  }
+  // void addShader(const ShaderInfo& shaderInfo, Shader* shader) {
+  //   return s_shaderPool.add(shaderInfo, shader);
+  // }
 
-  void releaseShader(const ShaderInfo& shaderInfo) {
-    s_shaderPool.release(shaderInfo);
-  }
+  // void releaseShader(const ShaderInfo& shaderInfo) {
+  //   s_shaderPool.release(shaderInfo);
+  // }
 
   template <typename T = IBuffer>
   inline std::shared_ptr<T> createStructuredBuffer(

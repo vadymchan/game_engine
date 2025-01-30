@@ -286,7 +286,7 @@ struct CompiledShader {
   // ======= END: public destructor   =========================================
 };
 
-struct Shader {
+struct Shader : public std::enable_shared_from_this<Shader> {
   // ======= BEGIN: public static methods =====================================
 
   static void s_startAndRunCheckUpdateShaderThread();
@@ -297,11 +297,14 @@ struct Shader {
   // ======= BEGIN: public static fields ======================================
 
   // TODO: consider renaming
-  static bool                 s_isRunningCheckUpdateShaderThread;
-  static std::thread          s_checkUpdateShaderThread;
-  static std::vector<Shader*> s_waitForUpdateShaders;
-  static std::map<const Shader*, std::vector<size_t>>
-      s_connectedPipelineStateHash;
+  // static bool s_isRunningCheckUpdateShaderThread;
+
+  // static std::thread s_checkUpdateShaderThread;
+
+  // static std::vector<Shader*> s_waitForUpdateShaders;
+
+  // static std::map<const Shader*, std::vector<size_t>>
+  //     s_connectedPipelineStateHash;
 
   // ======= END: public static fields   ======================================
 
@@ -336,7 +339,9 @@ struct Shader {
 
   // ======= BEGIN: public getters ============================================
 
-  CompiledShader* getCompiledShader() const { return m_compiledShader; }
+  const std::shared_ptr<CompiledShader>& getCompiledShader() const {
+    return m_compiledShader_;
+  }
 
   // ======= END: public getters   ============================================
 
@@ -348,9 +353,9 @@ struct Shader {
 
   // ======= BEGIN: public misc fields ========================================
 
-  uint64_t        m_timeStamp_ = 0;
-  ShaderInfo      m_shaderInfo_;
-  CompiledShader* m_compiledShader = nullptr;
+  uint64_t                        m_timeStamp_ = 0;
+  ShaderInfo                      m_shaderInfo_;
+  std::shared_ptr<CompiledShader> m_compiledShader_ = nullptr;
   // TODO: add abstraction (should be related to Vulkan) - maybe deprecated
   // comment
 
@@ -360,109 +365,118 @@ struct Shader {
 // TODO:
 // - consider whether there's better solution for this (templates, etc.)
 // - refactor
-#define DECLARE_SHADER_WITH_PERMUTATION(ShaderClass, PermutationVariable)  \
-  public:                                                                  \
-  static ShaderInfo   GShaderInfo;                                         \
-  static ShaderClass* CreateShader(                                        \
-      const ShaderClass::ShaderPermutation& permutation);                  \
-  using Shader::Shader;                                                    \
-  virtual void setPermutationId(int32_t permutaitonId) override {          \
-    PermutationVariable.setFromPermutationId(permutaitonId);               \
-  }                                                                        \
-  virtual int32_t getPermutationId() const override {                      \
-    return PermutationVariable.getPermutationId();                         \
-  }                                                                        \
-  virtual int32_t getPermutationCount() const override {                   \
-    return PermutationVariable.s_getPermutationCount();                    \
-  }                                                                        \
-  virtual void getPermutationDefines(std::string& result) const override { \
-    PermutationVariable.getPermutationDefines(result);                     \
-  }
-
-struct ShaderForwardPixelShader : public Shader {
-  // ======= BEGIN: public nested types =======================================
-
-  // TODO: currently not used
-  // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
-  DECLARE_DEFINE(USE_REVERSEZ, 0, 1);
-
-  // ======= END: public nested types   =======================================
-
-  // ======= BEGIN: public aliases ============================================
-
-  using ShaderPermutation
-      = Permutation</*USE_VARIABLE_SHADING_RATE,*/ USE_REVERSEZ>;
-
-  // ======= END: public aliases   ============================================
-
-  // ======= BEGIN: public misc fields ========================================
-
-  ShaderPermutation m_permutation_;
-
-  // ======= END: public misc fields   ========================================
-
-  // TODO: consider wrap to comment (as other code elements in class)
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, m_permutation_)
-};
-
-struct ShaderGBufferVertexShader : public Shader {
-  // ======= BEGIN: public nested types =======================================
-
-  DECLARE_DEFINE(USE_VERTEX_COLOR, 0, 1);
-  DECLARE_DEFINE(USE_VERTEX_BITANGENT, 0, 1);
-  DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
-  DECLARE_DEFINE(USE_SPHERICAL_MAP, 0, 1);
-
-  // ======= END: public nested types   =======================================
-
-  // ======= BEGIN: public aliases ============================================
-
-  using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
-                                        USE_VERTEX_BITANGENT,
-                                        USE_ALBEDO_TEXTURE,
-                                        USE_SPHERICAL_MAP>;
-
-  // ======= END: public aliases   ============================================
-
-  // ======= BEGIN: public misc fields ========================================
-
-  ShaderPermutation m_permutation_;
-
-  // ======= END: public misc fields   ========================================
-
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, m_permutation_)
-};
-
-struct ShaderGBufferPixelShader : public Shader {
-  // ======= BEGIN: public nested types =======================================
-
-  DECLARE_DEFINE(USE_VERTEX_COLOR, 0, 1);
-  DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
-  DECLARE_DEFINE(USE_SRGB_ALBEDO_TEXTURE, 0, 1);
-  // TODO: currently not used
-  // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
-  DECLARE_DEFINE(USE_PBR, 0, 1);
-
-  // ======= END: public nested types   =======================================
-
-  // ======= BEGIN: public aliases ============================================
-
-  using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
-                                        USE_ALBEDO_TEXTURE,
-                                        USE_SRGB_ALBEDO_TEXTURE,
-                                        /*USE_VARIABLE_SHADING_RATE,*/
-                                        USE_PBR>;
-
-  // ======= END: public aliases   ============================================
-
-  // ======= BEGIN: public misc fields ========================================
-
-  ShaderPermutation m_permutation_;
-
-  // ======= END: public misc fields   ========================================
-
-  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, m_permutation_)
-};
+// #define DECLARE_SHADER_WITH_PERMUTATION(ShaderClass, PermutationVariable)  \
+//  public:                                                                  \
+//  static ShaderInfo   GShaderInfo;                                         \
+//  static ShaderClass* CreateShader(                                        \
+//      const ShaderClass::ShaderPermutation& permutation);                  \
+//  using Shader::Shader;                                                    \
+//  virtual void setPermutationId(int32_t permutaitonId) override {          \
+//    PermutationVariable.setFromPermutationId(permutaitonId);               \
+//  }                                                                        \
+//  virtual int32_t getPermutationId() const override {                      \
+//    return PermutationVariable.getPermutationId();                         \
+//  }                                                                        \
+//  virtual int32_t getPermutationCount() const override {                   \
+//    return PermutationVariable.s_getPermutationCount();                    \
+//  }                                                                        \
+//  virtual void getPermutationDefines(std::string& result) const override { \
+//    PermutationVariable.getPermutationDefines(result);                     \
+//  }
+//
+// struct ShaderForwardPixelShader : public Shader {
+//  // ======= BEGIN: public nested types
+//  =======================================
+//
+//  // TODO: currently not used
+//  // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
+//  DECLARE_DEFINE(USE_REVERSEZ, 0, 1);
+//
+//  // ======= END: public nested types =======================================
+//
+//  // ======= BEGIN: public aliases
+//  ============================================
+//
+//  using ShaderPermutation
+//      = Permutation</*USE_VARIABLE_SHADING_RATE,*/ USE_REVERSEZ>;
+//
+//  // ======= END: public aliases ============================================
+//
+//  // ======= BEGIN: public misc fields
+//  ========================================
+//
+//  ShaderPermutation m_permutation_;
+//
+//  // ======= END: public misc fields ========================================
+//
+//  // TODO: consider wrap to comment (as other code elements in class)
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderForwardPixelShader, m_permutation_)
+//};
+//
+// struct ShaderGBufferVertexShader : public Shader {
+//  // ======= BEGIN: public nested types
+//  =======================================
+//
+//  DECLARE_DEFINE(USE_VERTEX_COLOR, 0, 1);
+//  DECLARE_DEFINE(USE_VERTEX_BITANGENT, 0, 1);
+//  DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
+//  DECLARE_DEFINE(USE_SPHERICAL_MAP, 0, 1);
+//
+//  // ======= END: public nested types =======================================
+//
+//  // ======= BEGIN: public aliases
+//  ============================================
+//
+//  using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
+//                                        USE_VERTEX_BITANGENT,
+//                                        USE_ALBEDO_TEXTURE,
+//                                        USE_SPHERICAL_MAP>;
+//
+//  // ======= END: public aliases ============================================
+//
+//  // ======= BEGIN: public misc fields
+//  ========================================
+//
+//  ShaderPermutation m_permutation_;
+//
+//  // ======= END: public misc fields ========================================
+//
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferVertexShader, m_permutation_)
+//};
+//
+// struct ShaderGBufferPixelShader : public Shader {
+//  // ======= BEGIN: public nested types
+//  =======================================
+//
+//  DECLARE_DEFINE(USE_VERTEX_COLOR, 0, 1);
+//  DECLARE_DEFINE(USE_ALBEDO_TEXTURE, 0, 1);
+//  DECLARE_DEFINE(USE_SRGB_ALBEDO_TEXTURE, 0, 1);
+//  // TODO: currently not used
+//  // DECLARE_DEFINE(USE_VARIABLE_SHADING_RATE, 0, 1);
+//  DECLARE_DEFINE(USE_PBR, 0, 1);
+//
+//  // ======= END: public nested types =======================================
+//
+//  // ======= BEGIN: public aliases
+//  ============================================
+//
+//  using ShaderPermutation = Permutation<USE_VERTEX_COLOR,
+//                                        USE_ALBEDO_TEXTURE,
+//                                        USE_SRGB_ALBEDO_TEXTURE,
+//                                        /*USE_VARIABLE_SHADING_RATE,*/
+//                                        USE_PBR>;
+//
+//  // ======= END: public aliases ============================================
+//
+//  // ======= BEGIN: public misc fields
+//  ========================================
+//
+//  ShaderPermutation m_permutation_;
+//
+//  // ======= END: public misc fields ========================================
+//
+//  DECLARE_SHADER_WITH_PERMUTATION(ShaderGBufferPixelShader, m_permutation_)
+//};
 
 // TODO: currently not used
 // struct ShaderDirectionalLightPixelShader : public Shader {
@@ -510,9 +524,9 @@ struct GraphicsPipelineShader {
 
   // ======= BEGIN: public misc fields ========================================
 
-  Shader* m_vertexShader_   = nullptr;
-  Shader* m_geometryShader_ = nullptr;
-  Shader* m_pixelShader_    = nullptr;
+  std::shared_ptr<Shader> m_vertexShader_   = nullptr;
+  std::shared_ptr<Shader> m_geometryShader_ = nullptr;
+  std::shared_ptr<Shader> m_pixelShader_    = nullptr;
 
   // ======= END: public misc fields   ========================================
 };

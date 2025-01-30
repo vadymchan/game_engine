@@ -13,6 +13,9 @@
 namespace game_engine {
 
 // TODO: consider moving this to a separate file
+
+// describes one descriptor (CPU / GPU handle, index and reference to heap where
+// it's located) in a descriptor heap
 struct DescriptorDx12 {
   // ======= BEGIN: public static fields ======================================
 
@@ -38,6 +41,7 @@ struct DescriptorDx12 {
   // ======= END: public misc fields   ========================================
 };
 
+// mostly for OfflineDescriptorHeapDx12, manages an entire descriptor heap
 class DescriptorHeapDx12
     : public std::enable_shared_from_this<DescriptorHeapDx12> {
   public:
@@ -55,6 +59,12 @@ class DescriptorHeapDx12
   static constexpr int32_t s_kNumOfFramesToWaitBeforeReleasing = 3;
 
   // ======= END: public static fields   ======================================
+
+  // ======= BEGIN: public destructor =========================================
+
+  ~DescriptorHeapDx12() { release(); }
+
+  // ======= END: public destructor   =========================================
 
   // ======= BEGIN: public misc methods =======================================
 
@@ -127,6 +137,9 @@ class DescriptorHeapDx12
   // ======= END: public misc fields   ========================================
 };
 
+// Stores info about a block of descriptors in a descriptor heap (their type,
+// start index, size, etc.) and a reference to the heap itself. Essentially a
+// data (array of descriptors)
 struct DescriptorBlockDx12 {
   // ======= BEGIN: public misc fields ========================================
 
@@ -204,6 +217,8 @@ class OnlineDescriptorHeapBlocksDx12 {
   // ======= END: public misc fields   ========================================
 };
 
+// it's a class that manages a block of descriptors in a descriptor heap (gives
+// usefull methods to allocate and free descriptors)
 // Each CommandList has its own OnlineDescriptorHeap, allocated from
 // OnlineDescriptorHeapBlocksDx12.
 // - By allocating a block per CommandList, we avoid multiple CommandLists
@@ -288,7 +303,7 @@ class OnlineDescriptorHeapDx12 {
 };
 
 // Manages the OnlineDescriptorHeapBlock and allocates additional
-// descriptorHeapBlocks when needed.
+// DescriptorHeapBlocks when needed.
 class OnlineDescriptorManager {
   public:
   // ======= BEGIN: public misc methods =======================================
@@ -373,8 +388,13 @@ class OnlineDescriptorManager {
   // ======= END: public misc fields   ========================================
 };
 
+// CPU only descriptor heap (not shader visible)
 class OfflineDescriptorHeapDx12 {
   public:
+  std::shared_ptr<DescriptorHeapDx12> getCurrentHeap() {
+    return m_currentHeap_;
+  }
+
   // ======= BEGIN: public misc methods =======================================
 
   void initialize(EDescriptorHeapTypeDX12 heapType) {
@@ -449,6 +469,7 @@ class OfflineDescriptorHeapDx12 {
     auto descriptorHeap = std::make_shared<DescriptorHeapDx12>();
     assert(descriptorHeap);
 
+    // Offline Descriptor Heap is not shader visible
     descriptorHeap->initialize(m_heapType_, false);
 
     m_heap_.push_back(descriptorHeap);

@@ -16,6 +16,7 @@ namespace game_engine {
 
 namespace fs = std::filesystem;
 
+// This code currently not used. Instead, dxc is used to compile HLSL to SPIR-V.
 class SpirvUtil {
   public:
   // ======= BEGIN: public static methods =====================================

@@ -9,6 +9,12 @@
 
 namespace game_engine {
 
+// TODO: move this to a separate file
+enum class RenderingApi {
+  Dx12,
+  Vulkan
+};
+
 class RuntimeSettings {
   public:
   static RuntimeSettings& s_get();
@@ -17,12 +23,14 @@ class RuntimeSettings {
   RuntimeSettings& operator=(const RuntimeSettings&) = delete;
 
   const math::Vector3Df& getWorldUp() const;
+  RenderingApi           getRenderingApi() const;
 
   void updateFromConfig();
 
   private:
   RuntimeSettings();
   math::Vector3Df m_worldUp_;
+  RenderingApi    m_renderingApi_;
 };
 
 }  // namespace game_engine

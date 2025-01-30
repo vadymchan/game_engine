@@ -2,7 +2,6 @@
 #define GAME_ENGINE_BUFFER_H
 
 #include "gfx/rhi/name.h"
-#include "gfx/rhi/render_frame_context.h"
 #include "gfx/rhi/resource_container.h"
 #include "gfx/rhi/rhi_type.h"
 #include "gfx/rhi/shader_bindable_resource.h"
@@ -10,6 +9,8 @@
 #include <memory>
 
 namespace game_engine {
+
+class CommandBuffer;
 
 class IBufferAttribute {
   public:

@@ -44,7 +44,8 @@ class SwapchainDx12 : public ISwapchain {
     return m_extent_;
   }
 
-  virtual ISwapchainImage* getSwapchainImage(int32_t index) const override {
+  virtual std::shared_ptr<ISwapchainImage> getSwapchainImage(
+      int32_t index) const override {
     assert(m_images_.size() > index);
     return m_images_[index];
   }
@@ -61,7 +62,7 @@ class SwapchainDx12 : public ISwapchain {
     return m_swapChain_->GetCurrentBackBufferIndex();
   }
 
-  ISwapchainImage* getCurrentSwapchainImage() const {
+  std::shared_ptr<ISwapchainImage> getCurrentSwapchainImage() const {
     return m_images_[getCurrentBackBufferIndex()];
   }
 
@@ -77,10 +78,10 @@ class SwapchainDx12 : public ISwapchain {
 
   // ======= BEGIN: public misc fields ========================================
 
-  ComPtr<IDXGISwapChain3>          m_swapChain_;
-  ETextureFormat                   m_format_ = ETextureFormat::RGB8;
-  math::Dimension2Di               m_extent_;
-  std::vector<SwapchainImageDx12*> m_images_;
+  ComPtr<IDXGISwapChain3> m_swapChain_;
+  ETextureFormat          m_format_ = ETextureFormat::RGB8;
+  math::Dimension2Di      m_extent_;
+  std::vector<std::shared_ptr<SwapchainImageDx12>> m_images_;
 
   // ======= END: public misc fields   ========================================
 };

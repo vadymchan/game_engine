@@ -124,6 +124,22 @@ void g_copyBuffer(ID3D12Resource* srcBuffer,
                   uint64_t        srcOffset,
                   uint64_t        dstOffset);
 
+void g_copyTexture(ID3D12GraphicsCommandList* commandList,
+                   ID3D12Resource*            srcResource,
+                   D3D12_RESOURCE_STATES      srcState,
+                   ID3D12Resource*            dstResource,
+                   D3D12_RESOURCE_STATES      dstState,
+                   uint32_t                   srcWidth,
+                   uint32_t                   srcHeight,
+                   uint32_t                   dstWidth,
+                   uint32_t                   dstHeight,
+                   uint32_t                   srcArrayLayers = 1,
+                   uint32_t                   dstArrayLayers = 1);
+
+void g_copyTexture(ID3D12GraphicsCommandList*          commandList,
+                   const std::shared_ptr<TextureDx12>& srcTexture,
+                   const std::shared_ptr<TextureDx12>& dstTexture);
+
 // Create CBV
 void g_createConstantBufferView(BufferDx12* buffer);
 
@@ -146,13 +162,13 @@ void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
                                           uint32_t       bufferSize);
 
 // Create SRV for Texture
-void g_createShaderResourceView(TextureDx12* texture);
+void g_createShaderResourceView(const std::shared_ptr<TextureDx12>& texture);
 
 // Create UAV for Texture
-void g_createUnorderedAccessView(TextureDx12* texture);
+void g_createUnorderedAccessView(const std::shared_ptr<TextureDx12>& texture);
 
-void g_createDepthStencilView(TextureDx12* texture);
-void g_createRenderTargetView(TextureDx12* texture);
+void g_createDepthStencilView(const std::shared_ptr<TextureDx12>& texture);
+void g_createRenderTargetView(const std::shared_ptr<TextureDx12>& texture);
 
 }  // namespace game_engine
 

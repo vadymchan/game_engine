@@ -527,10 +527,16 @@ struct PipelineStateFixedInfo {
                         m_hash_);
     }
 
-    // TODO: The contents below should also be able to generate a hash
-    m_hash_ ^= m_rasterizationState_->getHash();
-    m_hash_ ^= m_depthStencilState_->getHash();
-    m_hash_ ^= m_blendingState_->getHash();
+    if (m_rasterizationState_) {
+      m_hash_ ^= m_rasterizationState_->getHash();
+    }
+    if (m_depthStencilState_) {
+      m_hash_ ^= m_depthStencilState_->getHash();
+    }
+    if (m_blendingState_) {
+      m_hash_ ^= m_blendingState_->getHash();
+    }
+
     m_hash_ ^= (uint64_t)m_isUseVRS_;
 
     return m_hash_;
@@ -783,11 +789,11 @@ struct PipelineStateInfo {
     m_pipelineType_ = EPipelineType::Graphics;
   }
 
-  PipelineStateInfo(const Shader*                   computeShader,
+  PipelineStateInfo(std::shared_ptr<Shader>         computeShader,
                     const ShaderBindingLayoutArray& shaderBindingLayoutArray,
                     const PushConstant*             pushConstant = nullptr,
                     int32_t                         subpassIndex = 0)
-      : kComputeShader(computeShader)
+      : computeShader(std::move(computeShader))
       , m_shaderBindingLayoutArray_(shaderBindingLayoutArray)
       , kPushConstant(pushConstant)
       , m_subpassIndex_(subpassIndex) {
@@ -811,7 +817,7 @@ struct PipelineStateInfo {
   PipelineStateInfo(const PipelineStateInfo& pipelineState)
       : kPipelineStateFixed(pipelineState.kPipelineStateFixed)
       , kGraphicsShader(pipelineState.kGraphicsShader)
-      , kComputeShader(pipelineState.kComputeShader)
+      , computeShader(pipelineState.computeShader)
       //, m_raytracingShaders_(pipelineState.m_raytracingShaders_)
       , m_pipelineType_(pipelineState.m_pipelineType_)
       , m_vertexBufferArray_(pipelineState.m_vertexBufferArray_)
@@ -826,7 +832,7 @@ struct PipelineStateInfo {
   PipelineStateInfo(PipelineStateInfo&& pipelineState) noexcept
       : kPipelineStateFixed(pipelineState.kPipelineStateFixed)
       , kGraphicsShader(pipelineState.kGraphicsShader)
-      , kComputeShader(pipelineState.kComputeShader)
+      , computeShader(pipelineState.computeShader)
       //, m_raytracingShaders_(pipelineState.m_raytracingShaders_)
       , m_pipelineType_(pipelineState.m_pipelineType_)
       , m_vertexBufferArray_(pipelineState.m_vertexBufferArray_)
@@ -878,7 +884,7 @@ struct PipelineStateInfo {
 
   EPipelineType                 m_pipelineType_ = EPipelineType::Graphics;
   const GraphicsPipelineShader  kGraphicsShader;
-  const Shader*                 kComputeShader = nullptr;
+  std::shared_ptr<Shader>       computeShader = nullptr;
   // std::vector<RaytracingPipelineShader> m_raytracingShaders_;
   // RaytracingPipelineData                m_raytracingPipelineData_;
   const RenderPass*             kRenderPass = nullptr;

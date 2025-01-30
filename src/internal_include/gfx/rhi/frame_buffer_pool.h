@@ -32,7 +32,6 @@ class FrameBufferPool {
 
   static std::shared_ptr<FrameBuffer> s_getFrameBuffer(
       const FrameBufferInfo& info);
-  // static struct Texture* s_getNullTexture(ETextureType type);
 
   // ======= END: public static methods   =====================================
 

@@ -47,33 +47,6 @@ struct FrameBuffer : public std::enable_shared_from_this<FrameBuffer> {
 
   // ======= END: public destructor   =========================================
 
-  // ======= BEGIN: public overridden methods =================================
-
-  // No need for now
-  // virtual Texture* getTexture(int32_t index = 0) const {
-  //  return Textures[index].get();
-  //}
-
-  // virtual Texture* getTextureDepth(int32_t index = 0) const {
-  //   return TextureDepth.get();
-  // }
-
-  // virtual ETextureType getTextureType() const { return Info.TextureType; }
-
-  // virtual bool setDepthAttachment(const std::shared_ptr<Texture>& depth) {
-  //   TextureDepth = depth;
-  //   return true;
-  // }
-
-  // virtual void setDepthMipLevel(int32_t level) {}
-
-  // virtual bool FBOBegin(int index = 0, bool mrt = false) const { return true;
-  // }
-
-  // virtual void end() const {}
-
-  // ======= END: public overridden methods   =================================
-
   // ======= BEGIN: public misc fields ========================================
 
   FrameBufferInfo                        m_info_;

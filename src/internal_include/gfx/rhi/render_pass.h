@@ -27,7 +27,7 @@ struct Attachment {
              EResourceLayout initialLayout = EResourceLayout::UNDEFINED,
              EResourceLayout finalLayout   = EResourceLayout::SHADER_READ_ONLY,
              bool            isResolveAttachment = false)
-      : m_renderTargetPtr_(rtPtr)
+      : m_renderTarget_(rtPtr)
       , m_loadStoreOp_(loadStoreOp)
       , m_stencilLoadStoreOp_(stencilLoadStoreOp)
       , m_rtClearValue(rtClearValue)
@@ -45,7 +45,7 @@ struct Attachment {
     }
 
     m_hash_ = GETHASH_FROM_INSTANT_STRUCT(
-        (m_renderTargetPtr_ ? m_renderTargetPtr_->getHash() : 0),
+        (m_renderTarget_ ? m_renderTarget_->getHash() : 0),
         m_loadStoreOp_,
         m_stencilLoadStoreOp_,
         m_rtClearValue,
@@ -58,11 +58,11 @@ struct Attachment {
 
   // ======= BEGIN: public misc methods =======================================
 
-  bool isValid() const { return m_renderTargetPtr_ != nullptr; }
+  bool isValid() const { return m_renderTarget_ != nullptr; }
 
   bool isDepthAttachment() const {
-    assert(m_renderTargetPtr_);
-    return s_isDepthFormat(m_renderTargetPtr_->m_info_.m_format_);
+    assert(m_renderTarget_);
+    return s_isDepthFormat(m_renderTarget_->m_info_.m_format_);
   }
 
   bool isResolveAttachment() const { return m_ResolveAttachment; }
@@ -71,7 +71,7 @@ struct Attachment {
 
   // ======= BEGIN: public misc fields ========================================
 
-  std::shared_ptr<RenderTarget> m_renderTargetPtr_;
+  std::shared_ptr<RenderTarget> m_renderTarget_;
 
   // The two options below determine what to do with the data in the attachment
   // before and after rendering.
@@ -273,8 +273,6 @@ struct RenderPassInfo {
   // ======= BEGIN: public misc fields ========================================
 
   std::vector<Attachment> m_attachments_;
-  // TODO: consider remove (currently not used)
-  Attachment              m_resolveAttachment_;
   std::vector<Subpass>    m_subpasses_;
 
   // ======= END: public misc fields   ========================================

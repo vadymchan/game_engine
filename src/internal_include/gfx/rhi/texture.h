@@ -41,6 +41,7 @@ struct Texture : public ShaderBindableResource {
           ETextureFormat            format,
           const math::Dimension2Di& extent,
           uint32_t                  layerCount  = 1,
+          EResourceLayout           layout      = EResourceLayout::UNDEFINED,
           EMSAASamples              sampleCount = EMSAASamples::COUNT_1,
           bool                      sRGB        = false)
       : m_type_(type)
@@ -48,6 +49,7 @@ struct Texture : public ShaderBindableResource {
       , m_extent_(extent)
       , m_mipLevels_(s_getMipLevels(extent.width(), extent.height()))
       , m_layerCount_(layerCount)
+      , m_layout_(layout)
       , m_sampleCount_(sampleCount)
       , m_sRGB_(sRGB) {}
 
@@ -67,9 +69,7 @@ struct Texture : public ShaderBindableResource {
 
   virtual void release() {}
 
-  virtual EResourceLayout getLayout() const {
-    return EResourceLayout::UNDEFINED;
-  }
+  EResourceLayout getLayout() const { return m_layout_; }
 
   // ======= END: public overridden methods   =================================
 
@@ -83,11 +83,11 @@ struct Texture : public ShaderBindableResource {
 
   // ======= END: public misc methods   =======================================
 
-
   // ======= BEGIN: public misc fields ========================================
 
   ETextureType       m_type_;  // TODO: analog to VkImageViewType imageViewType
   ETextureFormat     m_format_;
+  EResourceLayout    m_layout_;
   math::Dimension2Di m_extent_;
   uint32_t           m_mipLevels_;
   uint32_t           m_layerCount_;

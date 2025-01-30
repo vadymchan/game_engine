@@ -104,7 +104,8 @@ class RhiVk : public RHI {
       const std::shared_ptr<Image>& image) const override;
 
   virtual bool createShaderInternal(
-      Shader* shader, const ShaderInfo& shaderInfo) const override;
+      std::shared_ptr<Shader> shader,
+      const ShaderInfo&       shaderInfo) const override;
 
   virtual FrameBuffer* createFrameBuffer(
       const FrameBufferInfo& info) const override;
@@ -163,7 +164,7 @@ class RhiVk : public RHI {
   }
 
   virtual PipelineStateInfo* createComputePipelineStateInfo(
-      const Shader*                   shader,
+      std::shared_ptr<Shader>         shader,
       const ShaderBindingLayoutArray& shaderBindingArray,
       const PushConstant*             pushConstant) const override {
     return s_pipelineStatePool.getOrCreateMove(
@@ -222,12 +223,14 @@ class RhiVk : public RHI {
       const RtClearValue&           clearValue   = RtClearValue::s_kInvalid,
       const wchar_t*                resourceName = nullptr) const override;
 
+  virtual void copyTexture(
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      const std::shared_ptr<Texture>&       srcTexture,
+      const std::shared_ptr<Texture>&       dstTexture) const override;
+
   virtual bool onHandleResized(uint32_t witdh,
                                uint32_t height,
                                bool     isMinimized) override {
-    assert(witdh > 0);
-    assert(height > 0);
-
     finish();
 
     m_swapchain_->create(m_window_);
@@ -294,7 +297,8 @@ class RhiVk : public RHI {
       const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr,
       ISemaphore*                                signalSemaphore) override;
 
-  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame() override;
+  virtual std::shared_ptr<RenderFrameContext> beginRenderFrame(
+      const math::Dimension2Di& viewportDimension) override;
 
   virtual void endRenderFrame(const std::shared_ptr<RenderFrameContext>&
                                   renderFrameContextPtr) override;
@@ -305,9 +309,10 @@ class RhiVk : public RHI {
   void endSingleTimeCommands(
       std::shared_ptr<CommandBuffer> commandBuffer) const override;
 
-  virtual bool transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
-                                Texture*                       texture,
-                                EResourceLayout newLayout) const override;
+  virtual bool transitionLayout(
+      const std::shared_ptr<CommandBuffer>& commandBuffer,
+      const std::shared_ptr<Texture>&       texture,
+      EResourceLayout                       newLayout) const override;
 
   virtual void bindGraphicsShaderBindingInstances(
       const std::shared_ptr<CommandBuffer> commandBuffer,
