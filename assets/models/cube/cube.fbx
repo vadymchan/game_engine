@@ -6,13 +6,13 @@ FBXHeaderExtension:  {
 	FBXVersion: 7700
 	CreationTimeStamp:  {
 		Version: 1000
-		Year: 2024
-		Month: 12
-		Day: 21
-		Hour: 14
-		Minute: 58
-		Second: 25
-		Millisecond: 535
+		Year: 2025
+		Month: 1
+		Day: 14
+		Hour: 20
+		Minute: 48
+		Second: 38
+		Millisecond: 191
 	}
 	Creator: "FBX SDK/FBX Plugins version 2020.3.6"
 	OtherFlags:  {
@@ -37,13 +37,13 @@ FBXHeaderExtension:  {
 			P: "Original|ApplicationVendor", "KString", "", "", "Autodesk"
 			P: "Original|ApplicationName", "KString", "", "", "Maya"
 			P: "Original|ApplicationVersion", "KString", "", "", "2025"
-			P: "Original|DateTime_GMT", "DateTime", "", "", "21/12/2024 12:58:25.533"
+			P: "Original|DateTime_GMT", "DateTime", "", "", "14/01/2025 18:48:38.188"
 			P: "Original|FileName", "KString", "", "", "C:\Users\vadym\source\repos\pet_project\game_engine\assets\models\cube\cube.fbx"
 			P: "LastSaved", "Compound", "", ""
 			P: "LastSaved|ApplicationVendor", "KString", "", "", "Autodesk"
 			P: "LastSaved|ApplicationName", "KString", "", "", "Maya"
 			P: "LastSaved|ApplicationVersion", "KString", "", "", "2025"
-			P: "LastSaved|DateTime_GMT", "DateTime", "", "", "21/12/2024 12:58:25.533"
+			P: "LastSaved|DateTime_GMT", "DateTime", "", "", "14/01/2025 18:48:38.188"
 			P: "Original|ApplicationActiveProject", "KString", "", "", "C:\Users\vadym\source\repos\pet_project\game_engine\assets\models\cube"
 			P: "Original|ApplicationNativeFile", "KString", "", "", "C:\Users\vadym\Documents\Autodesk Maya\projects\default\scenes\cube.mb"
 		}
@@ -80,7 +80,7 @@ GlobalSettings:  {
 
 Documents:  {
 	Count: 1
-	Document: 1909954340352, "", "Scene" {
+	Document: 2970550004800, "", "Scene" {
 		Properties70:  {
 			P: "SourceObject", "object", "", ""
 			P: "ActiveAnimStackName", "KString", "", "", "Take 001"
@@ -316,7 +316,7 @@ Definitions:  {
 ;------------------------------------------------------------------
 
 Objects:  {
-	Geometry: 1904827082544, "Geometry::", "Mesh" {
+	Geometry: 2973441510368, "Geometry::", "Mesh" {
 		Vertices: *24 {
 			a: -0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5
 		} 
@@ -333,9 +333,34 @@ Objects:  {
 			MappingInformationType: "ByPolygonVertex"
 			ReferenceInformationType: "Direct"
 			Normals: *72 {
-				a: 0,0,1,0,0,1,0,0,1,0,0,1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0
+				a: -0,-0,-1,-0,-0,-1,-0,-0,-1,-0,-0,-1,-0,1,-0,-0,1,-0,-0,1,-0,-0,1,-0,-0,-0,1,-0,-0,1,-0,-0,1,-0,-0,1,-0,-1,-0,-0,-1,-0,-0,-1,-0,-0,-1,-0,1,-0,-0,1,-0,-0,1,-0,-0,1,-0,-0,-1,-0,-0,-1,-0,-0,-1,-0,-0,-1,-0,-0
 			} 
 			NormalsW: *24 {
+				a: 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+			} 
+		}
+		LayerElementBinormal: 0 {
+			Version: 102
+			Name: "map1"
+			MappingInformationType: "ByPolygonVertex"
+			ReferenceInformationType: "Direct"
+			Binormals: *72 {
+				a: 0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,-1,0,0,-1,0,0,-1,0,0,-1,-0.00185127393342555,-0.999998271465302,-0,-0.00185130373574793,-0.999998271465302,-0,-0.00185133365448564,-0.999998271465302,-0,-0.00185130373574793,-0.999998271465302,-0,0,0,1,0,0,1,0,0,1,0,0,1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0
+			} 
+			BinormalsW: *24 {
+				a: 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+			} 
+
+		}
+		LayerElementTangent: 0 {
+			Version: 102
+			Name: "map1"
+			MappingInformationType: "ByPolygonVertex"
+			ReferenceInformationType: "Direct"
+			Tangents: *72 {
+				a: 1,0,0,1,0,0,1,0,0,1,0,0,1,-0,0,1,0,0,1,0,0,1,0,0,-0.999998390674591,0.00185127416625619,-0,-0.999998271465302,0.00185130373574793,-0,-0.999998271465302,0.00185133365448564,-0,-0.999998271465302,0.00185130373574793,-0,1,0,0,1,0,0,1,0,0,1,0,0,-0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1
+			} 
+			TangentsW: *24 {
 				a: 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 			} 
 		}
@@ -379,6 +404,14 @@ Objects:  {
 				TypedIndex: 0
 			}
 			LayerElement:  {
+				Type: "LayerElementBinormal"
+				TypedIndex: 0
+			}
+			LayerElement:  {
+				Type: "LayerElementTangent"
+				TypedIndex: 0
+			}
+			LayerElement:  {
 				Type: "LayerElementMaterial"
 				TypedIndex: 0
 			}
@@ -392,7 +425,7 @@ Objects:  {
 			}
 		}
 	}
-	Model: 1906326281664, "Model::pCube2", "Mesh" {
+	Model: 2969653044272, "Model::pCube2", "Mesh" {
 		Version: 232
 		Properties70:  {
 			P: "RotationActive", "bool", "", "",1
@@ -405,7 +438,7 @@ Objects:  {
 		Shading: T
 		Culling: "CullingOff"
 	}
-	Material: 1910268238000, "Material::standardSurface2", "" {
+	Material: 2973434096912, "Material::standardSurface2", "" {
 		Version: 102
 		ShadingModel: "unknown"
 		MultiLayer: 0
@@ -458,7 +491,7 @@ Objects:  {
 			P: "Maya|normalCameraFactor", "double", "Number", "",1
 		}
 	}
-	Video: 1906312699344, "Video::metallic", "Clip" {
+	Video: 2972788844720, "Video::metallic", "Clip" {
 		Type: "Clip"
 		Properties70:  {
 			P: "Path", "KString", "XRefUrl", "", "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_metallic_bc4.dds"
@@ -468,7 +501,7 @@ Objects:  {
 		Filename: "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_metallic_bc4.dds"
 		RelativeFilename: "cube_metallic_bc4.dds"
 	}
-	Video: 1906312698864, "Video::base_color", "Clip" {
+	Video: 2972788842800, "Video::base_color", "Clip" {
 		Type: "Clip"
 		Properties70:  {
 			P: "Path", "KString", "XRefUrl", "", "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/uv_grid_directx.dds"
@@ -478,7 +511,7 @@ Objects:  {
 		Filename: "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/uv_grid_directx.dds"
 		RelativeFilename: "uv_grid_directx.dds"
 	}
-	Video: 1906312700304, "Video::roughness", "Clip" {
+	Video: 2972788854320, "Video::roughness", "Clip" {
 		Type: "Clip"
 		Properties70:  {
 			P: "Path", "KString", "XRefUrl", "", "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_roughness_bc4.dds"
@@ -488,7 +521,7 @@ Objects:  {
 		Filename: "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_roughness_bc4.dds"
 		RelativeFilename: "cube_roughness_bc4.dds"
 	}
-	Video: 1906312699824, "Video::normal_map", "Clip" {
+	Video: 2972788853840, "Video::normal_map", "Clip" {
 		Type: "Clip"
 		Properties70:  {
 			P: "Path", "KString", "XRefUrl", "", "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_normal_map_bc1.dds"
@@ -498,7 +531,7 @@ Objects:  {
 		Filename: "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_normal_map_bc1.dds"
 		RelativeFilename: "cube_normal_map_bc1.dds"
 	}
-	Video: 1906312700784, "Video::normal_map", "Clip" {
+	Video: 2972788846160, "Video::normal_map", "Clip" {
 		Type: "Clip"
 		Properties70:  {
 			P: "Path", "KString", "XRefUrl", "", "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_normal_map_bc1.dds"
@@ -508,7 +541,7 @@ Objects:  {
 		Filename: "C:/Users/vadym/source/repos/pet_project/game_engine/assets/models/cube/cube_normal_map_bc1.dds"
 		RelativeFilename: "cube_normal_map_bc1.dds"
 	}
-	Texture: 1906750967200, "Texture::metallic", "" {
+	Texture: 2972788844240, "Texture::metallic", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::metallic"
@@ -523,7 +556,7 @@ Objects:  {
 		Texture_Alpha_Source: "None"
 		Cropping: 0,0,0,0
 	}
-	Texture: 1906750968160, "Texture::base_color", "" {
+	Texture: 2972788848560, "Texture::base_color", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::base_color"
@@ -538,7 +571,7 @@ Objects:  {
 		Texture_Alpha_Source: "None"
 		Cropping: 0,0,0,0
 	}
-	Texture: 1906750966720, "Texture::roughness", "" {
+	Texture: 2972788855280, "Texture::roughness", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::roughness"
@@ -553,7 +586,7 @@ Objects:  {
 		Texture_Alpha_Source: "None"
 		Cropping: 0,0,0,0
 	}
-	Texture: 1906750967680, "Texture::normal_map", "" {
+	Texture: 2972788842320, "Texture::normal_map", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::normal_map"
@@ -568,7 +601,7 @@ Objects:  {
 		Texture_Alpha_Source: "None"
 		Cropping: 0,0,0,0
 	}
-	Texture: 1906312701264, "Texture::normal_map", "" {
+	Texture: 2972788847600, "Texture::normal_map", "" {
 		Type: "TextureVideoClip"
 		Version: 202
 		TextureName: "Texture::normal_map"
@@ -585,7 +618,7 @@ Objects:  {
 		Texture_Alpha_Source: "None"
 		Cropping: 0,0,0,0
 	}
-	Implementation: 1909695243984, "Implementation::standardSurface2_Implementation", "" {
+	Implementation: 2969474796048, "Implementation::standardSurface2_Implementation", "" {
 		Version: 100
 		Properties70:  {
 			P: "ShaderLanguage", "KString", "", "", "StandardSSL"
@@ -594,7 +627,7 @@ Objects:  {
 			P: "RootBindingName", "KString", "", "", "root"
 		}
 	}
-	BindingTable: 1906764435312, "BindingTable::root 3", "" {
+	BindingTable: 2973432948288, "BindingTable::root 1", "" {
 		Version: 100
 		Properties70:  {
 			P: "TargetName", "KString", "", "", "root"
@@ -643,7 +676,7 @@ Objects:  {
 		Entry: "Maya|subsurfaceColor", "FbxPropertyEntry", "subsurface_color", "FbxSemanticEntry"
 		Entry: "Maya|transmissionScatter", "FbxPropertyEntry", "transmission_scatter", "FbxSemanticEntry"
 	}
-	AnimationStack: 1909697357472, "AnimStack::Take 001", "" {
+	AnimationStack: 2973210475696, "AnimStack::Take 001", "" {
 		Properties70:  {
 			P: "LocalStart", "KTime", "Time", "",1924423250
 			P: "LocalStop", "KTime", "Time", "",230930790000
@@ -651,7 +684,7 @@ Objects:  {
 			P: "ReferenceStop", "KTime", "Time", "",230930790000
 		}
 	}
-	AnimationLayer: 1908593222736, "AnimLayer::BaseLayer", "" {
+	AnimationLayer: 2973428584032, "AnimLayer::BaseLayer", "" {
 	}
 }
 
@@ -661,49 +694,49 @@ Objects:  {
 Connections:  {
 	
 	;Model::pCube2, Model::RootNode
-	C: "OO",1906326281664,0
+	C: "OO",2969653044272,0
 	
 	;AnimLayer::BaseLayer, AnimStack::Take 001
-	C: "OO",1908593222736,1909697357472
+	C: "OO",2973428584032,2973210475696
 	
 	;Texture::base_color, Material::standardSurface2
-	C: "OP",1906750968160,1910268238000, "Maya|baseColor"
+	C: "OP",2972788848560,2973434096912, "Maya|baseColor"
 	
 	;Texture::roughness, Material::standardSurface2
-	C: "OP",1906750966720,1910268238000, "Maya|specularRoughness"
+	C: "OP",2972788855280,2973434096912, "Maya|specularRoughness"
 	
 	;Texture::metallic, Material::standardSurface2
-	C: "OP",1906750967200,1910268238000, "Maya|metalness"
+	C: "OP",2972788844240,2973434096912, "Maya|metalness"
 	
 	;Texture::normal_map, Material::standardSurface2
-	C: "OP",1906750967680,1910268238000, "Maya|normalCamera"
+	C: "OP",2972788842320,2973434096912, "Maya|normalCamera"
 	
 	;Material::standardSurface2, Implementation::standardSurface2_Implementation
-	C: "OO",1910268238000,1909695243984
+	C: "OO",2973434096912,2969474796048
 	
-	;BindingTable::root 3, Implementation::standardSurface2_Implementation
-	C: "OO",1906764435312,1909695243984
+	;BindingTable::root 1, Implementation::standardSurface2_Implementation
+	C: "OO",2973432948288,2969474796048
 	
 	;Video::metallic, Texture::metallic
-	C: "OO",1906312699344,1906750967200
+	C: "OO",2972788844720,2972788844240
 	
 	;Video::base_color, Texture::base_color
-	C: "OO",1906312698864,1906750968160
+	C: "OO",2972788842800,2972788848560
 	
 	;Video::roughness, Texture::roughness
-	C: "OO",1906312700304,1906750966720
+	C: "OO",2972788854320,2972788855280
 	
 	;Video::normal_map, Texture::normal_map
-	C: "OO",1906312699824,1906750967680
+	C: "OO",2972788853840,2972788842320
 	
 	;Video::normal_map, Texture::normal_map
-	C: "OO",1906312700784,1906312701264
+	C: "OO",2972788846160,2972788847600
 	
 	;Geometry::, Model::pCube2
-	C: "OO",1904827082544,1906326281664
+	C: "OO",2973441510368,2969653044272
 	
 	;Material::standardSurface2, Model::pCube2
-	C: "OO",1910268238000,1906326281664
+	C: "OO",2973434096912,2969653044272
 }
 ;Takes section
 ;----------------------------------------------------

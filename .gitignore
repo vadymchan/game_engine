@@ -39,6 +39,10 @@ bld/
 [Ll]ogs/
 out/
 
+# do not ignore debug directory in shader
+!assets/shaders/debug/
+!assets/shaders/debug/**
+
 # Ignore CMake generated files
 CMakeCache.txt
 CMakeFiles/
