@@ -268,14 +268,18 @@ struct PSInput
 
 
 #if !TODO
-Texture2D DiffuseTexture : register(t0, space4);
+Texture2D<float4> DiffuseTexture : register(t0, space4);
 SamplerState DiffuseTextureSampler : register(s0, space4);
-Texture2D NormalTexture : register(t1, space4);
+
+Texture2D<float4> NormalTexture : register(t1, space4);
 SamplerState NormalTextureSampler : register(s1, space4);
-Texture2D RoughnessTexture : register(t2, space4); 
+
+Texture2D<float4> RoughnessTexture : register(t2, space4);
 SamplerState RoughnessTextureSampler : register(s2, space4);
-Texture2D MetalicTexture : register(t3, space4);
+
+Texture2D<float4> MetalicTexture : register(t3, space4);
 SamplerState MetailcTextureSampler : register(s3, space4);
+
 #endif
 
 //struct ViewUniformBuffer1
@@ -357,12 +361,12 @@ cbuffer SpotLightBuffer : register(b0, space3)
 
 float4 main(PSInput input) : SV_TARGET
 {
-    //float4 color = float4(0.0, 0.0, 0.0, 1.0);
+    float4 color = float4(0.0, 0.0, 0.0, 1.0);
     
-    //color += float4(directionalLight.color, 0);
-    //color += float4(pointLight.color, 0);
-    //color += float4(spotLight.color, 0);
-    //return color;
+    color += float4(directionalLight.color, 0);
+    color += float4(pointLight.color, 0);
+    color += float4(spotLight.color.x, 0, 0, 0);
+    // return color;
 
     float4 diffuseColor = DiffuseTexture.Sample(DiffuseTextureSampler, input.TexCoord);
 
@@ -373,7 +377,7 @@ float4 main(PSInput input) : SV_TARGET
     float metalicValue = MetalicTexture.Sample(MetailcTextureSampler, input.TexCoord).r;
 
     return input.Color;
-    return float4(normalColor, 1.0);
+    //return float4(normalColor, 1.0);
     return diffuseColor;
     return float4(roughnessValue, 0, 0, 0);
     return float4(metalicValue, 0, 0, 0);

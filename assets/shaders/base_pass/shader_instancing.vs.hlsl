@@ -10,17 +10,35 @@ struct VSInput
     
     //// instancing data
     //[[vk::location(6)]] float4x4 Instance : INSTANCE0;
-    
-    
+  
+#ifdef __spirv__
+    [[vk::location(0)]] float3 Position   : POSITION0;
+    [[vk::location(1)]] float3 Normal     : NORMAL0;
+    [[vk::location(2)]] float2 TexCoord   : TEXCOORD0;
+    [[vk::location(3)]] float3 Tangent    : TANGENT0;
+    [[vk::location(4)]] float3 Bitangent  : BITANGENT0;
+    [[vk::location(5)]] float4 Color      : COLOR0;
+    [[vk::location(6)]] float4x4 Instance : INSTANCE0;
+#else
     float3 Position : POSITION0;
     float3 Normal : NORMAL0;
     float2 TexCoord : TEXCOORD0;
     float3 Tangent : TANGENT0;
     float3 Bitangent : BITANGENT0;
     float4 Color : COLOR0;
-    
-    // instancing data
     float4x4 Instance : INSTANCE0;
+#endif
+    
+    
+    //float3 Position : POSITION0;
+    //float3 Normal : NORMAL0;
+    //float2 TexCoord : TEXCOORD0;
+    //float3 Tangent : TANGENT0;
+    //float3 Bitangent : BITANGENT0;
+    //float4 Color : COLOR0;
+    
+    //// instancing data
+    //float4x4 Instance : INSTANCE0;
     //float4 Instance0 : INSTANCE0;
     //float4 Instance1 : INSTANCE1;
     //float4 Instance2 : INSTANCE2;
@@ -116,13 +134,12 @@ cbuffer SpotLight : register(b0, space3)
 VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
-    
-    //float4x4 Instance = float4x4(input.Instance0, input.Instance1, input.Instance2, input.Instance3);
-    
-    
-    
-    //output.Position = mul(input.Instance, float4(input.Position.x, input.Position.y, -input.Position.z, 1.0));
+
+#ifdef __spirv__
+    output.Position = mul(float4(input.Position, 1.0), input.Instance);
+#else
     output.Position = mul(input.Instance, float4(input.Position, 1.0));
+#endif
     output.Position = mul(ViewParam.VP, output.Position);
     
     output.Normal = normalize(mul((float3x3) input.Instance, input.Normal));
