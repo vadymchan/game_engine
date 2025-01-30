@@ -18,7 +18,12 @@ void RuntimeSettings::updateFromConfig() {
             .lock();
 
   if (config) {
-    m_worldUp_ = config->get<math::Vector3Df>("worldUp");
+    m_worldUp_            = config->get<math::Vector3Df>("worldUp");
+    auto renderingApiText = config->get<std::string>("renderingApi");
+    // TODO: make this more robust
+    m_renderingApi_ = renderingApiText == "dx12"   ? RenderingApi::Dx12
+                    : renderingApiText == "vulkan" ? RenderingApi::Vulkan
+                                                   : RenderingApi::Dx12;
   } else {
     std::cerr << "Failed to initialize RuntimeSettings at " << __FILE__ << ":"
               << __LINE__ << ": config is nullptr." << std::endl;
@@ -27,5 +32,9 @@ void RuntimeSettings::updateFromConfig() {
 
 const math::Vector3Df& RuntimeSettings::getWorldUp() const {
   return m_worldUp_;
+}
+
+RenderingApi RuntimeSettings::getRenderingApi() const {
+  return m_renderingApi_;
 }
 }  // namespace game_engine
