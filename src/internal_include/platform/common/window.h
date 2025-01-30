@@ -20,6 +20,7 @@ class Window {
   enum class Flags : uint32_t {
     None              = 0,
     Fullscreen        = SDL_WINDOW_FULLSCREEN,
+    Maximized         = SDL_WINDOW_MAXIMIZED,
     Shown             = SDL_WINDOW_SHOWN,
     Borderless        = SDL_WINDOW_BORDERLESS,
     Resizable         = SDL_WINDOW_RESIZABLE,
