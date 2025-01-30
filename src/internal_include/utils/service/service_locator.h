@@ -20,6 +20,7 @@ class ServiceLocator {
         = std::make_shared<T>(std::forward<Args>(args)...);
   }
 
+  // TODO: use std::weak_ptr (we will manage destructors here)
   template <typename T>
   static std::shared_ptr<T> s_get() {
     return s_getServiceContainer<T>();
