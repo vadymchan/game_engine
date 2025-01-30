@@ -129,133 +129,138 @@ void* PipelineStateInfoDx12::createGraphicsPipelineState() {
   m_pipelineState_ = nullptr;
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-
   assert(m_vertexBufferArray_.m_numOfData_ > 0);
 
+  // Input layout setup
   std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs;
   VertexBufferDx12::s_createVertexInputState(inputElementDescs,
                                              m_vertexBufferArray_);
   psoDesc.InputLayout.pInputElementDescs = inputElementDescs.data();
-  psoDesc.InputLayout.NumElements        = (uint32_t)inputElementDescs.size();
+  psoDesc.InputLayout.NumElements = static_cast<UINT>(inputElementDescs.size());
 
-  // In DX12, only one can be used, but this will be changed. We need to decide
-  // whether to use one or multiple.
+  // Root signature
   ComPtr<ID3D12RootSignature> RootSignature
       = ShaderBindingLayoutDx12::s_createRootSignature(
           m_shaderBindingLayoutArray_);
   psoDesc.pRootSignature = RootSignature.Get();
 
+  // Shaders
   if (kGraphicsShader.m_vertexShader_) {
-    // TODO: rename
-    auto VS_Compiled = (CompiledShaderDx12*)
-                           kGraphicsShader.m_vertexShader_->getCompiledShader();
+    auto VS_Compiled = std::static_pointer_cast<CompiledShaderDx12>(
+        kGraphicsShader.m_vertexShader_->getCompiledShader());
     assert(VS_Compiled);
     psoDesc.VS
         = {.pShaderBytecode = VS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = VS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
   if (kGraphicsShader.m_geometryShader_) {
-    auto GS_Compiled
-        = (CompiledShaderDx12*)
-              kGraphicsShader.m_geometryShader_->getCompiledShader();
+    auto GS_Compiled = std::static_pointer_cast<CompiledShaderDx12>(
+        kGraphicsShader.m_geometryShader_->getCompiledShader());
     assert(GS_Compiled);
     psoDesc.GS
         = {.pShaderBytecode = GS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = GS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
   if (kGraphicsShader.m_pixelShader_) {
-    auto PS_Compiled = (CompiledShaderDx12*)
-                           kGraphicsShader.m_pixelShader_->getCompiledShader();
+    auto PS_Compiled = std::static_pointer_cast<CompiledShaderDx12>(
+        kGraphicsShader.m_pixelShader_->getCompiledShader());
     assert(PS_Compiled);
     psoDesc.PS
         = {.pShaderBytecode = PS_Compiled->m_shaderBlob_->GetBufferPointer(),
            .BytecodeLength  = PS_Compiled->m_shaderBlob_->GetBufferSize()};
   }
 
-  psoDesc.RasterizerState = ((RasterizationStateInfoDx12*)
-                                 kPipelineStateFixed->m_rasterizationState_)
+  // Rasterizer / SampleDesc
+  psoDesc.RasterizerState = static_cast<RasterizationStateInfoDx12*>(
+                                kPipelineStateFixed->m_rasterizationState_)
                                 ->m_rasterizeDesc_;
-  psoDesc.SampleDesc.Count = ((RasterizationStateInfoDx12*)
-                                  kPipelineStateFixed->m_rasterizationState_)
+  psoDesc.SampleDesc.Count = static_cast<RasterizationStateInfoDx12*>(
+                                 kPipelineStateFixed->m_rasterizationState_)
                                  ->m_multiSampleDesc_.Count;
 
-  RenderPassDx12* RenderPassDX12 = (RenderPassDx12*)kRenderPass;
-
-  // Should we specify the blending operation separately? Let's check the
-  // current support of RenderPass.
-  for (int32_t i = 0; i < (int32_t)RenderPassDX12->getRTVFormats().size();
+  // Blending
+  auto renderPassDx12 = static_cast<const RenderPassDx12*>(kRenderPass);
+  for (int32_t i = 0;
+       i < static_cast<int32_t>(renderPassDx12->getRTVFormats().size());
        ++i) {
     psoDesc.BlendState.RenderTarget[i]
-        = ((BlendingStateInfoDx12*)kPipelineStateFixed->m_blendingState_)
+        = static_cast<BlendingStateInfoDx12*>(
+              kPipelineStateFixed->m_blendingState_)
               ->m_blendDesc_;
   }
-  psoDesc.DepthStencilState
-      = ((DepthStencilStateInfoDx12*)(kPipelineStateFixed
-                                          ->m_depthStencilState_))
-            ->m_depthStencilStateDesc_;
+
+  // Depth/Stencil handling 
+  auto* depthStencilInfo = static_cast<DepthStencilStateInfoDx12*>(
+      kPipelineStateFixed->m_depthStencilState_);
+
+
+  DXGI_FORMAT dsvFormat = renderPassDx12->getDSVFormat();
+  bool        hasDepth  = (dsvFormat != DXGI_FORMAT_UNKNOWN);
+
+  if (hasDepth) {
+    psoDesc.DepthStencilState = depthStencilInfo->m_depthStencilStateDesc_;
+    psoDesc.DSVFormat         = dsvFormat;
+  } else {
+    // Fully disable depth/stencil
+    D3D12_DEPTH_STENCIL_DESC disabledDepth = {};
+    disabledDepth.DepthEnable              = FALSE;
+    disabledDepth.DepthWriteMask           = D3D12_DEPTH_WRITE_MASK_ZERO;
+    disabledDepth.DepthFunc                = D3D12_COMPARISON_FUNC_ALWAYS;
+    disabledDepth.StencilEnable            = FALSE;
+
+    psoDesc.DepthStencilState = disabledDepth;
+    psoDesc.DSVFormat         = DXGI_FORMAT_UNKNOWN;
+  }
+
+  // Other pipeline parameters
   psoDesc.SampleMask = UINT_MAX;
   psoDesc.PrimitiveTopologyType
       = ((VertexBufferDx12*)m_vertexBufferArray_[0])->getTopologyTypeOnly();
-  psoDesc.NumRenderTargets = (uint32_t)RenderPassDX12->getRTVFormats().size();
+  psoDesc.NumRenderTargets
+      = static_cast<UINT>(renderPassDx12->getRTVFormats().size());
 
-  const int32_t NumOfRTVs
-      = std::min(static_cast<int32_t>(std::size(psoDesc.RTVFormats)),
-                 static_cast<int32_t>(RenderPassDX12->getRTVFormats().size()));
-  for (int32_t i = 0; i < NumOfRTVs; ++i) {
-    psoDesc.RTVFormats[i] = RenderPassDX12->getRTVFormats()[i];
+  const int32_t numOfRTVs = std::min<int32_t>(
+      static_cast<int32_t>(std::size(psoDesc.RTVFormats)),
+      static_cast<int32_t>(renderPassDx12->getRTVFormats().size()));
+  for (int32_t i = 0; i < numOfRTVs; ++i) {
+    psoDesc.RTVFormats[i] = renderPassDx12->getRTVFormats()[i];
   }
-  psoDesc.DSVFormat = RenderPassDX12->getDSVFormat();
 
+  // Create the pipeline
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
-
   HRESULT hr = g_rhiDx12->m_device_->CreateGraphicsPipelineState(
       &psoDesc, IID_PPV_ARGS(&m_pipelineState_));
   assert(SUCCEEDED(hr));
-
   if (FAILED(hr)) {
     return nullptr;
   }
 
+  // Copy viewports/scissors
   m_viewports_.resize(kPipelineStateFixed->m_viewports_.size());
-  for (int32_t i = 0; i < (int32_t)kPipelineStateFixed->m_viewports_.size();
+  for (int32_t i = 0;
+       i < static_cast<int32_t>(kPipelineStateFixed->m_viewports_.size());
        ++i) {
-    const Viewport& Src = kPipelineStateFixed->m_viewports_[i];
-    D3D12_VIEWPORT& Dst = m_viewports_[i];
-    Dst.TopLeftX        = Src.m_x_;
-    Dst.TopLeftY        = Src.m_y_;
-    Dst.Width           = Src.m_width_;
-    Dst.Height          = Src.m_height_;
-    Dst.MinDepth        = Src.m_minDepth_;
-    Dst.MaxDepth        = Src.m_maxDepth_;
+    const Viewport& src = kPipelineStateFixed->m_viewports_[i];
+    D3D12_VIEWPORT& dst = m_viewports_[i];
+    dst.TopLeftX        = src.m_x_;
+    dst.TopLeftY        = src.m_y_;
+    dst.Width           = src.m_width_;
+    dst.Height          = src.m_height_;
+    dst.MinDepth        = src.m_minDepth_;
+    dst.MaxDepth        = src.m_maxDepth_;
   }
 
   m_scissors_.resize(kPipelineStateFixed->m_scissors_.size());
-  for (int32_t i = 0; i < (int32_t)kPipelineStateFixed->m_scissors_.size();
+  for (int32_t i = 0;
+       i < static_cast<int32_t>(kPipelineStateFixed->m_scissors_.size());
        ++i) {
-    const Scissor& Src = kPipelineStateFixed->m_scissors_[i];
-    D3D12_RECT&    Dst = m_scissors_[i];
-    Dst.left           = Src.m_offset_.x();
-    Dst.right          = Src.m_offset_.x() + Src.m_extent_.width();
-    Dst.top            = Src.m_offset_.y();
-    Dst.bottom         = Src.m_offset_.y() + Src.m_extent_.height();
-  }
-
-  size_t hash = getHash();
-  assert(hash);
-  if (hash) {
-    if (kGraphicsShader.m_vertexShader_) {
-      Shader::s_connectedPipelineStateHash[kGraphicsShader.m_vertexShader_]
-          .push_back(hash);
-    }
-    if (kGraphicsShader.m_geometryShader_) {
-      Shader::s_connectedPipelineStateHash[kGraphicsShader.m_geometryShader_]
-          .push_back(hash);
-    }
-    if (kGraphicsShader.m_pixelShader_) {
-      Shader::s_connectedPipelineStateHash[kGraphicsShader.m_pixelShader_]
-          .push_back(hash);
-    }
+    const Scissor& src = kPipelineStateFixed->m_scissors_[i];
+    D3D12_RECT&    dst = m_scissors_[i];
+    dst.left           = src.m_offset_.x();
+    dst.right          = src.m_offset_.x() + src.m_extent_.width();
+    dst.top            = src.m_offset_.y();
+    dst.bottom         = src.m_offset_.y() + src.m_extent_.height();
   }
 
   return m_pipelineState_.Get();
@@ -269,8 +274,9 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
       = ShaderBindingLayoutDx12::s_createRootSignature(
           m_shaderBindingLayoutArray_);
   psoDesc.pRootSignature = RootSignature.Get();
-  if (kComputeShader) {
-    auto CS_Compiled = (CompiledShaderDx12*)kComputeShader->getCompiledShader();
+  if (computeShader) {
+    auto CS_Compiled = std::static_pointer_cast<CompiledShaderDx12>(
+        computeShader->getCompiledShader());
     assert(CS_Compiled);
     psoDesc.CS
         = {.pShaderBytecode = CS_Compiled->m_shaderBlob_->GetBufferPointer(),
@@ -287,13 +293,13 @@ void* PipelineStateInfoDx12::createComputePipelineState() {
     return nullptr;
   }
 
-  size_t hash = getHash();
-  assert(hash);
-  if (hash) {
-    if (kComputeShader) {
-      Shader::s_connectedPipelineStateHash[kComputeShader].push_back(hash);
-    }
-  }
+  // size_t hash = getHash();
+  // assert(hash);
+  // if (hash) {
+  //   if (computeShader) {
+  //     Shader::s_connectedPipelineStateHash[computeShader].push_back(hash);
+  //   }
+  // }
 
   return m_pipelineState_.Get();
 }

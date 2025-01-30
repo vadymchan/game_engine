@@ -88,11 +88,12 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
                TextureResourceResourceBindless->m_textureBindDatas_) {
             assert(Resource.m_texture);
 
-            TextureDx12* TexDX12 = (TextureDx12*)Resource.m_texture;
+            auto TexDX12
+                = std::static_pointer_cast<TextureDx12>(Resource.m_texture);
             m_descriptors_.push_back(
                 {.m_descriptor_   = TexDX12->m_srv_,
                  .m_resourceName_ = TexDX12->m_resourceName_,
-                 .m_resource_     = TexDX12});
+                 .m_resource_     = TexDX12.get()});
 
             if (Resource.m_samplerState_) {
               SamplerStateInfoDx12* SamplerDX12
@@ -123,10 +124,10 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
                   shaderBinding->m_resource_);
-          assert(tbor && tbor->kTexture);
+          assert(tbor && tbor->m_texture_);
 
-          if (tbor && tbor->kTexture) {
-            TextureDx12*   TexDX12 = (TextureDx12*)tbor->kTexture;
+          if (tbor && tbor->m_texture_) {
+            auto           TexDX12 = (TextureDx12*)tbor->m_texture_;
             DescriptorData descriptorData;
             descriptorData.m_descriptor_   = TexDX12->m_srv_;
             descriptorData.m_resourceName_ = TexDX12->m_resourceName_;
@@ -172,14 +173,14 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
               = (TextureResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource :
                TextureResourceResourceBindless->m_textureBindDatas_) {
-            TextureDx12* Tex = (TextureDx12*)Resource.m_texture;
+            auto Tex
+                = std::static_pointer_cast<TextureDx12>(Resource.m_texture);
             m_descriptors_.push_back({.m_descriptor_   = Tex->m_srv_,
                                       .m_resourceName_ = Tex->m_resourceName_,
-                                      .m_resource_     = Tex});
+                                      .m_resource_     = Tex.get()});
           }
         } else {
-          TextureDx12* Tex
-              = (TextureDx12*)shaderBinding->m_resource_->getResource();
+          auto Tex = (TextureDx12*)shaderBinding->m_resource_->getResource();
           m_descriptors_.push_back({.m_descriptor_   = Tex->m_srv_,
                                     .m_resourceName_ = Tex->m_resourceName_,
                                     .m_resource_     = Tex});
@@ -252,11 +253,12 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
               = (TextureResourceBindless*)shaderBinding->m_resource_;
           for (auto Resource :
                TextureResourceResourceBindless->m_textureBindDatas_) {
-            TextureDx12* Tex = (TextureDx12*)Resource.m_texture;
+            auto Tex
+                = std::static_pointer_cast<TextureDx12>(Resource.m_texture);
             if (Resource.m_mipLevel_ == 0) {
               m_descriptors_.push_back({.m_descriptor_   = Tex->m_uav_,
                                         .m_resourceName_ = Tex->m_resourceName_,
-                                        .m_resource_     = Tex});
+                                        .m_resource_     = Tex.get()});
             } else {
               auto it_find = Tex->m_uavMipMap.find(Resource.m_mipLevel_);
               if (it_find != Tex->m_uavMipMap.end()
@@ -264,18 +266,17 @@ void ShaderBindingInstanceDx12::updateShaderBindings(
                 m_descriptors_.push_back(
                     {.m_descriptor_   = it_find->second,
                      .m_resourceName_ = Tex->m_resourceName_,
-                     .m_resource_     = Tex});
+                     .m_resource_     = Tex.get()});
               } else {
                 m_descriptors_.push_back(
                     {.m_descriptor_   = Tex->m_uav_,
                      .m_resourceName_ = Tex->m_resourceName_,
-                     .m_resource_     = Tex});
+                     .m_resource_     = Tex.get()});
               }
             }
           }
         } else {
-          TextureDx12* Tex
-              = (TextureDx12*)shaderBinding->m_resource_->getResource();
+          auto Tex = (TextureDx12*)shaderBinding->m_resource_->getResource();
           const TextureResource* tbor
               = reinterpret_cast<const TextureResource*>(
                   shaderBinding->m_resource_);

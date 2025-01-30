@@ -590,7 +590,7 @@ std::shared_ptr<TextureDx12> g_createTexture(
     HasClearValue = clearValue.getType() != ERTClearType::None;
   }
 
-  std::shared_ptr<CreatedResourceDx12> TextureInternal
+  std::shared_ptr<CreatedResourceDx12> textureInternal
       = g_createTexturenternal(witdh,
                                height,
                                arrayLayers,
@@ -602,22 +602,22 @@ std::shared_ptr<TextureDx12> g_createTexture(
                                imageLayout,
                                (HasClearValue ? &ClearValue : nullptr),
                                resourceName);
-  assert(TextureInternal->isValid());
+  assert(textureInternal->isValid());
 
-  auto TexturePtr = std::make_shared<TextureDx12>(
+  auto texturePtr = std::make_shared<TextureDx12>(
       type,
       format,
       // TODO: remove casting
       math::Dimension2Di{static_cast<int>(witdh), static_cast<int>(height)},
       arrayLayers,
+      imageLayout,
       EMSAASamples::COUNT_1,
       false,
       clearValue,
-      TextureInternal);
-  assert(TexturePtr);
+      textureInternal);
+  assert(texturePtr);
   // TODO: hotfix (remove mip level assigning here)
-  TexturePtr->m_mipLevels_ = mipLevels;
-  TexturePtr->m_layout_    = imageLayout;
+  texturePtr->m_mipLevels_ = mipLevels;
 
   // TODO: general - why do we need ResourceName?
   if (resourceName) {
@@ -628,23 +628,23 @@ std::shared_ptr<TextureDx12> g_createTexture(
     const size_t newsize  = origsize * 2;
     wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
 
-    TexturePtr->m_resourceName_ = Name(szResourceName);
+    texturePtr->m_resourceName_ = Name(szResourceName);
   }
 
   if (s_isDepthFormat(format)) {
-    g_createShaderResourceView(TexturePtr.get());
-    g_createDepthStencilView(TexturePtr.get());
+    g_createShaderResourceView(texturePtr);
+    g_createDepthStencilView(texturePtr);
   } else {
-    g_createShaderResourceView(TexturePtr.get());
+    g_createShaderResourceView(texturePtr);
     if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
-      g_createRenderTargetView(TexturePtr.get());
+      g_createRenderTargetView(texturePtr);
     }
     if (!!(textureCreateFlag & ETextureCreateFlag::UAV)) {
-      g_createUnorderedAccessView(TexturePtr.get());
+      g_createUnorderedAccessView(texturePtr);
     }
   }
 
-  return TexturePtr;
+  return texturePtr;
 }
 
 std::shared_ptr<TextureDx12> g_createTexture(
@@ -654,20 +654,20 @@ std::shared_ptr<TextureDx12> g_createTexture(
     const RtClearValue&                         clearValue,
     const wchar_t*                              resourceName) {
   const auto desc       = texture->m_resource_.get()->Get()->GetDesc();
-  auto       TexturePtr = std::make_shared<TextureDx12>(
+  auto       texturePtr = std::make_shared<TextureDx12>(
       g_getDX12TextureDemension(desc.Dimension, desc.DepthOrArraySize > 1),
       g_getDX12TextureFormat(desc.Format),
       // TODO: remove casting
       math::Dimension2Di{static_cast<int>(desc.Width),
                          static_cast<int>(desc.Height)},
       (int32_t)desc.DepthOrArraySize,
+      imageLayout,
       EMSAASamples::COUNT_1,
       false,
       clearValue,
       texture);
 
-  assert(TexturePtr);
-  TexturePtr->m_layout_ = imageLayout;
+  assert(texturePtr);
 
   if (resourceName) {
     // https://learn.microsoft.com/ko-kr/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-char-
@@ -677,23 +677,23 @@ std::shared_ptr<TextureDx12> g_createTexture(
     const size_t newsize  = origsize * 2;
     wcstombs_s(&length, szResourceName, newsize, resourceName, _TRUNCATE);
 
-    TexturePtr->m_resourceName_ = Name(szResourceName);
+    texturePtr->m_resourceName_ = Name(szResourceName);
   }
 
   if (s_isDepthFormat(g_getDX12TextureFormat(desc.Format))) {
-    g_createShaderResourceView(TexturePtr.get());
-    g_createDepthStencilView(TexturePtr.get());
+    g_createShaderResourceView(texturePtr);
+    g_createDepthStencilView(texturePtr);
   } else {
-    g_createShaderResourceView(TexturePtr.get());
+    g_createShaderResourceView(texturePtr);
     if (!!(textureCreateFlag & ETextureCreateFlag::RTV)) {
-      g_createRenderTargetView(TexturePtr.get());
+      g_createRenderTargetView(texturePtr);
     }
     if (!!(textureCreateFlag & ETextureCreateFlag::UAV)) {
-      g_createUnorderedAccessView(TexturePtr.get());
+      g_createUnorderedAccessView(texturePtr);
     }
   }
 
-  return TexturePtr;
+  return texturePtr;
 }
 
 void g_copyBufferToTexture(ID3D12GraphicsCommandList4*   commandBuffer,
@@ -780,6 +780,90 @@ void g_createConstantBufferView(BufferDx12* buffer) {
 
   g_rhiDx12->m_device_->CreateConstantBufferView(&Desc,
                                                  buffer->m_cbv_.m_cpuHandle_);
+}
+
+void g_copyTexture(ID3D12GraphicsCommandList* commandList,
+                   ID3D12Resource*            srcResource,
+                   D3D12_RESOURCE_STATES      srcState,
+                   ID3D12Resource*            dstResource,
+                   D3D12_RESOURCE_STATES      dstState,
+                   uint32_t                   srcWidth,
+                   uint32_t                   srcHeight,
+                   uint32_t                   dstWidth,
+                   uint32_t                   dstHeight,
+                   uint32_t                   srcArrayLayers,
+                   uint32_t                   dstArrayLayers) {
+  uint32_t copyWidth    = std::min(srcWidth, dstWidth);
+  uint32_t copyHeight   = std::min(srcHeight, dstHeight);
+  uint32_t layersToCopy = std::min(srcArrayLayers, dstArrayLayers);
+
+  D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
+  dstLocation.pResource                   = dstResource;
+  dstLocation.Type             = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+  dstLocation.SubresourceIndex = 0;
+
+  D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
+  srcLocation.pResource                   = srcResource;
+  srcLocation.Type             = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+  srcLocation.SubresourceIndex = 0;
+
+  D3D12_BOX srcBox = {};
+  srcBox.left      = 0;
+  srcBox.top       = 0;
+  srcBox.front     = 0;
+  srcBox.right     = copyWidth;
+  srcBox.bottom    = copyHeight;
+  srcBox.back      = 1;  // Assuming 2D textures
+
+  commandList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, &srcBox);
+}
+
+// TODO: consider that maybe transitionLayout should be called in more high
+// level function (e.g. RHI:copyTexture)
+void g_copyTexture(ID3D12GraphicsCommandList*          commandList,
+                   const std::shared_ptr<TextureDx12>& srcTexture,
+                   const std::shared_ptr<TextureDx12>& dstTexture) {
+  auto initialSrcLayout = srcTexture->getLayout();
+  auto initialDstLayout = dstTexture->getLayout();
+
+  if (srcTexture->getLayout() != EResourceLayout::TRANSFER_SRC) {
+    g_rhiDx12->transitionLayout(
+        commandList,
+        (ID3D12Resource*)srcTexture->getHandle(),
+        g_getDX12ResourceLayout(srcTexture->getLayout()),
+        D3D12_RESOURCE_STATE_COPY_SOURCE);
+  }
+
+  if (dstTexture->getLayout() != EResourceLayout::TRANSFER_DST) {
+    g_rhiDx12->transitionLayout(
+        commandList,
+        (ID3D12Resource*)dstTexture->getHandle(),
+        g_getDX12ResourceLayout(dstTexture->getLayout()),
+        D3D12_RESOURCE_STATE_COPY_DEST);
+  }
+
+  g_copyTexture(commandList,
+                static_cast<ID3D12Resource*>(srcTexture->getHandle()),
+                g_getDX12ResourceLayout(srcTexture->getLayout()),
+                static_cast<ID3D12Resource*>(dstTexture->getHandle()),
+                g_getDX12ResourceLayout(dstTexture->getLayout()),
+                srcTexture->m_extent_.width(),
+                srcTexture->m_extent_.height(),
+                dstTexture->m_extent_.width(),
+                dstTexture->m_extent_.height(),
+                srcTexture->m_layerCount_,
+                dstTexture->m_layerCount_);
+
+  // Transition the textures back to their original layout
+  g_rhiDx12->transitionLayout(commandList,
+                              (ID3D12Resource*)srcTexture->getHandle(),
+                              D3D12_RESOURCE_STATE_COPY_SOURCE,
+                              g_getDX12ResourceLayout(initialSrcLayout));
+
+  g_rhiDx12->transitionLayout(commandList,
+                              (ID3D12Resource*)dstTexture->getHandle(),
+                              D3D12_RESOURCE_STATE_COPY_DEST,
+                              g_getDX12ResourceLayout(initialDstLayout));
 }
 
 void g_createShaderResourceViewStructuredBuffer(BufferDx12* buffer,
@@ -935,7 +1019,7 @@ void g_createUnorderedAccessViewFormatted(BufferDx12*    buffer,
       buffer->m_buffer->get(), nullptr, &Desc, buffer->m_uav_.m_cpuHandle_);
 }
 
-void g_createShaderResourceView(TextureDx12* texture) {
+void g_createShaderResourceView(const std::shared_ptr<TextureDx12>& texture) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -994,7 +1078,7 @@ void g_createShaderResourceView(TextureDx12* texture) {
       texture->m_texture->get(), &Desc, texture->m_srv_.m_cpuHandle_);
 }
 
-void g_createDepthStencilView(TextureDx12* texture) {
+void g_createDepthStencilView(const std::shared_ptr<TextureDx12>& texture) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -1043,7 +1127,7 @@ void g_createDepthStencilView(TextureDx12* texture) {
       texture->m_texture->get(), &Desc, texture->m_dsv_.m_cpuHandle_);
 }
 
-void g_createUnorderedAccessView(TextureDx12* texture) {
+void g_createUnorderedAccessView(const std::shared_ptr<TextureDx12>& texture) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 
@@ -1095,7 +1179,7 @@ void g_createUnorderedAccessView(TextureDx12* texture) {
   }
 }
 
-void g_createRenderTargetView(TextureDx12* texture) {
+void g_createRenderTargetView(const std::shared_ptr<TextureDx12>& texture) {
   assert(g_rhiDx12);
   assert(g_rhiDx12->m_device_);
 

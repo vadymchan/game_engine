@@ -181,13 +181,15 @@ void WriteDescriptorSet::setWriteDescriptorInfo(
           for (auto TextureData : tbor->m_textureBindDatas_) {
             assert(TextureData.m_texture);
 
+            auto textureVk
+                = std::static_pointer_cast<TextureVk>(TextureData.m_texture);
+
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout
-                = TextureData.m_texture->isDepthFormat()
+                = textureVk->isDepthFormat()
                     ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                     : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView
-                = ((const TextureVk*)TextureData.m_texture)->m_imageView_;
+            imageInfo.imageView = textureVk->m_imageView_;
             imageInfo.sampler
                 = TextureData.m_samplerState_
                     ? (VkSampler)TextureData.m_samplerState_->getHandle()
@@ -203,19 +205,20 @@ void WriteDescriptorSet::setWriteDescriptorInfo(
       } else {
         const TextureResource* tbor = reinterpret_cast<const TextureResource*>(
             shaderBinding->m_resource_);
-        assert(tbor && tbor->kTexture);
+        assert(tbor && tbor->m_texture_);
 
-        if (tbor && tbor->kTexture) {
+        auto textureVk = (TextureVk*)tbor->m_texture_;
+
+        if (tbor && tbor->m_texture_) {
           VkDescriptorImageInfo imageInfo{};
           imageInfo.imageLayout
-              = tbor->kTexture->isDepthFormat()
+              = tbor->m_texture_->isDepthFormat()
                   ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                   : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-          imageInfo.imageView
-              = ((const TextureVk*)tbor->kTexture)->m_imageView_;
-          imageInfo.sampler = tbor->m_samplerState_
-                                ? (VkSampler)tbor->m_samplerState_->getHandle()
-                                : nullptr;
+          imageInfo.imageView = textureVk->m_imageView_;
+          imageInfo.sampler   = tbor->m_samplerState_
+                                  ? (VkSampler)tbor->m_samplerState_->getHandle()
+                                  : nullptr;
           if (!imageInfo.sampler) {
             imageInfo.sampler
                 = TextureVk::s_createDefaultSamplerState();  // todo
@@ -248,13 +251,15 @@ void WriteDescriptorSet::setWriteDescriptorInfo(
           for (auto TextureData : tbor->m_textureBindDatas_) {
             assert(TextureData.m_texture);
 
+            auto textureVk
+                = std::static_pointer_cast<TextureVk>(TextureData.m_texture);
+
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout
                 = TextureData.m_texture->isDepthFormat()
                     ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                     : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView
-                = ((const TextureVk*)TextureData.m_texture)->m_imageView_;
+            imageInfo.imageView = textureVk->m_imageView_;
             imageInfo.sampler
                 = TextureData.m_samplerState_
                     ? (VkSampler)TextureData.m_samplerState_->getHandle()
@@ -270,16 +275,17 @@ void WriteDescriptorSet::setWriteDescriptorInfo(
       } else {
         const TextureResource* tbor = reinterpret_cast<const TextureResource*>(
             shaderBinding->m_resource_);
-        assert(tbor && tbor->kTexture);
+        assert(tbor && tbor->m_texture_);
 
-        if (tbor && tbor->kTexture) {
+        auto textureVk = (TextureVk*)tbor->m_texture_;
+
+        if (tbor && tbor->m_texture_) {
           VkDescriptorImageInfo imageInfo{};
           imageInfo.imageLayout
-              = (tbor->kTexture->isDepthFormat()
+              = (tbor->m_texture_->isDepthFormat()
                      ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
                      : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-          imageInfo.imageView
-              = ((const TextureVk*)tbor->kTexture)->m_imageView_;
+          imageInfo.imageView = textureVk->m_imageView_;
           assert(imageInfo.imageView);
           m_writeDescriptorInfos_.push_back(WriteDescriptorInfo(imageInfo));
         }

@@ -19,7 +19,7 @@ bool CommandBufferDx12::begin() const {
     ID3D12DescriptorHeap* ppHeaps[]
         = {m_onlineDescriptorHeap_->getHeap(),
            m_onlineSamplerDescriptorHeap_->getHeap()};
-    m_commandList_->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    m_commandList_->SetDescriptorHeaps(std::size(ppHeaps), ppHeaps);
   }
 
   return true;

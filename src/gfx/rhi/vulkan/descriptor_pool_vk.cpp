@@ -69,8 +69,9 @@ void DescriptorPoolVk::create(uint32_t maxDescriptorSets) {
   PoolInfo.pPoolSizes    = Types.data();
   PoolInfo.maxSets       = maxDescriptorSets;
   PoolInfo.flags
-      = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;  // for bindless
-                                                          // resources
+      // for bindless resources
+      = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT
+      | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
   assert(VK_SUCCESS
          == vkCreateDescriptorPool(

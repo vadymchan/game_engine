@@ -484,7 +484,7 @@ std::shared_ptr<TextureVk> g_createTexture2DArray(
     TexturePtr->m_mipLevels_       = mipLevels;
     TexturePtr->m_sampleCount_     = (EMSAASamples)numSamples;
     TexturePtr->m_format_          = g_getVulkanTextureFormat(format);
-    TexturePtr->m_imageLayout_     = g_getVulkanImageLayout(imageLayout);
+    TexturePtr->m_layout_          = g_getVulkanImageLayout(imageLayout);
 
     const bool hasDepthAttachment = s_isDepthFormat(TexturePtr->m_format_);
     const VkImageAspectFlagBits ImageAspectFlagBit
@@ -556,7 +556,7 @@ std::shared_ptr<TextureVk> g_create2DTexture(
     TexturePtr->m_mipLevels_       = mipLevels;
     TexturePtr->m_sampleCount_     = (EMSAASamples)numSamples;
     TexturePtr->m_format_          = g_getVulkanTextureFormat(format);
-    TexturePtr->m_imageLayout_     = g_getVulkanImageLayout(imageLayout);
+    TexturePtr->m_layout_          = g_getVulkanImageLayout(imageLayout);
 
     const bool hasDepthAttachment = s_isDepthFormat(TexturePtr->m_format_);
     const VkImageAspectFlagBits ImageAspectFlagBit
@@ -628,7 +628,7 @@ std::shared_ptr<TextureVk> g_createCubeTexture(
     TexturePtr->m_mipLevels_       = mipLevels;
     TexturePtr->m_sampleCount_     = (EMSAASamples)numSamples;
     TexturePtr->m_format_          = g_getVulkanTextureFormat(format);
-    TexturePtr->m_imageLayout_     = g_getVulkanImageLayout(imageLayout);
+    TexturePtr->m_layout_          = g_getVulkanImageLayout(imageLayout);
 
     const bool hasDepthAttachment = s_isDepthFormat(TexturePtr->m_format_);
     const VkImageAspectFlagBits ImageAspectFlagBit
@@ -863,6 +863,107 @@ void g_copyBufferToTexture(VkBuffer buffer,
                         miplevel,
                         layerIndex);
   g_rhiVk->endSingleTimeCommands(commandBuffer);
+}
+
+void g_copyImage(VkCommandBuffer commandBuffer,
+                 VkImage         srcImage,
+                 VkImageLayout   srcLayout,
+                 VkImage         dstImage,
+                 VkImageLayout   dstLayout,
+                 uint32_t        srcWidth,
+                 uint32_t        srcHeight,
+                 uint32_t        dstWidth,
+                 uint32_t        dstHeight,
+                 uint32_t        srcLayerCount,
+                 uint32_t        dstLayerCount) {
+  // Determine how many layers to copy
+  const uint32_t layersToCopy = std::min(srcLayerCount, dstLayerCount);
+
+  VkImageCopy imageCopyRegion{};
+  // TODO: currently tested only for color buffer -> back buffer copy
+  imageCopyRegion.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+  imageCopyRegion.srcSubresource.baseArrayLayer = 0;
+  imageCopyRegion.srcSubresource.layerCount     = layersToCopy;
+  imageCopyRegion.srcSubresource.mipLevel       = 0;
+
+  imageCopyRegion.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+  imageCopyRegion.dstSubresource.baseArrayLayer = 0;
+  imageCopyRegion.dstSubresource.layerCount     = layersToCopy;
+  imageCopyRegion.dstSubresource.mipLevel       = 0;
+
+  imageCopyRegion.srcOffset = {0, 0, 0};
+  imageCopyRegion.dstOffset = {0, 0, 0};
+
+  // copy from (0,0) to (min(width,height)).
+  imageCopyRegion.extent.width  = std::min(srcWidth, dstWidth);
+  imageCopyRegion.extent.height = std::min(srcHeight, dstHeight);
+  imageCopyRegion.extent.depth  = 1;  // Assuming 2D images for now
+
+  vkCmdCopyImage(commandBuffer,
+                 srcImage,
+                 srcLayout,
+                 dstImage,
+                 dstLayout,
+                 1,  // one region
+                 &imageCopyRegion);
+}
+
+// TODO: consider that maybe transitionLayout should be called in more high
+// level function (e.g. RHI:copyTexture)
+void g_copyTexture(VkCommandBuffer                   commandBuffer,
+                   const std::shared_ptr<TextureVk>& srcTexture,
+                   const std::shared_ptr<TextureVk>& dstTexture) {
+  auto initialSrcLayout = srcTexture->getLayout();
+  auto initialDstLayout = dstTexture->getLayout();
+
+  if (srcTexture->getLayout() != EResourceLayout::TRANSFER_SRC) {
+    g_rhiVk->transitionLayout(commandBuffer,
+                              (VkImage)srcTexture->getHandle(),
+                              g_getVulkanTextureFormat(srcTexture->m_format_),
+                              srcTexture->m_mipLevels_,
+                              srcTexture->m_layerCount_,
+                              g_getVulkanImageLayout(srcTexture->getLayout()),
+                              VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+  }
+
+  if (dstTexture->getLayout() != EResourceLayout::TRANSFER_DST) {
+    g_rhiVk->transitionLayout(commandBuffer,
+                              (VkImage)dstTexture->getHandle(),
+                              g_getVulkanTextureFormat(dstTexture->m_format_),
+                              dstTexture->m_mipLevels_,
+                              dstTexture->m_layerCount_,
+                              g_getVulkanImageLayout(dstTexture->getLayout()),
+                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+  }
+
+  g_copyImage(commandBuffer,
+              srcTexture->m_image_,
+              VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+              dstTexture->m_image_,
+              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+              srcTexture->m_extent_.width(),
+              srcTexture->m_extent_.height(),
+              dstTexture->m_extent_.width(),
+              dstTexture->m_extent_.height(),
+              srcTexture->m_layerCount_,
+              dstTexture->m_layerCount_);
+
+  // Transition the textures back to their original layout
+  g_rhiVk->transitionLayout(commandBuffer,
+                            (VkImage)srcTexture->getHandle(),
+                            g_getVulkanTextureFormat(srcTexture->m_format_),
+                            srcTexture->m_mipLevels_,
+                            srcTexture->m_layerCount_,
+                            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                            g_getVulkanImageLayout(initialSrcLayout));
+
+  g_rhiVk->transitionLayout(commandBuffer,
+                            (VkImage)dstTexture->getHandle(),
+                            g_getVulkanTextureFormat(dstTexture->m_format_),
+                            dstTexture->m_mipLevels_,
+                            dstTexture->m_layerCount_,
+                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                            g_getVulkanImageLayout(initialDstLayout));
 }
 
 }  // namespace game_engine

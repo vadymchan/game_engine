@@ -10,22 +10,10 @@ RenderFrameContext::~RenderFrameContext() {
   destroy();
 }
 
-bool RenderFrameContext::beginActiveCommandBuffer() {
-  assert(!m_isBeginActiveCommandbuffer_);
-  m_isBeginActiveCommandbuffer_ = true;
-  return m_commandBuffer_->begin();
-}
-
-bool RenderFrameContext::endActiveCommandBuffer() {
-  assert(m_isBeginActiveCommandbuffer_);
-  m_isBeginActiveCommandbuffer_ = false;
-  return m_commandBuffer_->end();
-}
-
 void RenderFrameContext::destroy() {
-  if (m_sceneRenderTargetPtr_) {
-    m_sceneRenderTargetPtr_->returnRt();
-    m_sceneRenderTargetPtr_.reset();
+  if (m_sceneRenderTarget_) {
+    m_sceneRenderTarget_->returnRt();
+    m_sceneRenderTarget_.reset();
   }
 
   if (m_commandBuffer_) {

@@ -5,33 +5,8 @@
 namespace game_engine {
 
 std::map<size_t, std::list<FrameBufferPool::FrameBufferPoolResource> >
-                                FrameBufferPool::s_frameBufferResourceMap;
+                               FrameBufferPool::s_frameBufferResourceMap;
 std::map<FrameBuffer*, size_t> FrameBufferPool::s_frameBufferHashVariableMap;
-
-//struct Texture* FrameBufferPool::GetNullTexture(ETextureType type) {
-//  switch (type) {
-//    case ETextureType::TEXTURE_2D: {
-//      static auto temp = FrameBufferPool::s_getFrameBuffer(
-//          {ETextureType::TEXTURE_2D, ETextureFormat::RGBA8, 2, 2, 1});
-//      return temp->getTexture();
-//    }
-//    case ETextureType::TEXTURE_2D_ARRAY: {
-//      static auto temp = FrameBufferPool::s_getFrameBuffer(
-//          {ETextureType::TEXTURE_2D_ARRAY, ETextureFormat::RGBA8, 2, 2, 1});
-//      return temp->getTexture();
-//    }
-//    case ETextureType::TEXTURE_CUBE: {
-//      static auto temp = FrameBufferPool::s_getFrameBuffer(
-//          {ETextureType::TEXTURE_CUBE, ETextureFormat::RGBA8, 2, 2, 1});
-//      return temp->getTexture();
-//    }
-//    default:
-//      JASSERT(0);
-//      break;
-//  }
-//
-//  return nullptr;
-//}
 
 FrameBufferPool::FrameBufferPool() {
 }

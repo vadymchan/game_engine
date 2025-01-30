@@ -4,11 +4,11 @@ namespace game_engine {
 
 RHI* g_rhi = nullptr;
 
-int32_t g_maxCheckCountForRealTimeShaderUpdate = 10;
-int32_t g_sleepMSForRealTimeShaderUpdate       = 100;
-bool    g_useRealTimeShaderUpdate              = true;
+// int32_t g_maxCheckCountForRealTimeShaderUpdate = 10;
+// int32_t g_sleepMSForRealTimeShaderUpdate       = 100;
+// bool    g_useRealTimeShaderUpdate              = false;
 
-TResourcePool<Shader, MutexRWLock> RHI::s_shaderPool;
+//TResourcePool<Shader, MutexRWLock> RHI::s_shaderPool;
 
 const RtClearValue RtClearValue::s_kInvalid = RtClearValue();
 
@@ -20,9 +20,8 @@ void RHI::onInitRHI() {
 }
 
 void RHI::release() {
-
-  Shader::s_releaseCheckUpdateShaderThread();
-  s_shaderPool.release();
+  // Shader::s_releaseCheckUpdateShaderThread();
+  //  s_shaderPool.release();
 }
 
 RHI::RHI() {

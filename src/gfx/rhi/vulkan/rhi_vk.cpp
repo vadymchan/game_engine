@@ -26,8 +26,8 @@ struct FrameBufferVk : public FrameBuffer {
   bool                                  m_isInitialized = false;
   std::vector<std::shared_ptr<Texture>> m_allTextures;
 
-  virtual Texture* getTexture(std::int32_t index = 0) const {
-    return m_allTextures[index].get();
+  virtual std::shared_ptr<Texture> getTexture(std::int32_t index = 0) const {
+    return m_allTextures[index];
   }
 };
 
@@ -666,11 +666,11 @@ std::shared_ptr<Texture> RhiVk::createTextureFromData(
     stagingBufferPtr->updateBuffer(image->pixels.data(), image->pixels.size());
   }
 
-  std::shared_ptr<TextureVk> texturePtr;
+  std::shared_ptr<TextureVk> texture;
 
   if (image->dimension == ETextureType::TEXTURE_CUBE) {
     // Create a cube texture
-    // texturePtr = g_rhi->createCubeTexture<TextureVk>(
+    // texture = g_rhi->createCubeTexture<TextureVk>(
     //    static_cast<uint32_t>(image->width),
     //    static_cast<uint32_t>(image->height),
     //    static_cast<uint32_t>(image->mipLevels),
@@ -682,7 +682,7 @@ std::shared_ptr<Texture> RhiVk::createTextureFromData(
     //);
   } else {
     // Assume 2D for now
-    texturePtr = g_rhi->create2DTexture<TextureVk>(
+    texture = g_rhi->create2DTexture<TextureVk>(
         static_cast<uint32_t>(image->width),
         static_cast<uint32_t>(image->height),
         static_cast<uint32_t>(image->arraySize),
@@ -690,25 +690,26 @@ std::shared_ptr<Texture> RhiVk::createTextureFromData(
         image->format,
         // ETextureCreateFlag::TransferSrc | ETextureCreateFlag::TransferDst
         //     | ETextureCreateFlag::UAV,
-        // EResourceLayout::SHADER_READ_ONLY,
         ETextureCreateFlag::TransferDst,
         // ETextureCreateFlag::NONE,
-        EResourceLayout::GENERAL,
+        // assume that we'll use the texture as a shader resource
+        EResourceLayout::SHADER_READ_ONLY,
+        // EResourceLayout::GENERAL,
         image
 
     );
   }
 
-  if (!texturePtr) {
+  if (!texture) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create texture");
     return nullptr;
   }
 
-  return texturePtr;
+  return texture;
 }
 
-bool RhiVk::createShaderInternal(Shader*           shader,
-                                 const ShaderInfo& shaderInfo) const {
+bool RhiVk::createShaderInternal(std::shared_ptr<Shader> shader,
+                                 const ShaderInfo&       shaderInfo) const {
   auto CreateShaderModule
       = [m_device_ = this->m_device_](
             const std::vector<uint32_t>& code) -> VkShaderModule {
@@ -754,18 +755,17 @@ bool RhiVk::createShaderInternal(Shader*           shader,
   };
 
   std::vector<Name> IncludeFilePaths;
-  Shader*           shader_vk = shader;
-  assert(shader_vk->getPermutationCount());
+  assert(shader->getPermutationCount());
   {
-    assert(!shader_vk->m_compiledShader);
+    assert(!shader->m_compiledShader_);
     // TODO: check for memory leak, use smart pointer
-    CompiledShaderVk* CurCompiledShader = new CompiledShaderVk();
-    shader_vk->m_compiledShader         = CurCompiledShader;
+    auto CurCompiledShader    = std::make_shared<CompiledShaderVk>();
+    shader->m_compiledShader_ = CurCompiledShader;
 
-    shader_vk->setPermutationId(shaderInfo.getPermutationId());
+    shader->setPermutationId(shaderInfo.getPermutationId());
 
     std::string PermutationDefines;
-    shader_vk->getPermutationDefines(PermutationDefines);
+    shader->getPermutationDefines(PermutationDefines);
 
     VkShaderModule shaderModule{};
 
@@ -939,8 +939,8 @@ bool RhiVk::createShaderInternal(Shader*           shader,
     CurCompiledShader->m_shaderStage_.pName
         = shaderInfo.getEntryPoint().toStr();
   }
-  shader_vk->m_shaderInfo_ = shaderInfo;
-  shader_vk->m_shaderInfo_.setIncludeShaderFilePaths(IncludeFilePaths);
+  shader->m_shaderInfo_ = shaderInfo;
+  shader->m_shaderInfo_.setIncludeShaderFilePaths(IncludeFilePaths);
 
   return true;
 }
@@ -1063,6 +1063,8 @@ std::shared_ptr<RenderTarget> RhiVk::createRenderTarget(
     TextureCreateFlag |= ETextureCreateFlag::Memoryless;
   }
 
+  TextureCreateFlag |= info.m_textureCreateFlag_;
+
   const VkImageAspectFlags ImageAspectFlag = hasDepthAttachment
                                                ? VK_IMAGE_ASPECT_DEPTH_BIT
                                                : VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1156,165 +1158,12 @@ std::shared_ptr<RenderTarget> RhiVk::createRenderTarget(
   // TexturePtr->ViewUAV          = imageViewUAV;
   // TexturePtr->ViewUAVForMipMap = imageViewForMipMapUAV;
 
-  auto RenderTargetPtr           = std::make_shared<RenderTarget>();
-  RenderTargetPtr->m_info_       = info;
-  RenderTargetPtr->m_texturePtr_ = TexturePtr;
+  auto RenderTargetPtr        = std::make_shared<RenderTarget>();
+  RenderTargetPtr->m_info_    = info;
+  RenderTargetPtr->m_texture_ = TexturePtr;
 
   return RenderTargetPtr;
 }
-
-// TODO: remove commented code (old version)
-//  ///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  const VkFormat          textureFormat      = info.Format;
-//  const bool              hasDepthAttachment = g_isDepthFormat(info.Format);
-//  const VkImageUsageFlags AllowingUsageFlag
-//      = info.IsMemoryless ? (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-//                             | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-//                             | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)
-//                          : VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM;
-//
-//  const VkImageUsageFlags ImageUsageFlag
-//      = AllowingUsageFlag
-//      & ((hasDepthAttachment ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-//                             : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-//                                   | VK_IMAGE_USAGE_STORAGE_BIT)
-//         | VK_IMAGE_USAGE_SAMPLED_BIT
-//         | (info.IsUseAsSubpassInput ? VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT :
-//         0) | (info.IsMemoryless ? VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT :
-//         0));
-//  const VkImageAspectFlags ImageAspectFlag = hasDepthAttachment
-//                                               ? VK_IMAGE_ASPECT_DEPTH_BIT
-//                                               : VK_IMAGE_ASPECT_COLOR_BIT;
-//
-//  // const VkImageTiling TilingMode = IsMobile ?
-//  // VkImageTiling::VK_IMAGE_TILING_OPTIMAL :
-//  // VkImageTiling::VK_IMAGE_TILING_LINEAR;
-//  const VkImageTiling TilingMode = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-//
-//  const int32_t mipLevels
-//      = (info.SampleCount > VK_SAMPLE_COUNT_1_BIT || !info.IsGenerateMipmap)
-//          ? 1
-//          : TextureVk::s_getMipLevels(info.Extent.width(),
-//          info.Extent.height());
-//  assert((int32_t)info.SampleCount >= 1);
-//
-//  // VkImageView                imageViewUAV = nullptr;
-//  //  std::map<int32, VkImageView>     imageViewForMipMap;
-//  //  std::map<int32, VkImageView>     imageViewForMipMapUAV;
-//  std::shared_ptr<TextureVk> TexturePtr;
-//
-//  ETextureCreateFlag TextureCreateFlag{};
-//  if (hasDepthAttachment) {
-//    TextureCreateFlag |= ETextureCreateFlag::DSV;
-//  } else {
-//    TextureCreateFlag |= ETextureCreateFlag::RTV | ETextureCreateFlag::UAV;
-//  }
-//
-//  if (info.IsUseAsSubpassInput) {
-//    TextureCreateFlag |= ETextureCreateFlag::SubpassInput;
-//  }
-//
-//  if (info.IsMemoryless) {
-//    TextureCreateFlag |= ETextureCreateFlag::Memoryless;
-//  }
-//
-//  const VkImageAspectFlags ImageAspectFlag = hasDepthAttachment
-//                                               ? VK_IMAGE_ASPECT_DEPTH_BIT
-//                                               : VK_IMAGE_ASPECT_COLOR_BIT;
-//
-//  switch (info.Type) {
-//    case VK_IMAGE_VIEW_TYPE_2D:
-//
-//      TexturePtr = g_create2DTexture(info.Extent.width(),
-//                                   info.Extent.height(),
-//                                   1,
-//                                   mipLevels,
-//                                   info.Format,
-//                                   TextureCreateFlag,
-//                                   VK_IMAGE_LAYOUT_GENERAL);
-//      /*imageViewForMipMap[0] = TexturePtr->imageView;
-//
-//      assert(mipLevels > 0);
-//      for (int32_t i = 1; i < mipLevels; ++i) {
-//        imageViewForMipMap[i] = g_createTextureViewForSpecificMipMap(
-//            TexturePtr->image, textureFormat, ImageAspectFlag, i);
-//      }*/
-//      break;
-//    case VK_IMAGE_VIEW_TYPE_2D_ARRAY:
-//
-//      TexturePtr = g_create2DTexture(info.Extent.width(),
-//                                   info.Extent.height(),
-//                                   info.LayerCount,
-//                                   mipLevels,
-//                                   info.Format,
-//                                   TextureCreateFlag,
-//                                   VK_IMAGE_LAYOUT_GENERAL);
-//      /*imageViewForMipMap[0] = TexturePtr->imageView;
-//
-//      assert(mipLevels > 0);
-//      for (int32_t i = 1; i < mipLevels; ++i) {
-//        imageViewForMipMap[i]
-//            = g_createTexture2DArrayViewForSpecificMipMap(TexturePtr->image,
-//                                                        info.LayerCount,
-//                                                        textureFormat,
-//                                                        ImageAspectFlag,
-//                                                        i);
-//      }*/
-//      break;
-//    case VK_IMAGE_VIEW_TYPE_CUBE:
-//
-//      assert(info.LayerCount == 6);
-//      TexturePtr = g_createCubeTexture(info.Extent.width(),
-//                                     info.Extent.height(),
-//                                     mipLevels,
-//                                     info.Format,
-//                                     TextureCreateFlag,
-//                                     VK_IMAGE_LAYOUT_GENERAL);
-//
-//      // Create for Shader Resource (TextureCube)
-//      //{
-//      //  imageViewForMipMap[0] = TexturePtr->imageView;
-//
-//      //  assert(mipLevels > 0);
-//      //  for (int32_t i = 1; i < mipLevels; ++i) {
-//      //    imageViewForMipMap[i] = g_createTextureCubeViewForSpecificMipMap(
-//      //        TexturePtr->image, textureFormat, ImageAspectFlag, i);
-//      //  }
-//      //}
-//
-//      // Create for UAV (writing compute shader resource) (Texture2DArray)
-//      //{
-//      //  imageViewUAV             = TexturePtr->imageView;
-//      //  imageViewForMipMapUAV[0] = TexturePtr->imageView;
-//
-//      //  assert(mipLevels > 0);
-//      //  for (int32_t i = 1; i < mipLevels; ++i) {
-//      //    imageViewForMipMapUAV[i]
-//      //        =
-//      g_createTexture2DArrayViewForSpecificMipMap(TexturePtr->image,
-//      //                                                    info.LayerCount,
-//      //                                                    textureFormat,
-//      //                                                    ImageAspectFlag,
-//      //                                                    i);
-//      //  }
-//      //}
-//      break;
-//    default:
-//      // TODO: log error - Unsupported type texture in FramebufferPool
-//      return nullptr;
-//  }
-//
-//  // TexturePtr->ViewForMipMap    = imageViewForMipMap;
-//  // TexturePtr->ViewUAV          = imageViewUAV;
-//  // TexturePtr->ViewUAVForMipMap = imageViewForMipMapUAV;
-//
-//  auto RenderTargetPtr        = std::make_shared<RenderTargetVk>();
-//  RenderTargetPtr->Info       = info;
-//  RenderTargetPtr->TexturePtr = TexturePtr;
-//
-//  return RenderTargetPtr;
-//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1523,7 +1372,7 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
              && (usageFlags & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)));
 
   // Create the Vulkan image (handle, memory, view)
-  auto texturePtr
+  auto texture
       = game_engine::g_create2DTexture(width,
                                        height,
                                        mipLevels,
@@ -1550,7 +1399,7 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
     auto commandBuffer
         = std::static_pointer_cast<CommandBufferVk>(beginSingleTimeCommands());
     assert(transitionLayout(
-        commandBuffer, texturePtr.get(), EResourceLayout::TRANSFER_DST));
+        commandBuffer, texture, EResourceLayout::TRANSFER_DST));
 
     // Copy each sub-image
     // Assuming subImages are laid out as arraySlices * mipLevels
@@ -1571,18 +1420,29 @@ std::shared_ptr<Texture> RhiVk::create2DTexture(
       g_copyBufferToTexture(commandBuffer->getRef(),
                             stagingBufferPtr->m_buffer_,
                             stagingBufferPtr->m_offset_ + offset,
-                            texturePtr->m_image_,
+                            texture->m_image_,
                             static_cast<uint32_t>(subImage.width),
                             static_cast<uint32_t>(subImage.height),
                             mipLevel,
                             arraySlice);
     }
 
-    assert(transitionLayout(commandBuffer, texturePtr.get(), imageLayout));
+    assert(transitionLayout(commandBuffer, texture, imageLayout));
     endSingleTimeCommands(commandBuffer);
   }
 
-  return texturePtr;
+  return texture;
+}
+
+void RhiVk::copyTexture(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                        const std::shared_ptr<Texture>&       srcTexture,
+                        const std::shared_ptr<Texture>& dstTexture) const {
+  auto srcTextureVk = std::static_pointer_cast<TextureVk>(srcTexture);
+  auto dstTextureVk = std::static_pointer_cast<TextureVk>(dstTexture);
+
+  g_copyTexture((VkCommandBuffer)commandBuffer->getNativeHandle(),
+                srcTextureVk,
+                dstTextureVk);
 }
 
 void RhiVk::drawArrays(const std::shared_ptr<CommandBuffer>& commandBuffer,
@@ -1730,9 +1590,6 @@ void RhiVk::recreateSwapChain() {
     SDL_WaitEvent(NULL);
   }
 
-  // SCR_WIDTH  = width;
-  // SCR_HEIGHT = height;
-
   // use std::shared_ptr instead of raw pointers
   delete m_commandBufferManager_;
   m_commandBufferManager_ = new CommandBufferManagerVk();
@@ -1743,26 +1600,25 @@ void RhiVk::recreateSwapChain() {
   s_pipelineStatePool.release();
   s_renderPassPool.release();
 
-  // delete m_swapchain_;
-  // m_swapchain_ = new m_swapchain_();
   m_swapchain_->create(m_window_);
 
   flush();
 }
 
-std::shared_ptr<RenderFrameContext> RhiVk::beginRenderFrame() {
+std::shared_ptr<RenderFrameContext> RhiVk::beginRenderFrame(
+    const math::Dimension2Di& viewportDimension) {
+  auto swapchainImageVk = std::static_pointer_cast<SwapchainImageVk>(
+      m_swapchain_->getSwapchainImage(m_currentFrameIndex_));
+
   VkResult acquireNextImageResult = vkAcquireNextImageKHR(
       m_device_,
       (VkSwapchainKHR)m_swapchain_->getHandle(),
       UINT64_MAX,
-      (VkSemaphore)m_swapchain_->getSwapchainImage(m_currentFrameIndex_)
-          ->m_available_->getHandle(),
+      (VkSemaphore)swapchainImageVk->m_available_->getHandle(),
       VK_NULL_HANDLE,
       &m_currentFrameIndex_);
 
-  VkFence lastCommandBufferFence
-      = m_swapchain_->getSwapchainImage(m_currentFrameIndex_)
-            ->m_commandBufferFence_;
+  VkFence lastCommandBufferFence = swapchainImageVk->m_commandBufferFence_;
 
   if (acquireNextImageResult != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error,
@@ -1793,7 +1649,7 @@ std::shared_ptr<RenderFrameContext> RhiVk::beginRenderFrame() {
   getOneFrameUniformRingBuffer()->reset();
   getDescriptorPoolForSingleFrame()->reset();
 
-  m_swapchain_->getSwapchainImage(m_currentFrameIndex_)->m_commandBufferFence_
+  swapchainImageVk->m_commandBufferFence_
       = (VkFence)commandBufferVk->getFenceHandle();
 
   auto renderFrameContextPtr
@@ -1801,24 +1657,25 @@ std::shared_ptr<RenderFrameContext> RhiVk::beginRenderFrame() {
   // renderFrameContextPtr->UseForwardRenderer =
   // !gOptions.UseDeferredRenderer;
   renderFrameContextPtr->m_frameIndex_ = m_currentFrameIndex_;
-  renderFrameContextPtr->m_sceneRenderTargetPtr_
+  renderFrameContextPtr->m_sceneRenderTarget_
       = std::make_shared<SceneRenderTarget>();
-  renderFrameContextPtr->m_sceneRenderTargetPtr_->create(
-      m_window_, m_swapchain_->getSwapchainImage(m_currentFrameIndex_));
+
+  renderFrameContextPtr->m_sceneRenderTarget_->create(viewportDimension,
+                                                      swapchainImageVk);
   renderFrameContextPtr->m_currentWaitSemaphore_
-      = m_swapchain_->getSwapchainImage(m_currentFrameIndex_)->m_available_;
+      = swapchainImageVk->m_available_;
 
   return renderFrameContextPtr;
 }
 
 void RhiVk::endRenderFrame(
     const std::shared_ptr<RenderFrameContext>& renderFrameContextPtr) {
+  auto swapchainImageVk = std::static_pointer_cast<SwapchainImageVk>(
+      m_swapchain_->getSwapchainImage(m_currentFrameIndex_));
+
   VkSemaphore signalSemaphore[]
-      = {(VkSemaphore)m_swapchain_->getSwapchainImage(m_currentFrameIndex_)
-             ->m_renderFinished_->getHandle()};
-  queueSubmit(
-      renderFrameContextPtr,
-      m_swapchain_->getSwapchainImage(m_currentFrameIndex_)->m_renderFinished_);
+      = {(VkSemaphore)swapchainImageVk->m_renderFinished_->getHandle()};
+  queueSubmit(renderFrameContextPtr, swapchainImageVk->m_renderFinished_);
 
   VkPresentInfoKHR presentInfo   = {};
   presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1859,10 +1716,10 @@ void RhiVk::queueSubmit(
 
   renderFrameContext->getActiveCommandBuffer()->end();
 
-  VkCommandBuffer vkCommandBuffer
+  auto vkCommandBuffer
       = (VkCommandBuffer)renderFrameContext->getActiveCommandBuffer()
             ->getNativeHandle();
-  VkFence vkFence
+  auto vkFence
       = (VkFence)renderFrameContext->getActiveCommandBuffer()->getFenceHandle();
 
   // Submitting the command buffer
@@ -1902,39 +1759,10 @@ void RhiVk::queueSubmit(
 std::shared_ptr<CommandBuffer> RhiVk::beginSingleTimeCommands() const {
   return std::static_pointer_cast<CommandBufferVk>(
       m_commandBufferManager_->getOrCreateCommandBuffer());
-
-  // VkCommandBufferAllocateInfo allocInfo = {};
-  // allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  // allocInfo.level       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  // allocInfo.commandPool = m_commandBufferManager->getPool();
-  // allocInfo.commandBufferCount = 1;
-
-  // VkCommandBuffer commandBuffer;
-  // vkAllocateCommandBuffers(m_device_, &allocInfo, &commandBuffer);
-
-  // VkCommandBufferBeginInfo beginInfo = {};
-  // beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  // beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-  // vkBeginCommandBuffer(commandBuffer, &beginInfo);
-  // return commandBuffer;
 }
 
 void RhiVk::endSingleTimeCommands(
     std::shared_ptr<CommandBuffer> commandBuffer) const {
-  // vkEndCommandBuffer(commandBuffer);
-
-  // VkSubmitInfo submitInfo       = {};
-  // submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  // submitInfo.commandBufferCount = 1;
-  // submitInfo.pCommandBuffers    = &commandBuffer;
-
-  // vkQueueSubmit(m_graphicsQueue_.Queue, 1, &submitInfo, VK_NULL_HANDLE);
-  // vkQueueWaitIdle(m_graphicsQueue_.Queue);
-
-  // vkFreeCommandBuffers(
-  //     m_device_, m_commandBufferManager->getPool(), 1, &commandBuffer);
-
   auto commandBufferVk
       = std::static_pointer_cast<CommandBufferVk>(commandBuffer);
 
@@ -2167,9 +1995,10 @@ bool RhiVk::transitionLayout(VkCommandBuffer commandBuffer,
   return true;
 }
 
-bool RhiVk::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
-                             Texture*                       texture,
-                             EResourceLayout                newLayout) const {
+bool RhiVk::transitionLayout(
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    const std::shared_ptr<Texture>&       texture,
+    EResourceLayout                       newLayout) const {
   assert(commandBuffer);
   assert(texture);
 
@@ -2177,21 +2006,21 @@ bool RhiVk::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
     return true;
   }
 
-  auto texture_vk = (TextureVk*)texture;
-  if (texture_vk->isDepthFormat()
+  auto textureVk = std::static_pointer_cast<TextureVk>(texture);
+  if (textureVk->isDepthFormat()
       && (EResourceLayout::DEPTH_READ_ONLY == newLayout
           || EResourceLayout::SHADER_READ_ONLY == newLayout)) {
     newLayout = EResourceLayout::DEPTH_STENCIL_READ_ONLY;
   }
 
   if (transitionLayout((VkCommandBuffer)commandBuffer->getNativeHandle(),
-                       texture_vk->m_image_,
-                       g_getVulkanTextureFormat(texture_vk->m_format_),
-                       texture_vk->m_mipLevels_,
-                       texture_vk->m_layerCount_,
-                       g_getVulkanImageLayout(texture_vk->m_imageLayout_),
+                       textureVk->m_image_,
+                       g_getVulkanTextureFormat(textureVk->m_format_),
+                       textureVk->m_mipLevels_,
+                       textureVk->m_layerCount_,
+                       g_getVulkanImageLayout(textureVk->m_layout_),
                        g_getVulkanImageLayout(newLayout))) {
-    ((TextureVk*)texture)->m_imageLayout_ = newLayout;
+    textureVk->m_layout_ = newLayout;
     return true;
   }
   return true;

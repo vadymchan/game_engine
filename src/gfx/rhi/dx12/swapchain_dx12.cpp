@@ -15,7 +15,7 @@ void SwapchainImageDx12::release() {
 }
 
 void SwapchainImageDx12::releaseInternal() {
-  m_TexturePtr_ = nullptr;
+  m_texture_ = nullptr;
   // if (Available)
   //{
   //     g_rhi->getSemaphoreManager()->returnSemaphore(Available);
@@ -79,12 +79,11 @@ bool SwapchainDx12::create(const std::shared_ptr<Window>& window) {
     return false;
   }
 
-
   m_extent_ = window->getSize();
 
   m_images_.resize(RhiDx12::s_kMaxFrameCount);
   for (int32_t i = 0; i < m_images_.size(); ++i) {
-    SwapchainImageDx12* swapchainImage = new SwapchainImageDx12();
+    auto swapchainImage = std::make_shared<SwapchainImageDx12>();
 
     ComPtr<ID3D12Resource> NewResource;
     HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&NewResource));
@@ -94,7 +93,6 @@ bool SwapchainDx12::create(const std::shared_ptr<Window>& window) {
       return false;
     }
 
-
     std::shared_ptr<CreatedResourceDx12> RenderTargetResource
         = CreatedResourceDx12::s_createdFromSwapchain(NewResource);
 
@@ -102,17 +100,17 @@ bool SwapchainDx12::create(const std::shared_ptr<Window>& window) {
 
     auto TextureDX12Ptr
         = std::make_shared<TextureDx12>(ETextureType::TEXTURE_2D,
-                                          m_format_,
-                                          m_extent_,
-                                          1,
-                                          EMSAASamples::COUNT_1,
-                                          false,
-                                          RtClearValue::s_kInvalid,
-                                          RenderTargetResource);
-    swapchainImage->m_TexturePtr_ = TextureDX12Ptr;
+                                        m_format_,
+                                        m_extent_,
+                                        1,
+                                        EResourceLayout::PRESENT_SRC,
+                                        EMSAASamples::COUNT_1,
+                                        false,
+                                        RtClearValue::s_kInvalid,
+                                        RenderTargetResource);
+    swapchainImage->m_texture_ = TextureDX12Ptr;
 
-    g_createRenderTargetView((TextureDx12*)swapchainImage->m_TexturePtr_.get());
-    TextureDX12Ptr->m_layout_ = EResourceLayout::PRESENT_SRC;
+    g_createRenderTargetView(TextureDX12Ptr);
   }
 
   return true;
@@ -128,8 +126,8 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
 
   if (isSwapChainValid) {
     for (int32_t i = 0; i < g_rhiDx12->s_kMaxFrameCount; ++i) {
-      ISwapchainImage* swapchainImage = m_images_[i];
-      auto TexDX12 = (TextureDx12*)swapchainImage->m_TexturePtr_.get();
+      std::shared_ptr<ISwapchainImage> swapchainImage = m_images_[i];
+      auto TexDX12 = (TextureDx12*)swapchainImage->m_texture_.get();
       TexDX12->m_texture->m_resource_.get()->Reset();
     }
 
@@ -164,7 +162,7 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
   }
 
   for (int32_t i = 0; i < g_rhiDx12->s_kMaxFrameCount; ++i) {
-    ISwapchainImage* swapchainImage = m_images_[i];
+    std::shared_ptr<ISwapchainImage> swapchainImage = m_images_[i];
 
     ComPtr<ID3D12Resource> NewResource;
     HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&NewResource));
@@ -174,7 +172,6 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
       return false;
     }
 
-
     std::shared_ptr<CreatedResourceDx12> RenderTargetResource
         = CreatedResourceDx12::s_createdFromSwapchain(NewResource);
 
@@ -182,16 +179,16 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
         ETextureType::TEXTURE_2D,
         g_getDX12TextureFormat(DXGI_FORMAT_R8G8B8A8_UNORM),
         // TODO: remove casting
-        math::Dimension2Di{static_cast<int>(witdh),
-                           static_cast<int>(height)},
+        math::Dimension2Di{static_cast<int>(witdh), static_cast<int>(height)},
         1,
+        EResourceLayout::PRESENT_SRC,
         EMSAASamples::COUNT_1,
         false,
         RtClearValue::s_kInvalid,
         RenderTargetResource);
-    swapchainImage->m_TexturePtr_ = TextureDX12Ptr;
+    swapchainImage->m_texture_ = TextureDX12Ptr;
 
-    g_createRenderTargetView((TextureDx12*)swapchainImage->m_TexturePtr_.get());
+    g_createRenderTargetView(TextureDX12Ptr);
   }
 
   g_rhiDx12->s_renderPassPool.release();
@@ -200,9 +197,9 @@ bool SwapchainDx12::resize(int32_t witdh, int32_t height) {
 }
 
 void SwapchainDx12::releaseInternal() {
-  for (auto& iter : m_images_) {
-    delete iter;
-  }
+  // for (auto& iter : m_images_) {
+  //   delete iter;
+  // }
   m_images_.clear();
 
   if (m_swapChain_) {

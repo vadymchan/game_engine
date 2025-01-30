@@ -408,20 +408,20 @@ void* PipelineStateInfoVk::createGraphicsPipelineState() {
   uint32_t                        ShaderStageIndex = 0;
   if (kGraphicsShader.m_vertexShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)
-               kGraphicsShader.m_vertexShader_->getCompiledShader())
+        = (std::static_pointer_cast<CompiledShaderVk>(
+               kGraphicsShader.m_vertexShader_->getCompiledShader()))
               ->m_shaderStage_;
   }
   if (kGraphicsShader.m_geometryShader_) {
     ShaderStages[ShaderStageIndex++]
-        = ((CompiledShaderVk*)kGraphicsShader.m_geometryShader_)
+        = (std::static_pointer_cast<CompiledShaderVk>(
+               kGraphicsShader.m_geometryShader_->getCompiledShader()))
               ->m_shaderStage_;
   }
   if (kGraphicsShader.m_pixelShader_) {
     ShaderStages[ShaderStageIndex++]
-        //= ((CompiledShaderVk*)GraphicsShader.m_pixelShader_)->m_shaderStage_;
-        = ((CompiledShaderVk*)
-               kGraphicsShader.m_pixelShader_->getCompiledShader())
+        = (std::static_pointer_cast<CompiledShaderVk>(
+               kGraphicsShader.m_pixelShader_->getCompiledShader()))
               ->m_shaderStage_;
   }
 
@@ -532,9 +532,9 @@ void* PipelineStateInfoVk::createComputePipelineState() {
       = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
   computePipelineCreateInfo.layout = m_pipelineLayout_;
   computePipelineCreateInfo.flags  = 0;
-  computePipelineCreateInfo.stage
-      = ((CompiledShaderVk*)kComputeShader->getCompiledShader())
-            ->m_shaderStage_;
+  computePipelineCreateInfo.stage = (std::static_pointer_cast<CompiledShaderVk>(
+                                         computeShader->getCompiledShader()))
+                                        ->m_shaderStage_;
 
   if (vkCreateComputePipelines(g_rhiVk->m_device_,
                                g_rhiVk->m_pipelineCache_,

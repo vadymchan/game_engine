@@ -229,9 +229,9 @@ void SetupDebugLayerSettings(ID3D12Device* device) {
                                D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE};
 
     D3D12_INFO_QUEUE_FILTER filter = {};
-    filter.AllowList.NumSeverities = _countof(severities);
+    filter.AllowList.NumSeverities = std::size(severities);
     filter.AllowList.pSeverityList = severities;
-    filter.DenyList.NumIDs         = _countof(hide);
+    filter.DenyList.NumIDs         = std::size(hide);
     filter.DenyList.pIDList        = hide;
 
     infoQueue->PushStorageFilter(&filter);
@@ -365,7 +365,7 @@ bool RhiDx12::init(const std::shared_ptr<Window>& window) {
                  D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE};
 
           D3D12_INFO_QUEUE_FILTER filter = {};
-          filter.DenyList.NumIDs         = _countof(hideMessages);
+          filter.DenyList.NumIDs         = std::size(hideMessages);
           filter.DenyList.pIDList        = hideMessages;
           infoQueue->PushStorageFilter(&filter);
         }
@@ -695,21 +695,21 @@ BlendingStateInfo* RhiDx12::createBlendingState(
 }
 
 // TODO: consider rewriting this method for DX12 shader creation
-bool RhiDx12::createShaderInternal(Shader*           shader,
-                                   const ShaderInfo& shaderInfo) const {
+bool RhiDx12::createShaderInternal(std::shared_ptr<Shader> shader,
+                                   const ShaderInfo&       shaderInfo) const {
   std::vector<Name> IncludeFilePaths;
-  Shader*           shader_dx12 = shader;
-  assert(shader_dx12->getPermutationCount());
+
+  assert(shader->getPermutationCount());
   {
-    assert(!shader_dx12->m_compiledShader);
-    CompiledShaderDx12* CurCompiledShader = new CompiledShaderDx12();
-    shader_dx12->m_compiledShader         = CurCompiledShader;
+    assert(!shader->m_compiledShader_);
+    auto CurCompiledShader    = std::make_shared<CompiledShaderDx12>();
+    shader->m_compiledShader_ = CurCompiledShader;
 
     // Prepare for compilation by setting the PermutationId.
-    shader_dx12->setPermutationId(shaderInfo.getPermutationId());
+    shader->setPermutationId(shaderInfo.getPermutationId());
 
     std::string PermutationDefines;
-    shader_dx12->getPermutationDefines(PermutationDefines);
+    shader->getPermutationDefines(PermutationDefines);
 
     const wchar_t* ShadingModel = nullptr;
     switch (shaderInfo.getShaderType()) {
@@ -825,8 +825,8 @@ bool RhiDx12::createShaderInternal(Shader*           shader,
       }
     }
   }
-  shader_dx12->m_shaderInfo_ = shaderInfo;
-  shader_dx12->m_shaderInfo_.setIncludeShaderFilePaths(IncludeFilePaths);
+  shader->m_shaderInfo_ = shaderInfo;
+  shader->m_shaderInfo_.setIncludeShaderFilePaths(IncludeFilePaths);
 
   return true;
 }
@@ -888,7 +888,7 @@ PipelineStateInfo* RhiDx12::createPipelineStateInfo(
 }
 
 PipelineStateInfo* RhiDx12::createComputePipelineStateInfo(
-    const Shader*                   shader,
+    const std::shared_ptr<Shader>   shader,
     const ShaderBindingLayoutArray& shaderBindingArray,
     const PushConstant*             pushConstant) const {
   return s_pipelineStatePool.getOrCreateMove(
@@ -899,13 +899,14 @@ void RhiDx12::removePipelineStateInfo(size_t hash) {
   s_pipelineStatePool.release(hash);
 }
 
-std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
+std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame(
+    const math::Dimension2Di& viewportDimension) {
   // SCOPE_CPU_PROFILE(beginRenderFrame);
 
   //////////////////////////////////////////////////////////////////////////
   // Acquire new swapchain image
-  SwapchainImageDx12* currentSwapchainImage
-      = (SwapchainImageDx12*)m_swapchain_->getCurrentSwapchainImage();
+  auto currentSwapchainImage = std::static_pointer_cast<SwapchainImageDx12>(
+      m_swapchain_->getCurrentSwapchainImage());
   assert(m_commandBufferManager_);
   m_commandBufferManager_->m_fence_->waitForFenceValue(
       currentSwapchainImage->m_fenceValue_);
@@ -919,10 +920,10 @@ std::shared_ptr<RenderFrameContext> RhiDx12::beginRenderFrame() {
   auto renderFrameContextPtr
       = std::make_shared<RenderFrameContextDx12>(commandBuffer);
   renderFrameContextPtr->m_frameIndex_ = m_currentFrameIndex_;
-  renderFrameContextPtr->m_sceneRenderTargetPtr_
+  renderFrameContextPtr->m_sceneRenderTarget_
       = std::make_shared<SceneRenderTarget>();
-  renderFrameContextPtr->m_sceneRenderTargetPtr_->create(m_window_,
-                                                         currentSwapchainImage);
+  renderFrameContextPtr->m_sceneRenderTarget_->create(viewportDimension,
+                                                      currentSwapchainImage);
 
   return renderFrameContextPtr;
 }
@@ -934,10 +935,10 @@ void RhiDx12::endRenderFrame(
   auto commandBuffer = std::static_pointer_cast<CommandBufferDx12>(
       renderFrameContextPtr->getActiveCommandBuffer());
 
-  SwapchainImageDx12* CurrentSwapchainImage
-      = (SwapchainImageDx12*)m_swapchain_->getCurrentSwapchainImage();
+  auto CurrentSwapchainImage = std::static_pointer_cast<SwapchainImageDx12>(
+      m_swapchain_->getCurrentSwapchainImage());
   g_rhi->transitionLayout(commandBuffer,
-                          CurrentSwapchainImage->m_TexturePtr_.get(),
+                          CurrentSwapchainImage->m_texture_,
                           EResourceLayout::PRESENT_SRC);
 
   m_commandBufferManager_->executeCommandList(commandBuffer);
@@ -1063,7 +1064,7 @@ void RhiDx12::bindGraphicsShaderBindingInstances(
               = {commandBufferDx12->m_onlineDescriptorHeap_->getHeap(),
                  commandBufferDx12->m_onlineSamplerDescriptorHeap_->getHeap()};
           commandBufferDx12->m_commandList_->SetDescriptorHeaps(
-              _countof(ppHeaps), ppHeaps);
+              std::size(ppHeaps), ppHeaps);
         }
       }
     }
@@ -1397,17 +1398,16 @@ std::shared_ptr<RenderTarget> RhiDx12::createRenderTarget(
 
   auto RenderTargetPtr = std::make_shared<RenderTarget>();
   assert(RenderTargetPtr);
-  RenderTargetPtr->m_info_       = info;
-  RenderTargetPtr->m_texturePtr_ = TexturePtr;
+  RenderTargetPtr->m_info_    = info;
+  RenderTargetPtr->m_texture_ = TexturePtr;
 
   return RenderTargetPtr;
 }
 
-bool RhiDx12::transitionLayoutInternal(
-    std::shared_ptr<CommandBuffer> commandBuffer,
-    ID3D12Resource*                resource,
-    D3D12_RESOURCE_STATES          srcLayout,
-    D3D12_RESOURCE_STATES          dstLayout) const {
+bool RhiDx12::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
+                               ID3D12Resource*                resource,
+                               D3D12_RESOURCE_STATES          srcLayout,
+                               D3D12_RESOURCE_STATES          dstLayout) const {
   assert(commandBuffer);
   assert(resource);
 
@@ -1432,13 +1432,39 @@ bool RhiDx12::transitionLayoutInternal(
   return true;
 }
 
-bool RhiDx12::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
-                               Texture*                       texture,
-                               EResourceLayout                newLayout) const {
+bool RhiDx12::transitionLayout(ID3D12GraphicsCommandList* commandBuffer,
+                               ID3D12Resource*            resource,
+                               D3D12_RESOURCE_STATES      srcLayout,
+                               D3D12_RESOURCE_STATES      dstLayout) const {
+  assert(commandBuffer);
+  assert(resource);
+
+  if (srcLayout == dstLayout) {
+    return true;
+  }
+
+  D3D12_RESOURCE_BARRIER barrier = {};
+  barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  barrier.Transition.pResource   = resource;
+  barrier.Transition.StateBefore = srcLayout;
+  barrier.Transition.StateAfter  = dstLayout;
+  barrier.Transition.Subresource
+      = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;  // TODO: each subresource
+                                                  // control
+  commandBuffer->ResourceBarrier(1, &barrier);
+
+  return true;
+}
+
+bool RhiDx12::transitionLayout(
+    const std::shared_ptr<CommandBuffer>& commandBuffer,
+    const std::shared_ptr<Texture>&       texture,
+    EResourceLayout                       newLayout) const {
   assert(commandBuffer);
   assert(texture);
 
-  auto       textureDx12 = (TextureDx12*)texture;
+  auto       textureDx12 = std::static_pointer_cast<TextureDx12>(texture);
   const auto SrcLayout   = g_getDX12ResourceLayout(textureDx12->m_layout_);
   const auto DstLayout   = g_getDX12ResourceLayout(newLayout);
   if (SrcLayout == DstLayout) {
@@ -1446,15 +1472,15 @@ bool RhiDx12::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
   }
 
   textureDx12->m_layout_ = newLayout;
-  return transitionLayoutInternal(
+  return transitionLayout(
       commandBuffer, textureDx12->m_texture->get(), SrcLayout, DstLayout);
 }
 
-bool RhiDx12::transitionLayoutImmediate(Texture*        texture,
+bool RhiDx12::transitionLayoutImmediate(const std::shared_ptr<Texture>& texture,
                                         EResourceLayout newLayout) const {
   assert(texture);
   if (texture->getLayout() != newLayout) {
-    auto       textureDx12 = (TextureDx12*)texture;
+    auto       textureDx12 = std::static_pointer_cast<TextureDx12>(texture);
     const auto SrcLayout   = g_getDX12ResourceLayout(textureDx12->m_layout_);
     const auto DstLayout   = g_getDX12ResourceLayout(newLayout);
     if (SrcLayout == DstLayout) {
@@ -1465,7 +1491,7 @@ bool RhiDx12::transitionLayoutImmediate(Texture*        texture,
     assert(commandBuffer);
 
     if (commandBuffer) {
-      const bool ret = transitionLayoutInternal(
+      const bool ret = transitionLayout(
           commandBuffer, textureDx12->m_texture->get(), SrcLayout, DstLayout);
       textureDx12->m_layout_ = newLayout;
 
@@ -1477,12 +1503,12 @@ bool RhiDx12::transitionLayoutImmediate(Texture*        texture,
   return false;
 }
 
-void RhiDx12::uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
-                         Texture*                       texture) const {
+void RhiDx12::uavBarrier(std::shared_ptr<CommandBuffer>  commandBuffer,
+                         const std::shared_ptr<Texture>& texture) const {
   assert(commandBuffer);
   auto commandBufferDx12
       = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
-  auto texture_dx12 = (TextureDx12*)texture;
+  auto texture_dx12 = std::static_pointer_cast<TextureDx12>(texture);
   assert(texture_dx12->m_texture);
 
   D3D12_RESOURCE_BARRIER uavBarrier = {};
@@ -1507,7 +1533,8 @@ void RhiDx12::uavBarrier(std::shared_ptr<CommandBuffer> commandBuffer,
   commandBufferDx12->m_commandList_->ResourceBarrier(1, &uavBarrier);
 }
 
-void RhiDx12::uavBarrierImmediate(Texture* texture) const {
+void RhiDx12::uavBarrierImmediate(
+    const std::shared_ptr<Texture>& texture) const {
   auto commandBuffer = beginSingleTimeCommands();
   assert(commandBuffer);
 
@@ -1542,7 +1569,7 @@ bool RhiDx12::transitionLayout(std::shared_ptr<CommandBuffer> commandBuffer,
   }
 
   bufferDx12->m_layout_ = newLayout;
-  return transitionLayoutInternal(
+  return transitionLayout(
       commandBuffer, bufferDx12->m_buffer->get(), SrcLayout, DstLayout);
 }
 
@@ -1561,7 +1588,7 @@ bool RhiDx12::transitionLayoutImmediate(IBuffer*        buffer,
     assert(commandBuffer);
 
     if (commandBuffer) {
-      const bool ret = transitionLayoutInternal(
+      const bool ret = transitionLayout(
           commandBuffer, bufferDx12->m_buffer->get(), SrcLayout, DstLayout);
       bufferDx12->m_layout_ = newLayout;
 
@@ -1573,36 +1600,26 @@ bool RhiDx12::transitionLayoutImmediate(IBuffer*        buffer,
   return false;
 }
 
-// void RhiDx12::beginDebugEvent(
-//     std::shared_ptr<CommandBuffer> commandBuffer,
-//     const char*     name,
-//     const Vector4&  color /*= Vector4::g_kColorGreen*/) const {
-//   std::shared_ptr<CommandBufferDx12> CommandList =
-//   std::static_pointer_cast<CommandBufferDx12>(; assert(CommandList);
-//   assert(!CommandList->IsClosed);
-//
-//   PIXBeginEvent(CommandList->get(),
-//                 PIX_COLOR((BYTE)(255 * color.x),
-//                           (BYTE)(255 * color.y),
-//                           (BYTE)(255 * color.z)),
-//                 name);
-// }
-//
-// void RhiDx12::endDebugEvent(std::shared_ptr<CommandBuffer> commandBuffer)
-// const {
-//   std::shared_ptr<CommandBufferDx12> CommandList =
-//   std::static_pointer_cast<CommandBufferDx12>(;//   assert(CommandList);
-//   assert(!CommandList->IsClosed);
-//
-//   PIXEndEvent(CommandList->get());
-// }
-
 void RhiDx12::flush() const {
   waitForGPU();
 }
 
 void RhiDx12::finish() const {
   waitForGPU();
+}
+
+void RhiDx12::copyTexture(const std::shared_ptr<CommandBuffer>& commandBuffer,
+                          const std::shared_ptr<Texture>&       srcTexture,
+                          const std::shared_ptr<Texture>& dstTexture) const {
+  auto commandBufferDx12
+      = std::static_pointer_cast<CommandBufferDx12>(commandBuffer);
+
+  auto texSrc = std::static_pointer_cast<TextureDx12>(srcTexture);
+  auto texDst = std::static_pointer_cast<TextureDx12>(dstTexture);
+
+  auto nativeCommandList = commandBufferDx12->m_commandList_.Get();
+
+  g_copyTexture(nativeCommandList, texSrc, texDst);
 }
 
 std::shared_ptr<IBuffer> RhiDx12::createStructuredBuffer(

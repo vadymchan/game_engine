@@ -1,21 +1,13 @@
 #include "gfx/rhi/render_target_pool.h"
+
 #include "gfx/rhi/rhi.h"
 
 namespace game_engine {
 
-// std::shared_ptr<RenderTarget> g_EyeAdaptationARTPtr;
-// std::shared_ptr<RenderTarget> g_EyeAdaptationBRTPtr;
-
 std::map<size_t, std::list<RenderTargetPool::RenderTargetPoolResource> >
-                                 RenderTargetPool::m_renderTargetResourceMap_;
-std::map<RenderTarget*, size_t> RenderTargetPool::m_renderTargetHashVariableMap_;
-
-// struct Texture* RenderTargetPool::GetNullTexture(ETextureType type) {
-//   static std::shared_ptr<RenderTarget> RTPtr
-//       = RenderTargetPool::s_getRenderTarget(
-//           {type, ETextureFormat::RGBA8, 2, 2, 1});
-//   return RTPtr->getTexture();
-// }
+    RenderTargetPool::m_renderTargetResourceMap_;
+std::map<RenderTarget*, size_t>
+    RenderTargetPool::m_renderTargetHashVariableMap_;
 
 RenderTargetPool::RenderTargetPool() {
 }
@@ -33,7 +25,7 @@ std::shared_ptr<RenderTarget> RenderTargetPool::s_getRenderTarget(
     for (auto& iter : renderTargets) {
       if (!iter.m_isUsing_) {
         iter.m_isUsing_ = true;
-        return iter.m_renderTargetPtr_;
+        return iter.m_renderTarget_;
       }
     }
   }
@@ -56,7 +48,7 @@ void RenderTargetPool::s_seturnRenderTarget(RenderTarget* renderTarget) {
 
   const size_t hash = it_find->second;
   for (auto& iter : m_renderTargetResourceMap_[hash]) {
-    if (renderTarget == iter.m_renderTargetPtr_.get()) {
+    if (renderTarget == iter.m_renderTarget_.get()) {
       iter.m_isUsing_ = false;
       break;
     }

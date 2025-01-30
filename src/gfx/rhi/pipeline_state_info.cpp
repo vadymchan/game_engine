@@ -17,8 +17,8 @@ size_t PipelineStateInfo::getHash() const {
     m_hash_ ^= kRenderPass->getHash();
     m_hash_ ^= kGraphicsShader.getHash();
   } else if (m_pipelineType_ == EPipelineType::Compute) {
-    assert(kComputeShader);
-    m_hash_ ^= kComputeShader->m_shaderInfo_.getHash();
+    assert(computeShader);
+    m_hash_ ^= computeShader->m_shaderInfo_.getHash();
   } else if (m_pipelineType_ == EPipelineType::RayTracing) {
     // TODO: implement
     assert(0);

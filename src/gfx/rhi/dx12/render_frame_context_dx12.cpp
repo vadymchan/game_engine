@@ -7,23 +7,6 @@
 
 namespace game_engine {
 
-void RenderFrameContextDx12::queueSubmitCurrentActiveCommandBuffer() {
-  if (m_commandBuffer_) {
-    auto commandBufferDx12
-        = std::static_pointer_cast<CommandBufferDx12>(m_commandBuffer_);
-
-    auto commandBufferManager = g_rhiDx12->getCommandBufferManager();
-    commandBufferManager->executeCommandList(commandBufferDx12);
-    commandBufferManager->returnCommandBuffer(commandBufferDx12);
-
-    // get new commandbuffer
-    m_commandBuffer_ = commandBufferManager->getOrCreateCommandBuffer();
-    g_rhiDx12->m_swapchain_->m_images_[m_frameIndex_]->m_fenceValue_
-        = commandBufferDx12->m_owner_->m_fence_->signalWithNextFenceValue(
-            commandBufferDx12->m_owner_->getCommandQueue().Get());
-  }
-}
-
 void RenderFrameContextDx12::submitCurrentActiveCommandBuffer(
     ECurrentRenderPass currentRenderPass) {
   if (m_commandBuffer_) {

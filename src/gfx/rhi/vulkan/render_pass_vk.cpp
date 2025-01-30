@@ -18,10 +18,9 @@ void RenderPassVk::release() {
 
 void RenderPassVk::setFinalLayoutToAttachment_(
     const Attachment& attachment) const {
-  assert(attachment.m_renderTargetPtr_);
-  TextureVk* texture_vk
-      = (TextureVk*)attachment.m_renderTargetPtr_->getTexture();
-  texture_vk->m_imageLayout_ = attachment.m_finalLayout_;
+  assert(attachment.m_renderTarget_);
+  attachment.m_renderTarget_->getTexture()->m_layout_
+      = attachment.m_finalLayout_;
 }
 
 bool RenderPassVk::beginRenderPass(
@@ -101,7 +100,7 @@ bool RenderPassVk::createRenderPass() {
       const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
       assert(attachment.isValid());
 
-      const auto& RTInfo = attachment.m_renderTargetPtr_->m_info_;
+      const auto& RTInfo = attachment.m_renderTarget_->m_info_;
 
       VkAttachmentDescription& attachmentDesc = AttachmentDescs[i];
       attachmentDesc.format  = g_getVulkanTextureFormat(RTInfo.m_format_);
@@ -315,13 +314,13 @@ bool RenderPassVk::createRenderPass() {
       assert(m_renderPassInfo_.m_attachments_[k].isValid());
 
       const auto* RT
-          = m_renderPassInfo_.m_attachments_[k].m_renderTargetPtr_.get();
+          = m_renderPassInfo_.m_attachments_[k].m_renderTarget_.get();
       assert(RT);
 
-      const TextureVk* texture_vk = (const TextureVk*)RT->getTexture();
-      assert(texture_vk);
+      auto textureVk = std::static_pointer_cast<TextureVk>(RT->getTexture());
+      assert(textureVk);
 
-      ImageViews.push_back(texture_vk->m_imageView_);
+      ImageViews.push_back(textureVk->m_imageView_);
     }
 
     VkFramebufferCreateInfo framebufferInfo = {};

@@ -114,13 +114,13 @@ bool RenderPassDx12::createRenderPass() {
       const Attachment& attachment = m_renderPassInfo_.m_attachments_[i];
       assert(attachment.isValid());
 
-      const auto& RTInfo = attachment.m_renderTargetPtr_->m_info_;
+      const auto& RTInfo = attachment.m_renderTarget_->m_info_;
       const bool  HasClear
           = (attachment.m_loadStoreOp_ == EAttachmentLoadStoreOp::CLEAR_STORE
              || attachment.m_loadStoreOp_
                     == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
-      TextureDx12* TextureDX12
-          = (TextureDx12*)attachment.m_renderTargetPtr_->getTexture();
+      auto textureDx12 = std::static_pointer_cast<TextureDx12>(
+          attachment.m_renderTarget_->getTexture());
 
       if (attachment.isDepthAttachment()) {
         m_dsvFormat_ = g_getDX12TextureFormat(RTInfo.m_format_);
@@ -132,14 +132,14 @@ bool RenderPassDx12::createRenderPass() {
                               || attachment.m_stencilLoadStoreOp_
                                      == EAttachmentLoadStoreOp::CLEAR_DONTCARE);
 
-        m_dsvCPUDHandle_ = TextureDX12->m_dsv_.m_cpuHandle_;
+        m_dsvCPUDHandle_ = textureDx12->m_dsv_.m_cpuHandle_;
       } else {
         if (HasClear) {
           m_rtvClears_.push_back(attachment.m_rtClearValue);
         } else {
           m_rtvClears_.push_back(RtClearValue::s_kInvalid);
         }
-        m_rtvCPUHandles_.push_back(TextureDX12->m_rtv_.m_cpuHandle_);
+        m_rtvCPUHandles_.push_back(textureDx12->m_rtv_.m_cpuHandle_);
         m_rtvFormats_.push_back(g_getDX12TextureFormat(RTInfo.m_format_));
       }
     }

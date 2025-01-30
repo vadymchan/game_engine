@@ -15,14 +15,12 @@ void CommandBufferManagerDx12::release() {
   for (auto& iter : m_usingCommandBuffers_) {
     iter->getFence()->waitForFence();
     g_rhi->getFenceManager()->returnFence(iter->getFence());
-    // delete iter;
   }
   m_usingCommandBuffers_.clear();
 
   for (auto& iter : m_availableCommandLists_) {
     iter->getFence()->waitForFence();
     g_rhi->getFenceManager()->returnFence(iter->getFence());
-    // delete iter;
   }
   m_availableCommandLists_.clear();
 }
