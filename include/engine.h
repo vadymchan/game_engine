@@ -9,6 +9,7 @@
 #include "ecs/systems/movement_system.h"
 #include "ecs/systems/render_system.h"
 #include "ecs/systems/system_manager.h"
+#include "editor/editor.h"
 #include "event/application_event_manager.h"
 #include "event/window_event_manager.h"
 #include "game.h"
@@ -25,14 +26,17 @@
 #include "utils/image/image_manager.h"
 #include "utils/logger/console_logger.h"
 #include "utils/logger/global_logger.h"
+#include "utils/logger/memory_logger.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/third_party/directx_tex_util.h"
 #include "utils/third_party/stb_util.h"
 #include "utils/time/stopwatch.h"
 
+#include <utils/logger/file_logger.h>
 #include <utils/model/render_model_loader_manager.h>
 #include <utils/model/render_model_manager.h>
+#include <utils/time/timing_manager.h>
 
 #include <memory>
 
@@ -50,7 +54,25 @@ class Engine {
 
   // ======= BEGIN: public destructor =========================================
 
-  ~Engine() = default;
+  ~Engine() {
+    g_rhi->flush();
+    m_game_->release();
+    m_renderer_.reset();
+    ServiceLocator::s_remove<ConfigManager>();
+    ServiceLocator::s_remove<FileWatcherManager>();
+    ServiceLocator::s_remove<HotReloadManager>();
+    ServiceLocator::s_remove<InputManager>();
+    ServiceLocator::s_remove<WindowEventManager>();
+    ServiceLocator::s_remove<ApplicationEventManager>();
+    ServiceLocator::s_remove<SceneManager>();
+    ServiceLocator::s_remove<SystemManager>();
+    ServiceLocator::s_remove<TimingManager>();
+    ServiceLocator::s_remove<RenderModelManager>();
+    ServiceLocator::s_remove<RenderModelLoaderManager>();
+    ServiceLocator::s_remove<ImageManager>();
+    ServiceLocator::s_remove<ImageLoaderManager>();
+    g_rhi->release();
+  }
 
   // ======= END: public destructor   =========================================
 
@@ -77,8 +99,14 @@ class Engine {
 
     // logger
     // ------------------------------------------------------------------------
-    m_consoleLogger_ = std::make_shared<ConsoleLogger>();
+    m_consoleLogger_ = std::make_shared<ConsoleLogger>("console_logger");
     GlobalLogger::AddLogger(m_consoleLogger_);
+
+    // auto memoryLogger = std::make_shared<MemoryLogger>("memory_logger");
+    // GlobalLogger::AddLogger(memoryLogger);
+
+    // auto fileLogger = std::make_shared<FileLogger>("file_logger");
+    // GlobalLogger::AddLogger(fileLogger);
 
     // input event
     // ------------------------------------------------------------------------
@@ -124,6 +152,7 @@ class Engine {
     ServiceLocator::s_provide<ApplicationEventManager>(applicationEventHandler);
     ServiceLocator::s_provide<SceneManager>();
     ServiceLocator::s_provide<SystemManager>();
+    ServiceLocator::s_provide<TimingManager>();
 
     // config
     // ------------------------------------------------------------------------
@@ -140,8 +169,6 @@ class Engine {
         &math::g_getVectorfromConfig);
     debugConfig->registerConverter<math::Quaternionf>(
         &math::g_getQuaternionfromConfig);
-    debugConfig->registerConverter<CameraParametersDeprecated>(
-        &CameraParametersDeprecated::s_fromConfig);
     debugConfig->registerConverter<Transform>(&LoadTransform);
     debugConfig->registerConverter<Camera>(&LoadCamera);
 
@@ -153,11 +180,13 @@ class Engine {
     // ------------------------------------------------------------------------
     m_window_ = std::make_unique<Window>(
         renderingApi,
-        math::Dimension2Di{800, 600},
-        math::Point2Di{100, 100},
+        // Desired size (for maximized window will be 0)
+        math::Dimension2Di{0, 0},
+        math::Point2Di{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
         game_engine::Window::Flags::Resizable
             // TODO: Vulkan flag may not work for DX12 window
-            | game_engine::Window::Flags::Vulkan);
+            | game_engine::Window::Flags::Vulkan
+            | game_engine::Window::Flags::Maximized);
 
     if (renderingApi == "dx12") {
       g_rhi = new RhiDx12();
@@ -216,43 +245,49 @@ class Engine {
     // ------------------------------------------------------------------------
     m_renderer_ = std::make_shared<Renderer>();
 
+    // editor
+    // ------------------------------------------------------------------------
+    m_editor_ = std::make_shared<Editor>();
+    m_editor_->init(m_window_);
+
     return successfullyInitialized;
   }
 
   void render() {
     // TODO: temp solution to create render context here and each frame
     // (consider other approach)
-    auto renderContext = std::make_shared<RenderContext>();
+    // auto viewportDimension = m_window_->getSize();
+    auto viewportDimension
+        = m_editor_->getRenderParams().editorViewportDimension;
 
+    auto renderContext = std::make_shared<RenderContext>();
     renderContext->scene
         = ServiceLocator::s_get<SceneManager>()->getCurrentScene();
-    renderContext->viewportWidth  = m_window_->getSize().width();
-    renderContext->viewportHeight = m_window_->getSize().height();
+    renderContext->viewportDimension = m_window_->getSize();
+    renderContext->renderFrameContext
+        = g_rhi->beginRenderFrame(viewportDimension);
 
-    m_renderer_->renderFrame(renderContext);
+    m_renderer_->renderFrame(renderContext, m_editor_->getRenderParams());
+
+    m_editor_->render(renderContext);
+
+    g_rhi->endRenderFrame(renderContext->renderFrameContext);
+
+    g_rhi->incrementFrameNumber();
   }
 
   void run() {
-    m_deltaTime_.start();
     m_isRunning_ = true;
 
     while (m_isRunning_) {
-      float deltaTime = m_deltaTime_.elapsedTime<DeltaTime::DurationFloat<>>();
-      m_deltaTime_.reset();
-
+      GlobalLogger::Log(LogLevel::Info, "Next frame");
+      auto timingManager = ServiceLocator::s_get<TimingManager>();
+      timingManager->update();
       processEvents_();
       m_game_->processInput();  // TODO: consider remove
-      update_(deltaTime);
+      update_(timingManager->getDeltaTime());
       render();
     }
-  }
-
-  void release() {
-    if (g_rhiVk) {
-      g_rhiVk->flush();
-    }
-
-    m_game_->release();
   }
 
   void onClose(const ApplicationEvent& event) { m_isRunning_ = false; }
@@ -272,6 +307,7 @@ class Engine {
   void processEvents_() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+      ImGui_ImplSDL2_ProcessEvent(&event);
       ServiceLocator::s_get<InputManager>()->routeEvent(event);
       ServiceLocator::s_get<WindowEventManager>()->routeEvent(event);
       ServiceLocator::s_get<ApplicationEventManager>()->routeEvent(event);
@@ -285,7 +321,7 @@ class Engine {
 
     m_game_->update(deltaTime);
 
-    Shader::s_startAndRunCheckUpdateShaderThread();
+    // Shader::s_startAndRunCheckUpdateShaderThread();
   }
 
   // ======= END: private misc methods   ======================================
@@ -293,10 +329,12 @@ class Engine {
   // ======= BEGIN: private misc fields =======================================
 
   bool                           m_isRunning_{false};
-  DeltaTime                      m_deltaTime_;
+  // DeltaTime                      m_deltaTime_;
   std::shared_ptr<ConsoleLogger> m_consoleLogger_;
   std::shared_ptr<Window>        m_window_;
   std::shared_ptr<Renderer>      m_renderer_;
+
+  std::shared_ptr<Editor> m_editor_;
 
   // TODO: consider adding interface for Game class (for abstraction). add objec
   // in init method parameter
