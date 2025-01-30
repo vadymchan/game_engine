@@ -32,11 +32,11 @@ option(USE_DIRECTX "Use DirectX as the rendering API" OFF)
 
 include(CMakeDependentOption)
 
-cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Allocator" ON "USE_VULKAN" OFF)
-cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Allocator" ON "USE_VULKAN"  OFF)
+cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER   "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
-cmake_dependent_option(USE_DIRECTX_TEX               "Fetch DirectX Tex Library" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(USE_DIRECTX_TEX               "Fetch DirectX Tex Library"     ON "USE_DIRECTX" OFF)
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
 
 
@@ -60,6 +60,7 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
 # if(USE_VCPKG)
 if(USE_DIRECTX)
 
+    # TODO: make vcpkg.json to be able to set stable version 
     message(STATUS "Fetching vcpkg-cmake-integration...")
     FetchContent_Declare(
         vcpkg_cmake_integration
@@ -68,7 +69,7 @@ if(USE_DIRECTX)
     )
     FetchContent_MakeAvailable(vcpkg_cmake_integration)
 
-    file(COPY ${vcpkg_cmake_integration_SOURCE_DIR}/vcpkg.cmake DESTINATION ${CMAKE_SOURCE_DIR}/cmake)
+    # file(COPY ${vcpkg_cmake_integration_SOURCE_DIR}/vcpkg.cmake DESTINATION ${CMAKE_SOURCE_DIR}/cmake)
 
     set(VCPKG_PARENT_DIR "${CMAKE_SOURCE_DIR}/third_party")
     set(VCPKG_VERSION edge)
@@ -467,7 +468,6 @@ if(BUILD_IMGUI)
         ${imgui_SOURCE_DIR}/backends
     )
 
-    # link imgui library to main project
     target_link_libraries(${PROJECT_NAME} PRIVATE imgui_library)
 
     target_include_directories(${PROJECT_NAME}
