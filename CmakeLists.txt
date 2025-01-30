@@ -37,6 +37,7 @@ cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocat
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER   "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_TEX               "Fetch DirectX Tex Library" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
 
 
 
@@ -174,6 +175,16 @@ if(BUILD_IMGUI)
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
         # GIT_TAG v1.91.6
         GIT_TAG v1.91.6-docking
+    )
+endif()
+
+if(BUILD_IMGUIZMO)
+    message(STATUS "Fetching ImGuizmo...")
+    FetchContent_Declare(
+        imguizmo
+        GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
+        # GIT_TAG 664cf2d73864a36b2a8b5091d33fc4578c885eca
+        GIT_TAG b10e91756d32395f5c1fefd417899b657ed7cb88
     )
 endif()
 
@@ -465,6 +476,29 @@ if(BUILD_IMGUI)
             ${imgui_SOURCE_DIR}/backends
     )
 
+endif()
+
+if(BUILD_IMGUIZMO)
+    FetchContent_MakeAvailable(imguizmo)
+
+    add_library(imguizmo_library STATIC
+        ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
+    )
+
+    target_link_libraries(imguizmo_library PRIVATE imgui_library)
+
+    target_include_directories(imguizmo_library PRIVATE
+        ${imguizmo_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+    )
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE imguizmo_library)
+
+    target_include_directories(${PROJECT_NAME}
+        SYSTEM PRIVATE
+        ${imguizmo_SOURCE_DIR}
+    )
 endif()
 
 if(BUILD_ASSIMP)
