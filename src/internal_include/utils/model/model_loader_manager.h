@@ -2,6 +2,7 @@
 #define GAME_ENGINE_MODEL_LOADER_MANAGER_H
 
 #include "resources/i_model_loader.h"
+#include "utils/logger/global_logger.h"
 #include "utils/model/model_type.h"
 
 #include <filesystem>
@@ -28,9 +29,8 @@ class ModelLoaderManager {
     EModelType modelType = getModelTypeFromExtension(extension);
 
     if (modelType == EModelType::UNKNOWN) {
-      // TODO: add logging
-      std::cerr << "Unknown model type for extension: " << extension
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "Unknown model type for extension: " + extension);
       return {};
     }
 
@@ -39,7 +39,9 @@ class ModelLoaderManager {
     if (it != loaderMap_.end()) {
       return it->second->loadModel(filePath);
     }
-    // TODO: Logging or error handling if no loader is found
+    GlobalLogger::Log(
+        LogLevel::Error,
+        "No loader found for model type with extension: " + extension);
     return nullptr;
   }
 

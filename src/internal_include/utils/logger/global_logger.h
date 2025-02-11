@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_GLOBAL_LOGGER_H
 #define GAME_ENGINE_GLOBAL_LOGGER_H
 
-#include "i_logger.h"
+#include "utils/logger/i_logger.h"
 
 #include <memory>
 #include <vector>

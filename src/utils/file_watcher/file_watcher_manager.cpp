@@ -1,6 +1,6 @@
 #include "utils/file_watcher/file_watcher_manager.h"
 
-#include <iostream>
+#include "utils/logger/global_logger.h"
 
 namespace game_engine {
 
@@ -9,8 +9,9 @@ void FileWatcherManager::addWatcher(const std::filesystem::path& dirPath,
   std::filesystem::path modifiedDirPath = "./" / dirPath;
 
   if (m_watchers_.find(modifiedDirPath) != m_watchers_.end()) {
-    // TODO: use logger
-    std::cerr << "Watcher for this path already exists!" << std::endl;
+    GlobalLogger::Log(
+        LogLevel::Error,
+        "Watcher for path " + modifiedDirPath.string() + " already exists!");
     return;
   }
 
@@ -22,8 +23,8 @@ void FileWatcherManager::removeWatcher(const std::filesystem::path& dirPath) {
   if (m_watchers_.find(dirPath) != m_watchers_.end()) {
     m_watchers_.erase(dirPath);
   } else {
-    // TODO: use logger
-    std::cerr << "No watcher for this path." << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "No watcher for this path: " + dirPath.string());
   }
 }
 

@@ -3,6 +3,7 @@
 #include "ecs/components/model.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/transform.h"
+#include "utils/logger/global_logger.h"
 
 namespace game_engine {
 
@@ -19,8 +20,10 @@ void RenderSystem::update(const std::shared_ptr<Scene>& scene,
   for (auto entity : modelView) {
     auto& renderModel = modelView.get<RenderModel>(entity);
 
-    std::cout << "Entity " << static_cast<int>(entity)
-              << " has RenderModel: " << renderModel.filePath << "\n";
+    GlobalLogger::Log(
+        LogLevel::Info,
+        "Entity " + std::to_string(static_cast<int>(entity))
+            + " has RenderModel: " + renderModel.filePath.string());
   }
 
   // Handle entities with RenderMesh components
@@ -30,9 +33,10 @@ void RenderSystem::update(const std::shared_ptr<Scene>& scene,
     auto& renderMesh = meshView.get<RenderMesh>(entity);
 
     if (renderMesh.material) {
-      std::cout << "Entity " << static_cast<int>(entity)
-                << " has Material: " << renderMesh.material->materialName
-                << "\n";
+      GlobalLogger::Log(
+          LogLevel::Info,
+          "Entity " + std::to_string(static_cast<int>(entity))
+              + " has Material: " + renderMesh.material->materialName);
     }
   }
 }

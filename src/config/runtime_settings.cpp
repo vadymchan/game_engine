@@ -1,5 +1,7 @@
 #include "config/runtime_settings.h"
 
+#include "utils/logger/global_logger.h"
+
 namespace game_engine {
 
 RuntimeSettings& RuntimeSettings::s_get() {
@@ -25,8 +27,10 @@ void RuntimeSettings::updateFromConfig() {
                     : renderingApiText == "vulkan" ? RenderingApi::Vulkan
                                                    : RenderingApi::Dx12;
   } else {
-    std::cerr << "Failed to initialize RuntimeSettings at " << __FILE__ << ":"
-              << __LINE__ << ": config is nullptr." << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      std::string("Failed to initialize RuntimeSettings at ")
+                          + __FILE__ + ":" + std::to_string(__LINE__)
+                          + " - config is nullptr.");
   }
 }
 

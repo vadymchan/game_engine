@@ -1,5 +1,7 @@
 #include "resources/assimp_model_loader.h"
 
+#include "utils/logger/global_logger.h"
+
 namespace game_engine {
 
 std::shared_ptr<Model> AssimpModelLoader::loadModel(
@@ -15,7 +17,10 @@ std::shared_ptr<Model> AssimpModelLoader::loadModel(
   // Check if the scene or root node is null, or if there are no meshes
   if (!scene || !scene->mRootNode
       || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
-    // TODO: Log an error here
+    GlobalLogger::Log(LogLevel::Error,
+                      "AssimpModelLoader: Failed to load file \""
+                          + filePath.string()
+                          + "\". Error: " + importer.GetErrorString());
     return nullptr;
   }
 
@@ -108,7 +113,9 @@ std::pair<math::Vector3Df, math::Vector3Df>
     tangent   = math::Vector3Df(aiTangent.x, aiTangent.y, aiTangent.z);
     bitangent = math::Vector3Df(aiBitangent.x, aiBitangent.y, aiBitangent.z);
   } else {
-    // log warning that tangent computed manually
+    GlobalLogger::Log(
+        LogLevel::Warning,
+        "AssimpModelLoader: No tangents found in mesh. Computing manually.");
   }
 
   return {tangent, bitangent};
@@ -138,9 +145,13 @@ void AssimpModelLoader::calculateTangentsAndBitangents(
     aiMesh* ai_mesh, std::vector<Vertex>& vertices) {
   for (unsigned int i = 0; i < ai_mesh->mNumFaces; ++i) {
     const aiFace& face = ai_mesh->mFaces[i];
+    // Only process triangles
     if (face.mNumIndices != 3) {
-      // TODO: log warning
-      continue;  // Only process triangles
+      GlobalLogger::Log(LogLevel::Debug,
+                        "AssimpModelLoader: Skipping face with "
+                            + std::to_string(face.mNumIndices)
+                            + " indices (not a triangle).");
+      continue;  
     }
 
     // Indices for the triangle vertices

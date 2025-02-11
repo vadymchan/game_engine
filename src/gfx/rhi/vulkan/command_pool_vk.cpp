@@ -103,31 +103,13 @@ std::shared_ptr<CommandBuffer>
 void CommandBufferManagerVk::returnCommandBuffer(
     std::shared_ptr<CommandBuffer> commandBuffer) {
   ScopedLock s(&m_commandListLock_);
-  // auto       it = std::find(
-  //     UsingCommandBuffers.begin(), UsingCommandBuffers.end(), commandBuffer);
-  // if (it != UsingCommandBuffers.end()) {
-  //   UsingCommandBuffers.erase(it);
-  //   // TODO: temoporary removed
-  //   //commandBuffer->Reset();  // Reset the command buffer before reusing
-  //   AvailableCommandBuffers.push_back(commandBuffer);
-  // }
   for (int32_t i = 0; i < m_usingCommandBuffers_.size(); ++i) {
     if (m_usingCommandBuffers_[i]->getNativeHandle()
         == commandBuffer->getNativeHandle()) {
-      // std::cout << "------------------------------------\n";
-      // GlobalLogger::Log(LogLevel::Debug,
-      //                   "Number of UsingCommandBuffers before: "
-      //                       + std::to_string(UsingCommandBuffers.size()));
-
       m_usingCommandBuffers_.erase(m_usingCommandBuffers_.begin() + i);
       auto commandBufferVk
           = std::static_pointer_cast<CommandBufferVk>(commandBuffer);
       m_availableCommandBuffers_.push_back(commandBufferVk);
-
-      // GlobalLogger::Log(LogLevel::Debug,
-      //                   "Number of UsingCommandBuffers after: "
-      //                       + std::to_string(UsingCommandBuffers.size()));
-
       return;
     }
   }

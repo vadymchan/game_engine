@@ -1,5 +1,7 @@
 #include "utils/image/image_loader_manager.h"
 
+#include "utils/logger/global_logger.h"
+
 namespace game_engine {
 
 void ImageLoaderManager::registerLoader(EImageType                    imageType,
@@ -16,8 +18,8 @@ std::shared_ptr<Image> ImageLoaderManager::loadImage(
   EImageType imageType = getImageTypeFromExtension(extension);
 
   if (imageType == EImageType::UNKNOWN) {
-    // TODO: add logging
-    std::cerr << "Unknown image type for extension: " << extension << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "Unknown image type for extension: " + extension);
     return nullptr;
   }
 
@@ -33,9 +35,8 @@ std::shared_ptr<Image> ImageLoaderManager::loadImage(
   if (loader && loader->supportsFormat(extension)) {
     return loader->loadImage(filepath);
   }
-  // TODO: add logging
-  std::cerr << "No suitable loader found for image type: " << extension
-            << std::endl;
+  GlobalLogger::Log(LogLevel::Error,
+                    "No suitable loader found for image type: " + extension);
   return nullptr;
 }
 

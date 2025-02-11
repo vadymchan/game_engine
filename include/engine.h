@@ -15,6 +15,7 @@
 #include "game.h"
 #include "gfx/rhi/dx12/rhi_dx12.h"
 #include "gfx/rhi/rhi.h"
+#include "gfx/rhi/shader_manager.h"
 #include "gfx/rhi/vulkan/rhi_vk.h"
 #include "input/input_manager.h"
 #include "platform/common/window.h"
@@ -25,18 +26,17 @@
 #include "utils/image/image_loader_manager.h"
 #include "utils/image/image_manager.h"
 #include "utils/logger/console_logger.h"
+#include "utils/logger/file_logger.h"
 #include "utils/logger/global_logger.h"
 #include "utils/logger/memory_logger.h"
+#include "utils/model/render_model_loader_manager.h"
+#include "utils/model/render_model_manager.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/third_party/directx_tex_util.h"
 #include "utils/third_party/stb_util.h"
 #include "utils/time/stopwatch.h"
-
-#include <utils/logger/file_logger.h>
-#include <utils/model/render_model_loader_manager.h>
-#include <utils/model/render_model_manager.h>
-#include <utils/time/timing_manager.h>
+#include "utils/time/timing_manager.h"
 
 #include <memory>
 
@@ -71,6 +71,7 @@ class Engine {
     ServiceLocator::s_remove<RenderModelLoaderManager>();
     ServiceLocator::s_remove<ImageManager>();
     ServiceLocator::s_remove<ImageLoaderManager>();
+    ServiceLocator::s_remove<ShaderManager>();
     g_rhi->release();
   }
 
@@ -153,6 +154,7 @@ class Engine {
     ServiceLocator::s_provide<SceneManager>();
     ServiceLocator::s_provide<SystemManager>();
     ServiceLocator::s_provide<TimingManager>();
+    ServiceLocator::s_provide<ShaderManager>(false);
 
     // config
     // ------------------------------------------------------------------------
@@ -280,7 +282,6 @@ class Engine {
     m_isRunning_ = true;
 
     while (m_isRunning_) {
-      GlobalLogger::Log(LogLevel::Info, "Next frame");
       auto timingManager = ServiceLocator::s_get<TimingManager>();
       timingManager->update();
       processEvents_();

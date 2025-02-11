@@ -1,9 +1,9 @@
 #include "utils/third_party/directx_tex_util.h"
 
 #include "gfx/rhi/dx12/rhi_type_dx12.h"
+#include "utils/logger/global_logger.h"
 
 #include <algorithm>
-#include <iostream>
 #include <unordered_set>
 
 namespace game_engine {
@@ -32,8 +32,10 @@ ETextureType DirectXTexImageLoader::determineDimension_(
                                                : ETextureType::TEXTURE_3D;
       break;
     default:
-      // TODO: add logger
-      std::cerr << "Unsupported texture dimension. Defaulting to TEXTURE_2D.\n";
+      GlobalLogger::Log(
+          LogLevel::Warning,
+          "Unsupported texture dimension in DirectXTexImageLoader. "
+          "Defaulting to TEXTURE_MAX.");
       baseDimension = ETextureType::MAX;
       break;
   }
@@ -51,9 +53,10 @@ std::shared_ptr<Image> DirectXTexImageLoader::loadImage(
                                         scratchImage);
 
   if (FAILED(hr)) {
-    // TODO: add logger
-    std::cerr << "Failed to load DDS image: " << filepath << ". HRESULT: " << hr
-              << std::endl;
+    GlobalLogger::Log(
+        LogLevel::Error,
+        "DirectXTexImageLoader: Failed to load DDS image: " + filepath.string()
+            + " [HRESULT: " + std::to_string(hr) + "]");
     return nullptr;
   }
 
@@ -84,10 +87,13 @@ std::shared_ptr<Image> DirectXTexImageLoader::loadImage(
       for (auto slice = 0; slice < image->depth; ++slice) {
         const auto* img = scratchImage.GetImage(mip, arraySlice, slice);
         if (!img) {
-          // TODO: add logger
-          std::cerr << "Failed to retrieve image data for mip level " << mip
-                    << ", array slice " << arraySlice << ", depth slice "
-                    << slice << std::endl;
+          GlobalLogger::Log(
+              LogLevel::Warning,
+              "DirectXTexImageLoader: Failed to retrieve image data for "
+              "mip level "
+                  + std::to_string(mip) + ", array slice "
+                  + std::to_string(arraySlice) + ", depth slice "
+                  + std::to_string(slice) + ".");
           continue;
         }
 

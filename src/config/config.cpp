@@ -1,10 +1,12 @@
 #include "config/config.h"
 
 #include "file_loader/file_system_manager.h"
+#include "utils/logger/global_logger.h"
 
 namespace game_engine {
 void Config::reloadAsync() {
-  std::cout << "Reloading config due to file modification..." << std::endl;
+  GlobalLogger::Log(LogLevel::Info,
+                    "Reloading config due to file modification...");
   loadFromFileAsync(m_filePath_);
   return;
 }
@@ -22,15 +24,16 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 
   auto fileContent = FileSystemManager::readFile(filePath);
   if (!fileContent) {
+    GlobalLogger::Log(LogLevel::Error,
+                      "Failed to read file: " + filePath.string());
     return false;
   }
 
   m_root_.Parse(fileContent->c_str());
 
   if (m_root_.HasParseError()) {
-    // TODO: use logger
-    std::cerr << "Error: Failed to parse JSON in file " << filePath
-              << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "Failed to parse JSON in file: " + filePath.string());
     return false;
   }
 
@@ -40,9 +43,8 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
 std::string Config::toString() const {
   asyncLoadComplete_();
   if (!m_root_.IsObject()) {
-    // TODO: use logger
-    std::cerr << "Error: Configuration not loaded or root is not an object."
-              << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "Configuration not loaded or root is not an object.");
     return "";
   }
 
@@ -66,8 +68,8 @@ void Config::asyncLoadComplete_() const {
 const ConfigValue& Config::getMember_(const std::string& key) const {
   if (!m_root_.HasMember(key.c_str())) {
     static ConfigValue nullValue(rapidjson::kNullType);
-    // TODO: use logger
-    std::cerr << "Error: Key \"" << key << "\" not found." << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "Key \"" + key + "\" not found in config.");
     return nullValue;
   }
   return m_root_[key.c_str()];

@@ -1,7 +1,8 @@
 #include "utils/third_party/stb_util.h"
 
-#include <unordered_set>
+#include "utils/logger/global_logger.h"
 
+#include <unordered_set>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -98,7 +99,12 @@ ETextureFormat STBImageLoader::determineFormat_(int32_t channels,
     }
   }
 
-  // TODO: log error
+  GlobalLogger::Log(LogLevel::Error,
+                    "STBImageLoader::determineFormat_: Unknown format. "
+                    "channels = "
+                        + std::to_string(channels)
+                        + ", bitsPerChannel = " + std::to_string(bitsPerChannel)
+                        + ", isHdr = " + std::to_string(isHdr));
   return ETextureFormat::MAX;
 }
 
@@ -113,8 +119,9 @@ std::shared_ptr<Image> STBImageLoader::loadImageData_(
 
   auto* data = loader(filepath, &width, &height, &channels, desiredChannels);
   if (!data) {
-    // TODO: use logger
-    std::cerr << "Failed to load image: " << filepath << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "STBImageLoader::loadImageData_: Failed to load image: "
+                          + filepath.string());
     return nullptr;
   }
 
@@ -145,6 +152,14 @@ std::shared_ptr<Image> STBImageLoader::loadImageData_(
   subImage.pixelBegin = image.pixels.begin();
 
   image.subImages.push_back(subImage);
+
+  GlobalLogger::Log(LogLevel::Debug,
+                    "STBImageLoader::loadImageData_: Loaded image from "
+                        + filepath.string() + " (" + std::to_string(width) + "x"
+                        + std::to_string(height)
+                        + ", channels = " + std::to_string(channels)
+                        + ", bitsPerChannel = " + std::to_string(bitsPerChannel)
+                        + ", HDR = " + (isHdr ? "true" : "false") + ")");
 
   return std::make_shared<Image>(std::move(image));
 }

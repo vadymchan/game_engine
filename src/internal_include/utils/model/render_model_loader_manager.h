@@ -31,9 +31,8 @@ class RenderModelLoaderManager {
     EModelType modelType = getModelTypeFromExtension(extension);
 
     if (modelType == EModelType::UNKNOWN) {
-      // TODO: add logging
-      std::cerr << "Unknown model type for extension: " << extension
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "Unknown model type for extension: " + extension);
       return {};
     }
 
@@ -42,7 +41,9 @@ class RenderModelLoaderManager {
     if (it != loaderMap_.end()) {
       return it->second->loadRenderModel(filePath, outModel);
     }
-    // TODO: Logging or error handling if no loader is found
+    GlobalLogger::Log(
+        LogLevel::Error,
+        "No loader found for model type with extension: " + extension);
     return nullptr;
   }
 

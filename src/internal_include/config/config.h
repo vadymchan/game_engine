@@ -1,13 +1,14 @@
 #ifndef GAME_ENGINE_CONFIG_H
 #define GAME_ENGINE_CONFIG_H
 
+#include "utils/logger/global_logger.h"
+
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 
 #include <any>
 #include <filesystem>
 #include <future>
-#include <iostream>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
@@ -63,9 +64,8 @@ class Config {
   T get(const std::string& key) const {
     asyncLoadComplete_();
     if (!m_root_.IsObject()) {
-      // TODO: use logger
-      std::cerr << "Error: Configuration not loaded or root is not an object."
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "Configuration not loaded or root is not an object.");
       return T();
     }
 
@@ -78,17 +78,15 @@ class Config {
   Container getContainer(const std::string& key) const {
     asyncLoadComplete_();
     if (!m_root_.IsObject()) {
-      // TODO: use logger
-      std::cerr << "Error: Configuration not loaded or root is not an object."
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "Configuration not loaded or root is not an object.");
       return Container();
     }
 
     const ConfigValue& value = getMember_(key);
     if (!value.IsArray()) {
-      // TODO: use logger
-      std::cerr << "Error: Value for key \"" << key << "\" is not an array."
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "Value for key \"" + key + "\" is not an array.");
       return Container();
     }
 
@@ -132,8 +130,7 @@ class Config {
     if (value.IsObject()) {
       return convertObject_<T>(value);
     }
-    // TODO: use logger
-    std::cerr << "Error: Value is not an object." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not an object.");
     return T();
   }
 
@@ -146,9 +143,8 @@ class Config {
         return std::any_cast<T>(result);
       }
     } else {
-      // TODO: use logger
-      std::cerr << "Error: No converter registered for the requested type."
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "No converter registered for the requested type.");
     }
     return T();
   }
@@ -158,8 +154,7 @@ class Config {
     if (value.IsBool()) {
       return value.GetBool();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not a bool." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not a bool.");
     return false;
   }
 
@@ -169,8 +164,7 @@ class Config {
     if (value.IsNumber()) {
       return value.GetFloat();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not a float." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not a float.");
     return 0.0f;
   }
 
@@ -180,8 +174,7 @@ class Config {
     if (value.IsNumber()) {
       return value.GetDouble();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not a double." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not a double.");
     return 0.0;
   }
 
@@ -190,8 +183,7 @@ class Config {
     if (value.IsUint()) {
       return value.GetUint();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not a uint32." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not a uint32.");
     return 0;
   }
 
@@ -200,8 +192,7 @@ class Config {
     if (value.IsInt()) {
       return value.GetInt();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not an int32." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not an int32.");
     return 0;
   }
 
@@ -210,8 +201,7 @@ class Config {
     if (value.IsUint64()) {
       return value.GetUint64();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not a uint64." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not a uint64.");
     return 0;
   }
 
@@ -220,8 +210,7 @@ class Config {
     if (value.IsInt64()) {
       return value.GetInt64();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not an int64." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not an int64.");
     return 0;
   }
 
@@ -230,8 +219,7 @@ class Config {
     if (value.IsString()) {
       return value.GetString();
     }
-    // TODO: use logger
-    std::cerr << "Type error: Value is not a string." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Value is not a string.");
     return "";
   }
 

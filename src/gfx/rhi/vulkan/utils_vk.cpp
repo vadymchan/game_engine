@@ -7,8 +7,6 @@
 #include "gfx/rhi/vulkan/memory_pool_vk.h"
 #include "gfx/rhi/vulkan/texture_vk.h"
 
-#include <iostream>
-
 namespace game_engine {
 
 // callback function for Vulkan debug messages

@@ -1,9 +1,8 @@
 #include "utils/path_manager/path_manager.h"
 
 #include "config/config_manager.h"
+#include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
-
-#include <iostream>
 
 namespace game_engine {
 
@@ -25,9 +24,9 @@ bool PathManager::s_isConfigAvailable() {
   if (s_config_.expired()) {
     auto configManager = ServiceLocator::s_get<ConfigManager>();
     if (!configManager) {
-      // TODO: use logger
-      std::cout << "ConfigManager is not provided in ServiceLocator when "
-                   "using PathManager. Adding it...\n";
+      GlobalLogger::Log(LogLevel::Warning,
+                        "ConfigManager is not provided in ServiceLocator when "
+                        "using PathManager. Adding it...");
       ServiceLocator::s_provide<ConfigManager>();
       configManager = ServiceLocator::s_get<ConfigManager>();
     }
@@ -36,8 +35,7 @@ bool PathManager::s_isConfigAvailable() {
     s_config_ = configManager->getConfig(std::string(s_configFile));
 
     if (s_config_.expired()) {
-      // TODO: use logger
-      std::cerr << "Failed to load config!" << std::endl;
+      GlobalLogger::Log(LogLevel::Error, "Failed to load config!");
       return false;
     }
   }
@@ -47,8 +45,7 @@ bool PathManager::s_isConfigAvailable() {
 
 std::filesystem::path PathManager::s_getPath(std::string_view pathKey) {
   if (!s_isConfigAvailable()) {
-    // TODO: use logger
-    std::cerr << "Config is not available." << std::endl;
+    GlobalLogger::Log(LogLevel::Error, "Config is not available.");
     return {};
   }
 

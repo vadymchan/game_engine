@@ -2,6 +2,7 @@
 #define GAME_ENGINE_MATERIAL_LOADER_MANAGER_H
 
 #include "resources/i_material_loader.h"
+#include "utils/logger/global_logger.h"
 
 #include <filesystem>
 #include <memory>
@@ -49,9 +50,8 @@ class MaterialLoaderManager {
     MaterialType materialType = getMaterialTypeFromExtension(extension);
 
     if (materialType == MaterialType::UNKNOWN) {
-      // TODO: add logging
-      std::cerr << "Unknown material type for extension: " << extension
-                << std::endl;
+      GlobalLogger::Log(LogLevel::Error,
+                        "Unknown material type for extension: " + extension);
       return {};
     }
 
@@ -60,9 +60,9 @@ class MaterialLoaderManager {
     if (it != loaderMap_.end()) {
       return it->second->loadMaterials(filePath);
     }
-    // TODO: add logging
-    std::cerr << "No suitable loader found for material type: " << extension
-              << std::endl;
+    GlobalLogger::Log(
+        LogLevel::Error,
+        "No suitable loader found for material type: " + extension);
     return {};
   }
 

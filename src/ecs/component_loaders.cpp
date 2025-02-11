@@ -3,6 +3,7 @@
 #include "config/config_manager.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/transform.h"
+#include "utils/logger/global_logger.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 
@@ -64,10 +65,9 @@ Entity LoadCameraFromConfig(Registry& registry,
                             Entity    cameraEntity /*= entt::null*/) {
   if (!registry.valid(cameraEntity)) {
     if (cameraEntity != entt::null) {
-      // TOOD: replace with logging
-      std::cerr << "Warning: Provided camera entity is invalid. Creating a new "
-                   "camera entity."
-                << std::endl;
+      GlobalLogger::Log(
+          LogLevel::Warning,
+          "Provided camera entity is invalid. Creating a new camera entity.");
     }
     cameraEntity = registry.create();
   }

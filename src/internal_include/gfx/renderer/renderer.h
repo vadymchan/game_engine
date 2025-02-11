@@ -12,6 +12,7 @@
 #include "ecs/components/transform.h"
 #include "gfx/rhi/render_frame_context.h"
 #include "gfx/rhi/rhi.h"
+#include "gfx/rhi/shader_manager.h"
 #include "scene/scene.h"
 #include "utils/hot_reload/hot_reload_manager.h"
 #include "utils/path_manager/path_manager.h"
@@ -219,68 +220,75 @@ class BasePass : public RenderStage {
         Scissor(0, 0, viewportDimension.width(), viewportDimension.height()),
         false /*gOptions.UseVRS*/);
 
-    static bool isShaderInitialized = false;
+    // static bool isShaderInitialized = false;
 
     // TODO: use config in future
-    if (!isShaderInitialized) {
-      ShaderInfo vertexShaderInfo;
-      vertexShaderInfo.setName(NameStatic("BasePassVS"));
-      vertexShaderInfo.setShaderFilepath(
-          NameStatic("assets/shaders/base_pass/shader_instancing.vs.hlsl"));
-      vertexShaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+    // if (!isShaderInitialized) {
+    auto shaderManager = ServiceLocator::s_get<ShaderManager>();
 
-      ShaderInfo pixelShaderInfo;
-      pixelShaderInfo.setName(NameStatic("BasePassPS"));
-      pixelShaderInfo.setShaderFilepath(
-          NameStatic("assets/shaders/base_pass/shader.ps.hlsl"));
-      pixelShaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
+    auto vs = shaderManager->getShader(
+        "assets/shaders/base_pass/shader_instancing.vs.hlsl");
+    auto ps
+        = shaderManager->getShader("assets/shaders/base_pass/shader.ps.hlsl");
 
-      auto newVertexShader = g_rhi->createShader(vertexShaderInfo);
-      auto newPixelShader  = g_rhi->createShader(pixelShaderInfo);
+    // ShaderInfo vertexShaderInfo;
+    // vertexShaderInfo.setName(NameStatic("BasePassVS"));
+    // vertexShaderInfo.setShaderFilepath(
+    //     NameStatic("assets/shaders/base_pass/shader_instancing.vs.hlsl"));
+    // vertexShaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
 
-      {
-        std::lock_guard<std::mutex> lock(shaders_mutex_);
-        shaders_.m_vertexShader_ = newVertexShader;
-        shaders_.m_pixelShader_  = newPixelShader;
-      }
+    // ShaderInfo pixelShaderInfo;
+    // pixelShaderInfo.setName(NameStatic("BasePassPS"));
+    // pixelShaderInfo.setShaderFilepath(
+    //     NameStatic("assets/shaders/base_pass/shader.ps.hlsl"));
+    // pixelShaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
 
-      // hot reload for shaders
-      {
-        auto fileModificationHandler = [this](const wtr::event& e) {
-          std::lock_guard<std::mutex> lock(shaders_mutex_);
+    // auto newVertexShader = g_rhi->createShader(vertexShaderInfo);
+    // auto newPixelShader  = g_rhi->createShader(pixelShaderInfo);
 
-          const std::string vertexShaderPath
-              = "assets/shaders/base_pass/shader_instancing.vs.hlsl";
-          const std::string pixelShaderPath
-              = "assets/shaders/base_pass/shader.ps.hlsl";
-
-          const std::string absolutePath = e.path_name.generic_string();
-
-          if (absolutePath.find(vertexShaderPath) != std::string::npos) {
-            ShaderInfo vertexShaderInfo;
-            vertexShaderInfo.setName(NameStatic("BasePassVS"));
-            vertexShaderInfo.setShaderFilepath(
-                NameStatic(e.path_name.string()));
-            vertexShaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
-            shaders_.m_vertexShader_ = g_rhi->createShader(vertexShaderInfo);
-          }
-
-          if (absolutePath.find(pixelShaderPath) != std::string::npos) {
-            ShaderInfo pixelShaderInfo;
-            pixelShaderInfo.setName(NameStatic("BasePassPS"));
-            pixelShaderInfo.setShaderFilepath(NameStatic(e.path_name.string()));
-            pixelShaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
-            shaders_.m_pixelShader_ = g_rhi->createShader(pixelShaderInfo);
-          }
-        };
-
-        auto hotReloadManager = ServiceLocator::s_get<HotReloadManager>();
-        hotReloadManager->watchFileModifications(
-            PathManager::s_getShaderPath() / "base_pass",
-            fileModificationHandler);
-      }
-      isShaderInitialized = true;
+    {
+      std::lock_guard<std::mutex> lock(shaders_mutex_);
+      shaders_.m_vertexShader_ = vs;
+      shaders_.m_pixelShader_  = ps;
     }
+
+    //// hot reload for shaders
+    //{
+    //  auto fileModificationHandler = [this](const wtr::event& e) {
+    //    std::lock_guard<std::mutex> lock(shaders_mutex_);
+
+    //    const std::string vertexShaderPath
+    //        = "assets/shaders/base_pass/shader_instancing.vs.hlsl";
+    //    const std::string pixelShaderPath
+    //        = "assets/shaders/base_pass/shader.ps.hlsl";
+
+    //    const std::string absolutePath = e.path_name.generic_string();
+
+    //    if (absolutePath.find(vertexShaderPath) != std::string::npos) {
+    //      ShaderInfo vertexShaderInfo;
+    //      vertexShaderInfo.setName(NameStatic("BasePassVS"));
+    //      vertexShaderInfo.setShaderFilepath(
+    //          NameStatic(e.path_name.string()));
+    //      vertexShaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+    //      shaders_.m_vertexShader_ = g_rhi->createShader(vertexShaderInfo);
+    //    }
+
+    //    if (absolutePath.find(pixelShaderPath) != std::string::npos) {
+    //      ShaderInfo pixelShaderInfo;
+    //      pixelShaderInfo.setName(NameStatic("BasePassPS"));
+    //      pixelShaderInfo.setShaderFilepath(NameStatic(e.path_name.string()));
+    //      pixelShaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
+    //      shaders_.m_pixelShader_ = g_rhi->createShader(pixelShaderInfo);
+    //    }
+    //  };
+
+    //  auto hotReloadManager = ServiceLocator::s_get<HotReloadManager>();
+    //  hotReloadManager->watchFileModifications(
+    //      PathManager::s_getShaderPath() / "base_pass",
+    //      fileModificationHandler);
+    //}
+    // isShaderInitialized = true;
+    //}
   }
 
   void setupRenderPass() {
@@ -335,8 +343,7 @@ class BasePass : public RenderStage {
                       .view<Transform, Camera, CameraMatrices>();
 
       if (view.begin() == view.end()) {
-        // TODO: use loagger
-        std::cout << "No main Camera exists!\n";
+        GlobalLogger::Log(LogLevel::Warning, "No main Camera exists!");
       }
 
       // TODO: in future consider using tags instead of taking forst entity
@@ -951,21 +958,31 @@ class ShaderOverdrawStrategy : public IDebugDrawStrategy {
                  static_cast<float>(viewportDimension.height())),
         Scissor(0, 0, viewportDimension.width(), viewportDimension.height()),
         false /*gOptions.UseVRS*/);
+    // static bool isShaderInitialized = false;
 
-    ShaderInfo vsInfo;
-    vsInfo.setName(NameStatic("OverdrawVS"));
-    vsInfo.setShaderFilepath(
-        NameStatic("assets/shaders/debug/overdraw/shader_instancing.vs.hlsl"));
-    vsInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+    // TODO: use config in future
+    // if (!isShaderInitialized) {
+    //  ShaderInfo vsInfo;
+    //  vsInfo.setName(NameStatic("OverdrawVS"));
+    //  vsInfo.setShaderFilepath(NameStatic(
+    //      "assets/shaders/debug/overdraw/shader_instancing.vs.hlsl"));
+    //  vsInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
 
-    ShaderInfo psInfo;
-    psInfo.setName(NameStatic("OverdrawPS"));
-    psInfo.setShaderFilepath(
-        NameStatic("assets/shaders/debug/overdraw/shader.ps.hlsl"));
-    psInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
+    //  ShaderInfo psInfo;
+    //  psInfo.setName(NameStatic("OverdrawPS"));
+    //  psInfo.setShaderFilepath(
+    //      NameStatic("assets/shaders/debug/overdraw/shader.ps.hlsl"));
+    //  psInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
 
-    auto vs = g_rhi->createShader(vsInfo);
-    auto ps = g_rhi->createShader(psInfo);
+    //  auto vs = g_rhi->createShader(vsInfo);
+    //  auto ps = g_rhi->createShader(psInfo);
+
+    auto shaderManager = ServiceLocator::s_get<ShaderManager>();
+
+    auto vs = shaderManager->getShader(
+        "assets/shaders/debug/overdraw/shader_instancing.vs.hlsl");
+    auto ps = shaderManager->getShader(
+        "assets/shaders/debug/overdraw/shader.ps.hlsl");
 
     {
       std::lock_guard<std::mutex> lock(shaders_mutex_);
@@ -973,7 +990,9 @@ class ShaderOverdrawStrategy : public IDebugDrawStrategy {
       shaders_.m_pixelShader_  = ps;
     }
 
-    // TODO: hot reload for shaders
+    //  // TODO: hot reload for shaders
+    //  isShaderInitialized = true;
+    //}
   }
 
   void setupRenderPass() {
@@ -1026,7 +1045,8 @@ class ShaderOverdrawStrategy : public IDebugDrawStrategy {
     auto view = m_renderContext_->scene->getEntityRegistry()
                     .view<Transform, Camera, CameraMatrices>();
     if (view.begin() == view.end()) {
-      // TODO: add loagger
+      GlobalLogger::Log(LogLevel::Warning,
+                        "ShaderOverdrawStrategy: No main Camera exists!");
       return;
     }
     auto  entity    = view.front();
@@ -1313,28 +1333,40 @@ class NormalMapVisualizationStrategy : public IDebugDrawStrategy {
                  static_cast<float>(viewportDimension.height())),
         Scissor(0, 0, viewportDimension.width(), viewportDimension.height()),
         false /*gOptions.UseVRS*/);
+    // static bool isShaderInitialized = false;
 
-    ShaderInfo vsInfo;
-    vsInfo.setName(NameStatic("NormalMapVisVS"));
-    vsInfo.setShaderFilepath(
-        NameStatic("assets/shaders/debug/normal_map_visualization/"
-                   "shader_instancing.vs.hlsl"));
-    vsInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+    // TODO: use config in future
+    // if (!isShaderInitialized) {
+    //  ShaderInfo vsInfo;
+    //  vsInfo.setName(NameStatic("NormalMapVisVS"));
+    //  vsInfo.setShaderFilepath(
+    //      NameStatic("assets/shaders/debug/normal_map_visualization/"
+    //                 "shader_instancing.vs.hlsl"));
+    //  vsInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
 
-    ShaderInfo psInfo;
-    psInfo.setName(NameStatic("NormalMapVisPS"));
-    psInfo.setShaderFilepath(NameStatic(
-        "assets/shaders/debug/normal_map_visualization/shader.ps.hlsl"));
-    psInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
+    //  ShaderInfo psInfo;
+    //  psInfo.setName(NameStatic("NormalMapVisPS"));
+    //  psInfo.setShaderFilepath(NameStatic(
+    //      "assets/shaders/debug/normal_map_visualization/shader.ps.hlsl"));
+    //  psInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
 
-    auto vs = g_rhi->createShader(vsInfo);
-    auto ps = g_rhi->createShader(psInfo);
+    //  auto vs = g_rhi->createShader(vsInfo);
+    //  auto ps = g_rhi->createShader(psInfo);
+    auto shaderManager = ServiceLocator::s_get<ShaderManager>();
+
+    auto vs = shaderManager->getShader(
+        "assets/shaders/debug/normal_map_visualization/"
+        "shader_instancing.vs.hlsl");
+    auto ps = shaderManager->getShader(
+        "assets/shaders/debug/normal_map_visualization/shader.ps.hlsl");
 
     {
       std::lock_guard<std::mutex> lock(shaders_mutex_);
       shaders_.m_vertexShader_ = vs;
       shaders_.m_pixelShader_  = ps;
     }
+    //  isShaderInitialized = true;
+    //}
   }
 
   void setupRenderPass() {
@@ -1389,11 +1421,12 @@ class NormalMapVisualizationStrategy : public IDebugDrawStrategy {
                       .view<Transform, Camera, CameraMatrices>();
 
       if (view.begin() == view.end()) {
-        // TODO: use loagger
-        std::cout << "No main Camera exists!\n";
+        GlobalLogger::Log(
+            LogLevel::Warning,
+            "NormalMapVisualizationStrategy: No main Camera exists!");
       }
 
-      // TODO: in future consider using tags instead of taking forst entity
+      // TODO: in future consider using tags instead of taking first entity
       entt::entity firstEntity = view.front();
 
       auto& transform    = view.get<Transform>(firstEntity);
@@ -1790,33 +1823,54 @@ class VertexNormalVisualizationStrategy : public IDebugDrawStrategy {
                                  false);
 
     {
-      ShaderInfo vsInfo;
-      vsInfo.setName(NameStatic("VertexNormalVisVS"));
-      vsInfo.setShaderFilepath(
-          NameStatic("assets/shaders/debug/geometry_normal_visualization/"
-                     "shader_instancing.vs.hlsl"));
-      vsInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
+      // static bool isShaderInitialized = false;
 
-      ShaderInfo gsInfo;
-      gsInfo.setName(NameStatic("VertexNormalVisGS"));
-      gsInfo.setShaderFilepath(NameStatic(
-          "assets/shaders/debug/geometry_normal_visualization/shader.gs.hlsl"));
-      gsInfo.setShaderType(EShaderAccessStageFlag::GEOMETRY);
+      // TODO: use config in future
+      /*if (!isShaderInitialized) {
+        ShaderInfo vsInfo;
+        vsInfo.setName(NameStatic("VertexNormalVisVS"));
+        vsInfo.setShaderFilepath(
+            NameStatic("assets/shaders/debug/geometry_normal_visualization/"
+                       "shader_instancing.vs.hlsl"));
+        vsInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
 
-      ShaderInfo psInfo;
-      psInfo.setName(NameStatic("VertexNormalVisPS"));
-      psInfo.setShaderFilepath(NameStatic(
-          "assets/shaders/debug/geometry_normal_visualization/shader.ps.hlsl"));
-      psInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
+        ShaderInfo gsInfo;
+        gsInfo.setName(NameStatic("VertexNormalVisGS"));
+        gsInfo.setShaderFilepath(
+            NameStatic("assets/shaders/debug/geometry_normal_visualization/"
+                       "shader.gs.hlsl"));
+        gsInfo.setShaderType(EShaderAccessStageFlag::GEOMETRY);
 
-      auto vs = g_rhi->createShader(vsInfo);
-      auto gs = g_rhi->createShader(gsInfo);
-      auto ps = g_rhi->createShader(psInfo);
+        ShaderInfo psInfo;
+        psInfo.setName(NameStatic("VertexNormalVisPS"));
+        psInfo.setShaderFilepath(
+            NameStatic("assets/shaders/debug/geometry_normal_visualization/"
+                       "shader.ps.hlsl"));
+        psInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
 
-      std::lock_guard<std::mutex> lock(m_shadersMutex);
-      m_shaders.m_vertexShader_   = vs;
-      m_shaders.m_geometryShader_ = gs;
-      m_shaders.m_pixelShader_    = ps;
+        auto vs = g_rhi->createShader(vsInfo);
+        auto gs = g_rhi->createShader(gsInfo);
+        auto ps = g_rhi->createShader(psInfo);*/
+
+      auto shaderManager = ServiceLocator::s_get<ShaderManager>();
+
+      auto vs = shaderManager->getShader(
+          "assets/shaders/debug/geometry_normal_visualization/"
+          "shader_instancing.vs.hlsl");
+      auto gs = shaderManager->getShader(
+          "assets/shaders/debug/geometry_normal_visualization/shader.gs.hlsl");
+      auto ps = shaderManager->getShader(
+          "assets/shaders/debug/geometry_normal_visualization/shader.ps.hlsl");
+
+      {
+        std::lock_guard<std::mutex> lock(m_shadersMutex);
+        m_shaders.m_vertexShader_   = vs;
+        m_shaders.m_geometryShader_ = gs;
+        m_shaders.m_pixelShader_    = ps;
+      }
+
+      //  isShaderInitialized = true;
+      //}
     }
   }
 
@@ -1871,8 +1925,9 @@ class VertexNormalVisualizationStrategy : public IDebugDrawStrategy {
                       .view<Transform, Camera, CameraMatrices>();
 
       if (view.begin() == view.end()) {
-        // TODO: use loagger
-        std::cout << "No main Camera exists!\n";
+        GlobalLogger::Log(
+            LogLevel::Warning,
+            "VertexNormalVisualizationStrategy: No main Camera exists!");
       }
 
       // TODO: in future consider using tags instead of taking forst entity
@@ -2150,68 +2205,18 @@ class WireframeStrategy : public IDebugDrawStrategy {
         Scissor(0, 0, viewportDimension.width(), viewportDimension.height()),
         false /*gOptions.UseVRS*/);
 
-    // static bool isShaderInitialized = false;
+    auto shaderManager = ServiceLocator::s_get<ShaderManager>();
 
-    // TODO: use config in future
-    // if (!isShaderInitialized) {
-    ShaderInfo vertexShaderInfo;
-    vertexShaderInfo.setName(NameStatic("WireframeVS"));
-    vertexShaderInfo.setShaderFilepath(
-        NameStatic("assets/shaders/debug/wireframe/shader_instancing.vs.hlsl"));
-    vertexShaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
-
-    ShaderInfo pixelShaderInfo;
-    pixelShaderInfo.setName(NameStatic("WireframePS"));
-    pixelShaderInfo.setShaderFilepath(
-        NameStatic("assets/shaders/debug/wireframe/shader.ps.hlsl"));
-    pixelShaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
-
-    auto newVertexShader = g_rhi->createShader(vertexShaderInfo);
-    auto newPixelShader  = g_rhi->createShader(pixelShaderInfo);
-
+    auto vs = shaderManager->getShader(
+        "assets/shaders/debug/wireframe/shader_instancing.vs.hlsl");
+    auto ps = shaderManager->getShader(
+        "assets/shaders/debug/wireframe/shader.ps.hlsl");
     {
       std::lock_guard<std::mutex> lock(shaders_mutex_);
-      shaders_.m_vertexShader_ = newVertexShader;
-      shaders_.m_pixelShader_  = newPixelShader;
+      shaders_.m_vertexShader_ = vs;
+      shaders_.m_pixelShader_  = ps;
     }
 
-    // hot reload for shaders
-    //{
-    //  auto fileModificationHandler = [this](const wtr::event& e) {
-    //    std::lock_guard<std::mutex> lock(shaders_mutex_);
-
-    //    const std::string vertexShaderPath
-    //        = "assets/shaders/debug/wireframe/shader_instancing.vs.hlsl";
-    //    const std::string pixelShaderPath
-    //        = "assets/shaders/debug/wireframe/shader.ps.hlsl";
-
-    //    const std::string absolutePath = e.path_name.generic_string();
-
-    //    if (absolutePath.find(vertexShaderPath) != std::string::npos) {
-    //      ShaderInfo vertexShaderInfo;
-    //      vertexShaderInfo.setName(NameStatic("WireframeVS"));
-    //      vertexShaderInfo.setShaderFilepath(
-    //          NameStatic(e.path_name.string()));
-    //      vertexShaderInfo.setShaderType(EShaderAccessStageFlag::VERTEX);
-    //      shaders_.m_vertexShader_ = g_rhi->createShader(vertexShaderInfo);
-    //    }
-
-    //    if (absolutePath.find(pixelShaderPath) != std::string::npos) {
-    //      ShaderInfo pixelShaderInfo;
-    //      pixelShaderInfo.setName(NameStatic("WireframePS"));
-    //      pixelShaderInfo.setShaderFilepath(NameStatic(e.path_name.string()));
-    //      pixelShaderInfo.setShaderType(EShaderAccessStageFlag::FRAGMENT);
-    //      shaders_.m_pixelShader_ = g_rhi->createShader(pixelShaderInfo);
-    //    }
-    //  };
-
-    //  auto hotReloadManager = ServiceLocator::s_get<HotReloadManager>();
-    //   hotReloadManager->watchFileModifications(
-    //       PathManager::s_getShaderPath() / "debug/wireframe",
-    //       fileModificationHandler);
-    //}
-    // isShaderInitialized = true;
-    //}
   }
 
   void setupRenderPass() {
@@ -2265,8 +2270,8 @@ class WireframeStrategy : public IDebugDrawStrategy {
                       .view<Transform, Camera, CameraMatrices>();
 
       if (view.begin() == view.end()) {
-        // TODO: use loagger
-        std::cout << "No main Camera exists!\n";
+        GlobalLogger::Log(LogLevel::Warning,
+                          "WireframeStrategy: No main Camera exists!");
       }
 
       // TODO: in future consider using tags instead of taking forst entity
@@ -2494,8 +2499,10 @@ class DebugPass : public RenderStage {
   }
 
   bool isExclusiveMode() const {
-    // TODO: add logger (if strategy is not set)
-    return m_strategy_ ? m_strategy_->isExclusive() : false;
+    if (!m_strategy_) {
+      return false;
+    }
+    return m_strategy_->isExclusive();
   }
 
   private:

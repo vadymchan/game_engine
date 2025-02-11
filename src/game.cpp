@@ -12,12 +12,13 @@
 
 #include <ecs/components/movement.h>
 
-#include <iostream>
 #include <random>
 
 namespace game_engine {
 
 void Game::setup() {
+  GlobalLogger::Log(LogLevel::Info, "Game::setup() started.");
+
   // TODO: consider change to std::mt19937
   srand(static_cast<uint32_t>(time(NULL)));
 
@@ -210,7 +211,9 @@ void Game::setup() {
         auto cameraEntity = registry.view<Camera>().front();
 
         if (cameraEntity == entt::null) {
-          // TODO: log error
+          GlobalLogger::Log(
+              LogLevel::Error,
+              "File modification handler: Could not find a camera entity.");
         }
 
         LoadCameraFromConfig(registry, cameraEntity);
@@ -327,6 +330,8 @@ void Game::setup() {
   sceneManager->addScene(sceneName, std::move(registry));
   sceneManager->switchToScene(sceneName);
   m_scene_ = sceneManager->getCurrentScene();
+
+  GlobalLogger::Log(LogLevel::Info, "Game::setup() completed.");
 }
 
 void Game::onMouseMove(int32_t xOffset, int32_t yOffset) {
@@ -348,7 +353,9 @@ void Game::onMouseMove(int32_t xOffset, int32_t yOffset) {
   auto  cameraEntity = registry.view<Camera, Transform>().front();
 
   if (cameraEntity == entt::null) {
-    // TODO: log error
+    GlobalLogger::Log(LogLevel::Error,
+                      "onMouseMove() failed: camera entity is null.");
+    return;
   }
 
   auto& transform = registry.get<Transform>(cameraEntity);
@@ -373,7 +380,9 @@ void Game::update(float deltaTime) {
     auto  cameraEntity = registry.view<Movement, CameraMatrices>().front();
 
     if (cameraEntity == entt::null) {
-      // TODO: log error
+      GlobalLogger::Log(LogLevel::Error,
+                        "Game::update() failed: camera entity is null.");
+      return;
     }
 
     auto& movement = registry.get<Movement>(cameraEntity);

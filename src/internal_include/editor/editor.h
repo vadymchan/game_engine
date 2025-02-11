@@ -164,8 +164,28 @@ class Editor {
       ImGui::Begin("Performance");
       ImGui::Text("FPS: %.1f", fps);
       ImGui::Text("Frame Time: %.1f ms", frameTime);
+
+      // TODO: write better architecture
+      static const int historyCount                   = 300;
+      static float     frameTimeHistory[historyCount] = {0};
+      static int       historyIndex                   = 0;
+
+      frameTimeHistory[historyIndex] = frameTime;
+      historyIndex                   = (historyIndex + 1) % historyCount;
+
+      
+      ImGui::PlotLines("Frame Time (ms)",
+                       frameTimeHistory,
+                       historyCount,
+                       historyIndex,
+                       nullptr,
+                       0.0f,
+                       FLT_MAX,  // or set precise value (like 16.6f for 60 FPS)
+                       ImVec2(0, 80));
+
       ImGui::End();
     }
+
 
     // Log Window
     //    {

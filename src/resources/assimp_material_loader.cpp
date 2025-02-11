@@ -7,6 +7,11 @@
 namespace game_engine {
 std::vector<std::shared_ptr<Material>> AssimpMaterialLoader::loadMaterials(
     const std::filesystem::path& filePath) {
+  GlobalLogger::Log(
+      LogLevel::Info,
+      "AssimpMaterialLoader::loadMaterials(): Loading materials from "
+          + filePath.string());
+
   Assimp::Importer importer;
   // TODO: make flags configurable
   const aiScene*   scene = importer.ReadFile(
@@ -14,10 +19,22 @@ std::vector<std::shared_ptr<Material>> AssimpMaterialLoader::loadMaterials(
 
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE
       || !scene->mRootNode) {
-    // TODO: log error
+    GlobalLogger::Log(LogLevel::Error,
+                      "AssimpMaterialLoader::loadMaterials(): Assimp scene is "
+                      "invalid or incomplete for file \""
+                          + filePath.string()
+                          + "\". Error: " + importer.GetErrorString());
   }
 
-  return processMaterials(scene, filePath);
+  auto materials = processMaterials(scene, filePath);
+
+  GlobalLogger::Log(
+      LogLevel::Info,
+      "AssimpMaterialLoader::loadMaterials(): Successfully loaded "
+          + std::to_string(materials.size()) + " material(s) from "
+          + filePath.string());
+
+  return materials;
 }
 
 std::vector<std::shared_ptr<Material>> AssimpMaterialLoader::processMaterials(

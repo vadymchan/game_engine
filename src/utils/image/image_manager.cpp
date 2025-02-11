@@ -1,6 +1,7 @@
 #include "utils/image/image_manager.h"
 
 #include "utils/image/image_loader_manager.h"
+#include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
 namespace game_engine {
@@ -14,9 +15,8 @@ std::shared_ptr<Image> ImageManager::getImage(
 
   auto imageLoaderManager = ServiceLocator::s_get<ImageLoaderManager>();
   if (!imageLoaderManager) {
-    // TODO: add logging
-    std::cerr << "ImageLoaderManager not available in ServiceLocator."
-              << std::endl;
+    GlobalLogger::Log(LogLevel::Error,
+                      "ImageLoaderManager not available in ServiceLocator.");
     return nullptr;
   }
 
@@ -25,6 +25,8 @@ std::shared_ptr<Image> ImageManager::getImage(
     m_imageCache_[filepath] = image;
     return image;
   }
+  GlobalLogger::Log(LogLevel::Warning,
+                    "Failed to load image: " + filepath.string());
   return nullptr;
 }
 

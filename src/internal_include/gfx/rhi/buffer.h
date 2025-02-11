@@ -253,6 +253,7 @@ class IndexStreamData {
 
   // ======= BEGIN: public misc fields ========================================
 
+  // TODO: use smart pointer
   IBufferAttribute* m_stream_       = nullptr;
   uint32_t          m_elementCount_ = 0;
 
