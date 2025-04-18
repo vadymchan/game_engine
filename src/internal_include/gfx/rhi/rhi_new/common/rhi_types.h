@@ -276,30 +276,6 @@ union ClearValue {
   } depthStencil;
 };
 
-//------------------------------------------------------
-// Descriptor set updates
-//------------------------------------------------------
-struct DescriptorBufferInfo {
-  Buffer*  buffer = nullptr;
-  uint64_t offset = 0;
-  uint64_t range  = 0;
-};
-
-struct DescriptorImageInfo {
-  Sampler*       sampler     = nullptr;
-  Texture*       texture     = nullptr;
-  ResourceLayout imageLayout = ResourceLayout::ShaderReadOnly;
-};
-
-struct WriteDescriptorSet {
-  DescriptorSet*                    dstSet          = nullptr;
-  uint32_t                          dstBinding      = 0;
-  uint32_t                          dstArrayElement = 0;
-  ShaderBindingType                 descriptorType  = ShaderBindingType::Uniformbuffer;
-  std::vector<DescriptorImageInfo>  imageInfo;
-  std::vector<DescriptorBufferInfo> bufferInfo;
-};
-
 }  // namespace rhi
 }  // namespace gfx
 }  // namespace game_engine

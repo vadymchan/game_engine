@@ -46,13 +46,6 @@ static const std::unordered_map<TextureFormat, DXGI_FORMAT> textureFormatMapping
   { TextureFormat::Bc7Unorm,   DXGI_FORMAT_BC7_UNORM          }
 };
 
-static const std::unordered_map<DescriptorHeapTypeDx12, D3D12_DESCRIPTOR_HEAP_TYPE> heapTypeMapping = {
-  { DescriptorHeapTypeDx12::CbvSrvUav, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV },
-  { DescriptorHeapTypeDx12::Sampler,   D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER     },
-  { DescriptorHeapTypeDx12::Rtv,       D3D12_DESCRIPTOR_HEAP_TYPE_RTV         },
-  { DescriptorHeapTypeDx12::Dsv,       D3D12_DESCRIPTOR_HEAP_TYPE_DSV         }
-};
-
 static const std::unordered_map<ShaderBindingType, D3D12_DESCRIPTOR_RANGE_TYPE> bindingTypeMapping = {
   { ShaderBindingType::Uniformbuffer,            D3D12_DESCRIPTOR_RANGE_TYPE_CBV     },
   { ShaderBindingType::UniformbufferDynamic,     D3D12_DESCRIPTOR_RANGE_TYPE_CBV     },
@@ -503,8 +496,6 @@ D3D12_FILTER g_getTextureFilterDx12(TextureFilter minification, TextureFilter ma
 
 static const std::unordered_map<DXGI_FORMAT, TextureFormat> textureFormatMappingToGeneric
     = reverseMap(textureFormatMappingToDXGI);
-static const std::unordered_map<D3D12_DESCRIPTOR_HEAP_TYPE, DescriptorHeapTypeDx12> heapTypeReverseMapping
-    = reverseMap(heapTypeMapping);
 static const std::unordered_map<D3D12_DESCRIPTOR_RANGE_TYPE, ShaderBindingType> bindingTypeReverseMapping
     = reverseMap(bindingTypeMapping);
 static const std::unordered_map<D3D12_TEXTURE_ADDRESS_MODE, TextureAddressMode> addressModeReverseMapping
@@ -532,14 +523,6 @@ DXGI_FORMAT g_getTextureFormatDx12(TextureFormat textureFormat) {
 
 TextureFormat g_getTextureFormatDx12(DXGI_FORMAT formatType) {
   return getEnumMapping(textureFormatMappingToGeneric, formatType, TextureFormat::Count);
-}
-
-D3D12_DESCRIPTOR_HEAP_TYPE g_getDescriptorHeapTypeDx12(DescriptorHeapTypeDx12 heapType) {
-  return getEnumMapping(heapTypeMapping, heapType, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES);
-}
-
-DescriptorHeapTypeDx12 g_getDescriptorHeapTypeDx12(D3D12_DESCRIPTOR_HEAP_TYPE heapType) {
-  return getEnumMapping(heapTypeReverseMapping, heapType, DescriptorHeapTypeDx12::Count);
 }
 
 D3D12_DESCRIPTOR_RANGE_TYPE g_getShaderBindingTypeDx12(ShaderBindingType bindingType) {

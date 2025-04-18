@@ -12,14 +12,6 @@ namespace game_engine {
 namespace gfx {
 namespace rhi {
 
-enum class DescriptorHeapTypeDx12 : uint8_t {
-  CbvSrvUav,
-  Sampler,
-  Rtv,
-  Dsv,
-  Count
-};
-
 DXGI_FORMAT   g_getTextureFormatDx12(TextureFormat textureFormat);
 TextureFormat g_getTextureFormatDx12(DXGI_FORMAT formatType);
 
@@ -28,9 +20,6 @@ int g_getTexturePixelSizeDx12(TextureFormat type);
 
 TextureType              g_getTextureDimensionDx12(D3D12_RESOURCE_DIMENSION type, bool isArray);
 D3D12_RESOURCE_DIMENSION g_getTextureDimensionDx12(TextureType type);
-
-D3D12_DESCRIPTOR_HEAP_TYPE g_getDescriptorHeapTypeDx12(DescriptorHeapTypeDx12 heapType);
-DescriptorHeapTypeDx12     g_getDescriptorHeapTypeDx12(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 
 D3D12_DESCRIPTOR_RANGE_TYPE g_getShaderBindingTypeDx12(ShaderBindingType bindingType);
 ShaderBindingType           g_getShaderBindingTypeDx12(D3D12_DESCRIPTOR_RANGE_TYPE bindingType);

@@ -42,21 +42,6 @@ enum class BufferType : uint8_t {
   Count
 };
 
-enum class BufferElementType : uint8_t {
-  Byte,
-  ByteUnorm,
-  Uint16,
-  Uint32,
-  Float,
-  Count
-};
-
-enum class TextureFilterTarget : uint8_t {
-  Minification = 0,
-  Magnification,
-  Count
-};
-
 enum class TextureFilter : uint8_t {
   Nearest,
   Linear,
@@ -149,17 +134,6 @@ inline bool g_isDepthOnlyFormat(TextureFormat format) {
   }
 }
 
-enum class FormatType : uint8_t {
-  Byte,
-  UnsignedByte,
-  ShortInt,
-  Int,
-  UnsignedInt,
-  Half,
-  Float,
-  Count
-};
-
 // for color blending
 enum class BlendFactor : uint8_t {
   Zero,
@@ -189,13 +163,6 @@ enum class BlendOp : uint8_t {
   Count
 };
 
-enum class Face : uint8_t {
-  Front,
-  Back,
-  FrontAndBack,
-  Count
-};
-
 enum class StencilOp : uint8_t {
   Keep,
   Zero,
@@ -220,38 +187,6 @@ enum class CompareOp : uint8_t {
   Count
 };
 
-// TODO: if there's a need, add bitwise operations to this enum
-enum class RenderBufferType : uint32_t {
-  None    = 0,
-  Color   = 0x00'00'00'01,
-  Depth   = 0x00'00'00'02,
-  Stencil = 0x00'00'00'04,
-  All     = 0xFF'FF'FF'FF
-};
-
-enum class DrawBufferType : uint8_t {
-  ColorAttachment0,
-  ColorAttachment1,
-  ColorAttachment2,
-  ColorAttachment3,
-  ColorAttachment4,
-  ColorAttachment5,
-  ColorAttachment6,
-  ColorAttachment7,
-  Count
-};
-
-enum class DepthBufferType : uint8_t {
-  None,
-  Depth16,
-  Depth16Stencil8,
-  Depth24,
-  Depth24Stencil8,
-  Depth32,
-  Depth32Stencil8,
-  Count
-};
-
 enum class TextureAddressMode : uint8_t {
   Repeat,
   MirroredRepeat,
@@ -265,14 +200,6 @@ enum class PolygonMode : uint8_t {
   Point,
   Line,
   Fill,
-  Count
-};
-
-enum class ImageTextureAccessType : uint8_t {
-  None,
-  ReadOnly,
-  WriteOnly,
-  ReadWrite,
   Count
 };
 
@@ -388,34 +315,6 @@ enum class ResourceLayout : uint8_t {
 enum class PipelineType {
   Graphics,
   Compute
-};
-
-enum class PipelineStageMask : uint32_t {
-  None                            = 0,
-  TopOfPipeBit                    = 0x00'00'00'01,
-  DrawIndirectBit                 = 0x00'00'00'02,
-  VertexInputBit                  = 0x00'00'00'04,
-  VertexShaderBit                 = 0x00'00'00'08,
-  TessellationControlShaderBit    = 0x00'00'00'10,
-  TessellationEvaluationShaderBit = 0x00'00'00'20,
-  GeometryShaderBit               = 0x00'00'00'40,
-  FragmentShaderBit               = 0x00'00'00'80,
-  EarlyFragmentTestsBit           = 0x00'00'01'00,
-  LateFragmentTestsBit            = 0x00'00'02'00,
-  ColorAttachmentOutputBit        = 0x00'00'04'00,
-  ComputeShaderBit                = 0x00'00'08'00,
-  TransferBit                     = 0x00'00'10'00,
-  BottomOfPipeBit                 = 0x00'00'20'00,
-  HostBit                         = 0x00'00'40'00,
-  AllGraphicsBit                  = 0x00'00'80'00,
-  AllCommandsBit                  = 0x00'01'00'00,
-};
-
-enum class RTClearType : uint8_t {
-  None,
-  Color,
-  DepthStencil,
-  Count
 };
 
 enum class BufferCreateFlag : uint32_t {
