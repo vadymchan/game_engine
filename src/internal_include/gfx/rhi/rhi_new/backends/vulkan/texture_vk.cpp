@@ -1,0 +1,368 @@
+#include "gfx/rhi/rhi_new/backends/vulkan/texture_vk.h"
+
+#include "gfx/rhi/rhi_new/backends/vulkan/command_buffer_vk.h"
+#include "gfx/rhi/rhi_new/backends/vulkan/device_vk.h"
+#include "gfx/rhi/rhi_new/backends/vulkan/rhi_enums_vk.h"
+#include "gfx/rhi/rhi_new/backends/vulkan/synchronization_vk.h"
+#include "utils/logger/global_logger.h"
+
+namespace game_engine {
+namespace gfx {
+namespace rhi {
+
+TextureVk::TextureVk(const TextureDesc& desc, DeviceVk* device)
+    : Texture(desc)
+    , m_device_(device) {
+  // Convert our generic format to Vulkan format
+  m_vkFormat_ = g_getTextureFormatVk(desc.format);
+
+  // Set initial layout
+  m_vkLayout_      = g_getImageLayoutVk(desc.initialLayout);
+  m_currentLayout_ = desc.initialLayout;
+
+  // Create the image, allocate memory, and create image view
+  if (!createImage_() || !allocateMemory_() || !createImageView_()) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan texture");
+  }
+}
+
+TextureVk::TextureVk(DeviceVk* device, const TextureDesc& desc, VkImage existingImage, VkImageView existingImageView)
+    : Texture(desc)
+    , m_device_(device)
+    , m_image_(existingImage)
+    , m_imageView_(existingImageView)
+    , m_ownsImage_(false) {
+  // Convert our generic format to Vulkan format
+  m_vkFormat_ = g_getTextureFormatVk(desc.format);
+
+  // Set initial layout
+  m_vkLayout_      = g_getImageLayoutVk(desc.initialLayout);
+  m_currentLayout_ = desc.initialLayout;
+}
+
+TextureVk::~TextureVk() {
+  if (m_device_) {
+    VkDevice device = m_device_->getDevice();
+
+    // Destroy image view if it exists
+    if (m_imageView_ != VK_NULL_HANDLE) {
+      vkDestroyImageView(device, m_imageView_, nullptr);
+      m_imageView_ = VK_NULL_HANDLE;
+    }
+
+    // Destroy image and free memory if we own them
+    if (m_ownsImage_) {
+      if (m_image_ != VK_NULL_HANDLE) {
+        vkDestroyImage(device, m_image_, nullptr);
+        m_image_ = VK_NULL_HANDLE;
+      }
+
+      if (m_memory_ != VK_NULL_HANDLE) {
+        vkFreeMemory(device, m_memory_, nullptr);
+        m_memory_ = VK_NULL_HANDLE;
+      }
+    }
+  }
+}
+
+bool TextureVk::createImage_() {
+  VkImageCreateInfo imageInfo = {};
+  imageInfo.sType             = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+
+  // Set image type based on texture type
+  switch (m_desc_.type) {
+    case TextureType::Texture1D:
+      imageInfo.imageType = VK_IMAGE_TYPE_1D;
+      break;
+    case TextureType::Texture2D:
+    case TextureType::Texture2DArray:
+    case TextureType::TextureCube:
+      imageInfo.imageType = VK_IMAGE_TYPE_2D;
+      break;
+    case TextureType::Texture3D:
+    case TextureType::Texture3DArray:
+      imageInfo.imageType = VK_IMAGE_TYPE_3D;
+      break;
+    default:
+      GlobalLogger::Log(LogLevel::Error, "Unsupported texture type");
+      return false;
+  }
+
+  // Set format, dimensions, and mip levels
+  imageInfo.format        = m_vkFormat_;
+  imageInfo.extent.width  = m_desc_.width;
+  imageInfo.extent.height = m_desc_.height;
+  imageInfo.extent.depth  = m_desc_.depth;
+  imageInfo.mipLevels     = m_desc_.mipLevels;
+
+  // Set array layers
+  imageInfo.arrayLayers = m_desc_.arraySize;
+
+  // For cube maps, we need 6 array layers and the cube map flag
+  if (m_desc_.type == TextureType::TextureCube) {
+    imageInfo.arrayLayers  = 6;
+    imageInfo.flags       |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+  }
+
+  // Set samples for MSAA
+  imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;  // Default to 1 sample
+  if (m_desc_.sampleCount == MSAASamples::Count2) {
+    imageInfo.samples = VK_SAMPLE_COUNT_2_BIT;
+  } else if (m_desc_.sampleCount == MSAASamples::Count4) {
+    imageInfo.samples = VK_SAMPLE_COUNT_4_BIT;
+  } else if (m_desc_.sampleCount == MSAASamples::Count8) {
+    imageInfo.samples = VK_SAMPLE_COUNT_8_BIT;
+  } else if (m_desc_.sampleCount == MSAASamples::Count16) {
+    imageInfo.samples = VK_SAMPLE_COUNT_16_BIT;
+  }
+
+  // Set tiling, usage, and sharing mode
+  imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+
+  // Configure image usage based on flags
+  imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;  // Always allow sampling in shaders
+
+  // Add additional usage flags based on create flags
+  if (hasRtvUsage()) {
+    imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  }
+
+  if (hasDsvUsage()) {
+    imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+  }
+
+  if (hasUavUsage()) {
+    imageInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
+  }
+
+  // Always allow texture to be the target of transfer operations for uploads
+  imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+  // For mip generation and transfers
+  if (m_desc_.mipLevels > 1 || ((m_desc_.createFlags & TextureCreateFlag::TransferSrc) != TextureCreateFlag::None)) {
+    imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  }
+
+  // Sharing and initial layout
+  imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+  imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+  // Create the image
+  if (vkCreateImage(m_device_->getDevice(), &imageInfo, nullptr, &m_image_) != VK_SUCCESS) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan image");
+    return false;
+  }
+
+  return true;
+}
+
+bool TextureVk::allocateMemory_() {
+  VkMemoryRequirements memRequirements;
+  vkGetImageMemoryRequirements(m_device_->getDevice(), m_image_, &memRequirements);
+
+  // Get memory properties
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vkGetPhysicalDeviceMemoryProperties(m_device_->getPhysicalDevice(), &memProperties);
+
+  // Find suitable memory type (prefer device local)
+  uint32_t              memoryTypeIndex = 0;
+  VkMemoryPropertyFlags desiredFlags    = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+    if ((memRequirements.memoryTypeBits & (1 << i))
+        && (memProperties.memoryTypes[i].propertyFlags & desiredFlags) == desiredFlags) {
+      memoryTypeIndex = i;
+      break;
+    }
+  }
+
+  // Allocate memory
+  VkMemoryAllocateInfo allocInfo = {};
+  allocInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  allocInfo.allocationSize       = memRequirements.size;
+  allocInfo.memoryTypeIndex      = memoryTypeIndex;
+
+  if (vkAllocateMemory(m_device_->getDevice(), &allocInfo, nullptr, &m_memory_) != VK_SUCCESS) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to allocate Vulkan image memory");
+    return false;
+  }
+
+  // Bind memory to image
+  if (vkBindImageMemory(m_device_->getDevice(), m_image_, m_memory_, 0) != VK_SUCCESS) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to bind Vulkan image memory");
+    return false;
+  }
+
+  return true;
+}
+
+bool TextureVk::createImageView_() {
+  VkImageViewCreateInfo viewInfo = {};
+  viewInfo.sType                 = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  viewInfo.image                 = m_image_;
+
+  // Set view type based on texture type
+  switch (m_desc_.type) {
+    case TextureType::Texture1D:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
+      break;
+    case TextureType::Texture2D:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+      break;
+    case TextureType::Texture2DArray:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+      break;
+    case TextureType::Texture3D:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+      break;
+    case TextureType::Texture3DArray:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;  // No direct 3D array in Vulkan
+      break;
+    case TextureType::TextureCube:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+      break;
+    default:
+      GlobalLogger::Log(LogLevel::Error, "Unsupported texture view type");
+      return false;
+  }
+
+  // Set format
+  viewInfo.format = m_vkFormat_;
+
+  // Set swizzle (identity mapping)
+  viewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+  viewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+  viewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+  viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+  // Set subresource range
+  viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
+  // If this is a depth/stencil format, set the appropriate aspect mask
+  if (g_isDepthFormat(m_desc_.format)) {
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+    // Add stencil aspect if the format has stencil component
+    if (!g_isDepthOnlyFormat(m_desc_.format)) {
+      viewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+  }
+
+  viewInfo.subresourceRange.baseMipLevel   = 0;
+  viewInfo.subresourceRange.levelCount     = m_desc_.mipLevels;
+  viewInfo.subresourceRange.baseArrayLayer = 0;
+  viewInfo.subresourceRange.layerCount     = m_desc_.arraySize;
+
+  // Create the image view
+  if (vkCreateImageView(m_device_->getDevice(), &viewInfo, nullptr, &m_imageView_) != VK_SUCCESS) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan image view");
+    return false;
+  }
+
+  return true;
+}
+
+void TextureVk::updateCurrentLayout_(VkImageLayout layout) {
+  m_vkLayout_      = layout;
+  m_currentLayout_ = g_getImageLayoutVk(layout);
+}
+
+void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uint32_t arrayLayer) {
+  if (!data || !dataSize) {
+    GlobalLogger::Log(LogLevel::Error, "Invalid data or size for texture update");
+    return;
+  }
+
+  // We need to create a staging buffer, copy data to it, and then use a command buffer
+  // to copy from the staging buffer to the texture
+
+  // Create a staging buffer
+  VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
+  VkBuffer       stagingBuffer = m_device_->createStagingBuffer(data, dataSize, stagingMemory);
+
+  if (stagingBuffer == VK_NULL_HANDLE) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create staging buffer for texture update");
+    return;
+  }
+
+  // Create a command buffer for the transfer
+  CommandBufferDesc cmdBufferDesc;
+  cmdBufferDesc.primary = true;
+
+  auto commandBuffer = m_device_->createCommandBuffer(cmdBufferDesc);
+  if (!commandBuffer) {
+    // Clean up staging resources
+    vkDestroyBuffer(m_device_->getDevice(), stagingBuffer, nullptr);
+    vkFreeMemory(m_device_->getDevice(), stagingMemory, nullptr);
+    GlobalLogger::Log(LogLevel::Error, "Failed to create command buffer for texture update");
+    return;
+  }
+
+  CommandBufferVk* cmdBufferVk = static_cast<CommandBufferVk*>(commandBuffer.get());
+
+  // Begin command buffer
+  cmdBufferVk->begin();
+
+  // Transition layout to transfer destination
+  ResourceBarrierDesc barrier = {};
+  barrier.texture             = this;
+  barrier.oldLayout           = m_currentLayout_;
+  barrier.newLayout           = ResourceLayout::TransferDst;
+  cmdBufferVk->resourceBarrier(barrier);
+
+  // Calculate subresource dimensions for this mip level
+  uint32_t mipWidth = m_desc_.width >> mipLevel;
+  mipWidth          = mipWidth > 0 ? mipWidth : 1;
+
+  uint32_t mipHeight = m_desc_.height >> mipLevel;
+  mipHeight          = mipHeight > 0 ? mipHeight : 1;
+
+  uint32_t mipDepth = m_desc_.depth >> mipLevel;
+  mipDepth          = mipDepth > 0 ? mipDepth : 1;
+
+  // Set up buffer to image copy
+  VkBufferImageCopy region = {};
+  region.bufferOffset      = 0;
+  region.bufferRowLength   = 0;  // Tightly packed
+  region.bufferImageHeight = 0;  // Tightly packed
+
+  region.imageSubresource.aspectMask
+      = g_isDepthFormat(m_desc_.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+  region.imageSubresource.mipLevel       = mipLevel;
+  region.imageSubresource.baseArrayLayer = arrayLayer;
+  region.imageSubresource.layerCount     = 1;
+
+  region.imageOffset = {0, 0, 0};
+  region.imageExtent = {mipWidth, mipHeight, mipDepth};
+
+  // Copy buffer to image
+  vkCmdCopyBufferToImage(
+      cmdBufferVk->getCommandBuffer(), stagingBuffer, m_image_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+  // Transition layout back to original
+  barrier.oldLayout = ResourceLayout::TransferDst;
+  barrier.newLayout = m_currentLayout_;
+  cmdBufferVk->resourceBarrier(barrier);
+
+  // End and submit command buffer
+  cmdBufferVk->end();
+
+  // Create a fence to wait for the upload to complete
+  FenceDesc fenceDesc;
+  fenceDesc.signaled = false;
+  auto fence         = m_device_->createFence(fenceDesc);
+
+  // Submit the command buffer
+  m_device_->submitCommandBuffer(commandBuffer.get(), fence.get());
+
+  // Wait for the upload to complete
+  fence->wait();
+
+  // Clean up staging resources
+  vkDestroyBuffer(m_device_->getDevice(), stagingBuffer, nullptr);
+  vkFreeMemory(m_device_->getDevice(), stagingMemory, nullptr);
+}
+
+}  // namespace rhi
+}  // namespace gfx
+}  // namespace game_engine

@@ -1,0 +1,108 @@
+#ifndef GAME_ENGINE_COMMAND_BUFFER_VK_H
+#define GAME_ENGINE_COMMAND_BUFFER_VK_H
+
+#include "gfx/rhi/rhi_new/interface/command_buffer.h"
+
+#include <vulkan/vulkan.h>
+
+namespace game_engine {
+namespace gfx {
+namespace rhi {
+
+class DeviceVk;
+class GraphicsPipelineVk;
+class BufferVk;
+class TextureVk;
+class DescriptorSetVk;
+class RenderPassVk;
+class FramebufferVk;
+
+// clang-format off
+
+/**
+ * @note This class holds a reference to its command pool, which simplifies the design for educational purposes.
+ *       This approach makes the class self-contained and easier for students to understand by reflecting the actual
+ *       dependency between the command buffer and the pool in the Vulkan API.
+ */
+class CommandBufferVk : public CommandBuffer {
+  public:
+  CommandBufferVk(DeviceVk* device, VkCommandBuffer commandBuffer, VkCommandPool commandPool);
+  ~CommandBufferVk() = default;
+
+  // Command buffer recording
+  void begin() override;
+  void end() override;
+  void reset() override;
+
+  // Pipeline state
+  void setPipeline(Pipeline* pipeline) override;
+  void setViewport(const Viewport& viewport) override;
+  void setScissor(const ScissorRect& scissor) override;
+
+  // Resource binding
+  void bindVertexBuffer(uint32_t binding, Buffer* buffer, uint64_t offset = 0) override;
+  void bindIndexBuffer(Buffer* buffer, uint64_t offset = 0, bool use32BitIndices = false) override;
+  void bindDescriptorSet(uint32_t setIndex, DescriptorSet* set) override;
+
+  // Draw commands
+  void draw(uint32_t vertexCount, uint32_t firstVertex = 0) override;
+  void drawIndexed(uint32_t indexCount, uint32_t firstIndex = 0, int32_t vertexOffset = 0) override;
+  void drawInstanced(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex = 0, uint32_t firstInstance = 0) override;
+  void drawIndexedInstanced(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex = 0, int32_t vertexOffset = 0, uint32_t firstInstance = 0) override;
+
+  // Resource barriers
+  void resourceBarrier(const ResourceBarrierDesc& barrier) override;
+
+  // Render pass operations
+  void beginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const std::vector<ClearValue>& clearValues) override;
+  void endRenderPass() override;
+
+  // Copy operations
+  void copyBuffer(Buffer* srcBuffer, Buffer* dstBuffer, uint64_t srcOffset = 0, uint64_t dstOffset = 0, uint64_t size = 0) override;
+  void copyBufferToTexture(Buffer* srcBuffer, Texture* dstTexture, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
+  void copyTextureToBuffer(Texture* srcTexture, Buffer* dstBuffer, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
+
+  // Clear operations
+  void clearColor(Texture* texture, const float color[4], uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
+  void clearDepthStencil(Texture* texture, float depth, uint8_t stencil, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
+
+  // Vulkan-specific methods
+  const VkCommandBuffer& getCommandBuffer() const { return m_commandBuffer_; }
+
+  private:
+  DeviceVk*       m_device_;
+  VkCommandBuffer m_commandBuffer_;
+  VkCommandPool   m_commandPool_;
+
+  // Current state tracking
+  GraphicsPipelineVk*         m_currentPipeline_    = nullptr;
+  RenderPassVk*       m_currentRenderPass_  = nullptr;
+  FramebufferVk*      m_currentFramebuffer_ = nullptr;
+  bool                m_isRenderPassActive_ = false;
+  bool                m_isRecording_        = false;
+  VkPipelineBindPoint m_currentBindPoint_   = VK_PIPELINE_BIND_POINT_GRAPHICS;
+};
+
+// clang-format on
+
+class CommandPoolManager {
+  public:
+  CommandPoolManager() = default;
+  ~CommandPoolManager();
+
+  bool initialize(VkDevice device, uint32_t queueFamilyIndex);
+  void release();
+
+  VkCommandPool getPool() const { return m_commandPool_; }
+
+  private:
+  VkDevice      m_device_           = VK_NULL_HANDLE;
+  VkCommandPool m_commandPool_      = VK_NULL_HANDLE;
+  uint32_t      m_queueFamilyIndex_ = 0;
+};
+
+}  // namespace rhi
+}  // namespace gfx
+}  // namespace game_engine
+
+#endif  // GAME_ENGINE_COMMAND_BUFFER_VK_H
