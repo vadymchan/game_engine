@@ -10,8 +10,7 @@ namespace game_engine {
 // TODO: currently not implemented and not used (it's responsible for organizing
 // and preparing entity data for rendering (different render passes), applying
 // culling and LOD selection
-void RenderSystem::update(const std::shared_ptr<Scene>& scene,
-                          float                         deltaTime) {
+void RenderSystem::update(Scene* scene, float deltaTime) {
   Registry& registry = scene->getEntityRegistry();
 
   // Handle entities with RenderModel and Transform components
@@ -22,8 +21,7 @@ void RenderSystem::update(const std::shared_ptr<Scene>& scene,
 
     GlobalLogger::Log(
         LogLevel::Info,
-        "Entity " + std::to_string(static_cast<int>(entity))
-            + " has RenderModel: " + renderModel.filePath.string());
+        "Entity " + std::to_string(static_cast<int>(entity)) + " has RenderModel: " + renderModel.filePath.string());
   }
 
   // Handle entities with RenderMesh components
@@ -35,8 +33,7 @@ void RenderSystem::update(const std::shared_ptr<Scene>& scene,
     if (renderMesh.material) {
       GlobalLogger::Log(
           LogLevel::Info,
-          "Entity " + std::to_string(static_cast<int>(entity))
-              + " has Material: " + renderMesh.material->materialName);
+          "Entity " + std::to_string(static_cast<int>(entity)) + " has Material: " + renderMesh.material->materialName);
     }
   }
 }

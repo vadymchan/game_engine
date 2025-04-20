@@ -1,39 +1,31 @@
-
 #include "utils/logger/console_logger.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/stdout_sinks.h>
+#include <filesystem>
 
 namespace game_engine {
 
 namespace {
 
-auto createStdOutLogger(const std::string& loggerName,
-                        bool               multiThreaded,
-                        bool colored) -> std::shared_ptr<spdlog::logger> {
+auto createStdOutLogger(const std::string& loggerName, bool multiThreaded, bool colored)
+    -> std::shared_ptr<spdlog::logger> {
   if (colored) {
-    return multiThreaded ? spdlog::stdout_color_mt(loggerName)
-                         : spdlog::stdout_color_st(loggerName);
+    return multiThreaded ? spdlog::stdout_color_mt(loggerName) : spdlog::stdout_color_st(loggerName);
   }
-  return multiThreaded ? spdlog::stdout_logger_mt(loggerName)
-                       : spdlog::stdout_logger_st(loggerName);
+  return multiThreaded ? spdlog::stdout_logger_mt(loggerName) : spdlog::stdout_logger_st(loggerName);
 }
 
-auto createStdErrLogger(const std::string& loggerName,
-                        bool               multiThreaded,
-                        bool colored) -> std::shared_ptr<spdlog::logger> {
+auto createStdErrLogger(const std::string& loggerName, bool multiThreaded, bool colored)
+    -> std::shared_ptr<spdlog::logger> {
   if (colored) {
-    return multiThreaded ? spdlog::stderr_color_mt(loggerName)
-                         : spdlog::stderr_color_st(loggerName);
+    return multiThreaded ? spdlog::stderr_color_mt(loggerName) : spdlog::stderr_color_st(loggerName);
   }
-  return multiThreaded ? spdlog::stderr_logger_mt(loggerName)
-                       : spdlog::stderr_logger_st(loggerName);
+  return multiThreaded ? spdlog::stderr_logger_mt(loggerName) : spdlog::stderr_logger_st(loggerName);
 }
 
-auto createLogger(const std::string& loggerName,
-                  ConsoleStreamType  consoleType,
-                  bool               multiThreaded,
-                  bool colored) -> std::shared_ptr<spdlog::logger> {
+auto createLogger(const std::string& loggerName, ConsoleStreamType consoleType, bool multiThreaded, bool colored)
+    -> std::shared_ptr<spdlog::logger> {
   switch (consoleType) {
     case ConsoleStreamType::StdOut:
       return createStdOutLogger(loggerName, multiThreaded, colored);
@@ -74,45 +66,67 @@ ConsoleLogger::ConsoleLogger(const std::string& loggerName,
                              bool               isMultithreaded,
                              bool               isColored)
     : ILogger(loggerName)
-    , m_logger_(
-          createLogger(loggerName, consoleType, isMultithreaded, isColored))
+    , m_logger_(createLogger(loggerName, consoleType, isMultithreaded, isColored))
     , m_logLevel_(logLevel)
     , m_pattern_(pattern)
     , m_consoleType_(consoleType)
     , m_isMultithreaded_(isMultithreaded)
     , m_isColored_(isColored) {
-  m_logger_->set_level(toSpdlogLevel(logLevel));
-  m_logger_->set_pattern(pattern);
+  if (m_logger_) {
+    m_logger_->set_level(toSpdlogLevel(logLevel));
+    m_logger_->set_pattern(pattern);
+  }
 }
 
-void ConsoleLogger::log(LogLevel logLevel, const std::string& message) {
+ConsoleLogger::~ConsoleLogger() {
+  // Explicitly drop the logger from spdlog registry
+  if (m_logger_) {
+    spdlog::drop(m_logger_->name());
+  }
+}
+
+void ConsoleLogger::log(LogLevel logLevel, const std::string& message, const std::source_location& loc) {
+  if (!m_logger_) {
+    return;
+  }
+
+  auto file = std::filesystem::path(loc.file_name()).filename().string();
+
+  std::string_view functionName{loc.function_name()};
+  // strip off the parameter list (remove everything from '(' onward) 
+  if (auto p = functionName.find('('); p != std::string_view::npos) {
+    functionName.remove_suffix(functionName.size() - p);
+  }
+  // strip off any namespace qualifiers (remove up to the last "::")
+  if (auto ns = functionName.rfind("::"); ns != std::string_view::npos) {
+    functionName.remove_prefix(ns + 2);
+  }
+
+  auto fullMsg = fmt::format("{}:{} | {}() | {}", file, loc.line(), functionName, message);
+
   switch (logLevel) {
     case LogLevel::Fatal:
-      m_logger_->critical(message);
+      m_logger_->critical(fullMsg);
       break;
     case LogLevel::Error:
-      m_logger_->error(message);
+      m_logger_->error(fullMsg);
       break;
     case LogLevel::Warning:
-      m_logger_->warn(message);
+      m_logger_->warn(fullMsg);
       break;
     case LogLevel::Info:
-      m_logger_->info(message);
+      m_logger_->info(fullMsg);
       break;
     case LogLevel::Debug:
-      m_logger_->debug(message);
+      m_logger_->debug(fullMsg);
       break;
     case LogLevel::Trace:
-      m_logger_->trace(message);
+      m_logger_->trace(fullMsg);
       break;
   }
 }
 
 // Getters
-auto ConsoleLogger::getLoggerName() const -> const std::string& {
-  return m_logger_->name();
-}
-
 auto ConsoleLogger::getPattern() const -> const std::string& {
   return m_pattern_;
 }
@@ -123,18 +137,32 @@ auto ConsoleLogger::getLogLevel() const -> LogLevel {
 
 // Setters
 void ConsoleLogger::setLoggerName(const std::string& name) {
-  m_logger_
-      = createLogger(name, m_consoleType_, m_isMultithreaded_, m_isColored_);
+  if (m_logger_) {
+    // Drop the old logger
+    spdlog::drop(m_logger_->name());
+  }
+
+  // Create a new logger
+  m_logger_ = createLogger(name, m_consoleType_, m_isMultithreaded_, m_isColored_);
+
+  if (m_logger_) {
+    m_logger_->set_level(toSpdlogLevel(m_logLevel_));
+    m_logger_->set_pattern(m_pattern_);
+  }
 }
 
 void ConsoleLogger::setPattern(const std::string& pattern) {
   m_pattern_ = pattern;
-  m_logger_->set_pattern(pattern);
+  if (m_logger_) {
+    m_logger_->set_pattern(pattern);
+  }
 }
 
 void ConsoleLogger::setLogLevel(LogLevel level) {
   m_logLevel_ = level;
-  m_logger_->set_level(toSpdlogLevel(level));
+  if (m_logger_) {
+    m_logger_->set_level(toSpdlogLevel(level));
+  }
 }
 
 }  // namespace game_engine

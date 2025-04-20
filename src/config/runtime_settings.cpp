@@ -4,6 +4,8 @@
 
 namespace game_engine {
 
+using gfx::rhi::RenderingApi;
+
 RuntimeSettings& RuntimeSettings::s_get() {
   static RuntimeSettings instance;
   return instance;
@@ -15,9 +17,7 @@ RuntimeSettings::RuntimeSettings() {
 
 void RuntimeSettings::updateFromConfig() {
   auto configManager = ServiceLocator::s_get<ConfigManager>();
-  auto config
-      = configManager->getConfig(PathManager::s_getDebugPath() / "config.json")
-            .lock();
+  auto config        = configManager->getConfig(PathManager::s_getDebugPath() / "config.json");
 
   if (config) {
     m_worldUp_            = config->get<math::Vector3Df>("worldUp");
@@ -28,9 +28,8 @@ void RuntimeSettings::updateFromConfig() {
                                                    : RenderingApi::Dx12;
   } else {
     GlobalLogger::Log(LogLevel::Error,
-                      std::string("Failed to initialize RuntimeSettings at ")
-                          + __FILE__ + ":" + std::to_string(__LINE__)
-                          + " - config is nullptr.");
+                      std::string("Failed to initialize RuntimeSettings at ") + __FILE__ + ":"
+                          + std::to_string(__LINE__) + " - config is nullptr.");
   }
 }
 

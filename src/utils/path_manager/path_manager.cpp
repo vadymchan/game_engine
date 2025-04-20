@@ -21,7 +21,7 @@ std::filesystem::path PathManager::s_getDebugPath() {
 bool PathManager::s_isConfigAvailable() {
   // if weak_ptr is expired, we need to load the config (either initialization
   // or reload)
-  if (s_config_.expired()) {
+  if (!s_config_) {
     auto configManager = ServiceLocator::s_get<ConfigManager>();
     if (!configManager) {
       GlobalLogger::Log(LogLevel::Warning,
@@ -34,7 +34,7 @@ bool PathManager::s_isConfigAvailable() {
 
     s_config_ = configManager->getConfig(std::string(s_configFile));
 
-    if (s_config_.expired()) {
+    if (!s_config_) {
       GlobalLogger::Log(LogLevel::Error, "Failed to load config!");
       return false;
     }
@@ -49,9 +49,8 @@ std::filesystem::path PathManager::s_getPath(std::string_view pathKey) {
     return {};
   }
 
-  if (auto config = s_config_.lock()) {
-    return std::filesystem::path(
-        config->get<std::string>(std::string(pathKey)));
+  if (auto config = s_config_) {
+    return std::filesystem::path(config->get<std::string>(std::string(pathKey)));
   }
 
   return {};
