@@ -6,27 +6,27 @@
 
 namespace game_engine {
 
-std::shared_ptr<Image> ImageManager::getImage(
-    const std::filesystem::path& filepath) {
+Image* ImageManager::getImage(const std::filesystem::path& filepath) {
   auto it = m_imageCache_.find(filepath);
   if (it != m_imageCache_.end()) {
-    return it->second;
+    return it->second.get();
   }
 
   auto imageLoaderManager = ServiceLocator::s_get<ImageLoaderManager>();
   if (!imageLoaderManager) {
-    GlobalLogger::Log(LogLevel::Error,
-                      "ImageLoaderManager not available in ServiceLocator.");
+    GlobalLogger::Log(LogLevel::Error, "ImageLoaderManager not available in ServiceLocator.");
     return nullptr;
   }
 
   auto image = imageLoaderManager->loadImage(filepath);
   if (image) {
-    m_imageCache_[filepath] = image;
-    return image;
+    // Save pointer to return before we transfer ownership to the cache
+    Image* imagePtr         = image.get();
+    m_imageCache_[filepath] = std::move(image);
+    return imagePtr;
   }
-  GlobalLogger::Log(LogLevel::Warning,
-                    "Failed to load image: " + filepath.string());
+
+  GlobalLogger::Log(LogLevel::Warning, "Failed to load image: " + filepath.string());
   return nullptr;
 }
 

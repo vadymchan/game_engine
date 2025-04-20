@@ -1,25 +1,15 @@
-
 struct VSInput
 {
 #ifdef __spirv__
     [[vk::location(0)]] float3 Position   : POSITION0;
-    [[vk::location(1)]] float3 Normal     : NORMAL0;
-    [[vk::location(2)]] float2 TexCoord   : TEXCOORD0;
-    [[vk::location(3)]] float3 Tangent    : TANGENT0;
-    [[vk::location(4)]] float3 Bitangent  : BITANGENT0;
-    [[vk::location(5)]] float4 Color      : COLOR0;
-    [[vk::location(6)]] float4x4 Instance : INSTANCE0;
+    [[vk::location(1)]] float2 TexCoord   : TEXCOORD1; 
+    [[vk::location(2)]] float4x4 Instance : INSTANCE2;  
 #else
     float3 Position : POSITION0;
-    float3 Normal : NORMAL0;
-    float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-    float4 Color : COLOR0;
-    float4x4 Instance : INSTANCE0;
+    float2 TexCoord : TEXCOORD1;
+    float4x4 Instance : INSTANCE2;
 #endif
 };
-
 struct ViewUniformBuffer
 {
     float4x4 V;
@@ -37,11 +27,7 @@ cbuffer ViewParam : register(b0, space0)
 struct VSOutput
 {
     float4 Position : SV_POSITION;
-    float3 Normal : NORMAL0;
-    float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-    float4 Color : COLOR0;
+    float2 TexCoord : TEXCOORD1;
 };
 
 VSOutput main(VSInput input)
@@ -54,15 +40,8 @@ VSOutput main(VSInput input)
     output.Position = mul(input.Instance, float4(input.Position, 1.0));
 #endif
     output.Position = mul(ViewParam.VP, output.Position);
-    
-    output.Normal = normalize(mul((float3x3) input.Instance, input.Normal));
-    output.Tangent = normalize(mul((float3x3) input.Instance, input.Tangent));
-    output.Bitangent = normalize(mul((float3x3) input.Instance, input.Bitangent));
-    
-    output.Color = input.Color;
+
     output.TexCoord = input.TexCoord;
-    
-   
 
     return output;
 }

@@ -9,8 +9,7 @@
 
 namespace game_engine {
 
-void CameraSystem::update(const std::shared_ptr<Scene>& scene,
-                          float                         deltaTime) {
+void CameraSystem::update(Scene* scene, float deltaTime) {
   Registry&              registry        = scene->getEntityRegistry();
   auto&                  runtimeSettings = RuntimeSettings::s_get();
   const math::Vector3Df& worldUp         = runtimeSettings.getWorldUp();
@@ -32,21 +31,18 @@ void CameraSystem::update(const std::shared_ptr<Scene>& scene,
     pitch      = math::g_degreeToRadian(pitch);
     yaw        = math::g_degreeToRadian(yaw);
     roll       = math::g_degreeToRadian(roll);
-    auto q     = math::Quaternionf::fromEulerAngles(
-        roll, pitch, yaw, math::EulerRotationOrder::ZXY);
+    auto q     = math::Quaternionf::fromEulerAngles(roll, pitch, yaw, math::EulerRotationOrder::ZXY);
     // Assume that the forward vector is (0, 0, 1)
     auto forward   = math::g_forwardVector<float, 3>();
     auto direction = q.rotateVector(forward);
-    matrices.view = math::g_lookToLh(transform.translation, direction, worldUp);
+    matrices.view  = math::g_lookToLh(transform.translation, direction, worldUp);
 
     // 2: Projection matrix
     if (camera.type == CameraType::Perspective) {
       float aspectRatio   = camera.width / camera.height;
-      matrices.projection = math::g_perspectiveLhZo(
-          camera.fov, aspectRatio, camera.nearClip, camera.farClip);
+      matrices.projection = math::g_perspectiveLhZo(camera.fov, aspectRatio, camera.nearClip, camera.farClip);
     } else if (camera.type == CameraType::Orthographic) {
-      matrices.projection = math::g_orthoLhZo(
-          camera.width, camera.height, camera.nearClip, camera.farClip);
+      matrices.projection = math::g_orthoLhZo(camera.width, camera.height, camera.nearClip, camera.farClip);
     }
   }
 }

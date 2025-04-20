@@ -2,24 +2,27 @@
 
 namespace game_engine {
 
-void GlobalLogger::AddLogger(const std::shared_ptr<ILogger>& logger) {
-  s_loggers.push_back(logger);
+void GlobalLogger::AddLogger(std::unique_ptr<ILogger> logger) {
+  s_loggers.push_back(std::move(logger));
 }
 
-void GlobalLogger::Log(LogLevel logLevel, const std::string& message) {
+void GlobalLogger::Log(LogLevel logLevel, const std::string& message, const std::source_location& loc) {
   for (auto& logger : s_loggers) {
-    // TODO: consider using fmt::format or std::format
-    logger->log(logLevel, message);
+    logger->log(logLevel, message, loc);
   }
 }
 
-std::shared_ptr<ILogger> GlobalLogger::GetLogger(const std::string& name) {
+ILogger* GlobalLogger::GetLogger(const std::string& name) {
   for (const auto& logger : s_loggers) {
-    // returns the first logger with the given name
     if (logger->getLoggerName() == name) {
-      return logger;
+      return logger.get();
     }
   }
   return nullptr;
 }
+
+void GlobalLogger::Shutdown() {
+  s_loggers.clear();
+}
+
 }  // namespace game_engine

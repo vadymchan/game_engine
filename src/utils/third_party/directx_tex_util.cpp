@@ -1,62 +1,53 @@
 #include "utils/third_party/directx_tex_util.h"
 
-#include "gfx/rhi/dx12/rhi_type_dx12.h"
+#include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "utils/logger/global_logger.h"
 
 #include <algorithm>
-#include <unordered_set>
 
 namespace game_engine {
 
-const std::unordered_set<std::string>
-    DirectXTexImageLoader::supportedExtensions_ = {".dds"};
+using gfx::rhi::TextureType;
+
+const std::unordered_set<std::string> DirectXTexImageLoader::supportedExtensions_ = {".dds"};
 
 bool DirectXTexImageLoader::supportsFormat(const std::string& extension) const {
   return supportedExtensions_.find(extension) != supportedExtensions_.end();
 }
 
-ETextureType DirectXTexImageLoader::determineDimension_(
-    const DirectX::TexMetadata& metadata) const {
-  ETextureType baseDimension;
+TextureType DirectXTexImageLoader::determineDimension_(const DirectX::TexMetadata& metadata) const {
+  TextureType baseDimension;
   switch (metadata.dimension) {
     case DirectX::TEX_DIMENSION_TEXTURE1D:
-      baseDimension = ETextureType::TEXTURE_1D;
+      baseDimension = TextureType::Texture1D;
       break;
     case DirectX::TEX_DIMENSION_TEXTURE2D:
-      baseDimension = (metadata.IsCubemap())   ? ETextureType::TEXTURE_CUBE
-                    : (metadata.arraySize > 1) ? ETextureType::TEXTURE_2D_ARRAY
-                                               : ETextureType::TEXTURE_2D;
+      baseDimension = (metadata.IsCubemap())   ? TextureType::TextureCube
+                    : (metadata.arraySize > 1) ? TextureType::Texture2DArray
+                                               : TextureType::Texture2D;
       break;
     case DirectX::TEX_DIMENSION_TEXTURE3D:
-      baseDimension = (metadata.arraySize > 1) ? ETextureType::TEXTURE_3D_ARRAY
-                                               : ETextureType::TEXTURE_3D;
+      baseDimension = (metadata.arraySize > 1) ? TextureType::Texture3DArray : TextureType::Texture3D;
       break;
     default:
-      GlobalLogger::Log(
-          LogLevel::Warning,
-          "Unsupported texture dimension in DirectXTexImageLoader. "
-          "Defaulting to TEXTURE_MAX.");
-      baseDimension = ETextureType::MAX;
+      GlobalLogger::Log(LogLevel::Warning,
+                        "Unsupported texture dimension in DirectXTexImageLoader. "
+                        "Defaulting to TextureType::Count.");
+      baseDimension = TextureType::Count;
       break;
   }
   return baseDimension;
 }
 
-std::shared_ptr<Image> DirectXTexImageLoader::loadImage(
-    const std::filesystem::path& filepath) {
+std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::path& filepath) {
   DirectX::TexMetadata  metadata;
   DirectX::ScratchImage scratchImage;
 
-  HRESULT hr = DirectX::LoadFromDDSFile(filepath.wstring().c_str(),
-                                        DirectX::DDS_FLAGS_NONE,
-                                        &metadata,
-                                        scratchImage);
+  HRESULT hr = DirectX::LoadFromDDSFile(filepath.wstring().c_str(), DirectX::DDS_FLAGS_NONE, &metadata, scratchImage);
 
   if (FAILED(hr)) {
-    GlobalLogger::Log(
-        LogLevel::Error,
-        "DirectXTexImageLoader: Failed to load DDS image: " + filepath.string()
-            + " [HRESULT: " + std::to_string(hr) + "]");
+    GlobalLogger::Log(LogLevel::Error,
+                      "Failed to load DDS image: " + filepath.string() + " [HRESULT: " + std::to_string(hr) + "]");
     return nullptr;
   }
 
@@ -64,20 +55,19 @@ std::shared_ptr<Image> DirectXTexImageLoader::loadImage(
   size_t totalBytes = scratchImage.GetPixelsSize();
 
   // Copy pixel data into Image::pixels
-  std::vector<std::byte> pixels(
-      reinterpret_cast<std::byte*>(scratchImage.GetPixels()),
-      reinterpret_cast<std::byte*>(scratchImage.GetPixels()) + totalBytes);
+  std::vector<std::byte> pixels(reinterpret_cast<std::byte*>(scratchImage.GetPixels()),
+                                reinterpret_cast<std::byte*>(scratchImage.GetPixels()) + totalBytes);
 
   // Populate Image struct
-  std::shared_ptr<Image> image = std::make_shared<Image>();
-  image->width                 = metadata.width;
-  image->height                = metadata.height;
-  image->depth                 = metadata.depth;
-  image->mipLevels             = metadata.mipLevels;
-  image->arraySize             = metadata.arraySize;
-  image->format                = g_getDX12TextureFormat(metadata.format);
-  image->dimension             = determineDimension_(metadata);
-  image->pixels                = std::move(pixels);
+  auto image       = std::make_unique<Image>();
+  image->width     = metadata.width;
+  image->height    = metadata.height;
+  image->depth     = metadata.depth;
+  image->mipLevels = metadata.mipLevels;
+  image->arraySize = metadata.arraySize;
+  image->format    = gfx::rhi::g_getTextureFormatDx12(metadata.format);
+  image->dimension = determineDimension_(metadata);
+  image->pixels    = std::move(pixels);
 
   // Populate SubImages
   image->subImages.reserve(image->mipLevels * image->arraySize * image->depth);
@@ -87,13 +77,9 @@ std::shared_ptr<Image> DirectXTexImageLoader::loadImage(
       for (auto slice = 0; slice < image->depth; ++slice) {
         const auto* img = scratchImage.GetImage(mip, arraySlice, slice);
         if (!img) {
-          GlobalLogger::Log(
-              LogLevel::Warning,
-              "DirectXTexImageLoader: Failed to retrieve image data for "
-              "mip level "
-                  + std::to_string(mip) + ", array slice "
-                  + std::to_string(arraySlice) + ", depth slice "
-                  + std::to_string(slice) + ".");
+          GlobalLogger::Log(LogLevel::Warning,
+                            "Failed to retrieve image data for mip level " + std::to_string(mip) + ", array slice "
+                                + std::to_string(arraySlice) + ", depth slice " + std::to_string(slice) + ".");
           continue;
         }
 
@@ -102,8 +88,7 @@ std::shared_ptr<Image> DirectXTexImageLoader::loadImage(
         subImage.height     = img->height;
         subImage.rowPitch   = img->rowPitch;
         subImage.slicePitch = img->slicePitch;
-        subImage.pixelBegin
-            = image->pixels.begin() + (img->pixels - scratchImage.GetPixels());
+        subImage.pixelBegin = image->pixels.begin() + (img->pixels - scratchImage.GetPixels());
 
         image->subImages.emplace_back(subImage);
       }

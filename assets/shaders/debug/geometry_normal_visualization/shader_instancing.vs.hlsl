@@ -3,20 +3,16 @@ struct VSInput
 {
 #ifdef __spirv__
     [[vk::location(0)]] float3 Position   : POSITION0;
-    [[vk::location(1)]] float3 Normal     : NORMAL0;
-    [[vk::location(2)]] float2 TexCoord   : TEXCOORD0;
-    [[vk::location(3)]] float3 Tangent    : TANGENT0;
-    [[vk::location(4)]] float3 Bitangent  : BITANGENT0;
-    [[vk::location(5)]] float4 Color      : COLOR0;
-    [[vk::location(6)]] float4x4 Instance : INSTANCE0;
+    [[vk::location(1)]] float3 Normal     : NORMAL1;  
+    [[vk::location(2)]] float3 Tangent    : TANGENT2;  
+    [[vk::location(3)]] float3 Bitangent  : BITANGENT3;  
+    [[vk::location(4)]] float4x4 Instance : INSTANCE4;  
 #else
     float3 Position : POSITION0;
-    float3 Normal : NORMAL0;
-    float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-    float4 Color : COLOR0;
-    float4x4 Instance : INSTANCE0;
+    float3 Normal : NORMAL1;
+    float3 Tangent : TANGENT2;
+    float3 Bitangent : BITANGENT3;
+    float4x4 Instance : INSTANCE4;
 #endif
 };
 
@@ -37,11 +33,9 @@ cbuffer ViewParam : register(b0, space0)
 struct VSOutput
 {
     float4 Position : SV_POSITION;
-    float3 Normal : NORMAL0;
-    //float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-    //float4 Color : COLOR0;
+    float3 Normal : NORMAL1;
+    float3 Tangent : TANGENT2;
+    float3 Bitangent : BITANGENT3;
 };
 
 VSOutput main(VSInput input)
