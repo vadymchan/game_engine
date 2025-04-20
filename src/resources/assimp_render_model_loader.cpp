@@ -2,264 +2,156 @@
 
 #include "resources/assimp_material_loader.h"
 #include "resources/assimp_model_loader.h"
-
-#include <gfx/rhi/rhi.h>
+#include "utils/buffer/buffer_manager.h"
+#include "utils/material/material_manager.h"
+#include "utils/model/mesh_manager.h"
+#include "utils/model/render_geometry_mesh_manager.h"
+#include "utils/model/render_mesh_manager.h"
+#include "utils/service/service_locator.h"
 
 namespace game_engine {
-std::shared_ptr<RenderModel> AssimpRenderModelLoader::loadRenderModel(
-    const std::filesystem::path&          filePath,
-    std::optional<std::shared_ptr<Model>> outModel) {
+
+AssimpRenderModelLoader::AssimpRenderModelLoader(gfx::rhi::Device* device)
+    : m_device(device) {
+  if (!m_device) {
+    GlobalLogger::Log(LogLevel::Error, "Device is null");
+  }
+}
+
+std::unique_ptr<RenderModel> AssimpRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
+                                                                      std::optional<Model*>        outModel) {
   Assimp::Importer importer;
 
-  const aiScene* scene
-      = importer.ReadFile(filePath.string(),
-                          aiProcess_Triangulate | aiProcess_GenSmoothNormals
-                              | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+  const aiScene* scene = importer.ReadFile(
+      filePath.string(),
+      aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
-  if (!scene || !scene->mRootNode
-      || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
-    // TODO: Log an error here
+  if (!scene || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
+    GlobalLogger::Log(LogLevel::Error,
+                      "Failed to load file \"" + filePath.string() + "\". Error: " + importer.GetErrorString());
+    return nullptr;
+  }
+
+  // Get required managers from service locator
+  auto materialManager           = ServiceLocator::s_get<MaterialManager>();
+  auto renderGeometryMeshManager = ServiceLocator::s_get<RenderGeometryMeshManager>();
+  auto renderMeshManager         = ServiceLocator::s_get<RenderMeshManager>();
+  auto meshManager               = ServiceLocator::s_get<MeshManager>();
+
+  if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !meshManager) {
+    GlobalLogger::Log(LogLevel::Error, "Required managers not available in ServiceLocator.");
     return nullptr;
   }
 
   // Create instances of the loaders
-  // TODO: consider moving to other place
-  AssimpModelLoader    modelLoader;
-  AssimpMaterialLoader materialLoader;
+  AssimpModelLoader modelLoader;
 
-  // Process materials
-  auto materials = materialLoader.processMaterials(scene, filePath);
+  // Create a material loader with the device
+  AssimpMaterialLoader materialLoader(m_device);
 
-  // Process meshes
-  std::vector<std::shared_ptr<Mesh>> meshes = modelLoader.processMeshes(scene);
+  // Store processed materials in material manager
+  std::vector<Material*> materialPointers = materialManager->getMaterials(filePath);
 
-  // Create RenderMeshes by mapping meshes to materials
-  std::vector<std::shared_ptr<RenderMesh>> renderMeshes;
-
-  for (size_t i = 0; i < meshes.size(); ++i) {
-    auto&   mesh    = meshes[i];
-    aiMesh* ai_mesh = scene->mMeshes[i];
-
-    // Get the material index from aiMesh
-    unsigned int materialIndex = ai_mesh->mMaterialIndex;
-
-    // Get the corresponding material
-    std::shared_ptr<Material> material;
-    if (materialIndex < materials.size()) {
-      material = materials[materialIndex];
-    } else {
-      // Handle error or use a default material
-      material = nullptr;  // Or create a default material
-    }
-
-    // Create RenderGeometryMesh
-    auto renderGeometryMesh = createRenderGeometryMesh(mesh);
-
-    // Create RenderMesh
-    auto renderMesh      = std::make_shared<RenderMesh>();
-    renderMesh->gpuMesh  = renderGeometryMesh;
-    renderMesh->material = material;
-
-    renderMeshes.emplace_back(renderMesh);
+  // Create CPU model
+  auto cpuModel = modelLoader.loadModel(filePath);
+  if (!cpuModel) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to load CPU model from " + filePath.string());
+    return nullptr;
   }
 
-  // Create the RenderModel
-  auto renderModel          = std::make_shared<RenderModel>();
-  renderModel->filePath     = filePath;
-  renderModel->renderMeshes = renderMeshes;
+  auto& meshes = cpuModel->meshes;
 
-  // Optionally assign the CPU-side geometry model
+  auto renderModel      = std::make_unique<RenderModel>();
+  renderModel->filePath = filePath;
+  renderModel->renderMeshes.reserve(meshes.size());
+
+  for (size_t i = 0; i < meshes.size(); ++i) {
+    Mesh*   meshPtr = meshes[i];
+    aiMesh* ai_mesh = scene->mMeshes[i];
+
+    // Create GPU-side geometry
+    auto renderGeometryMesh = createRenderGeometryMesh(meshPtr);
+
+    // Add to manager
+    RenderGeometryMesh* gpuMeshPtr
+        = renderGeometryMeshManager->addRenderGeometryMesh(std::move(renderGeometryMesh), meshPtr);
+
+    // Get corresponding material
+    Material*    materialPtr   = nullptr;
+    unsigned int materialIndex = ai_mesh->mMaterialIndex;
+    if (materialIndex < materialPointers.size()) {
+      materialPtr = materialPointers[materialIndex];
+    }
+
+    // Create render mesh and add to manager
+    RenderMesh* renderMeshPtr = renderMeshManager->addRenderMesh(gpuMeshPtr, materialPtr, meshPtr);
+
+    // Add to render model
+    renderModel->renderMeshes.push_back(renderMeshPtr);
+  }
+
+  // If the caller wants the CPU model, provide it
   if (outModel.has_value()) {
-    auto model = std::make_shared<Model>();
-    // model->modelName = filePath.stem().string();
-    model->filePath = filePath;
-    model->meshes   = meshes;
-    outModel        = model;
+    *outModel = cpuModel.release();
   }
 
   return renderModel;
 }
 
 // Function to create GPU-side geometry mesh
+std::unique_ptr<RenderGeometryMesh> AssimpRenderModelLoader::createRenderGeometryMesh(Mesh* mesh) {
+  auto renderGeometryMesh = std::make_unique<RenderGeometryMesh>();
 
-std::shared_ptr<RenderGeometryMesh>
-    AssimpRenderModelLoader::createRenderGeometryMesh(
-        const std::shared_ptr<Mesh>& mesh) {
-  auto vertexStreamData = createVertexStreamData(mesh);
-  auto indexStreamData  = createIndexStreamData(mesh);
+  // Create vertex and index buffers
+  renderGeometryMesh->vertexBuffer = createVertexBuffer(mesh);
+  renderGeometryMesh->indexBuffer  = createIndexBuffer(mesh);
 
-  auto vertexBuffer = createVertexBuffer(vertexStreamData);
-  auto indexBuffer  = createIndexBuffer(indexStreamData);
+  // Store counts for convenience
+  // renderGeometryMesh->vertexCount = static_cast<uint32_t>(mesh->vertices.size());
+  // renderGeometryMesh->indexCount  = static_cast<uint32_t>(mesh->indices.size());
 
-  auto renderGeometryMesh          = std::make_shared<RenderGeometryMesh>();
-  renderGeometryMesh->vertexBuffer = vertexBuffer;
-  renderGeometryMesh->indexBuffer  = indexBuffer;
+  // Store stride information
+  // renderGeometryMesh->vertexStride = sizeof(Vertex);
 
   return renderGeometryMesh;
 }
 
-std::shared_ptr<VertexStreamData>
-    AssimpRenderModelLoader::createVertexStreamData(
-        const std::shared_ptr<Mesh>& mesh) {
-  // TODO: currently not the best implementation (we will store both in ECS -
-  // Model and in VertexStreamData / IndexStreamData). This is not memory
-  // efficient + it's error prone to store the same data in two places.
-
-  auto vertexStreamData = std::make_shared<VertexStreamData>();
-
-  // Positions
-  {
-    std::vector<float> positions;
-    positions.reserve(mesh->vertices.size() * 3);
-    for (const auto& vertex : mesh->vertices) {
-      positions.push_back(vertex.position.x());
-      positions.push_back(vertex.position.y());
-      positions.push_back(vertex.position.z());
-    }
-    auto streamParam = std::make_shared<BufferAttributeStream<float>>(
-        Name("POSITION"),
-        EBufferType::Static,
-        sizeof(float) * 3,
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
-        std::move(positions));
-    vertexStreamData->m_streams_.push_back(streamParam);
+gfx::rhi::Buffer* AssimpRenderModelLoader::createVertexBuffer(const Mesh* mesh) {
+  if (!m_device) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot create vertex buffer, device is null");
+    return nullptr;
   }
 
-  // Normals
-  {
-    std::vector<float> normals;
-    normals.reserve(mesh->vertices.size() * 3);
-    for (const auto& vertex : mesh->vertices) {
-      normals.push_back(vertex.normal.x());
-      normals.push_back(vertex.normal.y());
-      normals.push_back(vertex.normal.z());
-    }
-    auto streamParam = std::make_shared<BufferAttributeStream<float>>(
-        Name("NORMAL"),
-        EBufferType::Static,
-        sizeof(float) * 3,
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
-        std::move(normals));
-    vertexStreamData->m_streams_.push_back(streamParam);
+  auto bufferManager = ServiceLocator::s_get<BufferManager>();
+  if (!bufferManager) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot create vertex buffer, BufferManager not found");
+    return nullptr;
   }
 
-  // TexCoords
-  {
-    std::vector<float> texCoords;
-    texCoords.reserve(mesh->vertices.size() * 2);
-    for (const auto& vertex : mesh->vertices) {
-      texCoords.push_back(vertex.texCoords.x());
-      texCoords.push_back(vertex.texCoords.y());
-    }
-    auto streamParam = std::make_shared<BufferAttributeStream<float>>(
-        Name("TEXCOORD"),
-        EBufferType::Static,
-        sizeof(float) * 2,
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 2)},
-        std::move(texCoords));
-    vertexStreamData->m_streams_.push_back(streamParam);
-  }
+  // TODO: consider rewrite unique ID key
+  std::string bufferName  = "VertexBuffer_";
+  bufferName             += mesh->meshName.empty() ? "Unnamed" : mesh->meshName;
 
-  // Tangents
-  {
-    std::vector<float> tangents;
-    tangents.reserve(mesh->vertices.size() * 3);
-    for (const auto& vertex : mesh->vertices) {
-      tangents.push_back(vertex.tangent.x());
-      tangents.push_back(vertex.tangent.y());
-      tangents.push_back(vertex.tangent.z());
-    }
-    auto streamParam = std::make_shared<BufferAttributeStream<float>>(
-        Name("TANGENT"),
-        EBufferType::Static,
-        sizeof(float) * 3,
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
-        std::move(tangents));
-    vertexStreamData->m_streams_.push_back(streamParam);
-  }
-
-  // Bitangents (optional)
-  {
-    std::vector<float> bitangents;
-    bitangents.reserve(mesh->vertices.size() * 3);
-    for (const auto& vertex : mesh->vertices) {
-      bitangents.push_back(vertex.bitangent.x());
-      bitangents.push_back(vertex.bitangent.y());
-      bitangents.push_back(vertex.bitangent.z());
-    }
-    auto streamParam = std::make_shared<BufferAttributeStream<float>>(
-        Name("BITANGENT"),
-        EBufferType::Static,
-        sizeof(float) * 3,
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 3)},
-        std::move(bitangents));
-    vertexStreamData->m_streams_.push_back(streamParam);
-  }
-
-  // Colors (if present)
-  {
-    std::vector<float> colors;
-    colors.reserve(mesh->vertices.size() * 4);
-    for (const auto& vertex : mesh->vertices) {
-      colors.push_back(vertex.color.x());
-      colors.push_back(vertex.color.y());
-      colors.push_back(vertex.color.z());
-      colors.push_back(vertex.color.w());
-    }
-    auto streamParam = std::make_shared<BufferAttributeStream<float>>(
-        Name("COLOR"),
-        EBufferType::Static,
-        sizeof(float) * 4,
-        std::vector<IBufferAttribute::Attribute>{IBufferAttribute::Attribute(
-            EBufferElementType::FLOAT, 0, sizeof(float) * 4)},
-        std::move(colors));
-    vertexStreamData->m_streams_.push_back(streamParam);
-  }
-
-  // Set primitive type and element count
-  vertexStreamData->m_primitiveType_ = EPrimitiveType::TRIANGLES;
-  vertexStreamData->m_elementCount_
-      = static_cast<int32_t>(mesh->vertices.size());
-
-  return vertexStreamData;
+  return bufferManager->createVertexBuffer(mesh->vertices.data(), mesh->vertices.size(), sizeof(Vertex), bufferName);
 }
 
-std::shared_ptr<IndexStreamData> AssimpRenderModelLoader::createIndexStreamData(
-    const std::shared_ptr<Mesh>& mesh) {
-  auto indexStreamData = std::make_shared<IndexStreamData>();
-  indexStreamData->m_elementCount_
-      = static_cast<uint32_t>(mesh->indices.size());
+gfx::rhi::Buffer* AssimpRenderModelLoader::createIndexBuffer(const Mesh* mesh) {
+  if (!m_device) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot create index buffer, device is null");
+    return nullptr;
+  }
 
-  auto streamParam = new BufferAttributeStream<uint32_t>(
-      Name("Index"),
-      EBufferType::Static,
-      sizeof(uint32_t),
-      {IBufferAttribute::Attribute(
-          EBufferElementType::UINT32, 0, sizeof(uint32_t))},
-      mesh->indices);
+  auto bufferManager = ServiceLocator::s_get<BufferManager>();
+  if (!bufferManager) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot create index buffer, BufferManager not found");
+    return nullptr;
+  }
 
-  indexStreamData->m_stream_ = streamParam;
+  // TODO: consider rewrite unique ID key
+  std::string bufferName  = "IndexBuffer_";
+  bufferName             += mesh->meshName.empty() ? "Unnamed" : mesh->meshName;
 
-  return indexStreamData;
-}
-
-std::shared_ptr<VertexBuffer> AssimpRenderModelLoader::createVertexBuffer(
-    const std::shared_ptr<VertexStreamData>& vertexStreamData) {
-  auto vertexBuffer = g_rhi->createVertexBuffer(vertexStreamData);
-
-  return vertexBuffer;
-}
-
-std::shared_ptr<IndexBuffer> AssimpRenderModelLoader::createIndexBuffer(
-    const std::shared_ptr<IndexStreamData>& indexStreamData) {
-  auto indexBuffer = g_rhi->createIndexBuffer(indexStreamData);
-
-  return indexBuffer;
+  return bufferManager->createIndexBuffer(mesh->indices.data(), mesh->indices.size(), sizeof(uint32_t), bufferName);
 }
 
 }  // namespace game_engine

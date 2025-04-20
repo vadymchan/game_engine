@@ -2,6 +2,8 @@
 
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <filesystem>
+
 namespace game_engine {
 
 namespace {
@@ -9,17 +11,18 @@ namespace {
 auto createFileLogger(const std::string& loggerName,
                       const std::string& filePath,
                       bool               multiThreaded,
-                      bool truncateOnOpen) -> std::shared_ptr<spdlog::logger> {
+                      bool               truncateOnOpen) -> std::shared_ptr<spdlog::logger> {
   std::shared_ptr<spdlog::sinks::sink> fileSink;
   if (multiThreaded) {
-    fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-        filePath, truncateOnOpen);
+    fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filePath, truncateOnOpen);
   } else {
-    fileSink = std::make_shared<spdlog::sinks::basic_file_sink_st>(
-        filePath, truncateOnOpen);
+    fileSink = std::make_shared<spdlog::sinks::basic_file_sink_st>(filePath, truncateOnOpen);
   }
 
   auto logger = std::make_shared<spdlog::logger>(loggerName, fileSink);
+
+  spdlog::register_logger(logger);
+
   return logger;
 }
 
@@ -53,52 +56,69 @@ FileLogger::FileLogger(const std::string& loggerName,
                        bool               multiThreaded,
                        bool               truncateOnOpen)
     : ILogger(loggerName)
-    , m_logger_(
-          createFileLogger(loggerName, filePath, multiThreaded, truncateOnOpen))
+    , m_logger_(createFileLogger(loggerName, filePath, multiThreaded, truncateOnOpen))
     , m_pattern_(pattern)
     , m_filePath_(filePath)
     , m_logLevel_(logLevel)
     , m_isMultithreaded_(multiThreaded)
     , m_truncateOnOpen_(truncateOnOpen) {
-  m_logger_->set_level(toSpdlogLevel(logLevel));
-  m_logger_->set_pattern(m_pattern_);
+  if (m_logger_) {
+    m_logger_->set_level(toSpdlogLevel(logLevel));
+    m_logger_->set_pattern(m_pattern_);
+  }
 }
 
-void FileLogger::log(LogLevel logLevel, const std::string& message) {
+FileLogger::~FileLogger() {
+  if (m_logger_) {
+    spdlog::drop(m_logger_->name());
+  }
+}
+
+void FileLogger::log(LogLevel logLevel, const std::string& message, const std::source_location& loc) {
   if (!m_logger_) {
     return;
   }
 
+  auto file = std::filesystem::path(loc.file_name()).filename().string();
+
+  std::string_view functionName{loc.function_name()};
+  // strip off the parameter list (remove everything from '(' onward)
+  if (auto p = functionName.find('('); p != std::string_view::npos) {
+    functionName.remove_suffix(functionName.size() - p);
+  }
+  // strip off any namespace qualifiers (remove up to the last "::")
+  if (auto ns = functionName.rfind("::"); ns != std::string_view::npos) {
+    functionName.remove_prefix(ns + 2);
+  }
+
+  auto fullMsg = fmt::format("{}:{} | {}() | {}", file, loc.line(), functionName, message);
+
   switch (logLevel) {
     case LogLevel::Fatal:
-      m_logger_->critical(message);
+      m_logger_->critical(fullMsg);
       break;
     case LogLevel::Error:
-      m_logger_->error(message);
+      m_logger_->error(fullMsg);
       break;
     case LogLevel::Warning:
-      m_logger_->warn(message);
+      m_logger_->warn(fullMsg);
       break;
     case LogLevel::Info:
-      m_logger_->info(message);
+      m_logger_->info(fullMsg);
       break;
     case LogLevel::Debug:
-      m_logger_->debug(message);
+      m_logger_->debug(fullMsg);
       break;
     case LogLevel::Trace:
-      m_logger_->trace(message);
+      m_logger_->trace(fullMsg);
       break;
     case LogLevel::Off:
       // Do nothing
       break;
     default:
-      m_logger_->info(message);
+      m_logger_->info(fullMsg);
       break;
   }
-}
-
-auto FileLogger::getLoggerName() const -> const std::string& {
-  return m_logger_->name();
 }
 
 auto FileLogger::getPattern() const -> const std::string& {
@@ -115,11 +135,18 @@ auto FileLogger::getFilePath() const -> const std::string& {
 
 // Setters
 void FileLogger::setLoggerName(const std::string& name) {
-  // Recreate the logger to change the name
-  m_logger_ = createFileLogger(
-      name, m_filePath_, m_isMultithreaded_, m_truncateOnOpen_);
-  m_logger_->set_level(toSpdlogLevel(m_logLevel_));
-  m_logger_->set_pattern(m_pattern_);
+  // Drop the old logger if it exists
+  if (m_logger_) {
+    spdlog::drop(m_logger_->name());
+  }
+
+  // Recreate the logger with the new name
+  m_logger_ = createFileLogger(name, m_filePath_, m_isMultithreaded_, m_truncateOnOpen_);
+
+  if (m_logger_) {
+    m_logger_->set_level(toSpdlogLevel(m_logLevel_));
+    m_logger_->set_pattern(m_pattern_);
+  }
 }
 
 void FileLogger::setPattern(const std::string& pattern) {
@@ -137,9 +164,19 @@ void FileLogger::setLogLevel(LogLevel level) {
 }
 
 void FileLogger::setFilePath(const std::string& filePath) {
-  // TODO: for simplicity, we'll just store the new path. Consider
-  // reinitializing the logger.
   m_filePath_ = filePath;
+
+  // For file path changes, we need to recreate the logger with a new sink
+  if (m_logger_) {
+    spdlog::drop(m_logger_->name());
+
+    m_logger_ = createFileLogger(getLoggerName(), filePath, m_isMultithreaded_, m_truncateOnOpen_);
+
+    if (m_logger_) {
+      m_logger_->set_level(toSpdlogLevel(m_logLevel_));
+      m_logger_->set_pattern(m_pattern_);
+    }
+  }
 }
 
 }  // namespace game_engine

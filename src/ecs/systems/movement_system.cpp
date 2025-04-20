@@ -3,12 +3,9 @@
 #include "ecs/components/movement.h"
 #include "ecs/components/transform.h"
 
-
-
 namespace game_engine {
 
-void MovementSystem::update(const std::shared_ptr<Scene>& scene,
-                            float                         deltaTime) {
+void MovementSystem::update(Scene* scene, float deltaTime) {
   Registry& registry = scene->getEntityRegistry();
   auto      view     = registry.view<Transform, Movement>();
 

@@ -1,48 +1,23 @@
 
 struct VSInput
 {
-    //[[vk::location(0)]] float3 Position : POSITION0;
-    //[[vk::location(1)]] float3 Normal : NORMAL0;
-    //[[vk::location(2)]] float2 TexCoord : TEXCOORD0;
-    //[[vk::location(3)]] float3 Tangent : TANGENT0;
-    //[[vk::location(4)]] float3 Bitangent : BITANGENT0;
-    //[[vk::location(5)]] float4 Color : COLOR0;
-    
-    //// instancing data
-    //[[vk::location(6)]] float4x4 Instance : INSTANCE0;
-  
 #ifdef __spirv__
     [[vk::location(0)]] float3 Position   : POSITION0;
-    [[vk::location(1)]] float3 Normal     : NORMAL0;
-    [[vk::location(2)]] float2 TexCoord   : TEXCOORD0;
-    [[vk::location(3)]] float3 Tangent    : TANGENT0;
-    [[vk::location(4)]] float3 Bitangent  : BITANGENT0;
-    [[vk::location(5)]] float4 Color      : COLOR0;
-    [[vk::location(6)]] float4x4 Instance : INSTANCE0;
+    [[vk::location(1)]] float3 Normal     : NORMAL1;  
+    [[vk::location(2)]] float2 TexCoord   : TEXCOORD2;  
+    [[vk::location(3)]] float3 Tangent    : TANGENT3;  
+    [[vk::location(4)]] float3 Bitangent  : BITANGENT4;  
+    [[vk::location(5)]] float4 Color      : COLOR5;  
+    [[vk::location(6)]] float4x4 Instance : INSTANCE6;  
 #else
     float3 Position : POSITION0;
-    float3 Normal : NORMAL0;
-    float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-    float4 Color : COLOR0;
-    float4x4 Instance : INSTANCE0;
+    float3 Normal : NORMAL1;
+    float2 TexCoord : TEXCOORD2;
+    float3 Tangent : TANGENT3;
+    float3 Bitangent : BITANGENT4;
+    float4 Color : COLOR5;
+    float4x4 Instance : INSTANCE6;
 #endif
-    
-    
-    //float3 Position : POSITION0;
-    //float3 Normal : NORMAL0;
-    //float2 TexCoord : TEXCOORD0;
-    //float3 Tangent : TANGENT0;
-    //float3 Bitangent : BITANGENT0;
-    //float4 Color : COLOR0;
-    
-    //// instancing data
-    //float4x4 Instance : INSTANCE0;
-    //float4 Instance0 : INSTANCE0;
-    //float4 Instance1 : INSTANCE1;
-    //float4 Instance2 : INSTANCE2;
-    //float4 Instance3 : INSTANCE3;
 };
 
 struct ViewUniformBuffer
@@ -62,74 +37,12 @@ cbuffer ViewParam : register(b0, space0)
 struct VSOutput
 {
     float4 Position : SV_POSITION;
-    float3 Normal : NORMAL0;
-    float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-    float4 Color : COLOR0;
+    float3 Normal : NORMAL1;
+    float2 TexCoord : TEXCOORD2;
+    float3 Tangent : TANGENT3;
+    float3 Bitangent : BITANGENT4;
+    float4 Color : COLOR5;
 };
-
-#if TODO 
-struct DirectionalLightData
-{
-    // From Light
-    float3 color;
-    float intensity;
-
-    // From DirectionalLight
-    float3 direction;
-    
-    float padding;
-};
-
-struct PointLightData
-{
-    // From Light
-    float3 color;
-    float intensity;
-
-    // From PointLight
-    float range;
-
-    // From Transform
-    float3 position;
-};
-
-struct SpotLightData
-{
-    // From Light
-    float3 color;
-    float intensity;
-
-    // From PointLight
-    float range;
-    float innerConeAngle;
-    float outerConeAngle;
-
-    // From Transform
-    float3 position;
-    float3 direction;
-    
-    float3 padding;
-};
-
-
-// TODO: Currently only one type of light (consider in future to be able to dynamically add lights)
-cbuffer DirectionalLightBuffer : register(b0, space1)
-{
-    DirectionalLightData directionalLight;
-};
-
-cbuffer PointLight : register(b0, space2)
-{
-    PointLightData pointLight;
-};
-
-cbuffer SpotLight : register(b0, space3)
-{
-    SpotLightData spotLight;
-};
-#endif
 
 VSOutput main(VSInput input)
 {

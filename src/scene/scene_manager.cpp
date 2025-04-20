@@ -1,47 +1,48 @@
 #include "scene/scene_manager.h"
 
+#include "utils/logger/global_logger.h"
+
 namespace game_engine {
 
 void SceneManager::addScene(const std::string& name, Registry registry) {
-  if (scenes_.find(name) == scenes_.end()) {
-    auto scene = std::make_shared<Scene>();
-    scene->setEntityRegistry(std::move(registry));
-    scenes_[name] = scene;
-  } else {
-    // Log: Scene with this name already exists
+  if (scenes_.find(name) != scenes_.end()) {
+    GlobalLogger::Log(LogLevel::Warning, "Scene with name '" + name + "' already exists. Overwriting.");
   }
+
+  scenes_[name] = std::make_unique<Scene>(std::move(registry));
 }
 
-std::shared_ptr<Scene> SceneManager::getScene(const std::string& name) {
+Scene* SceneManager::getScene(const std::string& name) {
   auto it = scenes_.find(name);
-  return it != scenes_.end() ? it->second : nullptr;
+  if (it != scenes_.end()) {
+    return it->second.get();
+  }
+  return nullptr;
 }
 
 void SceneManager::removeScene(const std::string& name) {
-  if (scenes_.erase(name) > 0) {
-    if (currentSceneName_ == name) {
-      currentSceneName_.clear();
-      currentScene_.reset();
-    }
-  } else {
-    // Log: Scene not found
+  if (currentSceneName_ == name) {
+    currentScene_     = nullptr;
+    currentSceneName_ = "";
   }
+
+  scenes_.erase(name);
 }
 
 bool SceneManager::switchToScene(const std::string& name) {
   auto it = scenes_.find(name);
   if (it != scenes_.end()) {
+    currentScene_     = it->second.get();
     currentSceneName_ = name;
-    currentScene_     = it->second;
     return true;
-  } else {
-    // Log: Scene not found
-    return false;
   }
+
+  GlobalLogger::Log(LogLevel::Error, "Failed to switch to scene '" + name + "'. Scene not found.");
+  return false;
 }
 
-std::shared_ptr<Scene> SceneManager::getCurrentScene() const {
-  return currentScene_.lock();
+Scene* SceneManager::getCurrentScene() const {
+  return currentScene_;
 }
 
 std::string SceneManager::getCurrentSceneName() const {
@@ -53,9 +54,9 @@ bool SceneManager::hasScene(const std::string& name) const {
 }
 
 void SceneManager::clearAllScenes() {
+  currentScene_     = nullptr;
+  currentSceneName_ = "";
   scenes_.clear();
-  currentScene_.reset();
-  currentSceneName_.clear();
 }
 
 }  // namespace game_engine

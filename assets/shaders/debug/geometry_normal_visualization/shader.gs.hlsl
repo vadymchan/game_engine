@@ -14,10 +14,10 @@ cbuffer ViewParam : register(b0, space0)
 
 struct GSInput
 {
-    float4 positionWS : SV_Position;
-    float3 Normal : NORMAL0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
+    float4 PositionWS : SV_POSITION;
+    float3 Normal : NORMAL1;
+    float3 Tangent : TANGENT2;
+    float3 Bitangent : BITANGENT3;
 };
 
 struct GSOutput
@@ -38,7 +38,7 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
     [unroll]
     for (int i = 0; i < 3; i++)
     {
-        float3 pos = float3(inputTri[i].positionWS.xyz);
+        float3 pos = float3(inputTri[i].PositionWS.xyz);
 
         // 1) Tangent (red)
         {
@@ -47,7 +47,7 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
 
             GSOutput vStart, vEnd;
 
-            vStart.position = mul(ViewParam.VP, inputTri[i].positionWS);
+            vStart.position = mul(ViewParam.VP, inputTri[i].PositionWS);
             vEnd.position = endPosClip;
             //vEnd.position = float4(endPos, 1);
             
@@ -66,7 +66,7 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
             
             GSOutput vStart, vEnd;
             
-            vStart.position = mul(ViewParam.VP, inputTri[i].positionWS);
+            vStart.position = mul(ViewParam.VP, inputTri[i].PositionWS);
             vEnd.position = endPosClip;
             
             vStart.color = float4(0, 1, 0, 1);
@@ -84,7 +84,7 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
 
             GSOutput vStart, vEnd;
 
-            vStart.position = mul(ViewParam.VP, inputTri[i].positionWS);
+            vStart.position = mul(ViewParam.VP, inputTri[i].PositionWS);
             vEnd.position = endPosClip;
             
             vStart.color = float4(0, 0, 1, 1);

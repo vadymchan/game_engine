@@ -51,8 +51,7 @@ Camera LoadCamera(const ConfigValue& value) {
 void ApplyCameraComponents(Registry& registry, Entity cameraEntity) {
   auto configManager = ServiceLocator::s_get<ConfigManager>();
   auto config
-      = configManager->getConfig(PathManager::s_getDebugPath() / "config.json")
-            .lock();
+      = configManager->getConfig(PathManager::s_getDebugPath() / "config.json");
 
   auto transform = config->get<Transform>("camera");
   registry.emplace_or_replace<Transform>(cameraEntity, transform);

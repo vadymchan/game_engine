@@ -7,41 +7,40 @@
 
 namespace game_engine {
 
-void ConfigManager::loadAllConfigsFromDirectory(
-    const std::filesystem::path& dirPath) {
-  auto files = FileSystemManager::getAllFilesInDirectory(dirPath);
+void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dirPath) {
+  if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to load configs: Directory does not exist: " + dirPath.string());
+    return;
+  }
 
-  for (const auto& file : files) {
-    if (file.extension() == s_configExtension) {
-      addConfig(file);
+  for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
+    if (entry.is_regular_file() && entry.path().extension() == std::string(s_configExtension)) {
+      addConfig(entry.path());
     }
-    GlobalLogger::Log(LogLevel::Info,
-                      "Skipping non-config file: " + file.string());
   }
 }
 
 void ConfigManager::addConfig(const std::filesystem::path& filePath) {
   if (configs_.find(filePath) != configs_.end()) {
-    GlobalLogger::Log(LogLevel::Warning,
-                      "Config already exists with name: " + filePath.string());
+    GlobalLogger::Log(LogLevel::Warning, "Config already loaded: " + filePath.string());
     return;
   }
 
-  auto config = std::make_shared<Config>();
-  config->loadFromFileAsync(filePath);
-
-  configs_[filePath] = config;
+  auto config = std::make_unique<Config>();
+  if (config->loadFromFile(filePath)) {
+    configs_[filePath] = std::move(config);
+    GlobalLogger::Log(LogLevel::Info, "Config loaded: " + filePath.string());
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to load config: " + filePath.string());
+  }
 }
 
-std::weak_ptr<Config> ConfigManager::getConfig(
-    const std::filesystem::path& filePath) {
-  if (configs_.find(filePath) != configs_.end()) {
-    return configs_[filePath];
-  } else {
-    GlobalLogger::Log(LogLevel::Error,
-                      "Config not found: " + filePath.string());
-    return std::weak_ptr<Config>();
+Config* ConfigManager::getConfig(const std::filesystem::path& filePath) {
+  auto it = configs_.find(filePath);
+  if (it != configs_.end()) {
+    return it->second.get();
   }
+  return nullptr;
 }
 
 void ConfigManager::saveAllConfigs() {

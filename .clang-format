@@ -3,7 +3,7 @@ BasedOnStyle: Google
 #IndentCaseLabels: false
 AccessModifierOffset: 0
 # TODO: consider using 120 character limit for one line
-# ColumnLimit: 120
+ColumnLimit: 120
 
 AlignConsecutiveAssignments:
   Enabled: true
