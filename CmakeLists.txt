@@ -74,7 +74,7 @@ if(USE_VCPKG)
     )
     FetchContent_MakeAvailable(vcpkg_cmake_integration)
 
-    # file(COPY ${vcpkg_cmake_integration_SOURCE_DIR}/vcpkg.cmake DESTINATION ${CMAKE_SOURCE_DIR}/cmake)
+    file(COPY ${vcpkg_cmake_integration_SOURCE_DIR}/vcpkg.cmake DESTINATION ${CMAKE_SOURCE_DIR}/cmake)
 
     set(VCPKG_PARENT_DIR "${CMAKE_SOURCE_DIR}/third_party")
     set(VCPKG_VERSION edge)
