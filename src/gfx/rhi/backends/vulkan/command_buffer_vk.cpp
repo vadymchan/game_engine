@@ -1,4 +1,4 @@
-﻿#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
+#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 
 #include "gfx/rhi/backends/vulkan/buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"

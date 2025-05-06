@@ -42,6 +42,27 @@ void CommandBufferDx12::begin() {
   }
 
   m_isRecording_ = true;
+
+  // TODO: temp, dirty fix (consider set descriptor heaps in another way)
+  DeviceDx12* deviceDx12 = dynamic_cast<DeviceDx12*>(m_device_);
+  if (deviceDx12) {
+    ID3D12DescriptorHeap* heaps[2];
+    uint32_t              heapCount = 0;
+
+    auto cbvSrvUavHeap = deviceDx12->getFrameResourcesManager()->getCurrentCbvSrvUavHeap()->getHeap();
+    if (cbvSrvUavHeap) {
+      heaps[heapCount++] = cbvSrvUavHeap;
+    }
+
+    auto samplerHeap = deviceDx12->getFrameResourcesManager()->getCurrentSamplerHeap()->getHeap();
+    if (samplerHeap) {
+      heaps[heapCount++] = samplerHeap;
+    }
+
+    if (heapCount > 0) {
+      m_commandList_->SetDescriptorHeaps(heapCount, heaps);
+    }
+  }
 }
 
 void CommandBufferDx12::end() {
