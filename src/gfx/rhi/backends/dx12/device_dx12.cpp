@@ -288,8 +288,9 @@ std::unique_ptr<Shader> DeviceDx12::createShader(const ShaderDesc& desc) {
   return std::make_unique<ShaderDx12>(desc, this);
 }
 
-std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipeline(const GraphicsPipelineDesc& desc) {
-  return std::make_unique<GraphicsPipelineDx12>(desc, this);
+std::unique_ptr<GraphicsPipeline> DeviceDx12::createGraphicsPipeline(const GraphicsPipelineDesc& desc,
+                                                                     ShaderManager*              shaderManager) {
+  return std::make_unique<GraphicsPipelineDx12>(desc, this, shaderManager);
 }
 
 std::unique_ptr<DescriptorSetLayout> DeviceDx12::createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc) {

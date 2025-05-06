@@ -19,7 +19,7 @@ class RenderPassVk;
 
 class GraphicsPipelineVk : public GraphicsPipeline {
   public:
-  GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceVk* device);
+  GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceVk* device, ShaderManager* shaderManager);
   ~GraphicsPipelineVk() override;
 
   GraphicsPipelineVk(const GraphicsPipelineVk&)            = delete;
@@ -30,9 +30,12 @@ class GraphicsPipelineVk : public GraphicsPipeline {
 
   VkPipelineLayout getPipelineLayout() const { return m_pipelineLayout_; }
 
+  void rebuildPipeline() override;
+
   private:
   bool initialize_();
 
+  bool createPipeline_();
   bool createShaderStages_(std::vector<VkPipelineShaderStageCreateInfo>& shaderStages);
   bool createVertexInputState_(VkPipelineVertexInputStateCreateInfo& vertexInputInfo);
   bool createInputAssemblyState_(VkPipelineInputAssemblyStateCreateInfo& inputAssembly);

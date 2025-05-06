@@ -5,24 +5,40 @@
 #include "gfx/rhi/backends/vulkan/render_pass_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/shader_vk.h"
+#include "gfx/rhi/shader_manager.h"
 #include "utils/logger/global_logger.h"
 
 namespace game_engine {
 namespace gfx {
 namespace rhi {
 
-GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceVk* device)
-    : GraphicsPipeline(desc)
+GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceVk* device, ShaderManager* shaderManager)
+    : GraphicsPipeline(desc, shaderManager)
     , m_device_(device)
     , m_pipeline_(VK_NULL_HANDLE)
     , m_pipelineLayout_(VK_NULL_HANDLE) {
   if (!initialize_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to initialize Vulkan graphics pipeline");
   }
+
+  if (m_shaderManager_) {
+    for (auto* shader : m_desc_.shaders) {
+      if (shader) {
+        m_shaderManager_->registerShaderDependency(shader, this);
+      }
+    }
+  }
 }
 
 GraphicsPipelineVk::~GraphicsPipelineVk() {
-  // Clean up Vulkan resources
+  if (m_shaderManager_) {
+    for (auto* shader : m_desc_.shaders) {
+      if (shader) {
+        m_shaderManager_->unregisterShaderDependency(shader, this);
+      }
+    }
+  }
+
   if (m_pipeline_ != VK_NULL_HANDLE) {
     vkDestroyPipeline(m_device_->getDevice(), m_pipeline_, nullptr);
     m_pipeline_ = VK_NULL_HANDLE;
@@ -34,13 +50,24 @@ GraphicsPipelineVk::~GraphicsPipelineVk() {
   }
 }
 
+void GraphicsPipelineVk::rebuildPipeline() {
+  if (createPipeline_()) {
+    GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt Vulkan graphics pipeline after shader reload");
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to rebuild Vulkan graphics pipeline after shader reload");
+  }
+}
+
 bool GraphicsPipelineVk::initialize_() {
-  // Create pipeline layout first (needed for the pipeline creation)
   if (!createPipelineLayout_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline layout");
     return false;
   }
 
+  return createPipeline_();
+}
+
+bool GraphicsPipelineVk::createPipeline_() {
   // Setup shader stages
   std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
   if (!createShaderStages_(shaderStages)) {
@@ -129,6 +156,12 @@ bool GraphicsPipelineVk::initialize_() {
   pipelineInfo.basePipelineHandle           = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex            = -1;
 
+  // Destroy existing pipeline if it exists
+  if (m_pipeline_ != VK_NULL_HANDLE) {
+    vkDestroyPipeline(m_device_->getDevice(), m_pipeline_, nullptr);
+    m_pipeline_ = VK_NULL_HANDLE;
+  }
+
   if (vkCreateGraphicsPipelines(m_device_->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline_)
       != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create graphics pipeline");
@@ -137,6 +170,110 @@ bool GraphicsPipelineVk::initialize_() {
 
   return true;
 }
+
+// bool GraphicsPipelineVk::initialize_() {
+//   // Create pipeline layout first (needed for the pipeline creation)
+//   if (!createPipelineLayout_()) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline layout");
+//     return false;
+//   }
+//
+//   // Setup shader stages
+//   std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+//   if (!createShaderStages_(shaderStages)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create shader stages");
+//     return false;
+//   }
+//
+//   // Setup vertex input
+//   VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
+//   if (!createVertexInputState_(vertexInputInfo)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create vertex input state");
+//     return false;
+//   }
+//
+//   // Setup input assembly
+//   VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
+//   if (!createInputAssemblyState_(inputAssembly)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create input assembly state");
+//     return false;
+//   }
+//
+//   // Setup viewport state
+//   // For simplicity, we'll use dynamic viewports and scissors
+//   VkPipelineViewportStateCreateInfo viewportState = {};
+//   viewportState.sType                             = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+//   viewportState.viewportCount                     = 1;
+//   viewportState.scissorCount                      = 1;
+//   // Actual viewport and scissor will be set via dynamic state
+//
+//   // Setup rasterization state
+//   VkPipelineRasterizationStateCreateInfo rasterizer = {};
+//   if (!createRasterizationState_(rasterizer)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create rasterization state");
+//     return false;
+//   }
+//
+//   // Setup multisample state
+//   VkPipelineMultisampleStateCreateInfo multisampling = {};
+//   if (!createMultisampleState_(multisampling)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create multisample state");
+//     return false;
+//   }
+//
+//   // Setup depth-stencil state
+//   VkPipelineDepthStencilStateCreateInfo depthStencil = {};
+//   if (!createDepthStencilState_(depthStencil)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create depth-stencil state");
+//     return false;
+//   }
+//
+//   // Setup color blend state
+//   VkPipelineColorBlendStateCreateInfo colorBlending = {};
+//   if (!createColorBlendState_(colorBlending)) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create color blend state");
+//     return false;
+//   }
+//
+//   std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+//
+//   VkPipelineDynamicStateCreateInfo dynamicState = {};
+//   dynamicState.sType                            = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+//   dynamicState.dynamicStateCount                = static_cast<uint32_t>(dynamicStates.size());
+//   dynamicState.pDynamicStates                   = dynamicStates.data();
+//
+//   RenderPassVk* renderPassVk = dynamic_cast<RenderPassVk*>(m_desc_.renderPass);
+//   if (!renderPassVk) {
+//     GlobalLogger::Log(LogLevel::Error, "Invalid render pass for Vulkan graphics pipeline");
+//     return false;
+//   }
+//
+//   VkGraphicsPipelineCreateInfo pipelineInfo = {};
+//   pipelineInfo.sType                        = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+//   pipelineInfo.stageCount                   = static_cast<uint32_t>(shaderStages.size());
+//   pipelineInfo.pStages                      = shaderStages.data();
+//   pipelineInfo.pVertexInputState            = &vertexInputInfo;
+//   pipelineInfo.pInputAssemblyState          = &inputAssembly;
+//   pipelineInfo.pViewportState               = &viewportState;
+//   pipelineInfo.pRasterizationState          = &rasterizer;
+//   pipelineInfo.pMultisampleState            = &multisampling;
+//   pipelineInfo.pDepthStencilState           = &depthStencil;
+//   pipelineInfo.pColorBlendState             = &colorBlending;
+//   pipelineInfo.pDynamicState                = &dynamicState;
+//   pipelineInfo.layout                       = m_pipelineLayout_;
+//   pipelineInfo.renderPass                   = renderPassVk->getRenderPass();
+//   pipelineInfo.subpass                      = m_desc_.subpass;
+//   pipelineInfo.basePipelineHandle           = VK_NULL_HANDLE;
+//   pipelineInfo.basePipelineIndex            = -1;
+//
+//   if (vkCreateGraphicsPipelines(m_device_->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline_)
+//       != VK_SUCCESS) {
+//     GlobalLogger::Log(LogLevel::Error, "Failed to create graphics pipeline");
+//     return false;
+//   }
+//
+//   return true;
+// }
 
 bool GraphicsPipelineVk::createShaderStages_(std::vector<VkPipelineShaderStageCreateInfo>& shaderStages) {
   shaderStages.clear();
@@ -335,7 +472,6 @@ bool GraphicsPipelineVk::createPipelineLayout_() {
   std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 
   for (const auto& setLayout : m_desc_.setLayouts) {
-
     const DescriptorSetLayoutVk* setLayoutVk = dynamic_cast<const DescriptorSetLayoutVk*>(setLayout);
     if (!setLayoutVk) {
       GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set layout type for Vulkan pipeline");

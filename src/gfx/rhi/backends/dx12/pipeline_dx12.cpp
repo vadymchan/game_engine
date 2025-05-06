@@ -7,6 +7,7 @@
 #include "gfx/rhi/backends/dx12/render_pass_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/shader_dx12.h"
+#include "gfx/rhi/shader_manager.h"
 #include "utils/logger/global_logger.h"
 
 #include <d3dcompiler.h>
@@ -15,11 +16,40 @@ namespace game_engine {
 namespace gfx {
 namespace rhi {
 
-GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, DeviceDx12* device)
-    : GraphicsPipeline(desc)
+GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc,
+                                           DeviceDx12*                 device,
+                                           ShaderManager*              shaderManager)
+    : GraphicsPipeline(desc, shaderManager)
     , m_device_(device) {
   if (!initialize_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to initialize DirectX 12 graphics pipeline");
+  }
+
+  if (m_shaderManager_) {
+    for (auto* shader : m_desc_.shaders) {
+      if (shader) {
+        m_shaderManager_->registerShaderDependency(shader, this);
+      }
+    }
+  }
+}
+
+GraphicsPipelineDx12::~GraphicsPipelineDx12() {
+  if (m_shaderManager_) {
+    for (auto* shader : m_desc_.shaders) {
+      if (shader) {
+        m_shaderManager_->unregisterShaderDependency(shader, this);
+      }
+    }
+  }
+}
+
+void GraphicsPipelineDx12::rebuildPipeline() {
+  m_pipelineState_.Reset();
+  if (createPipelineState_()) {
+    GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt DirectX 12 graphics pipeline after shader reload");
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to rebuild DirectX 12 graphics pipeline after shader reload");
   }
 }
 

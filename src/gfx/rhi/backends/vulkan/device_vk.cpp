@@ -388,8 +388,9 @@ std::unique_ptr<Shader> DeviceVk::createShader(const ShaderDesc& desc) {
   return std::make_unique<ShaderVk>(desc, this);
 }
 
-std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipeline(const GraphicsPipelineDesc& desc) {
-  return std::make_unique<GraphicsPipelineVk>(desc, this);
+std::unique_ptr<GraphicsPipeline> DeviceVk::createGraphicsPipeline(const GraphicsPipelineDesc& desc,
+                                                                   ShaderManager*              shaderManager) {
+  return std::make_unique<GraphicsPipelineVk>(desc, this, shaderManager);
 }
 
 std::unique_ptr<DescriptorSetLayout> DeviceVk::createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc) {

@@ -20,6 +20,13 @@ class Shader {
       : m_desc_(desc) {}
   virtual ~Shader() = default;
 
+  /**
+   * @param code The new compiled shader bytecode
+   */
+  virtual bool initialize(const std::vector<uint8_t>& code) = 0;
+
+  virtual void release() = 0;
+
   ShaderStageFlag getStage() const { return m_desc_.stage; }
 
   const std::string& getEntryPoint() const { return m_desc_.entryPoint; }

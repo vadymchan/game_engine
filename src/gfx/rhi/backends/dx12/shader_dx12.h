@@ -23,6 +23,9 @@ class ShaderDx12 : public Shader {
   ShaderDx12(const ShaderDx12&)            = delete;
   ShaderDx12& operator=(const ShaderDx12&) = delete;
 
+  bool initialize(const std::vector<uint8_t>& newShaderCode) override;
+  void release() override;
+
   // DX12-specific methods
   const D3D12_SHADER_BYTECODE& getBytecode() const { return m_bytecode_; }
 

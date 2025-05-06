@@ -25,6 +25,9 @@ class ShaderVk : public Shader {
   ShaderVk(const ShaderVk&)            = delete;
   ShaderVk& operator=(const ShaderVk&) = delete;
 
+  bool initialize(const std::vector<uint8_t>& newShaderCode) override;
+  void release() override;
+
   // Vulkan-specific methods
   VkShaderModule getShaderModule() const { return m_shaderModule_; }
 

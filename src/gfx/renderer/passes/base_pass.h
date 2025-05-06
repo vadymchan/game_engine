@@ -81,6 +81,7 @@ class BasePass : public RenderPass {
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;
   FrameResources*        m_frameResources  = nullptr;
+  rhi::ShaderManager*    m_shaderManager   = nullptr;
 
   rhi::RenderPass*               m_renderPass = nullptr;
   std::vector<rhi::Framebuffer*> m_framebuffers;

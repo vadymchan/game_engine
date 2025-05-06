@@ -20,6 +20,8 @@ void BasePass::initialize(rhi::Device*           device,
   m_device          = device;
   m_resourceManager = resourceManager;
   m_frameResources  = frameResources;
+  m_shaderManager   = shaderManager;
+
 
   if (shaderManager) {
     m_vertexShader = shaderManager->getShader("assets/shaders/base_pass/shader_instancing.vs.hlsl");
@@ -377,7 +379,7 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
         pipelineDesc.renderPass = m_renderPass;
 
-        auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
+        auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc, m_shaderManager);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
       }
 

@@ -21,26 +21,31 @@ class DeviceDx12 : public Device {
 
   RenderingApi getApiType() const override { return RenderingApi::Dx12; }
 
+  // clang-format off
+
   std::unique_ptr<Buffer>              createBuffer(const BufferDesc& desc) override;
   std::unique_ptr<Texture>             createTexture(const TextureDesc& desc) override;
   std::unique_ptr<Sampler>             createSampler(const SamplerDesc& desc) override;
   std::unique_ptr<Shader>              createShader(const ShaderDesc& desc) override;
-  std::unique_ptr<GraphicsPipeline>    createGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
+  std::unique_ptr<GraphicsPipeline>    createGraphicsPipeline(const GraphicsPipelineDesc& desc, ShaderManager* shaderManager) override;
   std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc) override;
   std::unique_ptr<DescriptorSet>       createDescriptorSet(const DescriptorSetLayout* layout) override;
   std::unique_ptr<RenderPass>          createRenderPass(const RenderPassDesc& desc) override;
   std::unique_ptr<Framebuffer>         createFramebuffer(const FramebufferDesc& desc) override;
-  std::unique_ptr<CommandBuffer> createCommandBuffer(const CommandBufferDesc& desc = CommandBufferDesc()) override;
-  std::unique_ptr<Fence>         createFence(const FenceDesc& desc = FenceDesc()) override;
-  std::unique_ptr<Semaphore>     createSemaphore() override;
-  std::unique_ptr<SwapChain>     createSwapChain(const SwapchainDesc& desc) override;
+  std::unique_ptr<CommandBuffer>       createCommandBuffer(const CommandBufferDesc& desc = CommandBufferDesc()) override;
+  std::unique_ptr<Fence>               createFence(const FenceDesc& desc = FenceDesc()) override;
+  std::unique_ptr<Semaphore>           createSemaphore() override;
+  std::unique_ptr<SwapChain>           createSwapChain(const SwapchainDesc& desc) override;
+
+  // clang-format on
 
   void updateBuffer(Buffer* buffer, const void* data, size_t size, size_t offset = 0) override;
   void updateTexture(
       Texture* texture, const void* data, size_t dataSize, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
 
   /**
-   * The command buffer must already be in the "closed" state (end() - ID3D12GraphicsCommandList::Close() must have been called)
+   * The command buffer must already be in the "closed" state (end() - ID3D12GraphicsCommandList::Close() must have been
+   * called)
    */
   void submitCommandBuffer(CommandBuffer*                 cmdBuffer,
                            Fence*                         signalFence      = nullptr,

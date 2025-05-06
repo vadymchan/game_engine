@@ -3,21 +3,37 @@
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
+#include "gfx/rhi/shader_reload_observer.h"
 
 namespace game_engine {
 namespace gfx {
 namespace rhi {
+
+class ShaderManager;
 
 /*
  * A pipeline represents the configuration of the graphics/compute pipeline
  * stages and states for rendering or computation. It encapsulates shaders,
  * fixed-function state, and pipeline layout information.
  */
-class Pipeline {
+class Pipeline : public ShaderReloadObserver {
   public:
   virtual ~Pipeline() = default;
 
   virtual PipelineType getType() const = 0;
+
+  virtual const std::vector<Shader*>& getShaders() const = 0;
+
+  void onShaderReloaded(Shader* shader) override {
+    for (auto& pipelineShader : getShaders()) {
+      if (pipelineShader == shader) {
+        rebuildPipeline();
+        return;
+      }
+    }
+  }
+
+  virtual void rebuildPipeline() = 0;
 };
 
 /**
@@ -26,8 +42,9 @@ class Pipeline {
  */
 class GraphicsPipeline : public Pipeline {
   public:
-  GraphicsPipeline(const GraphicsPipelineDesc& desc)
-      : m_desc_(desc) {}
+  GraphicsPipeline(const GraphicsPipelineDesc& desc, ShaderManager* shaderManager)
+      : m_desc_(desc)
+      , m_shaderManager_(shaderManager) {}
 
   virtual ~GraphicsPipeline() = default;
 
@@ -37,8 +54,11 @@ class GraphicsPipeline : public Pipeline {
 
   PrimitiveType getPrimitiveType() const { return m_desc_.inputAssembly.topology; }
 
+  const std::vector<Shader*>& getShaders() const override { return m_desc_.shaders; }
+
   protected:
   GraphicsPipelineDesc m_desc_;
+  ShaderManager*       m_shaderManager_;
 };
 
 }  // namespace rhi

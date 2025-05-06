@@ -5,6 +5,7 @@
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/interface/device.h"
 #include "gfx/rhi/interface/shader.h"
+#include "gfx/rhi/shader_reload_observer.h"
 #include "utils/hot_reload/hot_reload_manager.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
@@ -58,21 +59,57 @@ class ShaderManager {
   void reloadShader(const std::filesystem::path& path) {
     std::lock_guard<std::mutex> lock(m_mutex_);
 
-    auto it = m_loadedShaders_.find(path);
+     if (m_device_) {
+      m_device_->waitIdle();
+    }
+
+    // Note: we consider the path to be relative to the current working directory
+    auto rel = std::filesystem::relative(path, std::filesystem::current_path());
+    // normalize the path
+    rel = std::filesystem::path(rel.generic_string());
+
+    auto it = m_loadedShaders_.find(rel);
     if (it == m_loadedShaders_.end()) {
       GlobalLogger::Log(LogLevel::Warning, "Cannot reload shader, not loaded: " + path.string());
       return;
     }
 
-    // Use entry point from the existing shader
-    std::string entryPoint = it->second->getEntryPoint();
+    Shader* shader = it->second.get();
 
-    auto newShader = createShaderObject(path, entryPoint);
-    if (newShader) {
+    // Compile the new shader code
+    ShaderStageFlag stage      = deduceStageFromPath(path);
+    std::string     entryPoint = shader->getEntryPoint();
+    std::wstring    wEntryPoint(entryPoint.begin(), entryPoint.end());
+
+    auto backend = (m_device_->getApiType() == RenderingApi::Vulkan) ? ShaderBackend::SPIRV : ShaderBackend::DXIL;
+    auto compiledShader = DxcUtil::s_get().compileHlslFile(path, stage, wEntryPoint, backend);
+
+    if (!compiledShader) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to compile shader during reload: " + path.string());
+      return;
+    }
+
+    // Get new bytecode
+    auto                 data = static_cast<const uint8_t*>(compiledShader->GetBufferPointer());
+    size_t               size = compiledShader->GetBufferSize();
+    std::vector<uint8_t> newCode(data, data + size);
+
+    // Release existing shader resources
+    shader->release();
+
+    // Initialize with new code
+    if (shader->initialize(newCode)) {
       GlobalLogger::Log(LogLevel::Info, "Reloaded shader: " + path.string());
-      it->second = std::move(newShader);
+
+      // Notify observers about the reload
+      auto observersIt = m_shaderObservers.find(shader);
+      if (observersIt != m_shaderObservers.end()) {
+        for (auto* observer : observersIt->second) {
+          observer->onShaderReloaded(shader);
+        }
+      }
     } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to reload shader: " + path.string());
+      GlobalLogger::Log(LogLevel::Error, "Failed to initialize reloaded shader: " + path.string());
     }
   }
 
@@ -81,6 +118,35 @@ class ShaderManager {
 
     m_loadedShaders_.clear();
     m_watchedDirs_.clear();
+  }
+
+  /**
+   * Register an observer to be notified when a shader is reloaded
+   * @param shader The shader to observe
+   * @param observer The observer to notify
+   */
+  void registerShaderDependency(Shader* shader, ShaderReloadObserver* observer) {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+    m_shaderObservers[shader].push_back(observer);
+  }
+
+  /**
+   * Unregister an observer from shader reload notifications
+   * @param shader The shader being observed
+   * @param observer The observer to remove
+   */
+  void unregisterShaderDependency(Shader* shader, ShaderReloadObserver* observer) {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+    auto                        it = m_shaderObservers.find(shader);
+    if (it != m_shaderObservers.end()) {
+      auto& observers = it->second;
+      observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+
+      // Remove the empty vector if no observers left
+      if (observers.empty()) {
+        m_shaderObservers.erase(it);
+      }
+    }
   }
 
   private:
@@ -102,7 +168,7 @@ class ShaderManager {
     return rawPtr;
   }
 
-    auto createShaderObject(const std::filesystem::path& path, const std::string& entryPoint) -> std::unique_ptr<Shader> {
+  auto createShaderObject(const std::filesystem::path& path, const std::string& entryPoint) -> std::unique_ptr<Shader> {
     ShaderStageFlag stage = deduceStageFromPath(path);
 
     auto backend = (m_device_->getApiType() == RenderingApi::Vulkan) ? ShaderBackend::SPIRV : ShaderBackend::DXIL;
@@ -196,6 +262,7 @@ class ShaderManager {
   bool                                                               m_enableHotReload_;
   std::mutex                                                         m_mutex_;
   std::unordered_map<std::filesystem::path, std::unique_ptr<Shader>> m_loadedShaders_;
+  std::unordered_map<Shader*, std::vector<ShaderReloadObserver*>>    m_shaderObservers;
   std::unordered_set<std::filesystem::path>                          m_watchedDirs_;
 };
 

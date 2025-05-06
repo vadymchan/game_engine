@@ -328,7 +328,7 @@ void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& c
 
         pipelineDesc.renderPass = m_renderPass;
 
-        auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
+        auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc, m_shaderManager);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
       }
 

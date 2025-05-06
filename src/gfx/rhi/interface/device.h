@@ -27,6 +27,7 @@ class CommandBuffer;
 class Fence;
 class Semaphore;
 class SwapChain;
+class ShaderManager;
 
 // clang-format off
 
@@ -47,19 +48,19 @@ class Device {
 
   const Window* getWindow() const { return m_window_; }
 
-  virtual std::unique_ptr<Buffer>              createBuffer(const BufferDesc& desc)                                     = 0;
-  virtual std::unique_ptr<Texture>             createTexture(const TextureDesc& desc)                                   = 0;
-  virtual std::unique_ptr<Sampler>             createSampler(const SamplerDesc& desc)                                   = 0;
-  virtual std::unique_ptr<Shader>              createShader(const ShaderDesc& desc)                                     = 0;
-  virtual std::unique_ptr<GraphicsPipeline>    createGraphicsPipeline(const GraphicsPipelineDesc& desc)                 = 0;
-  virtual std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc)           = 0;
-  virtual std::unique_ptr<DescriptorSet>       createDescriptorSet(const DescriptorSetLayout* layout)                   = 0;
-  virtual std::unique_ptr<RenderPass>          createRenderPass(const RenderPassDesc& desc)                             = 0;
-  virtual std::unique_ptr<Framebuffer>         createFramebuffer(const FramebufferDesc& desc)                           = 0;
-  virtual std::unique_ptr<CommandBuffer>       createCommandBuffer(const CommandBufferDesc& desc = CommandBufferDesc()) = 0;
-  virtual std::unique_ptr<Fence>               createFence(const FenceDesc& desc = FenceDesc())                         = 0;
-  virtual std::unique_ptr<Semaphore>           createSemaphore()                                                        = 0;
-  virtual std::unique_ptr<SwapChain>           createSwapChain(const SwapchainDesc& desc)                               = 0;
+  virtual std::unique_ptr<Buffer>              createBuffer(const BufferDesc& desc)                                                   = 0;
+  virtual std::unique_ptr<Texture>             createTexture(const TextureDesc& desc)                                                 = 0;
+  virtual std::unique_ptr<Sampler>             createSampler(const SamplerDesc& desc)                                                 = 0;
+  virtual std::unique_ptr<Shader>              createShader(const ShaderDesc& desc)                                                   = 0;
+  virtual std::unique_ptr<GraphicsPipeline>    createGraphicsPipeline(const GraphicsPipelineDesc& desc, ShaderManager* shaderManager) = 0;
+  virtual std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(const DescriptorSetLayoutDesc& desc)                         = 0;
+  virtual std::unique_ptr<DescriptorSet>       createDescriptorSet(const DescriptorSetLayout* layout)                                 = 0;
+  virtual std::unique_ptr<RenderPass>          createRenderPass(const RenderPassDesc& desc)                                           = 0;
+  virtual std::unique_ptr<Framebuffer>         createFramebuffer(const FramebufferDesc& desc)                                         = 0;
+  virtual std::unique_ptr<CommandBuffer>       createCommandBuffer(const CommandBufferDesc& desc = CommandBufferDesc())               = 0;
+  virtual std::unique_ptr<Fence>               createFence(const FenceDesc& desc = FenceDesc())                                       = 0;
+  virtual std::unique_ptr<Semaphore>           createSemaphore()                                                                      = 0;
+  virtual std::unique_ptr<SwapChain>           createSwapChain(const SwapchainDesc& desc)                                             = 0;
 
   virtual void updateBuffer(Buffer* buffer, const void* data, size_t size, size_t offset = 0)                                     = 0;
   virtual void updateTexture(Texture* texture, const void* data, size_t dataSize, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) = 0;

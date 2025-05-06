@@ -22,8 +22,8 @@ class DescriptorSetLayoutDx12;
 
 class GraphicsPipelineDx12 : public GraphicsPipeline {
   public:
-  GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, DeviceDx12* device);
-  ~GraphicsPipelineDx12() = default;
+  GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, DeviceDx12* device, ShaderManager* shaderManager);
+  ~GraphicsPipelineDx12() override;
 
   GraphicsPipelineDx12(const GraphicsPipelineDx12&)            = delete;
   GraphicsPipelineDx12& operator=(const GraphicsPipelineDx12&) = delete;
@@ -34,6 +34,8 @@ class GraphicsPipelineDx12 : public GraphicsPipeline {
   ID3D12PipelineState* getPipelineState() const { return m_pipelineState_.Get(); }
 
   ID3D12RootSignature* getRootSignature() const { return m_rootSignature_.Get(); }
+
+  void rebuildPipeline() override;
 
   private:
   bool initialize_();
