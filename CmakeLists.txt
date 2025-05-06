@@ -26,20 +26,20 @@ option(BUILD_ENTT         "Build the EnTT library"      ON)
 
 
 # Choose which rendering API to use
-option(USE_VULKAN  "Use Vulkan as the rendering API"  ON)
-option(USE_OPENGL  "Use OpenGL as the rendering API"  OFF)
-option(USE_DIRECTX "Use DirectX as the rendering API" OFF)
+option(USE_VULKAN  "Use Vulkan as the rendering API"                 ON)
+option(USE_OPENGL  "Use OpenGL as the rendering API (DEPRECATED!)"  OFF)
+option(USE_DIRECTX "Use DirectX as the rendering API"          ${WIN32})
 
 include(CMakeDependentOption)
 
 cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Allocator" ON "USE_VULKAN"  OFF)
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
-cmake_dependent_option(USE_DIRECTX_SHADER_COMPILER   "Fetch DirectX Shader Compiler" ON "USE_DIRECTX" OFF)
-cmake_dependent_option(USE_DIRECTX_TEX               "Fetch DirectX Tex Library"     ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for DX12" ON "USE_DIRECTX" OFF)
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
-
+# separately, since they're cross-platform 
+option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON)
+option(USE_DIRECTX_TEX             "Fetch DirectX Tex Library"     ON)
 
 
 # WIP - change build directory
@@ -56,10 +56,14 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
 # vcpkg
 # -------------------------------------------------------------------------------------
 
-# Currently vcpkg is used only for DirectX related third parties
-# option(USE_VCPKG "Build the vcpkg" ON)
-# if(USE_VCPKG)
-if(USE_DIRECTX)
+
+if(USE_DIRECTX OR USE_DIRECTX_SHADER_COMPILER OR USE_DIRECTX_TEX)
+    set(USE_VCPKG TRUE)
+else()
+    set(USE_VCPKG FALSE)
+endif()
+
+if(USE_VCPKG)
 
     # TODO: make vcpkg.json to be able to set stable version 
     message(STATUS "Fetching vcpkg-cmake-integration...")
@@ -88,9 +92,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # vcpkg - setting CMAKE_PREFIX_PATH 
 # -------------------------------------------------------------------------------------
 
-# if(USE_VCPKG)
-if(USE_DIRECTX)
-
+if(USE_VCPKG)
     function(vcpkg_make_set_triplet)
             # get platform: win/linux ONLY
             if(WIN32)
@@ -113,7 +115,6 @@ if(USE_DIRECTX)
     vcpkg_make_set_triplet()
     set(VCPKG_ROOT "${FETCHCONTENT_BASE_DIR}/vcpkg")
     set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/share")
-
 endif()
 
 
@@ -394,19 +395,6 @@ endif()
 # target_include_directories(${PROJECT_NAME} PRIVATE src/internal_include)
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
-
-option(BUILD_GLM "Build the GLM library" ON)
-
-if(BUILD_GLM)
-    message(STATUS "Fetching GLM...")
-    FetchContent_Declare(
-        glm
-        GIT_REPOSITORY https://github.com/g-truc/glm.git
-        GIT_TAG 0.9.9.8
-    )
-    FetchContent_MakeAvailable(glm)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glm_SOURCE_DIR})
-endif()
 
 if(BUILD_SDL)
     FetchContent_MakeAvailable(sdl)

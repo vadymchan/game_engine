@@ -4,7 +4,6 @@
 #include "file_loader/image_file_loader.h"
 #include "gfx/rhi/common/rhi_enums.h"
 
-// TODO: add compile for
 #include <DirectXTex.h>
 
 #include <filesystem>
