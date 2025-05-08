@@ -108,7 +108,7 @@ float4 main(PSInput input) : SV_TARGET
     color += float4(spotLight.color, 0);
 
     float4 diffuseColor = DiffuseTexture.Sample(DefaultSampler, input.TexCoord);
-    //return diffuseColor;
+    return diffuseColor;
 
     color += diffuseColor;
     
