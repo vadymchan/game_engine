@@ -6,6 +6,8 @@
 
 #ifdef GAME_ENGINE_RHI_DX12
 
+#include<mutex>
+
 namespace game_engine {
 namespace gfx {
 namespace rhi {
@@ -23,6 +25,9 @@ class ShaderDx12 : public Shader {
   ShaderDx12(const ShaderDx12&)            = delete;
   ShaderDx12& operator=(const ShaderDx12&) = delete;
 
+    void initialize(const std::vector<uint8_t>& code) override;
+  void release() override;
+
   // DX12-specific methods
   const D3D12_SHADER_BYTECODE& getBytecode() const { return m_bytecode_; }
 
@@ -32,6 +37,7 @@ class ShaderDx12 : public Shader {
   DeviceDx12*           m_device_;
   D3D12_SHADER_BYTECODE m_bytecode_;
   ComPtr<ID3DBlob>      m_shaderBlob_;  // Holds the shader bytecode memory
+  std::mutex            m_mutex_;
 };
 
 }  // namespace rhi

@@ -171,6 +171,22 @@ class RenderResourceManager {
     return nullptr;
   }
 
+  void updateScheduledPipelines() {
+    for (auto& pipeline : m_pipelines) {
+      pipeline->decrementUpdateCounter();
+      if (pipeline->needsUpdate()) {
+        pipeline->rebuild();
+      }
+    }
+
+    for (auto& [key, pipeline] : m_cachedPipelines) {
+      pipeline->decrementUpdateCounter();
+      if (pipeline->needsUpdate()) {
+        pipeline->rebuild();
+      }
+    }
+  }
+
   //--------------------------------------------------------------------------
   // RenderPass management
   //--------------------------------------------------------------------------
@@ -246,6 +262,7 @@ class RenderResourceManager {
   }
 
   private:
+  // TODO: consider leave only unordered_map (we don't need to keep unnamed resources in vector)
   std::vector<std::unique_ptr<rhi::Buffer>>              m_buffers;
   std::vector<std::unique_ptr<rhi::Texture>>             m_textures;
   std::vector<std::unique_ptr<rhi::Sampler>>             m_samplers;

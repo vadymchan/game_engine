@@ -34,6 +34,18 @@ GraphicsPipelineVk::~GraphicsPipelineVk() {
   }
 }
 
+bool GraphicsPipelineVk::rebuild() {
+  // We only need to recreate the pipeline itself, not the layout
+  if (createPipeline_()) {
+    GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt Vulkan graphics pipeline");
+    m_updateFrame = -1;
+    return true;
+  }
+
+  GlobalLogger::Log(LogLevel::Error, "Failed to rebuild Vulkan graphics pipeline");
+  return false;
+}
+
 bool GraphicsPipelineVk::initialize_() {
   // Create pipeline layout first (needed for the pipeline creation)
   if (!createPipelineLayout_()) {
@@ -41,6 +53,11 @@ bool GraphicsPipelineVk::initialize_() {
     return false;
   }
 
+  // Create the pipeline
+  return createPipeline_();
+}
+
+bool GraphicsPipelineVk::createPipeline_() {
   // Setup shader stages
   std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
   if (!createShaderStages_(shaderStages)) {
@@ -128,6 +145,15 @@ bool GraphicsPipelineVk::initialize_() {
   pipelineInfo.subpass                      = m_desc_.subpass;
   pipelineInfo.basePipelineHandle           = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex            = -1;
+
+  // TODO: temp, dirty fix. Consider add delayed destroy for old pipeline
+  m_device_->waitIdle();
+
+  // Destroy existing pipeline if it exists
+  if (m_pipeline_ != VK_NULL_HANDLE) {
+    vkDestroyPipeline(m_device_->getDevice(), m_pipeline_, nullptr);
+    m_pipeline_ = VK_NULL_HANDLE;
+  }
 
   if (vkCreateGraphicsPipelines(m_device_->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline_)
       != VK_SUCCESS) {

@@ -4,6 +4,8 @@
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
 
+#include <atomic>
+
 namespace game_engine {
 namespace gfx {
 namespace rhi {
@@ -18,6 +20,21 @@ class Pipeline {
   virtual ~Pipeline() = default;
 
   virtual PipelineType getType() const = 0;
+
+  bool needsUpdate() const { return m_updateFrame == 0; }
+
+  void scheduleUpdate(uint32_t delayFrames) { m_updateFrame = delayFrames; }
+
+  void decrementUpdateCounter() {
+    if (m_updateFrame > 0) {
+      m_updateFrame--;
+    }
+  }
+
+  virtual bool rebuild() = 0;
+
+  protected:
+  std::atomic<int32_t> m_updateFrame{-1};
 };
 
 /**

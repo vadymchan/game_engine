@@ -32,9 +32,16 @@ namespace rhi {
  */
 class ShaderManager {
   public:
-  ShaderManager(Device* device, bool enableHotReload = true)
+  /**
+   * @param maxFramesDelay Number of frames to delay pipeline rebuilds after shader changes.
+   *        This parameter is crucial for GPU synchronization - it ensures that all
+   *        command buffers using the old pipeline complete execution before the pipeline
+   *        is rebuilt. Should match or exceed the swapchain's buffer count.
+   */
+  ShaderManager(Device* device, uint32_t maxFramesDelay, bool enableHotReload = true)
       : m_device_(device)
-      , m_enableHotReload_(enableHotReload) {}
+      , m_enableHotReload_(enableHotReload)
+      , m_maxFramesDelay_(maxFramesDelay) {}
 
   ~ShaderManager() { release(); }
 
@@ -58,22 +65,42 @@ class ShaderManager {
   void reloadShader(const std::filesystem::path& path) {
     std::lock_guard<std::mutex> lock(m_mutex_);
 
-    auto it = m_loadedShaders_.find(path);
+    // Note: we consider the path to be relative to the current working directory
+    auto rel = std::filesystem::relative(path, std::filesystem::current_path());
+    // normalize the path
+    rel = std::filesystem::path(rel.generic_string());
+
+    auto it = m_loadedShaders_.find(rel);
     if (it == m_loadedShaders_.end()) {
       GlobalLogger::Log(LogLevel::Warning, "Cannot reload shader, not loaded: " + path.string());
       return;
     }
 
-    // Use entry point from the existing shader
-    std::string entryPoint = it->second->getEntryPoint();
+    Shader* shader = it->second.get();
 
-    auto newShader = createShaderObject(path, entryPoint);
-    if (newShader) {
-      GlobalLogger::Log(LogLevel::Info, "Reloaded shader: " + path.string());
-      it->second = std::move(newShader);
-    } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to reload shader: " + path.string());
+    auto backend = (m_device_->getApiType() == RenderingApi::Vulkan) ? ShaderBackend::SPIRV : ShaderBackend::DXIL;
+    std::wstring wEntryPoint(shader->getEntryPoint().begin(), shader->getEntryPoint().end());
+    auto         compiledShader = DxcUtil::s_get().compileHlslFile(path, shader->getStage(), wEntryPoint, backend);
+
+    if (!compiledShader) {
+      GlobalLogger::Log(LogLevel::Error, "Shader compilation failed: " + path.string());
+      return;
     }
+
+    auto                 data = static_cast<const uint8_t*>(compiledShader->GetBufferPointer());
+    size_t               size = compiledShader->GetBufferSize();
+    std::vector<uint8_t> newCode(data, data + size);
+
+    shader->reinitialize(newCode);
+
+    auto pipelineIt = m_shaderPipelines_.find(rel);
+    if (pipelineIt != m_shaderPipelines_.end()) {
+      for (Pipeline* pipeline : pipelineIt->second) {
+        pipeline->scheduleUpdate(m_maxFramesDelay_);
+      }
+    }
+
+    GlobalLogger::Log(LogLevel::Info, "Reloaded shader: " + path.string());
   }
 
   void release() {
@@ -81,6 +108,20 @@ class ShaderManager {
 
     m_loadedShaders_.clear();
     m_watchedDirs_.clear();
+  }
+
+  // Links a pipeline to a shader file for hot-reload tracking
+  void registerPipelineForShader(Pipeline* pipeline, const std::filesystem::path& shaderPath) {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+    m_shaderPipelines_[shaderPath].insert(pipeline);
+  }
+
+  void unregisterPipelineForShader(Pipeline* pipeline, const std::filesystem::path& shaderPath) {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+    auto                        it = m_shaderPipelines_.find(shaderPath);
+    if (it != m_shaderPipelines_.end()) {
+      it->second.erase(pipeline);
+    }
   }
 
   private:
@@ -102,7 +143,7 @@ class ShaderManager {
     return rawPtr;
   }
 
-    auto createShaderObject(const std::filesystem::path& path, const std::string& entryPoint) -> std::unique_ptr<Shader> {
+  auto createShaderObject(const std::filesystem::path& path, const std::string& entryPoint) -> std::unique_ptr<Shader> {
     ShaderStageFlag stage = deduceStageFromPath(path);
 
     auto backend = (m_device_->getApiType() == RenderingApi::Vulkan) ? ShaderBackend::SPIRV : ShaderBackend::DXIL;
@@ -192,11 +233,13 @@ class ShaderManager {
   }
 
   private:
-  Device*                                                            m_device_;
-  bool                                                               m_enableHotReload_;
-  std::mutex                                                         m_mutex_;
-  std::unordered_map<std::filesystem::path, std::unique_ptr<Shader>> m_loadedShaders_;
-  std::unordered_set<std::filesystem::path>                          m_watchedDirs_;
+  Device*                                                                  m_device_;
+  bool                                                                     m_enableHotReload_;
+  std::mutex                                                               m_mutex_;
+  std::unordered_map<std::filesystem::path, std::unique_ptr<Shader>>       m_loadedShaders_;
+  std::unordered_set<std::filesystem::path>                                m_watchedDirs_;
+  std::unordered_map<std::filesystem::path, std::unordered_set<Pipeline*>> m_shaderPipelines_;
+  uint32_t                                                                 m_maxFramesDelay_;
 };
 
 }  // namespace rhi

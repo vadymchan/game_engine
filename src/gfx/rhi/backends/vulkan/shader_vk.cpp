@@ -11,27 +11,35 @@ ShaderVk::ShaderVk(const ShaderDesc& desc, DeviceVk* device)
     : Shader(desc)
     , m_device_(device)
     , m_shaderModule_(VK_NULL_HANDLE) {
-  VkShaderModuleCreateInfo createInfo = {};
-  createInfo.sType                    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  createInfo.codeSize                 = desc.code.size();
-  createInfo.pCode                    = reinterpret_cast<const uint32_t*>(desc.code.data());
-
-  if (vkCreateShaderModule(device->getDevice(), &createInfo, nullptr, &m_shaderModule_) != VK_SUCCESS) {
-    // TODO: add log message from vkCreateShaderModule (if there's a need)
-    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan shader module");
-    return;
-  }
-
+  initialize(desc.code);
 }
 
 ShaderVk::~ShaderVk() {
-  if (!m_device_) {
-    GlobalLogger::Log(LogLevel::Error, "Device is null in ShaderVk destructor");
+  release();
+}
+
+void ShaderVk::initialize(const std::vector<uint8_t>& code) {
+  std::lock_guard<std::mutex> lock(m_mutex_);
+
+  m_desc_.code = code;
+
+  VkShaderModuleCreateInfo createInfo = {};
+  createInfo.sType                    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+  createInfo.codeSize                 = code.size();
+  createInfo.pCode                    = reinterpret_cast<const uint32_t*>(code.data());
+
+  if (vkCreateShaderModule(m_device_->getDevice(), &createInfo, nullptr, &m_shaderModule_) != VK_SUCCESS) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan shader module");
     return;
   }
+}
+
+void ShaderVk::release() {
+  std::lock_guard<std::mutex> lock(m_mutex_);
 
   if (m_shaderModule_ != VK_NULL_HANDLE) {
     vkDestroyShaderModule(m_device_->getDevice(), m_shaderModule_, nullptr);
+    m_shaderModule_ = VK_NULL_HANDLE;
   }
 }
 

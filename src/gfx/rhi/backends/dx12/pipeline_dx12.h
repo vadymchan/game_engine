@@ -28,6 +28,8 @@ class GraphicsPipelineDx12 : public GraphicsPipeline {
   GraphicsPipelineDx12(const GraphicsPipelineDx12&)            = delete;
   GraphicsPipelineDx12& operator=(const GraphicsPipelineDx12&) = delete;
 
+  bool rebuild() override;
+
   const std::array<float, 4>& getBlendFactors() const { return m_blendFactors_; }
 
   // DirectX 12-specific methods

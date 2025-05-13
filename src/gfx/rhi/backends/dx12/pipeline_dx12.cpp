@@ -23,14 +23,24 @@ GraphicsPipelineDx12::GraphicsPipelineDx12(const GraphicsPipelineDesc& desc, Dev
   }
 }
 
+bool GraphicsPipelineDx12::rebuild() {
+  m_pipelineState_.Reset();
+  if (createPipelineState_()) {
+    GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt DirectX 12 graphics pipeline");
+    m_updateFrame = -1;
+    return true;
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to rebuild DirectX 12 graphics pipeline");
+    return false;
+  }
+}
+
 bool GraphicsPipelineDx12::initialize_() {
-  // First create the root signature
   if (!createRootSignature_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create root signature for DX12 pipeline");
     return false;
   }
 
-  // Then create the pipeline state object
   if (!createPipelineState_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline state object for DX12 pipeline");
     return false;

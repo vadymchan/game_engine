@@ -34,7 +34,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
     return false;
   }
 
-  m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), true);
+  m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), MAX_FRAMES_IN_FLIGHT, true);
   m_resourceManager = std::make_unique<RenderResourceManager>();
 
   m_frameResources = std::make_unique<FrameResources>(m_device.get(), m_resourceManager.get());
@@ -83,6 +83,8 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   fence->wait();
   fence->reset();
+
+  m_resourceManager->updateScheduledPipelines();
 
   if (!m_swapChain->acquireNextImage(imageAvailableSemaphore.get())) {
     GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");

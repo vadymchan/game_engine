@@ -25,6 +25,8 @@ class GraphicsPipelineVk : public GraphicsPipeline {
   GraphicsPipelineVk(const GraphicsPipelineVk&)            = delete;
   GraphicsPipelineVk& operator=(const GraphicsPipelineVk&) = delete;
 
+  bool rebuild() override;
+
   // Vulkan-specific methods
   VkPipeline getPipeline() const { return m_pipeline_; }
 
@@ -33,6 +35,7 @@ class GraphicsPipelineVk : public GraphicsPipeline {
   private:
   bool initialize_();
 
+  bool createPipeline_();
   bool createShaderStages_(std::vector<VkPipelineShaderStageCreateInfo>& shaderStages);
   bool createVertexInputState_(VkPipelineVertexInputStateCreateInfo& vertexInputInfo);
   bool createInputAssemblyState_(VkPipelineInputAssemblyStateCreateInfo& inputAssembly);
@@ -46,7 +49,6 @@ class GraphicsPipelineVk : public GraphicsPipeline {
 
   VkPipeline       m_pipeline_;
   VkPipelineLayout m_pipelineLayout_;
-
 };
 
 }  // namespace rhi

@@ -5,6 +5,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include <mutex>
+
 namespace game_engine {
 namespace gfx {
 namespace rhi {
@@ -25,12 +27,16 @@ class ShaderVk : public Shader {
   ShaderVk(const ShaderVk&)            = delete;
   ShaderVk& operator=(const ShaderVk&) = delete;
 
+  void initialize(const std::vector<uint8_t>& code) override;
+  void release() override;
+
   // Vulkan-specific methods
   VkShaderModule getShaderModule() const { return m_shaderModule_; }
 
   private:
   DeviceVk*      m_device_;
   VkShaderModule m_shaderModule_;
+  std::mutex     m_mutex_;
 };
 
 }  // namespace rhi

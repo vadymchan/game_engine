@@ -26,6 +26,14 @@ class Shader {
 
   const ShaderDesc& getDesc() const { return m_desc_; }
 
+  virtual void initialize(const std::vector<uint8_t>& code) = 0;
+  virtual void release()                                    = 0;
+
+  virtual void reinitialize(const std::vector<uint8_t>& code) {
+    release();
+    initialize(code);
+  }
+
   protected:
   ShaderDesc m_desc_;
 };

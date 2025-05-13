@@ -98,6 +98,8 @@ class BasePass : public RenderPass {
   };
 
   std::unordered_map<Material*, MaterialCache> m_materialCache;
+
+  rhi::ShaderManager* m_shaderManager = nullptr;
 };
 
 }  // namespace renderer
