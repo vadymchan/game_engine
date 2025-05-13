@@ -22,8 +22,8 @@ void WireframeStrategy::initialize(rhi::Device*           device,
   m_frameResources  = frameResources;
   m_shaderManager   = shaderManager;
 
-  m_vertexShader = m_shaderManager->getShader("assets/shaders/debug/wireframe/shader_instancing.vs.hlsl");
-  m_pixelShader  = m_shaderManager->getShader("assets/shaders/debug/wireframe/shader.ps.hlsl");
+  m_vertexShader = m_shaderManager->getShader(m_vertexShaderPath_);
+  m_pixelShader  = m_shaderManager->getShader(m_pixelShaderPath_);
 
   setupRenderPass_();
 }
@@ -111,6 +111,10 @@ void WireframeStrategy::render(const RenderContext& context) {
 
     if (m_frameResources->getViewDescriptorSet()) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+    }
+
+    if (drawData.modelMatrixDescriptorSet) {
+      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
@@ -225,6 +229,7 @@ void WireframeStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
   auto viewDescriptorSetLayout = m_frameResources->getViewDescriptorSetLayout();
+  auto modelMatrixLayout       = m_frameResources->getModelMatrixDescriptorSetLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -302,15 +307,20 @@ void WireframeStrategy::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
         pipelineDesc.setLayouts.push_back(viewDescriptorSetLayout);
+        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
 
         pipelineDesc.renderPass = m_renderPass;
 
         auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
+
+        m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 
       DrawData drawData;
       drawData.pipeline       = pipeline;
+      drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
       drawData.vertexBuffer   = renderMesh->gpuMesh->vertexBuffer;
       drawData.indexBuffer    = renderMesh->gpuMesh->indexBuffer;
       drawData.instanceBuffer = cache.instanceBuffer;
@@ -327,7 +337,7 @@ void WireframeStrategy::cleanupUnusedBuffers_(
   std::vector<RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
-    if (currentFrameInstances.find(model) == currentFrameInstances.end()) {
+    if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
     }
   }

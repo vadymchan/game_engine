@@ -8,7 +8,7 @@ void FileWatcherManager::addWatcher(const std::filesystem::path& dirPath,
                                     const Callback&              callback) {
   std::filesystem::path modifiedDirPath = "./" / dirPath;
 
-  if (m_watchers_.find(modifiedDirPath) != m_watchers_.end()) {
+  if (m_watchers_.contains(modifiedDirPath)) {
     GlobalLogger::Log(
         LogLevel::Error,
         "Watcher for path " + modifiedDirPath.string() + " already exists!");
@@ -20,7 +20,7 @@ void FileWatcherManager::addWatcher(const std::filesystem::path& dirPath,
 }
 
 void FileWatcherManager::removeWatcher(const std::filesystem::path& dirPath) {
-  if (m_watchers_.find(dirPath) != m_watchers_.end()) {
+  if (m_watchers_.contains(dirPath)) {
     m_watchers_.erase(dirPath);
   } else {
     GlobalLogger::Log(LogLevel::Error,

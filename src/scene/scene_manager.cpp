@@ -5,7 +5,7 @@
 namespace game_engine {
 
 void SceneManager::addScene(const std::string& name, Registry registry) {
-  if (scenes_.find(name) != scenes_.end()) {
+  if (scenes_.contains(name)) {
     GlobalLogger::Log(LogLevel::Warning, "Scene with name '" + name + "' already exists. Overwriting.");
   }
 
@@ -50,7 +50,7 @@ std::string SceneManager::getCurrentSceneName() const {
 }
 
 bool SceneManager::hasScene(const std::string& name) const {
-  return scenes_.find(name) != scenes_.end();
+  return scenes_.contains(name);
 }
 
 void SceneManager::clearAllScenes() {

@@ -21,7 +21,7 @@ void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dir
 }
 
 void ConfigManager::addConfig(const std::filesystem::path& filePath) {
-  if (configs_.find(filePath) != configs_.end()) {
+  if (configs_.contains(filePath)) {
     GlobalLogger::Log(LogLevel::Warning, "Config already loaded: " + filePath.string());
     return;
   }

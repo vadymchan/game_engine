@@ -1,0 +1,265 @@
+{
+  "schemaVersion": "1.0",
+  "name": "test_scene",
+  "entities": [
+    {
+      "name": "MainCamera",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -10],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "camera",
+          "cameraType": "perspective",
+          "fov": 0.785398,
+          "near": 0.1,
+          "far": 1000.0,
+          "width": 800,
+          "height": 600
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model1",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -10],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model10",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -13],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model2",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -16],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model3",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -19],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model4",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -21],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model5",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -24],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model6",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -27],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model7",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -30],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model8",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -33],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "Model9",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0, 0, -36],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "model",
+          "path": "assets/models/DamagedHelmet/glTF/DamagedHelmet.gltf"
+        },
+        {
+          "type": "movement"
+        }
+      ]
+    },
+    {
+      "name": "DirectionalLight",
+      "components": [
+        {
+          "type": "light",
+          "color": [0.11, 0.12, 0.13],
+          "intensity": 0.14
+        },
+        {
+          "type": "directionalLight",
+          "direction": [0.15, -0.16, 0.17]
+        }
+      ]
+    },
+    {
+      "name": "PointLight",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0.26, 0.27, 0.28],
+          "rotation": [0, 0, 0],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "light",
+          "color": [0.21, 0.22, 0.23],
+          "intensity": 0.24
+        },
+        {
+          "type": "pointLight",
+          "range": 0.25
+        }
+      ]
+    },
+    {
+      "name": "SpotLight",
+      "components": [
+        {
+          "type": "transform",
+          "position": [0.38, 0.39, 0.31],
+          "rotation": [0.311, 0.312, 0.313],
+          "scale": [1, 1, 1]
+        },
+        {
+          "type": "light",
+          "color": [0.31, 0.32, 0.33],
+          "intensity": 0.34
+        },
+        {
+          "type": "spotLight",
+          "range": 0.35,
+          "innerConeAngle": 0.36,
+          "outerConeAngle": 0.37
+        }
+      ]
+    }
+  ]
+}

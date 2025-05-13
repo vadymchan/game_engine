@@ -23,8 +23,8 @@ void BasePass::initialize(rhi::Device*           device,
   m_shaderManager   = shaderManager;
 
   if (shaderManager) {
-    m_vertexShader = shaderManager->getShader("assets/shaders/base_pass/shader_instancing.vs.hlsl");
-    m_pixelShader  = shaderManager->getShader("assets/shaders/base_pass/shader.ps.hlsl");
+    m_vertexShader = shaderManager->getShader(m_vertexShaderPath_);
+    m_pixelShader  = shaderManager->getShader(m_pixelShaderPath_);
   } else {
     GlobalLogger::Log(LogLevel::Error, "ShaderManager not found");
   }
@@ -61,7 +61,7 @@ void BasePass::prepareFrame(const RenderContext& context) {
   }
 
   for (auto& [model, matrices] : currentFrameInstances) {
-    auto& cache = m_instanceBufferCache[model];  
+    auto& cache = m_instanceBufferCache[model];
 
     bool needsUpdate = cache.instanceBuffer == nullptr ||   // Buffer not created yet
                        matrices.size() > cache.capacity ||  // Need more space
@@ -118,24 +118,28 @@ void BasePass::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
     }
 
+    if (drawData.modelMatrixDescriptorSet) {
+      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+    }
+
     if (m_frameResources->getDirectionalLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(1, m_frameResources->getDirectionalLightDescriptorSet());
+      commandBuffer->bindDescriptorSet(2, m_frameResources->getDirectionalLightDescriptorSet());
     }
 
     if (m_frameResources->getPointLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(2, m_frameResources->getPointLightDescriptorSet());
+      commandBuffer->bindDescriptorSet(3, m_frameResources->getPointLightDescriptorSet());
     }
 
     if (m_frameResources->getSpotLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(3, m_frameResources->getSpotLightDescriptorSet());
+      commandBuffer->bindDescriptorSet(4, m_frameResources->getSpotLightDescriptorSet());
     }
 
     if (drawData.materialDescriptorSet) {
-      commandBuffer->bindDescriptorSet(4, drawData.materialDescriptorSet);
+      commandBuffer->bindDescriptorSet(5, drawData.materialDescriptorSet);
     }
 
     if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(5, m_frameResources->getDefaultSamplerDescriptorSet());
+      commandBuffer->bindDescriptorSet(6, m_frameResources->getDefaultSamplerDescriptorSet());
     }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
@@ -251,10 +255,11 @@ void BasePass::updateInstanceBuffer_(RenderModel*                         model,
 void BasePass::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewLayout     = m_frameResources->getViewDescriptorSetLayout();
-  auto lightLayout    = m_frameResources->getLightDescriptorSetLayout();
-  auto materialLayout = m_frameResources->getMaterialDescriptorSetLayout();
-  auto samplerLayout  = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
+  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
+  auto lightLayout       = m_frameResources->getLightDescriptorSetLayout();
+  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+  auto materialLayout    = m_frameResources->getMaterialDescriptorSetLayout();
+  auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -370,6 +375,7 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
         pipelineDesc.setLayouts.push_back(viewLayout);
+        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
         pipelineDesc.setLayouts.push_back(lightLayout);
         pipelineDesc.setLayouts.push_back(lightLayout);
         pipelineDesc.setLayouts.push_back(lightLayout);
@@ -381,18 +387,19 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
 
-        m_shaderManager->registerPipelineForShader(pipeline, "assets/shaders/base_pass/shader_instancing.vs.hlsl");
-        m_shaderManager->registerPipelineForShader(pipeline, "assets/shaders/base_pass/shader.ps.hlsl");
+        m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 
       DrawData drawData;
-      drawData.pipeline              = pipeline;
-      drawData.materialDescriptorSet = materialDescriptorSet;
-      drawData.vertexBuffer          = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer           = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer        = cache.instanceBuffer;
-      drawData.indexCount            = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount         = cache.count;
+      drawData.pipeline                 = pipeline;
+      drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
+      drawData.materialDescriptorSet    = materialDescriptorSet;
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }
@@ -404,7 +411,7 @@ void BasePass::cleanupUnusedBuffers_(
   std::vector<RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
-    if (currentFrameInstances.find(model) == currentFrameInstances.end()) {
+    if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
     }
   }
@@ -426,27 +433,53 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
     return nullptr;
   }
 
-  auto descriptorSet = m_device->createDescriptorSet(materialLayout);
+  std::string materialKey = "material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
 
-  std::vector<std::string> textureNames = {"albedo", "normal_map", "roughness", "metalness"};
-  uint32_t                 binding      = 0;
+  auto descriptorSetPtr = m_resourceManager->getDescriptorSet(materialKey);
+  if (!descriptorSetPtr) {
+    auto descriptorSet = m_device->createDescriptorSet(materialLayout);
+    descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
+  }
 
-  for (const auto& textureName : textureNames) {
-    auto it = material->textures.find(textureName);
+  rhi::Buffer* paramBuffer = m_frameResources->getOrCreateMaterialParamBuffer(material);
+  if (paramBuffer) {
+    descriptorSetPtr->setUniformBuffer(0, paramBuffer);
+  }
+
+  std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
+  uint32_t                 binding      = 1;
+
+    for (const auto& textureName : textureNames) {
+    auto          it      = material->textures.find(textureName);
+    rhi::Texture* texture = nullptr;
 
     if (it != material->textures.end() && it->second) {
-      auto texture = it->second;
-      descriptorSet->setTexture(binding, texture);
+      texture = it->second;
     } else {
-      GlobalLogger::Log(LogLevel::Warning,
-                        "Material texture not found: " + textureName + " for material: " + material->materialName);
+      if (textureName == "albedo") {
+        texture = m_frameResources->getDefaultWhiteTexture();
+      } else if (textureName == "normal_map") {
+        texture = m_frameResources->getDefaultNormalTexture();
+      } else if (textureName == "metallic_roughness") {
+        texture = m_frameResources->getDefaultBlackTexture();
+      }
+
+      GlobalLogger::Log(
+          LogLevel::Debug,
+          "Using fallback texture for missing " + textureName + " in material: " + material->materialName);
+    }
+
+    if (texture) {
+      descriptorSetPtr->setTexture(binding, texture);
+    }
+    else
+    {
+      GlobalLogger::Log(LogLevel::Error,
+                        "Texture not found for " + textureName + " in material: " + material->materialName);
     }
 
     binding++;
   }
-
-  std::string materialKey      = "material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
-  auto        descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
 
   m_materialCache[material].descriptorSet = descriptorSetPtr;
 

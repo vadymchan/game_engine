@@ -4,8 +4,7 @@
 
 using namespace game_engine;
 
-#if (defined(_WIN32) || defined(_WIN64)) \
-    && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
+#if (defined(_WIN32) || defined(_WIN64)) && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
 #include <windows.h>
 int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,

@@ -4,11 +4,9 @@ struct PSInput
     float2 TexCoord : TEXCOORD1;
 };
 
-#if !TODO
-Texture2D<float4> NormalTexture : register(t0, space1);
-#endif
+Texture2D<float4> NormalTexture : register(t0, space2);
 
-SamplerState DefaultSampler : register(s0, space2);
+SamplerState DefaultSampler : register(s0, space3);
 
 float4 main(PSInput input) : SV_TARGET
 {

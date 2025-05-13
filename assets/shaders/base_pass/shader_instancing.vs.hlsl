@@ -34,6 +34,16 @@ cbuffer ViewParam : register(b0, space0)
     ViewUniformBuffer ViewParam;
 }
 
+struct ModelUniformBuffer
+{
+    float4x4 ModelMatrix; 
+};
+
+cbuffer ModelParam : register(b0, space1) 
+{
+    ModelUniformBuffer ModelParam;
+}
+
 struct VSOutput
 {
     float4 Position : SV_POSITION;
@@ -48,16 +58,21 @@ VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
 
+    float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
+    //modelPos = float4(input.Position, 1.0);
 #ifdef __spirv__
-    output.Position = mul(float4(input.Position, 1.0), input.Instance);
+    //float4 modelPos = mul(float4(input.Position, 1.0), ModelParam.ModelMatrix);
+    output.Position = mul(modelPos, input.Instance);
 #else
-    output.Position = mul(input.Instance, float4(input.Position, 1.0));
+    output.Position = mul(input.Instance, modelPos);
 #endif
+    
     output.Position = mul(ViewParam.VP, output.Position);
     
-    output.Normal = normalize(mul((float3x3) input.Instance, input.Normal));
-    output.Tangent = normalize(mul((float3x3) input.Instance, input.Tangent));
-    output.Bitangent = normalize(mul((float3x3) input.Instance, input.Bitangent));
+    // TODO: add model matrix multiplication
+    //output.Normal = normalize(mul((float3x3) input.Instance, input.Normal));
+    //output.Tangent = normalize(mul((float3x3) input.Instance, input.Tangent));
+    //output.Bitangent = normalize(mul((float3x3) input.Instance, input.Bitangent));
     
     output.Color = input.Color;
     output.TexCoord = input.TexCoord;

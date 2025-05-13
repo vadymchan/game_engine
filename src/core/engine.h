@@ -18,8 +18,11 @@
 #include "gfx/rhi/shader_manager.h"
 #include "input/input_manager.h"
 #include "platform/common/window.h"
-#include "resources/assimp_material_loader.h"
-#include "resources/assimp_render_model_loader.h"
+#include "resources/assimp/assimp_material_loader.h"
+#include "resources/assimp/assimp_render_model_loader.h"
+#include "resources/cgltf/cgltf_material_loader.h"
+#include "resources/cgltf/cgltf_render_model_loader.h"
+#include "scene/scene_loader.h"
 #include "scene/scene_manager.h"
 #include "utils/buffer/buffer_manager.h"
 #include "utils/hot_reload/hot_reload_manager.h"
@@ -40,6 +43,7 @@
 #include "utils/service/service_locator.h"
 #include "utils/texture/texture_manager.h"
 #include "utils/third_party/directx_tex_util.h"
+#include "utils/third_party/ktx_image_loader.h"
 #include "utils/third_party/stb_util.h"
 #include "utils/time/stopwatch.h"
 #include "utils/time/timing_manager.h"
@@ -81,6 +85,8 @@ class Engine {
     ServiceLocator::s_remove<gfx::renderer::RenderResourceManager>();
     ServiceLocator::s_remove<TextureManager>();
     ServiceLocator::s_remove<BufferManager>();
+
+    GlobalLogger::Shutdown();
   }
 
   Window* getWindow() const { return m_window_.get(); }
@@ -152,7 +158,6 @@ class Engine {
     // ------------------------------------------------------------------------
     auto applicationEventHandler = std::make_unique<ApplicationEventHandler>();
     applicationEventHandler->subscribe(SDL_QUIT, std::bind(&Engine::onClose, this, std::placeholders::_1));
-    // [this](const ApplicationEvent& event) { this->onClose(event); }
 
     // service locator
     // ------------------------------------------------------------------------
@@ -170,17 +175,11 @@ class Engine {
     // config
     // ------------------------------------------------------------------------
     auto configManager = ServiceLocator::s_get<ConfigManager>();
-    auto debugPath     = PathManager::s_getDebugPath() / "config.json";
-    configManager->addConfig(debugPath);
-    auto debugConfig = configManager->getConfig(debugPath);
-    // register config
-    // ------------------------------------------------------------------------
-    debugConfig->registerConverter<math::Vector3Df>(&math::g_getVectorfromConfig);
-    debugConfig->registerConverter<math::Quaternionf>(&math::g_getQuaternionfromConfig);
-    debugConfig->registerConverter<Transform>(&LoadTransform);
-    debugConfig->registerConverter<Camera>(&LoadCamera);
+    auto configPath    = PathManager::s_getEngineSettingsPath() / "settings.json";
+    configManager->addConfig(configPath);
+    auto config = configManager->getConfig(configPath);
 
-    auto renderingApiString = debugConfig->get<std::string>("renderingApi");
+    auto renderingApiString = config->get<std::string>("renderingApi");
 
     gfx::rhi::RenderingApi renderingApi = gfx::rhi::RenderingApi::Vulkan;
     if (renderingApiString == "dx12") {
@@ -189,22 +188,16 @@ class Engine {
       renderingApi = gfx::rhi::RenderingApi::Vulkan;
     }
 
-    auto applicationModeStr = debugConfig->get<std::string>("applicationMode");
-
-    // hot reload
-    // ------------------------------------------------------------------------
-    // auto hotReloadManager = ServiceLocator::s_get<HotReloadManager>();
+    auto applicationModeStr = config->get<std::string>("applicationMode");
 
     // window
     // ------------------------------------------------------------------------
-    m_window_
-        = std::make_unique<Window>(renderingApiString,
-                                   // Desired size (for maximized window will be 0)
-                                   math::Dimension2Di{0, 0},
-                                   math::Point2Di{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
-                                   game_engine::Window::Flags::Resizable
-                                       // TODO: Vulkan flag may not work for DX12 window
-                                       | game_engine::Window::Flags::Vulkan | game_engine::Window::Flags::Maximized);
+    m_window_ = std::make_unique<Window>(renderingApiString,
+                                         // Desired size (for maximized window will be 0)
+                                         math::Dimension2Di{0, 0},
+                                         math::Point2Di{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
+                                         game_engine::Window::Flags::Resizable | game_engine::Window::Flags::Vulkan
+                                             | game_engine::Window::Flags::Maximized);
 
     // ecs
     // ------------------------------------------------------------------------
@@ -240,6 +233,9 @@ class Engine {
     imageLoaderManager->registerLoader(ImageType::PGM, stbLoader);
     auto directxTexLoader = std::make_shared<DirectXTexImageLoader>();
     imageLoaderManager->registerLoader(ImageType::DDS, directxTexLoader);
+    auto khronosTexLoader = std::make_shared<KtxImageLoader>();
+    imageLoaderManager->registerLoader(ImageType::KTX, khronosTexLoader);
+    imageLoaderManager->registerLoader(ImageType::KTX2, khronosTexLoader);
     ServiceLocator::s_provide<ImageLoaderManager>(std::move(imageLoaderManager));
 
     auto imageManager = std::make_unique<ImageManager>();
@@ -252,9 +248,14 @@ class Engine {
     ServiceLocator::s_provide<RenderGeometryMeshManager>();
 
     auto renderModelLoaderManager = std::make_unique<RenderModelLoaderManager>();
-    auto assimpModelLoader        = std::make_shared<AssimpRenderModelLoader>(device);
+#ifdef GAME_ENGINE_USE_ASSIMP
+    auto assimpModelLoader = std::make_shared<AssimpRenderModelLoader>();
     renderModelLoaderManager->registerLoader(ModelType::OBJ, assimpModelLoader);
     renderModelLoaderManager->registerLoader(ModelType::FBX, assimpModelLoader);
+#endif  // GAME_ENGINE_USE_ASSIMP
+    auto cgltfModelLoader = std::make_shared<CgltfRenderModelLoader>();
+    renderModelLoaderManager->registerLoader(ModelType::GLTF, cgltfModelLoader);
+    renderModelLoaderManager->registerLoader(ModelType::GLB, cgltfModelLoader);
     ServiceLocator::s_provide<RenderModelLoaderManager>(std::move(renderModelLoaderManager));
 
     auto renderModelManager = std::make_unique<RenderModelManager>();
@@ -262,9 +263,13 @@ class Engine {
 
     ServiceLocator::s_provide<MaterialManager>();
     auto materialLoaderManager = std::make_unique<MaterialLoaderManager>();
-    auto assimpMaterialLoader  = std::make_shared<AssimpMaterialLoader>(device);
+#ifdef GAME_ENGINE_USE_ASSIMP
+    auto assimpMaterialLoader  = std::make_shared<AssimpMaterialLoader>();
     materialLoaderManager->registerLoader(MaterialType::MTL, assimpMaterialLoader);
     materialLoaderManager->registerLoader(MaterialType::FBX, assimpMaterialLoader);
+#endif  // GAME_ENGINE_USE_ASSIMP
+    auto cgltfMaterialLoader = std::make_shared<CgltfMaterialLoader>();
+    materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
     ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));
 
     // editor

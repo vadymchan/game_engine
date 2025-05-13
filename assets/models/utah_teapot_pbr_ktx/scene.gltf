@@ -1,0 +1,265 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "gltfpack 0.23",
+    "extras": {
+      "author": "hackmans (https://sketchfab.com/hackmans)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/utah-teapot-pbr-185b612a223d4dd5b03e55376429574f",
+      "title": "Utah Teapot PBR"
+    }
+  },
+  "extensionsUsed": [
+    "KHR_mesh_quantization",
+    "EXT_meshopt_compression",
+    "KHR_texture_transform",
+    "KHR_texture_basisu"
+  ],
+  "extensionsRequired": ["KHR_mesh_quantization", "KHR_texture_basisu"],
+  "buffers": [
+    { "uri": "scene.bin", "byteLength": 67540 },
+    {
+      "uri": "scene.fallback.bin",
+      "byteLength": 150984,
+      "extensions": { "EXT_meshopt_compression": { "fallback": true } }
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 19536,
+      "byteStride": 4,
+      "target": 34962,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 13377,
+          "byteStride": 4,
+          "mode": "ATTRIBUTES",
+          "count": 4884
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 19536,
+      "byteLength": 39072,
+      "byteStride": 8,
+      "target": 34962,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 13380,
+          "byteLength": 20301,
+          "byteStride": 8,
+          "mode": "ATTRIBUTES",
+          "count": 4884
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 58608,
+      "byteLength": 19536,
+      "byteStride": 4,
+      "target": 34962,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 33684,
+          "byteLength": 11691,
+          "byteStride": 4,
+          "mode": "ATTRIBUTES",
+          "count": 4884
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 78144,
+      "byteLength": 19536,
+      "byteStride": 4,
+      "target": 34962,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 45376,
+          "byteLength": 11855,
+          "byteStride": 4,
+          "mode": "ATTRIBUTES",
+          "count": 4884
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 97680,
+      "byteLength": 53304,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 57232,
+          "byteLength": 10306,
+          "byteStride": 2,
+          "mode": "TRIANGLES",
+          "count": 26652
+        }
+      }
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5120,
+      "count": 4884,
+      "type": "VEC3",
+      "normalized": true
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 4884,
+      "type": "VEC3",
+      "min": [0, 0, 0],
+      "max": [16383, 8395, 10185]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5120,
+      "count": 4884,
+      "type": "VEC4",
+      "normalized": true
+    },
+    {
+      "bufferView": 3,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 4884,
+      "type": "VEC2",
+      "normalized": true
+    },
+    {
+      "bufferView": 4,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 26652,
+      "type": "SCALAR"
+    }
+  ],
+  "samplers": [{ "magFilter": 9729, "minFilter": 9987 }],
+  "images": [
+    { "uri": "UtahTeapot_baseColor.ktx2" },
+    { "uri": "UtahTeapot_metallicRoughness.ktx2" },
+    { "uri": "UtahTeapot_emissive.ktx2" },
+    { "uri": "UtahTeapot_normal.ktx2" }
+  ],
+  "textures": [
+    { "sampler": 0, "extensions": { "KHR_texture_basisu": { "source": 0 } } },
+    { "sampler": 0, "extensions": { "KHR_texture_basisu": { "source": 1 } } },
+    { "sampler": 0, "extensions": { "KHR_texture_basisu": { "source": 2 } } },
+    { "sampler": 0, "extensions": { "KHR_texture_basisu": { "source": 3 } } }
+  ],
+  "materials": [
+    {
+      "name": "UtahTeapot",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0,
+          "extensions": {
+            "KHR_texture_transform": {
+              "offset": [0.00195299997, 0.00195299997],
+              "scale": [15.9411526, 15.574461]
+            }
+          }
+        },
+        "metallicRoughnessTexture": {
+          "index": 1,
+          "extensions": {
+            "KHR_texture_transform": {
+              "offset": [0.00195299997, 0.00195299997],
+              "scale": [15.9411526, 15.574461]
+            }
+          }
+        }
+      },
+      "normalTexture": {
+        "index": 3,
+        "extensions": {
+          "KHR_texture_transform": {
+            "offset": [0.00195299997, 0.00195299997],
+            "scale": [15.9411526, 15.574461]
+          }
+        }
+      },
+      "occlusionTexture": {
+        "index": 1,
+        "extensions": {
+          "KHR_texture_transform": {
+            "offset": [0.00195299997, 0.00195299997],
+            "scale": [15.9411526, 15.574461]
+          }
+        }
+      },
+      "emissiveTexture": {
+        "index": 2,
+        "extensions": {
+          "KHR_texture_transform": {
+            "offset": [0.00195299997, 0.00195299997],
+            "scale": [15.9411526, 15.574461]
+          }
+        }
+      },
+      "emissiveFactor": [1, 1, 1],
+      "doubleSided": true
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 0,
+            "POSITION": 1,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 4,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "translation": [-97.5783081, 0, -60.663765],
+      "scale": [0.0119121419, 0.0119121419, 0.0119121419]
+    },
+    {
+      "name": "Sketchfab_model",
+      "matrix": [
+        1, 0, 0, 0, 0, 2.22044605e-16, -1, 0, 0, 1, 2.22044605e-16, 0, 0,
+        -1.29543309e-9, -9.91888442e-7, 1
+      ],
+      "children": [2]
+    },
+    {
+      "name": "Collada visual scene group",
+      "matrix": [
+        1, 0, 0, 0, 0, -4.37113883e-8, 1, 0, 0, -1, -4.37113883e-8, 0, 0, 0, 0,
+        1
+      ],
+      "children": [3]
+    },
+    { "name": "UtahTeapot_low", "children": [4] },
+    { "name": "defaultMaterial", "children": [0] }
+  ],
+  "scenes": [{ "name": "Sketchfab_Scene", "nodes": [1] }],
+  "scene": 0
+}

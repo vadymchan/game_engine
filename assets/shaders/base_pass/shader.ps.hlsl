@@ -22,7 +22,6 @@ cbuffer ViewParam : register(b0, space0)
     ViewUniformBuffer ViewParam;
 }
 
-#if !TODO 
 struct DirectionalLightData
 {
     // From Light
@@ -67,33 +66,43 @@ struct SpotLightData
     float padding3;
 };
 
-
-// TODO: Currently only one type of light (consider in future to be able to dynamically add lights)
-cbuffer DirectionalLightBuffer : register(b0, space1)
+// TODO: Currently only one type of light (consider in future to be able to dynamically add lights) - use StructuredBuffer
+cbuffer DirectionalLightBuffer : register(b0, space2)
 {
     DirectionalLightData directionalLight;
 };
 
-cbuffer PointLightBuffer : register(b0, space2)
+cbuffer PointLightBuffer : register(b0, space3)
 {
     PointLightData pointLight;
 };
 
-cbuffer SpotLightBuffer : register(b0, space3)
+cbuffer SpotLightBuffer : register(b0, space4)
 {
     SpotLightData spotLight;
 };
-#endif
 
-#if !TODO
-Texture2D<float4> DiffuseTexture : register(t0, space4);
-Texture2D<float4> NormalTexture : register(t1, space4);
-Texture2D<float4> RoughnessTexture : register(t2, space4);
-Texture2D<float4> MetalicTexture : register(t3, space4);
+struct MaterialParams
+{
+    float4 baseColor;
+    float metallic;
+    float roughness;
+    float opacity;
+    float padding;
+};
 
-#endif
+cbuffer MaterialBuffer : register(b0, space5) 
+{
+    MaterialParams material;
+}
 
-SamplerState DefaultSampler : register(s0, space5);
+Texture2D<float4> DiffuseTexture : register(t1, space5);
+Texture2D<float4> NormalTexture : register(t2, space5);
+Texture2D<float4> MetallicRoughnessTexture : register(t3, space5);
+//Texture2D<float4> RoughnessTexture : register(t2, space5);
+//Texture2D<float4> MetalicTexture : register(t3, space5);
+
+SamplerState DefaultSampler : register(s0, space6);
 
 
 
@@ -103,12 +112,11 @@ float4 main(PSInput input) : SV_TARGET
     //return float4(1.0, 0.0, 0.0, 1.0);
     float4 color = float4(0.0, 0.0, 0.0, 1.0);
     
-    color += float4(directionalLight.color, 0);
-    color += float4(pointLight.color, 0);
-    color += float4(spotLight.color, 0);
+    //color += float4(directionalLight.color, 0);
+    //color += float4(pointLight.color, 0);
+    //color += float4(spotLight.color, 0);
 
     float4 diffuseColor = DiffuseTexture.Sample(DefaultSampler, input.TexCoord);
-    return diffuseColor;
 
     color += diffuseColor;
     
@@ -116,19 +124,26 @@ float4 main(PSInput input) : SV_TARGET
 
     color += float4(normalColor, 0);
     
-    float roughnessValue = RoughnessTexture.Sample(DefaultSampler, input.TexCoord).r;
+    float2 metallicRoughnessValue = MetallicRoughnessTexture.Sample(DefaultSampler, input.TexCoord).gb;
 
-    color += float4(roughnessValue, 0, 0, 0);
+    color += float4(metallicRoughnessValue, 0, 0);
     
-    float metalicValue = MetalicTexture.Sample(DefaultSampler, input.TexCoord).r;
+    //float roughnessValue = RoughnessTexture.Sample(DefaultSampler, input.TexCoord).r;
 
-    color += float4(metalicValue, 0, 0, 0);
+    //color += float4(roughnessValue, 0, 0, 0);
     
-    return color;
+    //float metalicValue = MetalicTexture.Sample(DefaultSampler, input.TexCoord).r;
+
+    //color += float4(metalicValue, 0, 0, 0);
     
-    return input.Color;
-    return float4(normalColor, 1.0);
+    //return color;
+    
+    //return material.baseColor;
+    //return input.Color;
+    //return float4(normalColor, 1.0);
     return diffuseColor;
-    return float4(roughnessValue, 0, 0, 0);
-    return float4(metalicValue, 0, 0, 0);
+    //return float4(diffuseColor.rgb, 1);
+    return float4(metallicRoughnessValue, 0, 1);
+    return float4(metallicRoughnessValue.r, 0, 0, 1);
+    return float4(metallicRoughnessValue.g, 0, 0, 1);
 }

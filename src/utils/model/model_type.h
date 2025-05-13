@@ -10,6 +10,8 @@ namespace game_engine {
 enum class ModelType {
   OBJ,
   FBX,
+  GLTF,
+  GLB, 
   UNKNOWN,
 };
 

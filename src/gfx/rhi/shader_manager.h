@@ -215,12 +215,11 @@ class ShaderManager {
       dir = ".";
     }
 
-    // Check if already being watched
-    if (m_watchedDirs_.find(dir) != m_watchedDirs_.end()) {
+    auto alreadyWatched = m_watchedDirs_.contains(dir);
+    if (alreadyWatched) {
       return;
     }
 
-    // Add to watched directories
     m_watchedDirs_.insert(dir);
 
     auto hotReloadManager = ServiceLocator::s_get<HotReloadManager>();

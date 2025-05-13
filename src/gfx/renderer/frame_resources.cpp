@@ -21,7 +21,9 @@ void FrameResources::initialize(uint32_t framesCount) {
 
   createViewDescriptorSetLayout_();
   createLightDescriptorSetLayouts_();
+  createModelMatrixDescriptorSetLayout_();
   createMaterialDescriptorSetLayout_();
+  createDefaultTextures_();
 
   createDefaultSampler_();
   createSamplerDescriptorSet_();
@@ -79,10 +81,87 @@ void FrameResources::cleanup() {
 
   m_defaultSampler = nullptr;
 
+  m_modelMatrixCache.clear();
+
   m_sortedModels.clear();
   m_modelsMap.clear();
 
   m_initialized = false;
+}
+
+rhi::DescriptorSet* FrameResources::getOrCreateModelMatrixDescriptorSet(RenderMesh* renderMesh) {
+  auto it = m_modelMatrixCache.find(renderMesh);
+  if (it != m_modelMatrixCache.end() && it->second.descriptorSet) {
+    return it->second.descriptorSet;
+  }
+
+  if (!renderMesh->transformMatrixBuffer) {
+    GlobalLogger::Log(LogLevel::Warning, "RenderMesh has no model matrix buffer");
+    return nullptr;
+  }
+
+  auto descriptorSet = m_device->createDescriptorSet(m_modelMatrixDescriptorSetLayout);
+  descriptorSet->setUniformBuffer(0, renderMesh->transformMatrixBuffer);
+
+  std::string setKey           = "mesh_model_matrix_set_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh));
+  auto        descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), setKey);
+
+  m_modelMatrixCache[renderMesh].descriptorSet = descriptorSetPtr;
+  return descriptorSetPtr;
+}
+
+rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(Material* material) {
+  auto it = m_materialParamCache.find(material);
+  if (it != m_materialParamCache.end() && it->second.paramBuffer) {
+    return it->second.paramBuffer;
+  }
+
+  std::string bufferKey = "material_params_" + std::to_string(reinterpret_cast<uintptr_t>(material));
+
+  rhi::BufferDesc bufferDesc;
+  bufferDesc.size        = alignConstantBufferSize(sizeof(MaterialParametersData));
+  bufferDesc.createFlags = rhi::BufferCreateFlag::CpuAccess | rhi::BufferCreateFlag::ConstantBuffer;
+  bufferDesc.type        = rhi::BufferType::Dynamic;
+  bufferDesc.debugName   = bufferKey;
+
+  auto buffer    = m_device->createBuffer(bufferDesc);
+  auto bufferPtr = m_resourceManager->addBuffer(std::move(buffer), bufferKey);
+
+  MaterialParametersData paramData = {};
+
+  auto colorIt = material->vectorParameters.find("base_color");
+  if (colorIt != material->vectorParameters.end()) {
+    paramData.baseColor = colorIt->second;
+  } else {
+    paramData.baseColor = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
+  }
+
+  auto metallicIt = material->scalarParameters.find("metallic");
+  if (metallicIt != material->scalarParameters.end()) {
+    paramData.metallic = metallicIt->second;
+  } else {
+    paramData.metallic = 0.0f;
+  }
+
+  auto roughnessIt = material->scalarParameters.find("roughness");
+  if (roughnessIt != material->scalarParameters.end()) {
+    paramData.roughness = roughnessIt->second;
+  } else {
+    paramData.roughness = 1.0f;
+  }
+
+  auto opacityIt = material->scalarParameters.find("opacity");
+  if (opacityIt != material->scalarParameters.end()) {
+    paramData.opacity = opacityIt->second;
+  } else {
+    paramData.opacity = 1.0f;
+  }
+
+  m_device->updateBuffer(bufferPtr, &paramData, sizeof(paramData));
+
+  m_materialParamCache[material].paramBuffer = bufferPtr;
+
+  return bufferPtr;
 }
 
 void FrameResources::createViewDescriptorSetLayout_() {
@@ -109,11 +188,30 @@ void FrameResources::createLightDescriptorSetLayouts_() {
   m_lightDescriptorSetLayout = m_resourceManager->addDescriptorSetLayout(std::move(lightSetLayout), "light_set_layout");
 }
 
+void FrameResources::createModelMatrixDescriptorSetLayout_() {
+  rhi::DescriptorSetLayoutDesc        layoutDesc;
+  rhi::DescriptorSetLayoutBindingDesc bindingDesc;
+  bindingDesc.binding    = 0;
+  bindingDesc.type       = rhi::ShaderBindingType::Uniformbuffer;
+  bindingDesc.stageFlags = rhi::ShaderStageFlag::Vertex;
+  layoutDesc.bindings.push_back(bindingDesc);
+
+  auto layout = m_device->createDescriptorSetLayout(layoutDesc);
+  m_modelMatrixDescriptorSetLayout
+      = m_resourceManager->addDescriptorSetLayout(std::move(layout), "model_matrix_layout");
+}
+
 void FrameResources::createMaterialDescriptorSetLayout_() {
   rhi::DescriptorSetLayoutDesc materialLayoutDesc;
 
-  std::vector<std::string> textureNames = {"albedo", "normal_map", "roughness", "metalness"};
-  uint32_t                 binding      = 0;
+  rhi::DescriptorSetLayoutBindingDesc paramsBindingDesc;
+  paramsBindingDesc.binding    = 0;
+  paramsBindingDesc.type       = rhi::ShaderBindingType::Uniformbuffer;
+  paramsBindingDesc.stageFlags = rhi::ShaderStageFlag::Fragment;
+  materialLayoutDesc.bindings.push_back(paramsBindingDesc);
+
+  std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
+  uint32_t                 binding      = 1;
 
   for (const auto& textureName : textureNames) {
     rhi::DescriptorSetLayoutBindingDesc textureBindingDesc;
@@ -126,6 +224,62 @@ void FrameResources::createMaterialDescriptorSetLayout_() {
   auto materialSetLayout = m_device->createDescriptorSetLayout(materialLayoutDesc);
   m_materialDescriptorSetLayout
       = m_resourceManager->addDescriptorSetLayout(std::move(materialSetLayout), "material_layout");
+}
+
+void FrameResources::createDefaultTextures_() {
+  // 1x1 white texture (for albedo when missing)
+  {
+    rhi::TextureDesc texDesc;
+    texDesc.width = texDesc.height = 1;
+    texDesc.format                 = rhi::TextureFormat::Rgba8;
+    texDesc.createFlags            = gfx::rhi::TextureCreateFlag::TransferDst;
+    texDesc.initialLayout          = rhi::ResourceLayout::ShaderReadOnly;
+    texDesc.debugName              = "default_white_texture";
+
+    auto texture = m_device->createTexture(texDesc);
+
+    // white color
+    uint32_t whitePixel = 0xFF'FF'FF'FF;
+    m_device->updateTexture(texture.get(), &whitePixel, sizeof(whitePixel));
+
+    m_defaultWhiteTexture = m_resourceManager->addTexture(std::move(texture), "default_white_texture");
+  }
+
+  // 1x1 normal map texture (0.5, 0.5, 1.0 for flat normal)
+  {
+    rhi::TextureDesc texDesc;
+    texDesc.width = texDesc.height = 1;
+    texDesc.format                 = rhi::TextureFormat::Rgba8;
+    texDesc.createFlags            = gfx::rhi::TextureCreateFlag::TransferDst;
+    texDesc.initialLayout          = rhi::ResourceLayout::ShaderReadOnly;
+    texDesc.debugName              = "default_normal_texture";
+
+    auto texture = m_device->createTexture(texDesc);
+
+    // normal facing up (0.5, 0.5, 1.0, 1.0) encoded as RGBA
+    uint32_t normalPixel = 0xFF'80'80'FF;  // RGBA order in memory
+    m_device->updateTexture(texture.get(), &normalPixel, sizeof(normalPixel));
+
+    m_defaultNormalTexture = m_resourceManager->addTexture(std::move(texture), "default_normal_texture");
+  }
+
+  // 1x1 black texture (for metallic-roughness where black = non-metallic, full rough)
+  {
+    rhi::TextureDesc texDesc;
+    texDesc.width = texDesc.height = 1;
+    texDesc.format                 = rhi::TextureFormat::Rgba8;
+    texDesc.createFlags            = gfx::rhi::TextureCreateFlag::TransferDst;
+    texDesc.initialLayout          = rhi::ResourceLayout::ShaderReadOnly;
+    texDesc.debugName              = "default_black_texture";
+
+    auto texture = m_device->createTexture(texDesc);
+
+    // black color
+    uint32_t blackPixel = 0xFF'00'00'00;  // Alpha = 1, RGB = 0
+    m_device->updateTexture(texture.get(), &blackPixel, sizeof(blackPixel));
+
+    m_defaultBlackTexture = m_resourceManager->addTexture(std::move(texture), "default_black_texture");
+  }
 }
 
 void FrameResources::createDefaultSampler_() {
@@ -176,10 +330,10 @@ void FrameResources::createRenderTargets_(RenderTargets& targets, const math::Di
   targets.colorBuffer = m_device->createTexture(colorDesc);
 
   rhi::TextureDesc depthDesc;
-  depthDesc.width       = width;
-  depthDesc.height      = height;
-  depthDesc.format      = rhi::TextureFormat::D24S8;
-  depthDesc.createFlags = rhi::TextureCreateFlag::Dsv;
+  depthDesc.width         = width;
+  depthDesc.height        = height;
+  depthDesc.format        = rhi::TextureFormat::D24S8;
+  depthDesc.createFlags   = rhi::TextureCreateFlag::Dsv;
   depthDesc.initialLayout = rhi::ResourceLayout::DepthStencilAttachment;
   depthDesc.debugName     = "depth_buffer";
 
@@ -386,8 +540,6 @@ void FrameResources::updateLightResources_(const RenderContext& context) {
   }
 }
 
-
-
 void FrameResources::updateModelList_(const RenderContext& context) {
   bool                             needRebuildRenderArray = false;
   std::unordered_set<entt::entity> currentEntityIds;
@@ -419,13 +571,13 @@ void FrameResources::updateModelList_(const RenderContext& context) {
         instance.materialId = reinterpret_cast<uintptr_t>(renderModel->renderMeshes[0]->material);
       }
 
-      m_modelsMap[entity] = instance;
-      needRebuildRenderArray   = true;
+      m_modelsMap[entity]    = instance;
+      needRebuildRenderArray = true;
     }
   }
 
   for (auto it = m_modelsMap.begin(); it != m_modelsMap.end();) {
-    if (currentEntityIds.find(it->first) == currentEntityIds.end()) {
+    if (!currentEntityIds.contains(it->first)) {
       it                     = m_modelsMap.erase(it);
       needRebuildRenderArray = true;
     } else {
@@ -446,9 +598,9 @@ void FrameResources::updateModelList_(const RenderContext& context) {
 }
 
 void FrameResources::sortModelsByMaterial_() {
-  std::sort(m_sortedModels.begin(),
-            m_sortedModels.end(),
-            [](const ModelInstance* a, const ModelInstance* b) { return a->materialId < b->materialId; });
+  std::sort(m_sortedModels.begin(), m_sortedModels.end(), [](const ModelInstance* a, const ModelInstance* b) {
+    return a->materialId < b->materialId;
+  });
 }
 
 void FrameResources::clearInternalDirtyFlags_() {

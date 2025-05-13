@@ -9,12 +9,12 @@
       "fov": 0.785398,
       "type": 0,
       "near": 0.1,
-      "far": 100.0,
+      "far": 1000.0,
       "width": 800,
       "height": 600
     }
   },
-  "renderingApi": "vulkan",
+  "renderingApi": "dx12",
   "applicationMode": "editor",
   "worldUp": {
     "x": 0,

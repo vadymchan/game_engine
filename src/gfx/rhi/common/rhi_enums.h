@@ -54,6 +54,7 @@ enum class TextureFilter : uint8_t {
 
 enum class TextureType : uint8_t {
   Texture1D,
+  Texture1DArray,
   Texture2D,
   Texture2DArray,
   Texture3D,

@@ -23,10 +23,9 @@ void VertexNormalVisualizationStrategy::initialize(rhi::Device*           device
   m_frameResources  = frameResources;
   m_shaderManager   = shaderManager;
 
-  m_vertexShader
-      = m_shaderManager->getShader("assets/shaders/debug/geometry_normal_visualization/shader_instancing.vs.hlsl");
-  m_geometryShader = m_shaderManager->getShader("assets/shaders/debug/geometry_normal_visualization/shader.gs.hlsl");
-  m_pixelShader    = m_shaderManager->getShader("assets/shaders/debug/geometry_normal_visualization/shader.ps.hlsl");
+  m_vertexShader   = m_shaderManager->getShader(m_vertexShaderPath_);
+  m_geometryShader = m_shaderManager->getShader(m_geometryShaderPath_);
+  m_pixelShader    = m_shaderManager->getShader(m_pixelShaderPath_);
 
   setupRenderPass_();
 }
@@ -112,6 +111,10 @@ void VertexNormalVisualizationStrategy::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
     }
 
+    if (drawData.modelMatrixDescriptorSet) {
+      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+    }
+
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
     commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
     commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
@@ -137,7 +140,7 @@ void VertexNormalVisualizationStrategy::setupRenderPass_() {
   rhi::RenderPassAttachmentDesc colorAttachmentDesc;
   colorAttachmentDesc.format        = rhi::TextureFormat::Bgra8;
   colorAttachmentDesc.samples       = rhi::MSAASamples::Count1;
-  colorAttachmentDesc.loadStoreOp   = rhi::AttachmentLoadStoreOp::LoadStore; 
+  colorAttachmentDesc.loadStoreOp   = rhi::AttachmentLoadStoreOp::LoadStore;
   colorAttachmentDesc.initialLayout = rhi::ResourceLayout::ColorAttachment;
   colorAttachmentDesc.finalLayout   = rhi::ResourceLayout::ColorAttachment;
   renderPassDesc.colorAttachments.push_back(colorAttachmentDesc);
@@ -223,7 +226,8 @@ void VertexNormalVisualizationStrategy::updateInstanceBuffer_(RenderModel*      
 void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewLayout = m_frameResources->getViewDescriptorSetLayout();
+  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
+  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -325,20 +329,25 @@ void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& c
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
         pipelineDesc.setLayouts.push_back(viewLayout);
+        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
 
         pipelineDesc.renderPass = m_renderPass;
 
         auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
+
+        m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 
       DrawData drawData;
-      drawData.pipeline       = pipeline;
-      drawData.vertexBuffer   = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer    = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer = cache.instanceBuffer;
-      drawData.indexCount     = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount  = cache.count;
+      drawData.pipeline                 = pipeline;
+      drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }
@@ -350,7 +359,7 @@ void VertexNormalVisualizationStrategy::cleanupUnusedBuffers_(
   std::vector<RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
-    if (currentFrameInstances.find(model) == currentFrameInstances.end()) {
+    if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
     }
   }

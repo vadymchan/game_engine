@@ -1,0 +1,7 @@
+{
+  "assetPath": "assets/",
+  "shaderPath": "assets/shaders",
+  "debugPath": "config/debug",
+  "scenesPath": "config/scenes",
+  "engineSettingsPath": "config/engine"
+}

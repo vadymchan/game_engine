@@ -12,14 +12,14 @@ using gfx::rhi::TextureType;
 const std::unordered_set<std::string> DirectXTexImageLoader::supportedExtensions_ = {".dds"};
 
 bool DirectXTexImageLoader::supportsFormat(const std::string& extension) const {
-  return supportedExtensions_.find(extension) != supportedExtensions_.end();
+  return supportedExtensions_.contains(extension);
 }
 
 TextureType DirectXTexImageLoader::determineDimension_(const DirectX::TexMetadata& metadata) const {
   TextureType baseDimension;
   switch (metadata.dimension) {
     case DirectX::TEX_DIMENSION_TEXTURE1D:
-      baseDimension = TextureType::Texture1D;
+      baseDimension = (metadata.arraySize > 1) ? TextureType::Texture1DArray : TextureType::Texture1D;
       break;
     case DirectX::TEX_DIMENSION_TEXTURE2D:
       baseDimension = (metadata.IsCubemap())   ? TextureType::TextureCube
@@ -88,7 +88,8 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
         subImage.height     = img->height;
         subImage.rowPitch   = img->rowPitch;
         subImage.slicePitch = img->slicePitch;
-        subImage.pixelBegin = image->pixels.begin() + (img->pixels - scratchImage.GetPixels());
+        subImage.pixelOffset = reinterpret_cast<const std::byte*>(img->pixels)
+                             - reinterpret_cast<const std::byte*>(scratchImage.GetPixels());
 
         image->subImages.emplace_back(subImage);
       }

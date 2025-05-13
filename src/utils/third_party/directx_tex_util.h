@@ -1,3 +1,5 @@
+// TODO: rename to directx_tex_utils.h
+
 #ifndef GAME_ENGINE_DIRECTX_TEX_UTILS_H
 #define GAME_ENGINE_DIRECTX_TEX_UTILS_H
 

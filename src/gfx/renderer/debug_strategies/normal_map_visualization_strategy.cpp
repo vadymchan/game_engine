@@ -23,9 +23,8 @@ void NormalMapVisualizationStrategy::initialize(rhi::Device*           device,
   m_frameResources  = frameResources;
   m_shaderManager   = shaderManager;
 
-  m_vertexShader
-      = m_shaderManager->getShader("assets/shaders/debug/normal_map_visualization/shader_instancing.vs.hlsl");
-  m_pixelShader = m_shaderManager->getShader("assets/shaders/debug/normal_map_visualization/shader.ps.hlsl");
+  m_vertexShader = m_shaderManager->getShader(m_vertexShaderPath_);
+  m_pixelShader  = m_shaderManager->getShader(m_pixelShaderPath_);
 
   rhi::DescriptorSetLayoutDesc        materialLayoutDesc;
   rhi::DescriptorSetLayoutBindingDesc textureBindingDesc;
@@ -126,12 +125,16 @@ void NormalMapVisualizationStrategy::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
     }
 
+    if (drawData.modelMatrixDescriptorSet) {
+      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+    }
+
     if (drawData.materialDescriptorSet) {
-      commandBuffer->bindDescriptorSet(1, drawData.materialDescriptorSet);
+      commandBuffer->bindDescriptorSet(2, drawData.materialDescriptorSet);
     }
 
     if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(2, m_frameResources->getDefaultSamplerDescriptorSet());
+      commandBuffer->bindDescriptorSet(3, m_frameResources->getDefaultSamplerDescriptorSet());
     }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
@@ -231,7 +234,6 @@ void NormalMapVisualizationStrategy::updateInstanceBuffer_(RenderModel*         
     bufferDesc.stride      = sizeof(math::Matrix4f<>);
     bufferDesc.debugName   = bufferKey;
 
-
     auto buffer          = m_device->createBuffer(bufferDesc);
     cache.instanceBuffer = m_resourceManager->addBuffer(std::move(buffer), bufferKey);
     cache.capacity       = newCapacity;
@@ -247,8 +249,9 @@ void NormalMapVisualizationStrategy::updateInstanceBuffer_(RenderModel*         
 void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewLayout    = m_frameResources->getViewDescriptorSetLayout();
-  auto samplerLayout = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
+  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
+  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+  auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -256,8 +259,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      if (!renderMesh->material
-          || renderMesh->material->textures.find("normal_map") == renderMesh->material->textures.end()) {
+      if (!renderMesh->material || !renderMesh->material->textures.contains("normal_map")) {
         GlobalLogger::Log(LogLevel::Error,
                           "Normal map visualization strategy requires a material with a normal map texture");
         continue;
@@ -341,6 +343,7 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
         pipelineDesc.setLayouts.push_back(viewLayout);
+        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
         pipelineDesc.setLayouts.push_back(m_materialDescriptorSetLayout);
         pipelineDesc.setLayouts.push_back(samplerLayout);
 
@@ -348,16 +351,20 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 
         auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
+
+        m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 
       DrawData drawData;
-      drawData.pipeline              = pipeline;
-      drawData.materialDescriptorSet = materialDescriptorSet;
-      drawData.vertexBuffer          = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer           = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer        = cache.instanceBuffer;
-      drawData.indexCount            = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount         = cache.count;
+      drawData.pipeline                 = pipeline;
+      drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
+      drawData.materialDescriptorSet    = materialDescriptorSet;
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }
@@ -369,7 +376,7 @@ void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
   std::vector<RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
-    if (currentFrameInstances.find(model) == currentFrameInstances.end()) {
+    if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
     }
   }
@@ -394,11 +401,15 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
     return nullptr;
   }
 
-  auto descriptorSet = m_device->createDescriptorSet(m_materialDescriptorSetLayout);
-  descriptorSet->setTexture(0, normalMapIt->second);
+  std::string descriptorKey = "normal_map_material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
 
-  std::string descriptorKey    = "normal_map_material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
-  auto        descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
+  auto descriptorSetPtr = m_resourceManager->getDescriptorSet(descriptorKey);
+  if (!descriptorSetPtr) {
+    auto descriptorSet = m_device->createDescriptorSet(m_materialDescriptorSetLayout);
+    descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
+  }
+
+  descriptorSetPtr->setTexture(0, normalMapIt->second);
 
   m_materialCache[material].descriptorSet = descriptorSetPtr;
 

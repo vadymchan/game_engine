@@ -13,6 +13,7 @@ struct Mesh {
   std::string           meshName;
   std::vector<Vertex>   vertices;
   std::vector<uint32_t> indices;
+  math::Matrix4f<>      transformMatrix = math::Matrix4f<>::Identity();
 };
 
 }  // namespace game_engine

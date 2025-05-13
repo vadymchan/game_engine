@@ -2,6 +2,7 @@
 
 #include "gfx/rhi/interface/device.h"
 #include "utils/logger/global_logger.h"
+#include "utils/memory/align.h"
 
 namespace game_engine {
 
@@ -49,7 +50,7 @@ gfx::rhi::Buffer* BufferManager::createVertexBuffer(const void*        data,
   std::lock_guard<std::mutex> lock(m_mutex);
 
   // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
@@ -105,7 +106,7 @@ gfx::rhi::Buffer* BufferManager::createIndexBuffer(const void*        data,
   std::lock_guard<std::mutex> lock(m_mutex);
 
   // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
@@ -143,9 +144,9 @@ gfx::rhi::Buffer* BufferManager::createUniformBuffer(size_t size, const void* da
 
   // Create buffer description
   gfx::rhi::BufferDesc bufferDesc;
-  bufferDesc.size        = size;
-  bufferDesc.type        = gfx::rhi::BufferType::Dynamic;          // Uniform buffers are typically updated frequently
-  bufferDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess;  // For easy updates
+  bufferDesc.size        = alignConstantBufferSize(size);
+  bufferDesc.type        = gfx::rhi::BufferType::Dynamic;  // Uniform buffers are typically updated frequently
+  bufferDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ConstantBuffer;
   bufferDesc.debugName   = name.empty() ? "unnamed_uniform_buffer" : name;
 
   // Generate a name if not provided
@@ -155,7 +156,7 @@ gfx::rhi::Buffer* BufferManager::createUniformBuffer(size_t size, const void* da
   std::lock_guard<std::mutex> lock(m_mutex);
 
   // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
@@ -210,7 +211,7 @@ gfx::rhi::Buffer* BufferManager::createStorageBuffer(size_t size, const void* da
   std::lock_guard<std::mutex> lock(m_mutex);
 
   // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
@@ -248,7 +249,7 @@ gfx::rhi::Buffer* BufferManager::addBuffer(std::unique_ptr<gfx::rhi::Buffer> buf
   std::lock_guard<std::mutex> lock(m_mutex);
 
   // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }

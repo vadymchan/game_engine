@@ -51,12 +51,13 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
   };
 
   struct DrawData {
-    rhi::GraphicsPipeline* pipeline       = nullptr;
-    rhi::Buffer*           vertexBuffer   = nullptr;
-    rhi::Buffer*           indexBuffer    = nullptr;
-    rhi::Buffer*           instanceBuffer = nullptr;
-    uint32_t               indexCount     = 0;
-    uint32_t               instanceCount  = 0;
+    rhi::GraphicsPipeline* pipeline                 = nullptr;
+    rhi::DescriptorSet*    modelMatrixDescriptorSet = nullptr;
+    rhi::Buffer*           vertexBuffer             = nullptr;
+    rhi::Buffer*           indexBuffer              = nullptr;
+    rhi::Buffer*           instanceBuffer           = nullptr;
+    uint32_t               indexCount               = 0;
+    uint32_t               instanceCount            = 0;
   };
 
   void setupRenderPass_();
@@ -67,6 +68,9 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
       const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+
+  const std::string m_vertexShaderPath_ = "assets/shaders/debug/overdraw/shader_instancing.vs.hlsl";
+  const std::string m_pixelShaderPath_  = "assets/shaders/debug/overdraw/shader.ps.hlsl";
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;

@@ -3,8 +3,10 @@
 namespace game_engine {
 ModelType getModelTypeFromExtension(const std::string& extension) {
   static const std::unordered_map<std::string, ModelType> extensionToType = {
-    {".obj", ModelType::OBJ},
-    {".fbx", ModelType::FBX},
+    { ".obj",  ModelType::OBJ},
+    { ".fbx",  ModelType::FBX},
+    {".gltf", ModelType::GLTF},
+    { ".glb",  ModelType::GLB},
   };
 
   std::string ext = extension;

@@ -12,15 +12,18 @@
 namespace game_engine {
 
 enum class MaterialType {
-  MTL,  // Wavefront (OBJ) .mtl files
-  FBX,  // FBX material files
+  MTL,   // Wavefront (OBJ) .mtl files
+  FBX,   // FBX material files
+  GLTF,  // glTF material definitions
   UNKNOWN,
 };
 
 inline MaterialType getMaterialTypeFromExtension(const std::string& extension) {
   static const std::unordered_map<std::string, MaterialType> extensionToType = {
-    {".mtl", MaterialType::MTL},
-    {".fbx", MaterialType::FBX},
+    { ".mtl",  MaterialType::MTL},
+    { ".fbx",  MaterialType::FBX},
+    {".gltf", MaterialType::GLTF},
+    { ".glb", MaterialType::GLTF},
   };
 
   std::string ext = extension;

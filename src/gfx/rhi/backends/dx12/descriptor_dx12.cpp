@@ -62,10 +62,20 @@ DescriptorSetLayoutDx12::DescriptorSetLayoutDx12(const DescriptorSetLayoutDesc& 
     }
   }
 
-  for (const auto& [type, bindings] : m_bindingsByType) {
-    if (bindings.empty()) {
+  std::vector<D3D12_DESCRIPTOR_RANGE_TYPE> rangeOrder;
+  if (m_isSamplerLayout) {
+    rangeOrder = {D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER};
+  } else {
+    rangeOrder = {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, D3D12_DESCRIPTOR_RANGE_TYPE_CBV};
+  }
+
+  for (auto type : rangeOrder) {
+    auto it = m_bindingsByType.find(type);
+    if (it == m_bindingsByType.end() || it->second.empty()) {
       continue;
     }
+
+    const auto& bindings = it->second;
 
     uint32_t minBinding = UINT32_MAX;
     uint32_t maxBinding = 0;

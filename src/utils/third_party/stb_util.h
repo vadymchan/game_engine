@@ -1,3 +1,5 @@
+// TODO: rename this file to stb_utils.h
+
 #ifndef GAME_ENGINE_STB_UTIL_H
 #define GAME_ENGINE_STB_UTIL_H
 
@@ -43,6 +45,8 @@ class STBImageLoader : public IImageLoader {
       const std::filesystem::path& filepath, LoaderFunc loader, FreeFunc freeFunc, int32_t bitsPerChannel, bool isHdr);
 
   gfx::rhi::TextureFormat determineFormat_(int32_t channels, int32_t bitsPerChannel, bool isHdr);
+
+  void generateMipmaps_(std::unique_ptr<Image>& image, int32_t channels, int32_t bitsPerChannel);
 
   static const std::unordered_set<std::string> supportedExtensions_;
 };

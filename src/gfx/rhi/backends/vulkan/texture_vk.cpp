@@ -17,7 +17,6 @@ TextureVk::TextureVk(const TextureDesc& desc, DeviceVk* device)
 
   m_currentLayout_ = ResourceLayout::Undefined;  // initially vulkan texture is in undefined layout
 
-  // Only need to call createImage_() and createImageView_() now - VMA handles memory allocation
   if (!createImage_() || !createImageView_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan texture");
   }
@@ -86,6 +85,7 @@ bool TextureVk::createImage_() {
 
   switch (m_desc_.type) {
     case TextureType::Texture1D:
+    case TextureType::Texture1DArray:
       imageInfo.imageType = VK_IMAGE_TYPE_1D;
       break;
     case TextureType::Texture2D:
@@ -178,6 +178,9 @@ bool TextureVk::createImageView_() {
   switch (m_desc_.type) {
     case TextureType::Texture1D:
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
+      break;
+    case TextureType::Texture1DArray:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
       break;
     case TextureType::Texture2D:
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;

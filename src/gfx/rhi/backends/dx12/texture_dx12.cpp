@@ -90,6 +90,7 @@ bool TextureDx12::createResource_() {
 
   switch (m_desc_.type) {
     case TextureType::Texture1D:
+    case TextureType::Texture1DArray:
       resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
       break;
     case TextureType::Texture2D:
@@ -202,6 +203,12 @@ bool TextureDx12::createViews_() {
         rtvDesc.ViewDimension      = D3D12_RTV_DIMENSION_TEXTURE1D;
         rtvDesc.Texture1D.MipSlice = 0;
         break;
+      case TextureType::Texture1DArray:
+        rtvDesc.ViewDimension                  = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+        rtvDesc.Texture1DArray.FirstArraySlice = 0;
+        rtvDesc.Texture1DArray.ArraySize       = m_desc_.arraySize;
+        rtvDesc.Texture1DArray.MipSlice        = 0;
+        break;
       case TextureType::Texture2D:
         if (m_desc_.sampleCount != MSAASamples::Count1) {
           rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
@@ -263,6 +270,11 @@ bool TextureDx12::createViews_() {
         dsvDesc.ViewDimension      = D3D12_DSV_DIMENSION_TEXTURE1D;
         dsvDesc.Texture1D.MipSlice = 0;
         break;
+      case TextureType::Texture1DArray:
+        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+        dsvDesc.Texture1DArray.FirstArraySlice = 0;
+        dsvDesc.Texture1DArray.ArraySize       = m_desc_.arraySize;
+        dsvDesc.Texture1DArray.MipSlice        = 0;
       case TextureType::Texture2D:
         if (m_desc_.sampleCount != MSAASamples::Count1) {
           dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
@@ -322,6 +334,14 @@ bool TextureDx12::createViews_() {
       srvDesc.Texture1D.MostDetailedMip     = 0;
       srvDesc.Texture1D.MipLevels           = m_desc_.mipLevels;
       srvDesc.Texture1D.ResourceMinLODClamp = 0.0f;
+      break;
+    case TextureType::Texture1DArray:
+      srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+      srvDesc.Texture1DArray.MostDetailedMip = 0;
+      srvDesc.Texture1DArray.MipLevels       = m_desc_.mipLevels;
+      srvDesc.Texture1DArray.FirstArraySlice = 0;
+      srvDesc.Texture1DArray.ArraySize       = m_desc_.arraySize;
+      srvDesc.Texture1DArray.ResourceMinLODClamp = 0.0f;
       break;
     case TextureType::Texture2D:
       if (m_desc_.sampleCount != MSAASamples::Count1) {
@@ -388,6 +408,12 @@ bool TextureDx12::createViews_() {
         case TextureType::Texture1D:
           uavDesc.ViewDimension      = D3D12_UAV_DIMENSION_TEXTURE1D;
           uavDesc.Texture1D.MipSlice = i;
+          break;
+        case TextureType::Texture1DArray:
+          uavDesc.ViewDimension                  = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+          uavDesc.Texture1DArray.MipSlice        = i;
+          uavDesc.Texture1DArray.FirstArraySlice = 0;
+          uavDesc.Texture1DArray.ArraySize       = m_desc_.arraySize;
           break;
         case TextureType::Texture2D:
           uavDesc.ViewDimension        = D3D12_UAV_DIMENSION_TEXTURE2D;

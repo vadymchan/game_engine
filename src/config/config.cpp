@@ -40,7 +40,7 @@ bool Config::loadFromFile(const std::filesystem::path& filePath) {
   return true;
 }
 
-std::string Config::toString() const {
+[[nodiscard]] std::string Config::toString() const {
   asyncLoadComplete_();
   if (!m_root_.IsObject()) {
     GlobalLogger::Log(LogLevel::Error,

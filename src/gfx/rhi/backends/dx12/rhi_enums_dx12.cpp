@@ -264,7 +264,7 @@ int g_getTexturePixelSizeDx12(TextureFormat type) {
 TextureType g_getTextureDimensionDx12(D3D12_RESOURCE_DIMENSION type, bool isArray) {
   switch (type) {
     case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
-      return TextureType::Texture1D;
+      return isArray ? TextureType::Texture1DArray : TextureType::Texture1D;
     case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
       return isArray ? TextureType::Texture2DArray : TextureType::Texture2D;
     case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
@@ -279,6 +279,7 @@ TextureType g_getTextureDimensionDx12(D3D12_RESOURCE_DIMENSION type, bool isArra
 D3D12_RESOURCE_DIMENSION g_getTextureDimensionDx12(TextureType type) {
   switch (type) {
     case TextureType::Texture1D:
+    case TextureType::Texture1DArray:
       return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
     case TextureType::Texture2D:
     case TextureType::Texture2DArray:

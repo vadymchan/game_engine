@@ -55,7 +55,7 @@ class Config {
 
   bool loadFromFile(const std::filesystem::path& filePath);
 
-  std::string toString() const;
+  [[nodiscard]] std::string toString() const;
 
   [[nodiscard]] const std::filesystem::path& getFilename() const;
 

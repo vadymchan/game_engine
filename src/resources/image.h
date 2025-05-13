@@ -15,8 +15,7 @@ struct SubImage {
   size_t                                 height;
   size_t                                 rowPitch;    // width * height * bytes per pixel (also known as stride)
   size_t                                 slicePitch;  // width * height * bytes per pixel
-  // TODO: consider renaming
-  std::vector<std::byte>::const_iterator pixelBegin;  // Start of pixel data
+  size_t                                 pixelOffset;
 };
 
 struct Image {
@@ -27,7 +26,7 @@ struct Image {
   size_t                  arraySize;  // Number of array slices; 1 if not an array texture
   // TODO: consider renaming Texture... to something else (maybe PixelFormat and ImageDimension - alias to current
   // enums)
-  gfx::rhi::TextureFormat format; 
+  gfx::rhi::TextureFormat format;
   gfx::rhi::TextureType   dimension;  // Texture dimension - 1D, 2D, 3D
 
   // Raw pixel data for all mip levels and array slices
@@ -54,6 +53,8 @@ enum class ImageType {
   PPM,
   PGM,
   DDS,
+  KTX,
+  KTX2,
   UNKNOWN,
 };
 
@@ -70,6 +71,8 @@ inline ImageType getImageTypeFromExtension(const std::string& extension) {
     { ".ppm",  ImageType::PPM},
     { ".pgm",  ImageType::PGM},
     { ".dds",  ImageType::DDS},
+    { ".ktx",  ImageType::KTX},
+    {".ktx2", ImageType::KTX2},
   };
 
   std::string ext = extension;
