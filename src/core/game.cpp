@@ -95,7 +95,8 @@ void Game::setup() {
   //  // TODO: use config file for file path
   //  // auto teapotModel = modelManager->getRenderModel("assets/models/utah_teapot_pbr_ktx/scene.gltf");
   //  // auto teapotModel = modelManager->getRenderModel("assets/models/sponza_ktx/scene.gltf");
-  //  auto teapotModel = modelManager->getRenderModel("assets/models/MetalRoughSpheres/glTF-ktx2/MetalRoughSpheres.gltf");
+  //  auto teapotModel =
+  //  modelManager->getRenderModel("assets/models/MetalRoughSpheres/glTF-ktx2/MetalRoughSpheres.gltf");
 
   //  registry.emplace<Transform>(teapot, teapotTransform);
   //  registry.emplace<RenderModel*>(teapot, teapotModel);
@@ -180,7 +181,7 @@ void Game::setup() {
   //}
 
   const std::string sceneName    = "scene";
-  auto       sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto              sceneManager = ServiceLocator::s_get<SceneManager>();
 
   auto scene = SceneLoader::loadScene(sceneName, sceneManager);
 
@@ -222,15 +223,6 @@ void Game::onMouseMove(int32_t xOffset, int32_t yOffset) {
 
   transform.rotation.x() = m_pitch_;
   transform.rotation.y() = m_yaw_;
-
-  // float yawRadians   = math::g_degreeToRadian(m_yaw_);
-  // float pitchRadians = math::g_degreeToRadian(m_pitch_);
-
-  // auto rotationQuaternion = math::Quaternionf::fromEulerAngles(
-  //     0, pitchRadians, yawRadians, math::EulerRotationOrder::ZXY);
-
-  //// TODO: add getter / setter for camera orientation
-  // m_mainCamera_->setOrientation(rotationQuaternion);
 }
 
 void Game::update(float deltaTime) {
@@ -305,11 +297,11 @@ void Game::setupInputHandlers() {
     m_actionStates_.set(static_cast<size_t>(Action::MoveRight), true);
   });
 
-  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_SPACE}, [this](const KeyboardEvent& event) {
+  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_E}, [this](const KeyboardEvent& event) {
     m_actionStates_.set(static_cast<size_t>(Action::MoveUp), true);
   });
 
-  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_LCTRL}, [this](const KeyboardEvent& event) {
+  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_Q}, [this](const KeyboardEvent& event) {
     m_actionStates_.set(static_cast<size_t>(Action::MoveDown), true);
   });
 
@@ -330,17 +322,21 @@ void Game::setupInputHandlers() {
     m_actionStates_.set(static_cast<size_t>(Action::MoveRight), false);
   });
 
-  keyboardEventHandler->subscribe({SDL_KEYUP, SDL_SCANCODE_SPACE}, [this](const KeyboardEvent& event) {
+  keyboardEventHandler->subscribe({SDL_KEYUP, SDL_SCANCODE_E}, [this](const KeyboardEvent& event) {
     m_actionStates_.set(static_cast<size_t>(Action::MoveUp), false);
   });
 
-  keyboardEventHandler->subscribe({SDL_KEYUP, SDL_SCANCODE_LCTRL}, [this](const KeyboardEvent& event) {
+  keyboardEventHandler->subscribe({SDL_KEYUP, SDL_SCANCODE_Q}, [this](const KeyboardEvent& event) {
     m_actionStates_.set(static_cast<size_t>(Action::MoveDown), false);
   });
 
   auto mouseEventHandler = ServiceLocator::s_get<InputManager>()->getMouseHandler();
 
   mouseEventHandler->subscribe({SDL_MOUSEWHEEL}, [this](const MouseWheelEvent& event) {
+    if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+      return;
+    }
+
     if (event.y > 0) {
       m_movingSpeed_ += s_speedChangeStep;
     } else if (event.y < 0) {

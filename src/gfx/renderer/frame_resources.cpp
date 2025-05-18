@@ -2,8 +2,11 @@
 
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
+#include "ecs/systems/light_system.h"
+#include "ecs/systems/system_manager.h"
 #include "gfx/renderer/render_resource_manager.h"
 #include "utils/memory/align.h"
+#include "utils/service/service_locator.h"
 
 namespace game_engine {
 namespace gfx {
@@ -20,7 +23,6 @@ void FrameResources::initialize(uint32_t framesCount) {
   }
 
   createViewDescriptorSetLayout_();
-  createLightDescriptorSetLayouts_();
   createModelMatrixDescriptorSetLayout_();
   createMaterialDescriptorSetLayout_();
   createDefaultTextures_();
@@ -52,10 +54,18 @@ void FrameResources::resize(const math::Dimension2Di& newDimension) {
 }
 
 void FrameResources::updatePerFrameResources(const RenderContext& context) {
+  if (!m_lightSystem) {
+    auto systemManager = ServiceLocator::s_get<SystemManager>();
+    m_lightSystem      = systemManager->getSystem<LightSystem>();
+    if (!m_lightSystem) {
+      GlobalLogger::Log(LogLevel::Error, "LightSystem not found!");
+      return;
+    }
+  }
+
   clearInternalDirtyFlags_();
 
   updateViewResources_(context);
-  updateLightResources_(context);
   updateModelList_(context);
 
   clearEntityDirtyFlags_(context);
@@ -64,22 +74,12 @@ void FrameResources::updatePerFrameResources(const RenderContext& context) {
 void FrameResources::cleanup() {
   m_renderTargetsPerFrame.clear();
 
-  m_viewDescriptorSet             = nullptr;
-  m_directionalLightDescriptorSet = nullptr;
-  m_pointLightDescriptorSet       = nullptr;
-  m_spotLightDescriptorSet        = nullptr;
-  m_defaultSamplerDescriptorSet   = nullptr;
+  m_viewDescriptorSet       = nullptr;
+  m_viewDescriptorSetLayout = nullptr;
+  m_viewUniformBuffer       = nullptr;
 
-  m_viewDescriptorSetLayout     = nullptr;
-  m_lightDescriptorSetLayout    = nullptr;
-  m_materialDescriptorSetLayout = nullptr;
-
-  m_viewUniformBuffer             = nullptr;
-  m_directionalLightUniformBuffer = nullptr;
-  m_pointLightUniformBuffer       = nullptr;
-  m_spotLightUniformBuffer        = nullptr;
-
-  m_defaultSampler = nullptr;
+  m_defaultSamplerDescriptorSet = nullptr;
+  m_defaultSampler              = nullptr;
 
   m_modelMatrixCache.clear();
 
@@ -87,6 +87,10 @@ void FrameResources::cleanup() {
   m_modelsMap.clear();
 
   m_initialized = false;
+}
+
+rhi::DescriptorSet* FrameResources::getLightDescriptorSet() const {
+  return m_lightSystem->getLightDescriptorSet();
 }
 
 rhi::DescriptorSet* FrameResources::getOrCreateModelMatrixDescriptorSet(RenderMesh* renderMesh) {
@@ -108,6 +112,10 @@ rhi::DescriptorSet* FrameResources::getOrCreateModelMatrixDescriptorSet(RenderMe
 
   m_modelMatrixCache[renderMesh].descriptorSet = descriptorSetPtr;
   return descriptorSetPtr;
+}
+
+rhi::DescriptorSetLayout* FrameResources::getLightDescriptorSetLayout() const {
+  return m_lightSystem->getLightDescriptorSetLayout();
 }
 
 rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(Material* material) {
@@ -174,18 +182,6 @@ void FrameResources::createViewDescriptorSetLayout_() {
 
   auto viewSetLayout        = m_device->createDescriptorSetLayout(viewLayoutDesc);
   m_viewDescriptorSetLayout = m_resourceManager->addDescriptorSetLayout(std::move(viewSetLayout), "view_set_layout");
-}
-
-void FrameResources::createLightDescriptorSetLayouts_() {
-  rhi::DescriptorSetLayoutDesc        lightLayoutDesc;
-  rhi::DescriptorSetLayoutBindingDesc lightBindingDesc;
-  lightBindingDesc.binding    = 0;
-  lightBindingDesc.type       = rhi::ShaderBindingType::Uniformbuffer;
-  lightBindingDesc.stageFlags = rhi::ShaderStageFlag::Fragment;
-  lightLayoutDesc.bindings.push_back(lightBindingDesc);
-
-  auto lightSetLayout        = m_device->createDescriptorSetLayout(lightLayoutDesc);
-  m_lightDescriptorSetLayout = m_resourceManager->addDescriptorSetLayout(std::move(lightSetLayout), "light_set_layout");
 }
 
 void FrameResources::createModelMatrixDescriptorSetLayout_() {
@@ -384,160 +380,6 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
   viewData.padding        = 0.0f;
 
   m_device->updateBuffer(m_viewUniformBuffer, &viewData, sizeof(viewData));
-}
-
-void FrameResources::updateLightResources_(const RenderContext& context) {
-  auto& registry = context.scene->getEntityRegistry();
-
-  // Directional Light
-  {
-    auto dirLightView = registry.view<Light, DirectionalLight>();
-    if (dirLightView.begin() != dirLightView.end()) {
-      if (!m_directionalLightUniformBuffer) {
-        rhi::BufferDesc lightUboDesc;
-        lightUboDesc.size        = alignConstantBufferSize(sizeof(float) * 8);
-        lightUboDesc.createFlags = rhi::BufferCreateFlag::CpuAccess | rhi::BufferCreateFlag::ConstantBuffer;
-        lightUboDesc.type        = rhi::BufferType::Dynamic;
-        lightUboDesc.debugName   = "directional_light_buffer";
-
-        auto lightBuffer = m_device->createBuffer(lightUboDesc);
-        m_directionalLightUniformBuffer
-            = m_resourceManager->addBuffer(std::move(lightBuffer), "directional_light_buffer");
-
-        auto lightDescriptorSet = m_device->createDescriptorSet(m_lightDescriptorSetLayout);
-        lightDescriptorSet->setUniformBuffer(0, m_directionalLightUniformBuffer);
-        m_directionalLightDescriptorSet
-            = m_resourceManager->addDescriptorSet(std::move(lightDescriptorSet), "directional_light_descriptor");
-      }
-
-      auto  entity   = *dirLightView.begin();
-      auto& light    = dirLightView.get<Light>(entity);
-      auto& dirLight = dirLightView.get<DirectionalLight>(entity);
-
-      struct DirectionalLightData {
-        float color[3];
-        float intensity;
-        float direction[3];
-        float padding;
-      } lightData;
-
-      lightData.color[0]     = light.color.x();
-      lightData.color[1]     = light.color.y();
-      lightData.color[2]     = light.color.z();
-      lightData.intensity    = light.intensity;
-      lightData.direction[0] = dirLight.direction.x();
-      lightData.direction[1] = dirLight.direction.y();
-      lightData.direction[2] = dirLight.direction.z();
-      lightData.padding      = 0.0f;
-
-      m_device->updateBuffer(m_directionalLightUniformBuffer, &lightData, sizeof(lightData));
-    }
-  }
-
-  // Point Light
-  {
-    auto pointLightView = registry.view<Light, PointLight, Transform>();
-    if (pointLightView.begin() != pointLightView.end()) {
-      if (!m_pointLightUniformBuffer) {
-        rhi::BufferDesc lightUboDesc;
-        lightUboDesc.size        = alignConstantBufferSize(sizeof(float) * 8);
-        lightUboDesc.createFlags = rhi::BufferCreateFlag::CpuAccess | rhi::BufferCreateFlag::ConstantBuffer;
-        lightUboDesc.type        = rhi::BufferType::Dynamic;
-        lightUboDesc.debugName   = "point_light_buffer";
-
-        auto lightBuffer          = m_device->createBuffer(lightUboDesc);
-        m_pointLightUniformBuffer = m_resourceManager->addBuffer(std::move(lightBuffer), "point_light_buffer");
-
-        auto lightDescriptorSet = m_device->createDescriptorSet(m_lightDescriptorSetLayout);
-        lightDescriptorSet->setUniformBuffer(0, m_pointLightUniformBuffer);
-        m_pointLightDescriptorSet
-            = m_resourceManager->addDescriptorSet(std::move(lightDescriptorSet), "point_light_descriptor");
-      }
-
-      auto  entity     = *pointLightView.begin();
-      auto& light      = pointLightView.get<Light>(entity);
-      auto& pointLight = pointLightView.get<PointLight>(entity);
-      auto& transform  = pointLightView.get<Transform>(entity);
-
-      struct PointLightData {
-        float color[3];
-        float intensity;
-        float range;
-        float position[3];
-      } lightData;
-
-      lightData.color[0]    = light.color.x();
-      lightData.color[1]    = light.color.y();
-      lightData.color[2]    = light.color.z();
-      lightData.intensity   = light.intensity;
-      lightData.range       = pointLight.range;
-      lightData.position[0] = transform.translation.x();
-      lightData.position[1] = transform.translation.y();
-      lightData.position[2] = transform.translation.z();
-
-      m_device->updateBuffer(m_pointLightUniformBuffer, &lightData, sizeof(lightData));
-    }
-  }
-
-  // Spot Light
-  {
-    auto spotLightView = registry.view<Light, SpotLight, Transform>();
-    if (spotLightView.begin() != spotLightView.end()) {
-      if (!m_spotLightUniformBuffer) {
-        rhi::BufferDesc lightUboDesc;
-        lightUboDesc.size        = alignConstantBufferSize(sizeof(float) * 16);
-        lightUboDesc.createFlags = rhi::BufferCreateFlag::CpuAccess | rhi::BufferCreateFlag::ConstantBuffer;
-        lightUboDesc.type        = rhi::BufferType::Dynamic;
-        lightUboDesc.debugName   = "spot_light_buffer";
-
-        auto lightBuffer         = m_device->createBuffer(lightUboDesc);
-        m_spotLightUniformBuffer = m_resourceManager->addBuffer(std::move(lightBuffer), "spot_light_buffer");
-
-        auto lightDescriptorSet = m_device->createDescriptorSet(m_lightDescriptorSetLayout);
-        lightDescriptorSet->setUniformBuffer(0, m_spotLightUniformBuffer);
-        m_spotLightDescriptorSet
-            = m_resourceManager->addDescriptorSet(std::move(lightDescriptorSet), "spot_light_descriptor");
-      }
-
-      auto  entity    = *spotLightView.begin();
-      auto& light     = spotLightView.get<Light>(entity);
-      auto& spotLight = spotLightView.get<SpotLight>(entity);
-      auto& transform = spotLightView.get<Transform>(entity);
-
-      struct SpotLightData {
-        float color[3];
-        float intensity;
-        float range;
-        float innerConeAngle;
-        float outerConeAngle;
-        float padding1;
-        float position[3];
-        float padding2;
-        float direction[3];
-        float padding3;
-      } lightData;
-
-      lightData.color[0]       = light.color.x();
-      lightData.color[1]       = light.color.y();
-      lightData.color[2]       = light.color.z();
-      lightData.intensity      = light.intensity;
-      lightData.range          = spotLight.range;
-      lightData.innerConeAngle = spotLight.innerConeAngle;
-      lightData.outerConeAngle = spotLight.outerConeAngle;
-      lightData.padding1       = 0.0f;
-      lightData.position[0]    = transform.translation.x();
-      lightData.position[1]    = transform.translation.y();
-      lightData.position[2]    = transform.translation.z();
-      lightData.padding2       = 0.0f;
-
-      lightData.direction[0] = transform.rotation.x();
-      lightData.direction[1] = transform.rotation.y();
-      lightData.direction[2] = transform.rotation.z();
-      lightData.padding3     = 0.0f;
-
-      m_device->updateBuffer(m_spotLightUniformBuffer, &lightData, sizeof(lightData));
-    }
-  }
 }
 
 void FrameResources::updateModelList_(const RenderContext& context) {

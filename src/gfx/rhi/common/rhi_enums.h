@@ -323,7 +323,7 @@ enum class PipelineType {
 enum class BufferCreateFlag : uint32_t {
   None                            = 0,
   CpuAccess                       = 0x00'00'00'01,
-  Uav                             = 0x00'00'00'02,
+  Uav                             = 0x00'00'00'02, // RW buffers
   Readback                        = 0x00'00'00'04,
   AccelerationStructureBuildInput = 0x00'00'00'08,
   VertexBuffer                    = 0x00'00'00'10,
@@ -333,7 +333,7 @@ enum class BufferCreateFlag : uint32_t {
   AccelerationStructure           = 0x00'00'01'00,
   ConstantBuffer                  = 0x00'00'02'00,  
   InstanceBuffer                  = 0x00'00'04'00,  
-  ShaderResource                  = 0x00'00'08'00,
+  ShaderResource                  = 0x00'00'08'00,  // Read-only buffers
 };
 
 DECLARE_ENUM_BIT_OPERATORS(BufferCreateFlag)

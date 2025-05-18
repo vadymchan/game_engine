@@ -407,10 +407,18 @@ void DescriptorBufferDx12::createShaderResourceView() {
   srvDesc.ViewDimension                   = D3D12_SRV_DIMENSION_BUFFER;
   srvDesc.Shader4ComponentMapping         = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
   srvDesc.Buffer.FirstElement             = 0;
-  // Size in bytes / 4 bytes per element (estimate)
-  srvDesc.Buffer.NumElements         = static_cast<UINT>(m_desc_.size / 4);
-  srvDesc.Buffer.StructureByteStride = 0;
-  srvDesc.Buffer.Flags               = D3D12_BUFFER_SRV_FLAG_NONE;
+  if (m_desc_.stride > 0) {
+    // Structured Buffer
+    srvDesc.Buffer.StructureByteStride = m_desc_.stride;
+    srvDesc.Buffer.NumElements         = static_cast<UINT>(m_desc_.size / m_desc_.stride);
+  } else {
+    // Raw Buffer
+    srvDesc.Buffer.StructureByteStride = 0;
+    // Size in bytes / 4 bytes per element (estimate)
+    srvDesc.Buffer.NumElements         = static_cast<UINT>(m_desc_.size / 4);
+  }
+
+  srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
   m_device_->getDevice()->CreateShaderResourceView(m_resource_.Get(), &srvDesc, m_srvCpuHandle_);
 }

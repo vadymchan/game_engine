@@ -260,18 +260,10 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
     GlobalLogger::Log(LogLevel::Error, "Null buffer");
     return;
   }
-  if (m_layout_->isSamplerLayout()) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot set storage buffer on a sampler descriptor set");
-    return;
-  }
 
   DescriptorBufferDx12* bufferDx12 = dynamic_cast<DescriptorBufferDx12*>(buffer);
   if (!bufferDx12) {
     GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
-    return;
-  }
-  if (!bufferDx12->hasUavHandle()) {
-    GlobalLogger::Log(LogLevel::Error, "Buffer does not have a UAV");
     return;
   }
 
@@ -289,15 +281,27 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
     return;
   }
 
-  uint32_t srcIndex
-      = uint32_t((bufferDx12->getUavCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
+  uint32_t                    srcIndex;
+  D3D12_DESCRIPTOR_RANGE_TYPE rangeType;
 
-  uint32_t bindingOffset = findBindingOffset_(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, binding);
+  if (bufferDx12->isUnorderedAccessBuffer() && bufferDx12->hasUavHandle()) {
+    srcIndex
+        = uint32_t((bufferDx12->getUavCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
+    rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+  } else if (bufferDx12->isShaderResourceBuffer() && bufferDx12->hasSrvHandle()) {
+    srcIndex
+        = uint32_t((bufferDx12->getSrvCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
+    rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Buffer must have either UAV or SRV capability for storage buffer usage");
+    return;
+  }
+
+  uint32_t bindingOffset = findBindingOffset_(rangeType, binding);
   uint32_t dstIndex      = m_srvUavCbvIndices_[currentFrame] + bindingOffset;
 
   gpuHeap->copyDescriptors(cpuHeap, srcIndex, dstIndex, 1);
 }
-
 [[nodiscard]] D3D12_GPU_DESCRIPTOR_HANDLE DescriptorSetDx12::getGpuSrvUavCbvHandle(uint32_t frame) const {
   auto* frameResMgr = m_device_->getFrameResourcesManager();
   auto* heap        = frameResMgr->getCbvSrvUavHeap(frame);

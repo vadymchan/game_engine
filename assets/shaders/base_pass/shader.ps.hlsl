@@ -67,20 +67,32 @@ struct SpotLightData
 };
 
 // TODO: Currently only one type of light (consider in future to be able to dynamically add lights) - use StructuredBuffer
-cbuffer DirectionalLightBuffer : register(b0, space2)
-{
-    DirectionalLightData directionalLight;
-};
+//cbuffer DirectionalLightBuffer : register(b0, space2)
+//{
+//    DirectionalLightData directionalLight;
+//};
 
-cbuffer PointLightBuffer : register(b0, space3)
-{
-    PointLightData pointLight;
-};
+//cbuffer PointLightBuffer : register(b0, space3)
+//{
+//    PointLightData pointLight;
+//};
 
-cbuffer SpotLightBuffer : register(b0, space4)
+//cbuffer SpotLightBuffer : register(b0, space4)
+//{
+//    SpotLightData spotLight;
+//};
+
+cbuffer LightCounts : register(b0, space2)
 {
-    SpotLightData spotLight;
-};
+    uint directionalLightCount;
+    uint pointLightCount;
+    uint spotLightCount;
+    uint padding;
+}
+
+StructuredBuffer<DirectionalLightData> directionalLights : register(t1, space2);
+StructuredBuffer<PointLightData> pointLights : register(t2, space2);
+StructuredBuffer<SpotLightData> spotLights : register(t3, space2);
 
 struct MaterialParams
 {
@@ -91,18 +103,18 @@ struct MaterialParams
     float padding;
 };
 
-cbuffer MaterialBuffer : register(b0, space5) 
+cbuffer MaterialBuffer : register(b0, space3) 
 {
     MaterialParams material;
 }
 
-Texture2D<float4> DiffuseTexture : register(t1, space5);
-Texture2D<float4> NormalTexture : register(t2, space5);
-Texture2D<float4> MetallicRoughnessTexture : register(t3, space5);
+Texture2D<float4> DiffuseTexture : register(t1, space3);
+Texture2D<float4> NormalTexture : register(t2, space3);
+Texture2D<float4> MetallicRoughnessTexture : register(t3, space3);
 //Texture2D<float4> RoughnessTexture : register(t2, space5);
 //Texture2D<float4> MetalicTexture : register(t3, space5);
 
-SamplerState DefaultSampler : register(s0, space6);
+SamplerState DefaultSampler : register(s0, space4);
 
 
 
@@ -116,6 +128,10 @@ float4 main(PSInput input) : SV_TARGET
     //color += float4(pointLight.color, 0);
     //color += float4(spotLight.color, 0);
 
+    
+    
+    //return color;
+    
     float4 diffuseColor = DiffuseTexture.Sample(DefaultSampler, input.TexCoord);
 
     color += diffuseColor;
@@ -138,7 +154,25 @@ float4 main(PSInput input) : SV_TARGET
     
     //return color;
     
-    //return material.baseColor;
+    for(uint i = 0; i < directionalLightCount; i++)
+    {
+        color += float4(directionalLights[i].color, 0);
+    }
+    
+    for (uint j = 0; j < pointLightCount; j++)
+    {
+        color += float4(pointLights[j].color, 0);
+    }
+    
+    for (uint k = 0; k < spotLightCount; k++)
+    {
+      color += float4(spotLights[k].color, 0);
+    }
+    
+    return color;
+    
+    return float4(directionalLightCount, spotLightCount, pointLightCount , 1);
+    return material.baseColor;
     //return input.Color;
     //return float4(normalColor, 1.0);
     return diffuseColor;

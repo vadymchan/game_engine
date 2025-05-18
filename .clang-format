@@ -2,7 +2,6 @@ BasedOnStyle: Google
 #IndentWidth: 4
 #IndentCaseLabels: false
 AccessModifierOffset: 0
-# TODO: consider using 120 character limit for one line
 ColumnLimit: 120
 
 AlignConsecutiveAssignments:
@@ -104,7 +103,9 @@ RemoveParentheses: ReturnStatement
 
 RemoveSemicolon: true
 
-SeparateDefinitionBlocks: Always
+SeparateDefinitionBlocks: Leave
+
+MaxEmptyLinesToKeep: 1
 
 SortUsingDeclarations: Lexicographic
 

@@ -203,6 +203,14 @@ VkBufferUsageFlags BufferVk::getBufferUsageFlags_() const {
     usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
   }
 
+  if ((m_desc_.createFlags & BufferCreateFlag::ShaderResource) != BufferCreateFlag::None) {
+    if (m_desc_.stride > 0) {
+      usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    } else {
+      usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+    }
+  }
+
   if ((m_desc_.createFlags & BufferCreateFlag::IndirectCommand) != BufferCreateFlag::None) {
     usage |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
   }

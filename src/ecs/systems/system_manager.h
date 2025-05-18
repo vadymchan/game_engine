@@ -23,6 +23,17 @@ class SystemManager {
 
   // TODO: add removeSystem method
 
+  template <typename T>
+  T* getSystem() const {
+    for (const auto& system : m_systems_) {
+      T* typedSystem = dynamic_cast<T*>(system.get());
+      if (typedSystem) {
+        return typedSystem;
+      }
+    }
+    return nullptr;
+  }
+
   void updateSystems(Scene* scene, float deltaTime);
 
   private:

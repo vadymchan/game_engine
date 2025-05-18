@@ -18,14 +18,6 @@ class Engine;
 // TODO: consider renaming class (e.g. Application)
 class Game {
   public:
-  enum class SpawnedType {
-    None = 0,
-    TestPrimitive,
-    CubePrimitive,
-    InstancingPrimitive,
-    IndirectDrawPrimitive,
-  };
-
   enum class Action {
     MoveForward,
     MoveBackward,
@@ -52,7 +44,11 @@ class Game {
 
   void release();
 
-  SpawnedType m_spawnedType_ = SpawnedType::None;
+  private:
+  void setupInputHandlers();
+
+  static constexpr float s_speedChangeStep = 0.5f;
+  static constexpr float s_minMovingSpeed  = 0.1f;
 
   Window* m_window_ = nullptr;
 
@@ -65,12 +61,6 @@ class Game {
   float m_yaw_                       = 0.0f;
   float m_pitch_                     = 0.0f;
   bool  m_isRightMouseButtonPressed_ = false;
-
-  private:
-  void setupInputHandlers();
-
-  static constexpr float s_speedChangeStep = 0.5f;
-  static constexpr float s_minMovingSpeed  = 0.1f;
 
   Scene* m_scene_ = nullptr;
 };

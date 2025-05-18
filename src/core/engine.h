@@ -7,6 +7,7 @@
 #include "ecs/component_loaders.h"
 #include "ecs/components/camera.h"
 #include "ecs/systems/camera_system.h"
+#include "ecs/systems/light_system.h"
 #include "ecs/systems/movement_system.h"
 #include "ecs/systems/render_system.h"
 #include "ecs/systems/system_manager.h"
@@ -49,6 +50,7 @@
 #include "utils/time/timing_manager.h"
 
 // TODO: consider moving this to another file
+
 #include <imgui_impl_sdl2.h>
 
 #include <memory>
@@ -217,6 +219,8 @@ class Engine {
     ServiceLocator::s_provide<TextureManager>(device);
     ServiceLocator::s_provide<BufferManager>(device);
 
+    systemManager->addSystem(std::make_unique<LightSystem>(device, m_renderer_->getResourceManager()));
+
     // image loader
     // ------------------------------------------------------------------------
     auto imageLoaderManager = std::make_unique<ImageLoaderManager>();
@@ -264,7 +268,7 @@ class Engine {
     ServiceLocator::s_provide<MaterialManager>();
     auto materialLoaderManager = std::make_unique<MaterialLoaderManager>();
 #ifdef GAME_ENGINE_USE_ASSIMP
-    auto assimpMaterialLoader  = std::make_shared<AssimpMaterialLoader>();
+    auto assimpMaterialLoader = std::make_shared<AssimpMaterialLoader>();
     materialLoaderManager->registerLoader(MaterialType::MTL, assimpMaterialLoader);
     materialLoaderManager->registerLoader(MaterialType::FBX, assimpMaterialLoader);
 #endif  // GAME_ENGINE_USE_ASSIMP

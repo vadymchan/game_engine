@@ -37,7 +37,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
   m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), MAX_FRAMES_IN_FLIGHT, true);
   m_resourceManager = std::make_unique<RenderResourceManager>();
 
-  m_frameResources = std::make_unique<FrameResources>(m_device.get(), m_resourceManager.get());
+  m_frameResources = std::make_unique<FrameResources>(m_device.get(), getResourceManager());
   m_frameResources->initialize(MAX_FRAMES_IN_FLIGHT);
   m_frameResources->resize(window->getSize());
 
@@ -321,13 +321,13 @@ void Renderer::waitForAllFrames_() {
 
 void Renderer::setupRenderPasses_() {
   m_basePass = std::make_unique<BasePass>();
-  m_basePass->initialize(m_device.get(), m_resourceManager.get(), m_frameResources.get(), m_shaderManager.get());
+  m_basePass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 
   m_debugPass = std::make_unique<DebugPass>();
-  m_debugPass->initialize(m_device.get(), m_resourceManager.get(), m_frameResources.get(), m_shaderManager.get());
+  m_debugPass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 
   m_finalPass = std::make_unique<FinalPass>();
-  m_finalPass->initialize(m_device.get(), m_resourceManager.get(), m_frameResources.get(), m_shaderManager.get());
+  m_finalPass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 }
 }  // namespace renderer
 }  // namespace gfx

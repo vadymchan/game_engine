@@ -122,24 +122,16 @@ void BasePass::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
-    if (m_frameResources->getDirectionalLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(2, m_frameResources->getDirectionalLightDescriptorSet());
-    }
-
-    if (m_frameResources->getPointLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(3, m_frameResources->getPointLightDescriptorSet());
-    }
-
-    if (m_frameResources->getSpotLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(4, m_frameResources->getSpotLightDescriptorSet());
+    if (m_frameResources->getLightDescriptorSet()) {
+      commandBuffer->bindDescriptorSet(2, m_frameResources->getLightDescriptorSet());
     }
 
     if (drawData.materialDescriptorSet) {
-      commandBuffer->bindDescriptorSet(5, drawData.materialDescriptorSet);
+      commandBuffer->bindDescriptorSet(3, drawData.materialDescriptorSet);
     }
 
     if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(6, m_frameResources->getDefaultSamplerDescriptorSet());
+      commandBuffer->bindDescriptorSet(4, m_frameResources->getDefaultSamplerDescriptorSet());
     }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
@@ -376,8 +368,6 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 
         pipelineDesc.setLayouts.push_back(viewLayout);
         pipelineDesc.setLayouts.push_back(modelMatrixLayout);
-        pipelineDesc.setLayouts.push_back(lightLayout);
-        pipelineDesc.setLayouts.push_back(lightLayout);
         pipelineDesc.setLayouts.push_back(lightLayout);
         pipelineDesc.setLayouts.push_back(materialLayout);
         pipelineDesc.setLayouts.push_back(samplerLayout);
