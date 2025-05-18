@@ -337,6 +337,7 @@ void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& c
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
 
         m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_geometryShaderPath_);
         m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 

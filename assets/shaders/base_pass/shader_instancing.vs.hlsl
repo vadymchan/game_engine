@@ -2,21 +2,21 @@
 struct VSInput
 {
 #ifdef __spirv__
-    [[vk::location(0)]] float3 Position   : POSITION0;
-    [[vk::location(1)]] float3 Normal     : NORMAL1;  
-    [[vk::location(2)]] float2 TexCoord   : TEXCOORD2;  
-    [[vk::location(3)]] float3 Tangent    : TANGENT3;  
-    [[vk::location(4)]] float3 Bitangent  : BITANGENT4;  
-    [[vk::location(5)]] float4 Color      : COLOR5;  
-    [[vk::location(6)]] float4x4 Instance : INSTANCE6;  
+    [[vk::location(0)]] float3   Position  : POSITION0;
+    [[vk::location(1)]] float2   TexCoord  : TEXCOORD1;  
+    [[vk::location(2)]] float3   Normal    : NORMAL2;  
+    [[vk::location(3)]] float3   Tangent   : TANGENT3;  
+    [[vk::location(4)]] float3   Bitangent : BITANGENT4;  
+    [[vk::location(5)]] float4   Color     : COLOR5;  
+    [[vk::location(6)]] float4x4 Instance  : INSTANCE6;  
 #else
-    float3 Position : POSITION0;
-    float3 Normal : NORMAL1;
-    float2 TexCoord : TEXCOORD2;
-    float3 Tangent : TANGENT3;
-    float3 Bitangent : BITANGENT4;
-    float4 Color : COLOR5;
-    float4x4 Instance : INSTANCE6;
+    float3   Position  : POSITION0;
+    float2   TexCoord  : TEXCOORD1;
+    float3   Normal    : NORMAL2;
+    float3   Tangent   : TANGENT3;
+    float3   Bitangent : BITANGENT4;
+    float4   Color     : COLOR5;
+    float4x4 Instance  : INSTANCE6;
 #endif
 };
 
@@ -46,12 +46,12 @@ cbuffer ModelParam : register(b0, space1)
 
 struct VSOutput
 {
-    float4 Position : SV_POSITION;
-    float3 Normal : NORMAL1;
-    float2 TexCoord : TEXCOORD2;
-    float3 Tangent : TANGENT3;
+    float4 Position  : SV_POSITION;
+    float2 TexCoord  : TEXCOORD1;
+    float3 Normal    : NORMAL2;
+    float3 Tangent   : TANGENT3;
     float3 Bitangent : BITANGENT4;
-    float4 Color : COLOR5;
+    float4 Color     : COLOR5;
 };
 
 VSOutput main(VSInput input)
@@ -59,9 +59,7 @@ VSOutput main(VSInput input)
     VSOutput output = (VSOutput) 0;
 
     float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
-    //modelPos = float4(input.Position, 1.0);
 #ifdef __spirv__
-    //float4 modelPos = mul(float4(input.Position, 1.0), ModelParam.ModelMatrix);
     output.Position = mul(modelPos, input.Instance);
 #else
     output.Position = mul(input.Instance, modelPos);

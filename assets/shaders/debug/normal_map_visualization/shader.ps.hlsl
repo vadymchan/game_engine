@@ -1,7 +1,10 @@
 struct PSInput
 {
-    float4 Position : SV_POSITION;
-    float2 TexCoord : TEXCOORD1;
+    float4 Position  : SV_POSITION;
+    float2 TexCoord  : TEXCOORD1;
+    float3 Normal    : NORMAL2;
+    float3 Tangent   : TANGENT3;
+    float3 Bitangent : BITANGENT4;
 };
 
 Texture2D<float4> NormalTexture : register(t0, space2);

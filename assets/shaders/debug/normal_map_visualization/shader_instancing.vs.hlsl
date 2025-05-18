@@ -22,24 +22,32 @@ cbuffer ModelParam : register(b0, space1)
     ModelUniformBuffer ModelParam;
 }
 
-
 struct VSInput
 {
 #ifdef __spirv__
     [[vk::location(0)]] float3 Position   : POSITION0;
     [[vk::location(1)]] float2 TexCoord   : TEXCOORD1; 
-    [[vk::location(2)]] float4x4 Instance : INSTANCE2;  
+    [[vk::location(2)]] float3 Normal     : NORMAL2;  
+    [[vk::location(3)]] float3 Tangent    : TANGENT3;  
+    [[vk::location(4)]] float3 Bitangent  : BITANGENT4;  
+    [[vk::location(5)]] float4x4 Instance : INSTANCE5;  
 #else
-    float3 Position : POSITION0;
-    float2 TexCoord : TEXCOORD1;
-    float4x4 Instance : INSTANCE2;
+    float3   Position  : POSITION0;
+    float2   TexCoord  : TEXCOORD1;
+    float3   Normal    : NORMAL2;
+    float3   Tangent   : TANGENT3;
+    float3   Bitangent : BITANGENT4;
+    float4x4 Instance  : INSTANCE5;
 #endif
 };
 
 struct VSOutput
 {
-    float4 Position : SV_POSITION;
-    float2 TexCoord : TEXCOORD1;
+    float4 Position  : SV_POSITION;
+    float2 TexCoord  : TEXCOORD1;
+    float3 Normal    : NORMAL2;
+    float3 Tangent   : TANGENT3;
+    float3 Bitangent : BITANGENT4;
 };
 
 VSOutput main(VSInput input)
@@ -48,7 +56,6 @@ VSOutput main(VSInput input)
 
     float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
 #ifdef __spirv__
-    //float4 modelPos = mul(float4(input.Position, 1.0), ModelParam.ModelMatrix);
     output.Position = mul(modelPos, input.Instance);
 #else
     output.Position = mul(input.Instance, modelPos);

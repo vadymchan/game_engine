@@ -70,7 +70,7 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
   rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
 
   const std::string m_vertexShaderPath_ = "assets/shaders/debug/normal_map_visualization/shader_instancing.vs.hlsl";
-  const std::string m_pixelShaderPath_  = "assets/shaders/debug/overdraw/shader.ps.hlsl";
+  const std::string m_pixelShaderPath_  = "assets/shaders/debug/normal_map_visualization/shader.ps.hlsl";
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;

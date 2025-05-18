@@ -259,15 +259,12 @@ bool GraphicsPipelineDx12::createPipelineState_() {
     }
   }
 
-  // Copy blend constants
   for (int i = 0; i < 4; i++) {
     m_blendFactors_[i] = m_desc_.colorBlend.blendConstants[i];
   }
 
-  // Setup the sample mask
   psoDesc.SampleMask = m_desc_.multisample.sampleMask;
 
-  // Setup the rasterizer state
   psoDesc.RasterizerState.FillMode              = g_getPolygonModeDx12(m_desc_.rasterization.polygonMode);
   psoDesc.RasterizerState.CullMode              = g_getCullModeDx12(m_desc_.rasterization.cullMode);
   psoDesc.RasterizerState.FrontCounterClockwise = (m_desc_.rasterization.frontFace == FrontFace::Ccw) ? TRUE : FALSE;
@@ -281,7 +278,6 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   psoDesc.RasterizerState.ForcedSampleCount     = 0;      // Use the sample count from the render target
   psoDesc.RasterizerState.ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-  // Setup the depth-stencil state
   psoDesc.DepthStencilState.DepthEnable = m_desc_.depthStencil.depthTestEnable;
   psoDesc.DepthStencilState.DepthWriteMask
       = m_desc_.depthStencil.depthWriteEnable ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
@@ -290,26 +286,21 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   psoDesc.DepthStencilState.StencilReadMask  = static_cast<UINT8>(m_desc_.depthStencil.front.compareMask);
   psoDesc.DepthStencilState.StencilWriteMask = static_cast<UINT8>(m_desc_.depthStencil.front.writeMask);
 
-  // Setup front face stencil operations
   psoDesc.DepthStencilState.FrontFace.StencilFailOp      = g_getStencilOpDx12(m_desc_.depthStencil.front.failOp);
   psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = g_getStencilOpDx12(m_desc_.depthStencil.front.depthFailOp);
   psoDesc.DepthStencilState.FrontFace.StencilPassOp      = g_getStencilOpDx12(m_desc_.depthStencil.front.passOp);
   psoDesc.DepthStencilState.FrontFace.StencilFunc        = g_getCompareOpDx12(m_desc_.depthStencil.front.compareOp);
 
-  // Setup back face stencil operations
   psoDesc.DepthStencilState.BackFace.StencilFailOp      = g_getStencilOpDx12(m_desc_.depthStencil.back.failOp);
   psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = g_getStencilOpDx12(m_desc_.depthStencil.back.depthFailOp);
   psoDesc.DepthStencilState.BackFace.StencilPassOp      = g_getStencilOpDx12(m_desc_.depthStencil.back.passOp);
   psoDesc.DepthStencilState.BackFace.StencilFunc        = g_getCompareOpDx12(m_desc_.depthStencil.back.compareOp);
 
-  // Setup input layout
   psoDesc.InputLayout.pInputElementDescs = inputLayout.data();
   psoDesc.InputLayout.NumElements        = static_cast<UINT>(inputLayout.size());
 
-  // Setup primitive topology
   psoDesc.PrimitiveTopologyType = g_getPrimitiveTopologyTypeOnlyDx12(m_desc_.inputAssembly.topology);
 
-  // Setup render target formats
   RenderPassDx12* renderPassDx12 = dynamic_cast<RenderPassDx12*>(m_desc_.renderPass);
   if (!renderPassDx12) {
     GlobalLogger::Log(LogLevel::Error, "Invalid render pass for DX12 pipeline");
@@ -323,10 +314,8 @@ bool GraphicsPipelineDx12::createPipelineState_() {
     psoDesc.RTVFormats[i] = renderTargetFormats[i];
   }
 
-  // Setup depth-stencil format
   psoDesc.DSVFormat = renderPassDx12->getDepthStencilFormat();
 
-  // Setup sample description
   switch (m_desc_.multisample.rasterizationSamples) {
     case MSAASamples::Count1:
       psoDesc.SampleDesc.Count = 1;
@@ -349,15 +338,12 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   }
   psoDesc.SampleDesc.Quality = 0;
 
-  // Setup node mask and caching
   psoDesc.NodeMask                        = 0;
   psoDesc.CachedPSO.pCachedBlob           = nullptr;
   psoDesc.CachedPSO.CachedBlobSizeInBytes = 0;
 
-  // Set the pipeline flag (graphics pipeline)
   psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-  // Create the pipeline state object
   HRESULT hr = m_device_->getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState_));
 
   if (FAILED(hr)) {

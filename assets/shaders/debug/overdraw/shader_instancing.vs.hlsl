@@ -28,7 +28,7 @@ struct VSInput
     [[vk::location(0)]] float3 Position   : POSITION0;
     [[vk::location(1)]] float4x4 Instance : INSTANCE1;  
 #else
-    float3 Position : POSITION0;
+    float3   Position : POSITION0;
     float4x4 Instance : INSTANCE1;
 #endif
 };
@@ -44,7 +44,6 @@ VSOutput main(VSInput input)
     
     float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
 #ifdef __spirv__
-    //float4 modelPos = mul(float4(input.Position, 1.0), ModelParam.ModelMatrix);
     output.Position = mul(modelPos, input.Instance);
 #else
     output.Position = mul(input.Instance, modelPos);

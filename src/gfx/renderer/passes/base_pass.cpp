@@ -295,21 +295,21 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         positionAttr.semanticName = "POSITION";
         pipelineDesc.vertexAttributes.push_back(positionAttr);
 
-        rhi::VertexInputAttributeDesc normalAttr;
-        normalAttr.location     = 1;
-        normalAttr.binding      = 0;
-        normalAttr.format       = rhi::TextureFormat::Rgb32f;
-        normalAttr.offset       = offsetof(Vertex, normal);
-        normalAttr.semanticName = "NORMAL";
-        pipelineDesc.vertexAttributes.push_back(normalAttr);
-
         rhi::VertexInputAttributeDesc uvAttr;
-        uvAttr.location     = 2;
+        uvAttr.location     = 1;
         uvAttr.binding      = 0;
         uvAttr.format       = rhi::TextureFormat::Rg32f;
         uvAttr.offset       = offsetof(Vertex, texCoords);
         uvAttr.semanticName = "TEXCOORD";
         pipelineDesc.vertexAttributes.push_back(uvAttr);
+
+        rhi::VertexInputAttributeDesc normalAttr;
+        normalAttr.location     = 2;
+        normalAttr.binding      = 0;
+        normalAttr.format       = rhi::TextureFormat::Rgb32f;
+        normalAttr.offset       = offsetof(Vertex, normal);
+        normalAttr.semanticName = "NORMAL";
+        pipelineDesc.vertexAttributes.push_back(normalAttr);
 
         rhi::VertexInputAttributeDesc tangentAttr;
         tangentAttr.location     = 3;
@@ -439,7 +439,7 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
   std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
   uint32_t                 binding      = 1;
 
-    for (const auto& textureName : textureNames) {
+  for (const auto& textureName : textureNames) {
     auto          it      = material->textures.find(textureName);
     rhi::Texture* texture = nullptr;
 
@@ -461,9 +461,7 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
 
     if (texture) {
       descriptorSetPtr->setTexture(binding, texture);
-    }
-    else
-    {
+    } else {
       GlobalLogger::Log(LogLevel::Error,
                         "Texture not found for " + textureName + " in material: " + material->materialName);
     }

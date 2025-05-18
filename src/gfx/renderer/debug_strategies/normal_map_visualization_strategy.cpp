@@ -33,9 +33,12 @@ void NormalMapVisualizationStrategy::initialize(rhi::Device*           device,
   textureBindingDesc.stageFlags = rhi::ShaderStageFlag::Fragment;
   materialLayoutDesc.bindings.push_back(textureBindingDesc);
 
-  auto materialSetLayout = m_device->createDescriptorSetLayout(materialLayoutDesc);
-  m_materialDescriptorSetLayout
-      = m_resourceManager->addDescriptorSetLayout(std::move(materialSetLayout), "normal_map_material_layout");
+  auto materialSetLayout        = m_device->createDescriptorSetLayout(materialLayoutDesc);
+  m_materialDescriptorSetLayout = m_resourceManager->getDescriptorSetLayout("normal_map_material_layout");
+  if (!m_materialDescriptorSetLayout) {
+    m_materialDescriptorSetLayout
+        = m_resourceManager->addDescriptorSetLayout(std::move(materialSetLayout), "normal_map_material_layout");
+  }
 
   setupRenderPass_();
 }
@@ -311,9 +314,33 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
         uvAttr.semanticName = "TEXCOORD";
         pipelineDesc.vertexAttributes.push_back(uvAttr);
 
+        rhi::VertexInputAttributeDesc normalAttr;
+        normalAttr.location     = 2;
+        normalAttr.binding      = 0;
+        normalAttr.format       = rhi::TextureFormat::Rgb32f;
+        normalAttr.offset       = offsetof(Vertex, normal);
+        normalAttr.semanticName = "NORMAL";
+        pipelineDesc.vertexAttributes.push_back(normalAttr);
+
+        rhi::VertexInputAttributeDesc tangentAttr;
+        tangentAttr.location     = 3;
+        tangentAttr.binding      = 0;
+        tangentAttr.format       = rhi::TextureFormat::Rgb32f;
+        tangentAttr.offset       = offsetof(Vertex, tangent);
+        tangentAttr.semanticName = "TANGENT";
+        pipelineDesc.vertexAttributes.push_back(tangentAttr);
+
+        rhi::VertexInputAttributeDesc bitangentAttr;
+        bitangentAttr.location     = 4;
+        bitangentAttr.binding      = 0;
+        bitangentAttr.format       = rhi::TextureFormat::Rgb32f;
+        bitangentAttr.offset       = offsetof(Vertex, bitangent);
+        bitangentAttr.semanticName = "BITANGENT";
+        pipelineDesc.vertexAttributes.push_back(bitangentAttr);
+
         for (uint32_t i = 0; i < 4; i++) {
           rhi::VertexInputAttributeDesc matrixCol;
-          matrixCol.location     = 2 + i;
+          matrixCol.location     = 5 + i;
           matrixCol.binding      = 1;
           matrixCol.format       = rhi::TextureFormat::Rgba32f;
           matrixCol.offset       = i * 16;

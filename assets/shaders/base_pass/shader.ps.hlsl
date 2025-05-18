@@ -1,11 +1,11 @@
 struct PSInput
 {
-    float4 Position : SV_POSITION;  
-    float3 Normal : NORMAL1;        
-    float2 TexCoord : TEXCOORD2;    
-    float3 Tangent : TANGENT3;      
+    float4 Position  : SV_POSITION;  
+    float2 TexCoord  : TEXCOORD1;    
+    float3 Normal    : NORMAL2;        
+    float3 Tangent   : TANGENT3;      
     float3 Bitangent : BITANGENT4;  
-    float4 Color : COLOR5;          
+    float4 Color     : COLOR5;          
 };
 
 struct ViewUniformBuffer
@@ -169,9 +169,9 @@ float4 main(PSInput input) : SV_TARGET
       color += float4(spotLights[k].color, 0);
     }
     
-    return color;
+    //return color;
     
-    return float4(directionalLightCount, spotLightCount, pointLightCount , 1);
+    return float4(directionalLightCount, spotLightCount, pointLightCount , 0);
     return material.baseColor;
     //return input.Color;
     //return float4(normalColor, 1.0);

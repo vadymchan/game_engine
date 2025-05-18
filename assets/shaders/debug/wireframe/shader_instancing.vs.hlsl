@@ -29,8 +29,8 @@ struct VSInput
     [[vk::location(1)]] float4 Color      : COLOR1;  
     [[vk::location(2)]] float4x4 Instance : INSTANCE2;  
 #else
-    float3 Position : POSITION0;
-    float4 Color : COLOR1;
+    float3   Position : POSITION0;
+    float4   Color    : COLOR1;
     float4x4 Instance : INSTANCE2;
 #endif
 };
@@ -38,7 +38,7 @@ struct VSInput
 struct VSOutput
 {
     float4 Position : SV_POSITION;
-    float4 Color : COLOR1;
+    float4 Color    : COLOR1;
 };
 
 VSOutput main(VSInput input)
@@ -48,14 +48,10 @@ VSOutput main(VSInput input)
     float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
     
 #ifdef __spirv__
-    //float4 modelPos = mul(float4(input.Position, 1.0), ModelParam.ModelMatrix);
-    output.Position = mul(input.Instance, modelPos);
     output.Position = mul(modelPos, input.Instance);
 #else
     output.Position = mul(input.Instance, modelPos);
 #endif
-    
-    
     
     output.Position = mul(ViewParam.VP, output.Position);
     

@@ -48,11 +48,10 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
             GSOutput vStart, vEnd;
 
             vStart.position = mul(ViewParam.VP, inputTri[i].PositionWS);
+            //vEnd.position = vStart.position;
             vEnd.position = endPosClip;
-            //vEnd.position = float4(endPos, 1);
             
             vStart.color = vEnd.color = float4(1, 0, 0, 1);
-            //vStart.color = vEnd.color = float4(inputTri[i].Tangent, 1);
 
             lineStream.Append(vStart);
             lineStream.Append(vEnd);
@@ -67,10 +66,10 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
             GSOutput vStart, vEnd;
             
             vStart.position = mul(ViewParam.VP, inputTri[i].PositionWS);
+            //vEnd.position = vStart.position;
             vEnd.position = endPosClip;
             
-            vStart.color = float4(0, 1, 0, 1);
-            vEnd.color = float4(0, 1, 0, 1);
+            vStart.color = vEnd.color = float4(0, 1, 0, 1);
 
             lineStream.Append(vStart);
             lineStream.Append(vEnd);
@@ -85,10 +84,10 @@ void main(triangle GSInput inputTri[3], inout LineStream<GSOutput> lineStream)
             GSOutput vStart, vEnd;
 
             vStart.position = mul(ViewParam.VP, inputTri[i].PositionWS);
+            //vEnd.position = vStart.position;
             vEnd.position = endPosClip;
             
-            vStart.color = float4(0, 0, 1, 1);
-            vEnd.color = float4(0, 0, 1, 1);
+            vStart.color = vEnd.color = float4(0, 0, 1, 1);
 
             lineStream.Append(vStart);
             lineStream.Append(vEnd);
