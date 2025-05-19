@@ -4,7 +4,10 @@
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
 #include "ecs/components/render_model.h"
+#include "input/input_manager.h"
 #include "scene/scene_manager.h"
+#include "scene/scene_saver.h"
+#include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/time/timing_manager.h"
 
@@ -35,6 +38,11 @@ bool Editor::initialize(Window*                        window,
   m_renderParams.postProcessMode         = gfx::renderer::PostProcessMode::None;
   m_renderParams.appMode                 = gfx::renderer::ApplicationRenderMode::Editor;
   m_renderParams.renderViewportDimension = window->getSize();
+
+  m_notificationTimer.stop();
+  m_sceneSaveTimer.stop();
+
+  setupInputHandlers_();
 
   GlobalLogger::Log(LogLevel::Info, "Editor initialized successfully");
   return true;
@@ -70,6 +78,8 @@ void Editor::render(gfx::renderer::RenderContext& context) {
 
   ImGuizmo::BeginFrame();
 
+  renderMainMenu();
+
   ImGui::DockSpaceOverViewport();
 
   renderPerformanceWindow();
@@ -78,6 +88,8 @@ void Editor::render(gfx::renderer::RenderContext& context) {
   renderSceneHierarchyWindow();
   renderInspectorWindow();
   renderGizmoControlsWindow();
+
+  renderNotifications();
 
   auto backBufferTexture = m_frameResources->getRenderTargets(context.currentImageIndex).backBuffer;
 
@@ -116,6 +128,18 @@ void Editor::resizeViewport(const gfx::renderer::RenderContext& context) {
   }
 
   // We'll create new texture IDs on-demand in the render method
+}
+
+void Editor::renderMainMenu() {
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
+        saveCurrentScene_();
+      }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
 }
 
 void Editor::renderPerformanceWindow() {
@@ -394,7 +418,7 @@ void Editor::renderInspectorWindow() {
 
           dirLight.direction.normalize();
 
-          dirLight.isDirty       = true;
+          dirLight.isDirty = true;
         }
       } else if (registry.all_of<PointLight>(m_selectedEntity)) {
         auto& pointLight = registry.get<PointLight>(m_selectedEntity);
@@ -486,6 +510,43 @@ void Editor::renderInspectorWindow() {
   ImGui::End();
 }
 
+void Editor::renderNotifications() {
+  if (m_showSaveNotification) {
+    ImGui::SetNextWindowPos(ImVec2(m_window->getSize().width() / 2.0f - 100.0f, 50.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(200.0f, 0.0f), ImGuiCond_Always);
+
+    const float maxDisplayTime = 2.0f;
+    float       elapsedTime    = m_notificationTimer.elapsedTime<ElapsedTime::DurationFloat<>>();
+    float       remainingTime  = maxDisplayTime - elapsedTime;
+    float       alpha          = std::min(1.0f, remainingTime / 0.5f);
+
+    if (alpha > 0.0f) {
+      ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
+
+      ImGui::Begin("##SaveNotification",
+                   nullptr,
+                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoMove
+                       | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNav);
+
+      if (m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>() > 0.0f) {
+        float saveTime = m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>();
+        ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "Scene saved successfully!");
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Save time: %.2f ms", saveTime);
+      } else {
+        ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "Scene saved successfully!");
+      }
+
+      ImGui::End();
+      ImGui::PopStyleVar();
+    } else {
+      m_showSaveNotification = false;
+    }
+
+    if (elapsedTime >= maxDisplayTime) {
+      m_showSaveNotification = false;
+    }
+  }
+}
 void Editor::renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos) {
   if (!shouldRenderGizmo_()) {
     return;
@@ -572,7 +633,6 @@ void Editor::renderGizmoControlsWindow() {
 
   ImGui::Checkbox("Show Gizmo", &m_showGizmo);
 
-  // Show which operations are available for the current entity type
   bool canTranslate = isOperationAllowedForEntity(ImGuizmo::TRANSLATE);
   bool canRotate    = isOperationAllowedForEntity(ImGuizmo::ROTATE);
   bool canScale     = isOperationAllowedForEntity(ImGuizmo::SCALE);
@@ -787,7 +847,6 @@ void Editor::handleEntitySelection(entt::entity entity) {
   auto& registry = scene->getEntityRegistry();
 
   if (registry.valid(entity) && registry.all_of<Light, DirectionalLight>(entity)) {
-
     auto cameraView = registry.view<Camera, CameraMatrices, Transform>();
     if (cameraView.begin() != cameraView.end()) {
       auto        cameraEntity    = *cameraView.begin();
@@ -913,6 +972,56 @@ bool Editor::performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::enti
   float* modelMatrix_ptr = const_cast<float*>(modelMatrix.data());
 
   return ImGuizmo::Manipulate(viewMatrix, projMatrix, m_currentGizmoOperation, m_currentGizmoMode, modelMatrix_ptr);
+}
+
+void Editor::saveCurrentScene_() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded to save");
+    return;
+  }
+
+  m_sceneSaveTimer.reset();
+  m_sceneSaveTimer.start();
+
+  std::string sceneName = sceneManager->getCurrentSceneName();
+  if (sceneName.empty()) {
+    sceneName = "untitled_scene";
+  }
+
+  auto                  pathManager = ServiceLocator::s_get<PathManager>();
+  std::filesystem::path scenesDir   = pathManager->s_getScenesPath();
+  std::filesystem::path filePath    = scenesDir / (sceneName + ".json");
+
+  bool success = SceneSaver::saveScene(scene, sceneName, filePath);
+
+  m_sceneSaveTimer.pause();
+
+  if (success) {
+    GlobalLogger::Log(LogLevel::Info,
+                      "Scene saved in "
+                          + std::to_string(m_sceneSaveTimer.elapsedTime<FrameTime::DurationFloat<std::milli>>())
+                          + " ms");
+
+    m_showSaveNotification = true;
+    m_notificationTimer.reset();
+    m_notificationTimer.start();
+  }
+}
+
+void Editor::setupInputHandlers_() {
+  auto keyboardEventHandler = ServiceLocator::s_get<InputManager>()->getKeyboardHandler();
+
+  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_S}, [this](const KeyboardEvent& event) {
+    if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+      return false;
+    }
+
+    saveCurrentScene_();
+    return true;
+  });
 }
 
 }  // namespace game_engine

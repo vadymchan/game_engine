@@ -199,97 +199,97 @@ float3 CalcSpot(SpotLightData light, float3 N, float3 V, float3 worldPos,
 
 
 // PBR
-//float4 main(PSInput input) : SV_TARGET
-//{
-
-//    float3 albedo = DiffuseTexture.Sample(DefaultSampler, input.TexCoord).rgb *
-//                    material.baseColor.rgb;
-//    float2 mr = MetallicRoughnessTexture.Sample(DefaultSampler, input.TexCoord).gb;
-//    float metallic = saturate(mr.x * material.metallic);
-//    float roughness = saturate(mr.y * material.roughness);
-
-//    float3 Nmap = NormalTexture.Sample(DefaultSampler, input.TexCoord).rgb * 2.0 - 1.0;
-//    float3 T = normalize(input.Tangent);
-//    float3 B = normalize(input.Bitangent);
-//    float3 N = normalize(input.Normal);
-//    float3x3 TBN = float3x3(T, B, N);
-//    N = normalize(mul(Nmap, TBN));
-
-//    float3 V = normalize(ViewParam.EyeWorld - input.WorldPos);
-
-//    float3 color = float3(0, 0, 0);
-
-//    // Directional
-//    for (uint i = 0; i < directionalLightCount; ++i)
-//        color += CalcDirectional(directionalLights[i], N, V, albedo, metallic, roughness);
-
-//    // Point
-//    for (uint k = 0; k < pointLightCount; ++k)
-//        color += CalcPoint(pointLights[k], N, V, input.WorldPos, albedo, metallic, roughness);
-
-//    // Spot
-//    for (uint j = 0; j < spotLightCount; ++j)
-//        color += CalcSpot(spotLights[j], N, V, input.WorldPos, albedo, metallic, roughness);
-
-//    color += albedo * 0.03;
-
-//    return float4(color, material.opacity);
-//}
-
-
 float4 main(PSInput input) : SV_TARGET
 {
+
+    float3 albedo = DiffuseTexture.Sample(DefaultSampler, input.TexCoord).rgb *
+                    material.baseColor.rgb;
+    float2 mr = MetallicRoughnessTexture.Sample(DefaultSampler, input.TexCoord).gb;
+    float metallic = saturate(mr.x * material.metallic);
+    float roughness = saturate(mr.y * material.roughness);
+
     float3 Nmap = NormalTexture.Sample(DefaultSampler, input.TexCoord).rgb * 2.0 - 1.0;
     float3 T = normalize(input.Tangent);
     float3 B = normalize(input.Bitangent);
     float3 N = normalize(input.Normal);
     float3x3 TBN = float3x3(T, B, N);
     N = normalize(mul(Nmap, TBN));
-    
-    float3 color = float3(0.0, 0.0, 0.0);
 
-    /* Directional */
+    float3 V = normalize(ViewParam.EyeWorld - input.WorldPos);
+
+    float3 color = float3(0, 0, 0);
+
+    // Directional
     for (uint i = 0; i < directionalLightCount; ++i)
-    {
-        float3 L = normalize(-directionalLights[i].direction);
-        float NdotL = saturate(dot(N, L));
-        color += directionalLights[i].color * directionalLights[i].intensity * NdotL;
-    }
+        color += CalcDirectional(directionalLights[i], N, V, albedo, metallic, roughness);
 
-    /* Point */
-    for (uint i = 0; i < pointLightCount; ++i)
-    {
-        float3 Lvec = pointLights[i].position - input.WorldPos;
-        float dist = length(Lvec);
-        if (dist < pointLights[i].range)
-        {
-            float3 L = Lvec / dist;
-            float atten = pow(1.0 - saturate(dist / pointLights[i].range), 2.0);
-            float NdotL = saturate(dot(N, L));
-            color += pointLights[i].color * pointLights[i].intensity * NdotL * atten;
-        }
-    }
+    // Point
+    for (uint k = 0; k < pointLightCount; ++k)
+        color += CalcPoint(pointLights[k], N, V, input.WorldPos, albedo, metallic, roughness);
 
-    /* Spot */
-    for (uint i = 0; i < spotLightCount; ++i)
-    {
-        float3 Lvec = spotLights[i].position - input.WorldPos;
-        float dist = length(Lvec);
-        if (dist < spotLights[i].range)
-        {
-            float3 L = Lvec / dist;
-            float NdotL = saturate(dot(N, L));
+    // Spot
+    for (uint j = 0; j < spotLightCount; ++j)
+        color += CalcSpot(spotLights[j], N, V, input.WorldPos, albedo, metallic, roughness);
 
-            float cosDir = dot(-L, normalize(spotLights[i].direction));
-            float innerCos = cos(radians(spotLights[i].innerConeAngle));
-            float outerCos = cos(radians(spotLights[i].outerConeAngle));
-            float spot = smoothstep(outerCos, innerCos, cosDir);
+    color += albedo * 0.03;
 
-            float atten = pow(1.0 - saturate(dist / spotLights[i].range), 2.0) * spot;
-
-            color += spotLights[i].color * spotLights[i].intensity * NdotL * atten;
-        }
-    }
-
-    return float4(color, 1.0); 
+    return float4(color, material.opacity);
 }
+
+
+//float4 main(PSInput input) : SV_TARGET
+//{
+//    float3 Nmap = NormalTexture.Sample(DefaultSampler, input.TexCoord).rgb * 2.0 - 1.0;
+//    float3 T = normalize(input.Tangent);
+//    float3 B = normalize(input.Bitangent);
+//    float3 N = normalize(input.Normal);
+//    float3x3 TBN = float3x3(T, B, N);
+//    N = normalize(mul(Nmap, TBN));
+    
+//    float3 color = float3(0.0, 0.0, 0.0);
+
+//    /* Directional */
+//    for (uint i = 0; i < directionalLightCount; ++i)
+//    {
+//        float3 L = normalize(-directionalLights[i].direction);
+//        float NdotL = saturate(dot(N, L));
+//        color += directionalLights[i].color * directionalLights[i].intensity * NdotL;
+//    }
+
+//    /* Point */
+//    for (uint i = 0; i < pointLightCount; ++i)
+//    {
+//        float3 Lvec = pointLights[i].position - input.WorldPos;
+//        float dist = length(Lvec);
+//        if (dist < pointLights[i].range)
+//        {
+//            float3 L = Lvec / dist;
+//            float atten = pow(1.0 - saturate(dist / pointLights[i].range), 2.0);
+//            float NdotL = saturate(dot(N, L));
+//            color += pointLights[i].color * pointLights[i].intensity * NdotL * atten;
+//        }
+//    }
+
+//    /* Spot */
+//    for (uint i = 0; i < spotLightCount; ++i)
+//    {
+//        float3 Lvec = spotLights[i].position - input.WorldPos;
+//        float dist = length(Lvec);
+//        if (dist < spotLights[i].range)
+//        {
+//            float3 L = Lvec / dist;
+//            float NdotL = saturate(dot(N, L));
+
+//            float cosDir = dot(-L, normalize(spotLights[i].direction));
+//            float innerCos = cos(radians(spotLights[i].innerConeAngle));
+//            float outerCos = cos(radians(spotLights[i].outerConeAngle));
+//            float spot = smoothstep(outerCos, innerCos, cosDir);
+
+//            float atten = pow(1.0 - saturate(dist / spotLights[i].range), 2.0) * spot;
+
+//            color += spotLights[i].color * spotLights[i].intensity * NdotL * atten;
+//        }
+//    }
+
+//    return float4(color, 1.0);
+//}

@@ -129,6 +129,9 @@ void Game::setupInputHandlers() {
   });
 
   keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_S}, [this](const KeyboardEvent& event) {
+    if ((SDL_GetModState() & KMOD_CTRL) != 0) {  // do not move while hold Ctrl (for Ctrl + S operation)
+      return;
+    }
     m_actionStates_.set(static_cast<size_t>(Action::MoveBackward), true);
   });
 
@@ -193,6 +196,15 @@ void Game::setupInputHandlers() {
                                [this](const MouseMotionEvent& event) { this->onMouseMove(event.xrel, event.yrel); });
 
   mouseEventHandler->subscribe({SDL_MOUSEBUTTONDOWN, SDL_BUTTON_RIGHT}, [this](const MouseButtonEvent& event) {
+    auto& registry     = m_scene_->getEntityRegistry();
+    auto  cameraEntity = registry.view<Camera, Transform>().front();
+
+    if (cameraEntity != entt::null) {
+      auto& transform = registry.get<Transform>(cameraEntity);
+      m_pitch_        = transform.rotation.x();
+      m_yaw_          = transform.rotation.y();
+    }
+
     m_isRightMouseButtonPressed_ = true;
     SDL_SetRelativeMouseMode(SDL_TRUE);
   });

@@ -1,24 +1,26 @@
 {
   "schemaVersion": "1.0",
-  "name": "test_scene",
+  "name": "scene",
   "entities": [
     {
       "name": "MainCamera",
       "components": [
         {
           "type": "transform",
-          "position": [0, 0, -10],
-          "rotation": [0, 0, 0],
-          "scale": [1, 1, 1]
+          "position": [
+            3.741335391998291, 2.3139591217041017, -5.130931377410889
+          ],
+          "rotation": [32.40007781982422, -92.79727172851563, 0.0],
+          "scale": [1.0, 1.0, 1.0]
         },
         {
           "type": "camera",
           "cameraType": "perspective",
-          "fov": 0.785398,
-          "near": 0.1,
+          "fov": 0.785398006439209,
+          "near": 0.10000000149011612,
           "far": 1000.0,
-          "width": 800,
-          "height": 600
+          "width": 1426.0,
+          "height": 1027.0
         },
         {
           "type": "movement"
@@ -26,20 +28,20 @@
       ]
     },
     {
-      "name": "Model1",
+      "name": "Model_TwoSidedPlane.gltf",
       "components": [
         {
           "type": "transform",
-          "position": [0, 0, -5],
-          "rotation": [0, 0, 0],
-          "scale": [1, 1, 1]
+          "position": [0.0, 0.0, -5.0],
+          "rotation": [0.0, 0.0, 0.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        {
+          "type": "movement"
         },
         {
           "type": "model",
           "path": "assets/models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
-        },
-        {
-          "type": "movement"
         }
       ]
     },
@@ -48,12 +50,12 @@
       "components": [
         {
           "type": "light",
-          "color": [1.0, 0, 0],
-          "intensity": 1
+          "color": [1.0, 0.0, 0.0],
+          "intensity": 1.0
         },
         {
           "type": "directionalLight",
-          "direction": [-0.577, -0.577, 0.577]
+          "direction": [0.0, -1.0, 0.0]
         }
       ]
     },
@@ -62,13 +64,13 @@
       "components": [
         {
           "type": "transform",
-          "position": [2.0, 2.0, -3.0],
-          "rotation": [0, 0, 0],
-          "scale": [1, 1, 1]
+          "position": [-1.1032907962799073, 1.5, -5.0],
+          "rotation": [0.0, -0.0, 0.0],
+          "scale": [1.0, 1.0, 1.0]
         },
         {
           "type": "light",
-          "color": [0, 1, 0],
+          "color": [0.0, 1.0, 0.0],
           "intensity": 1.0
         },
         {
@@ -82,14 +84,14 @@
       "components": [
         {
           "type": "transform",
-          "position": [-2.0, 3.0, -4.0],
-          "rotation": [-45.0, -45.0, 0.0],
-          "scale": [1, 1, 1]
+          "position": [0.0, 1.5, -5.0],
+          "rotation": [90.0, 0.0, 0.0],
+          "scale": [1.0, 1.0, 1.0]
         },
         {
           "type": "light",
-          "color": [0, 0, 1.0],
-          "intensity": 1
+          "color": [0.0, 0.0, 1.0],
+          "intensity": 1.0
         },
         {
           "type": "spotLight",

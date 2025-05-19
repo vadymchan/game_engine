@@ -4,6 +4,7 @@
 
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/common/rhi_enums.h"
+#include "utils/time/stopwatch.h"
 #include "utils/ui/imgui_rhi_context.h"
 
 #include <ImGuizmo.h>
@@ -35,11 +36,13 @@ class Editor {
   private:
   void resizeViewport(const gfx::renderer::RenderContext& context);
 
+  void renderMainMenu();
   void renderPerformanceWindow();
   void renderViewportWindow(gfx::renderer::RenderContext& context);
   void renderModeSelectionWindow();
   void renderSceneHierarchyWindow();
   void renderInspectorWindow();
+  void renderNotifications();
 
   void renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos);
   void handleGizmoInput();
@@ -57,6 +60,9 @@ class Editor {
   math::Matrix4f<> calculateEntityModelMatrix_();
   math::Matrix4f<> calculateDirectionalLightMatrix_(Registry& registry);
   bool             performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::entity cameraEntity);
+
+  void saveCurrentScene_();
+  void setupInputHandlers_();
 
   // Editor state
   gfx::renderer::RenderSettings m_renderParams;
@@ -77,7 +83,10 @@ class Editor {
   ImGuizmo::MODE      m_currentGizmoMode      = ImGuizmo::WORLD;
 
   math::Vector3Df m_currentDirectionalLightGizmoPosition;
-  //bool            m_isDirectionalLightSelected = false;
+
+  bool        m_showSaveNotification = false;
+  ElapsedTime m_notificationTimer;
+  FrameTime   m_sceneSaveTimer;
 };
 
 }  // namespace game_engine

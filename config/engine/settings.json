@@ -1,5 +1,5 @@
 {
-  "renderingApi": "vulkan",
+  "renderingApi": "dx12",
   "applicationMode": "editor",
   "worldUp": {
     "x": 0,

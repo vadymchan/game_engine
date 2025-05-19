@@ -17,6 +17,25 @@ namespace math {
 
 // ----------------------------------------------------------------------------
 
+
+inline float normalizeAngle(float angle) {
+  // Get the angle to be within the range [0, 360)
+  angle = std::fmod(angle, 360.0f);
+
+  // Convert to range [-180, 180)
+  if (angle >= 180.0f) {
+    angle -= 360.0f;
+  } else if (angle < -180.0f) {
+    angle += 360.0f;
+  }
+
+  return angle;
+}
+
+inline math::Vector3Df normalizeRotation(const math::Vector3Df& rotation) {
+  return math::Vector3Df(normalizeAngle(rotation.x()), normalizeAngle(rotation.y()), normalizeAngle(rotation.z()));
+}
+
 Vector3Df g_getVectorfromConfig(const game_engine::ConfigValue& value);
 
 }  // namespace math
