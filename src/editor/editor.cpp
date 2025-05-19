@@ -230,9 +230,9 @@ void Editor::renderSceneHierarchyWindow() {
     ImGui::Text("Current Scene: %s", sceneManager->getCurrentSceneName().c_str());
     ImGui::Separator();
 
-    auto view = registry.view<Transform>();
+    auto entities = registry.view<entt::entity>();
 
-    for (auto entity : view) {
+    for (auto entity : entities) {
       std::string label = "Entity " + std::to_string(static_cast<uint32_t>(entity));
 
       if (registry.all_of<RenderModel*>(entity)) {
@@ -253,7 +253,7 @@ void Editor::renderSceneHierarchyWindow() {
       bool isSelected = (entity == m_selectedEntity);
 
       if (ImGui::Selectable(label.c_str(), isSelected)) {
-        m_selectedEntity = entity;
+        handleEntitySelection(entity);
       }
     }
   } else {
@@ -374,11 +374,13 @@ void Editor::renderInspectorWindow() {
         light.color.x() = color[0];
         light.color.y() = color[1];
         light.color.z() = color[2];
+        light.isDirty   = true;
       }
 
       float intensity = light.intensity;
       if (ImGui::DragFloat("Intensity", &intensity, 0.1f, 0.0f, 100.0f)) {
         light.intensity = intensity;
+        light.isDirty   = true;
       }
 
       if (registry.all_of<DirectionalLight>(m_selectedEntity)) {
@@ -389,30 +391,38 @@ void Editor::renderInspectorWindow() {
           dirLight.direction.x() = direction[0];
           dirLight.direction.y() = direction[1];
           dirLight.direction.z() = direction[2];
+
+          dirLight.direction.normalize();
+
+          dirLight.isDirty       = true;
         }
       } else if (registry.all_of<PointLight>(m_selectedEntity)) {
         auto& pointLight = registry.get<PointLight>(m_selectedEntity);
 
         float range = pointLight.range;
         if (ImGui::DragFloat("Range", &range, 0.1f, 0.0f, 1000.0f)) {
-          pointLight.range = range;
+          pointLight.range   = range;
+          pointLight.isDirty = true;
         }
       } else if (registry.all_of<SpotLight>(m_selectedEntity)) {
         auto& spotLight = registry.get<SpotLight>(m_selectedEntity);
 
         float range = spotLight.range;
         if (ImGui::DragFloat("Range", &range, 0.1f, 0.0f, 1000.0f)) {
-          spotLight.range = range;
+          spotLight.range   = range;
+          spotLight.isDirty = true;
         }
 
         float innerAngle = spotLight.innerConeAngle;
         if (ImGui::DragFloat("Inner Cone Angle", &innerAngle, 0.1f, 0.0f, spotLight.outerConeAngle)) {
           spotLight.innerConeAngle = innerAngle;
+          spotLight.isDirty        = true;
         }
 
         float outerAngle = spotLight.outerConeAngle;
         if (ImGui::DragFloat("Outer Cone Angle", &outerAngle, 0.1f, spotLight.innerConeAngle, 90.0f)) {
           spotLight.outerConeAngle = outerAngle;
+          spotLight.isDirty        = true;
         }
       }
     }
@@ -477,71 +487,25 @@ void Editor::renderInspectorWindow() {
 }
 
 void Editor::renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos) {
-  if (!m_showGizmo || m_selectedEntity == entt::null || !m_frameResources) {
+  if (!shouldRenderGizmo_()) {
     return;
   }
 
-  auto* sceneManager = ServiceLocator::s_get<SceneManager>();
-  auto* scene        = sceneManager->getCurrentScene();
+  updateGizmoConstraints();
 
-  if (!scene) {
+  entt::entity cameraEntity = getCameraEntity_();
+  if (cameraEntity == entt::null) {
     return;
   }
 
-  auto& registry = scene->getEntityRegistry();
+  setupImGuizmo_(viewportPos, viewportSize);
 
-  if (!registry.all_of<Transform>(m_selectedEntity)) {
-    return;
-  }
+  math::Matrix4f<> modelMatrix = calculateEntityModelMatrix_();
 
-  auto& transform = registry.get<Transform>(m_selectedEntity);
-
-  math::Matrix4f<> modelMatrix = calculateTransformMatrix(transform);
-
-  auto cameraView = registry.view<Camera, CameraMatrices>();
-  if (cameraView.begin() == cameraView.end()) {
-    return;
-  }
-
-  auto        cameraEntity   = cameraView.front();
-  const auto& cameraMatrices = registry.get<CameraMatrices>(cameraEntity);
-
-  ImGuizmo::SetOrthographic(false);
-  ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
-
-  ImGuizmo::SetRect(viewportPos.x,
-                    viewportPos.y,
-                    static_cast<float>(viewportSize.width()),
-                    static_cast<float>(viewportSize.height()));
-
-  float* viewMatrix      = const_cast<float*>(cameraMatrices.view.data());
-  float* projMatrix      = const_cast<float*>(cameraMatrices.projection.data());
-  float* modelMatrix_ptr = const_cast<float*>(modelMatrix.data());
-
-  bool manipulated
-      = ImGuizmo::Manipulate(viewMatrix, projMatrix, m_currentGizmoOperation, m_currentGizmoMode, modelMatrix_ptr);
+  bool manipulated = performGizmoManipulation_(modelMatrix, cameraEntity);
 
   if (manipulated) {
-    math::Vector3Df translation, rotation, scale;
-
-    float translationArray[3], rotationArray[3], scaleArray[3];
-
-    ImGuizmo::DecomposeMatrixToComponents(modelMatrix_ptr, translationArray, rotationArray, scaleArray);
-
-    for (int i = 0; i < 3; i++) {
-      translation(i) = translationArray[i];
-      rotation(i)    = rotationArray[i];
-      scale(i)       = scaleArray[i];
-    }
-
-    transform.translation = translation;
-    transform.rotation    = rotation;
-    transform.scale       = scale;
-    transform.isDirty     = true;
-
-    GlobalLogger::Log(
-        LogLevel::Info,
-        "Transform marked as dirty for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
+    handleGizmoManipulation(modelMatrix);
   }
 }
 
@@ -552,14 +516,26 @@ void Editor::handleGizmoInput() {
   }
 
   if (ImGui::IsKeyPressed(ImGuiKey_1)) {
-    m_currentGizmoOperation = ImGuizmo::TRANSLATE;
-    GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Translate mode");
+    if (isOperationAllowedForEntity(ImGuizmo::TRANSLATE)) {
+      m_currentGizmoOperation = ImGuizmo::TRANSLATE;
+      GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Translate mode");
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Translate operation not allowed for this entity type");
+    }
   } else if (ImGui::IsKeyPressed(ImGuiKey_2)) {
-    m_currentGizmoOperation = ImGuizmo::ROTATE;
-    GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Rotate mode");
+    if (isOperationAllowedForEntity(ImGuizmo::ROTATE)) {
+      m_currentGizmoOperation = ImGuizmo::ROTATE;
+      GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Rotate mode");
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Rotate operation not allowed for this entity type");
+    }
   } else if (ImGui::IsKeyPressed(ImGuiKey_3)) {
-    m_currentGizmoOperation = ImGuizmo::SCALE;
-    GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Scale mode");
+    if (isOperationAllowedForEntity(ImGuizmo::SCALE)) {
+      m_currentGizmoOperation = ImGuizmo::SCALE;
+      GlobalLogger::Log(LogLevel::Info, "Gizmo: Switched to Scale mode");
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Scale operation not allowed for this entity type");
+    }
   }
 
   if (ImGui::IsKeyPressed(ImGuiKey_4)) {
@@ -584,19 +560,66 @@ void Editor::renderGizmoControlsWindow() {
     return;
   }
 
+  auto* sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto* scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    ImGui::End();
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
   ImGui::Checkbox("Show Gizmo", &m_showGizmo);
 
-  ImGui::SameLine();
-  if (ImGui::Button("T")) {
-    m_currentGizmoOperation = ImGuizmo::TRANSLATE;
+  // Show which operations are available for the current entity type
+  bool canTranslate = isOperationAllowedForEntity(ImGuizmo::TRANSLATE);
+  bool canRotate    = isOperationAllowedForEntity(ImGuizmo::ROTATE);
+  bool canScale     = isOperationAllowedForEntity(ImGuizmo::SCALE);
+
+  if (canTranslate) {
+    ImGui::SameLine();
+    if (ImGui::Button("T")) {
+      m_currentGizmoOperation = ImGuizmo::TRANSLATE;
+    }
+  } else {
+    ImGui::SameLine();
+    ImGui::BeginDisabled();
+    ImGui::Button("T");
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("Translation not allowed for this entity type");
+    }
   }
-  ImGui::SameLine();
-  if (ImGui::Button("R")) {
-    m_currentGizmoOperation = ImGuizmo::ROTATE;
+
+  if (canRotate) {
+    ImGui::SameLine();
+    if (ImGui::Button("R")) {
+      m_currentGizmoOperation = ImGuizmo::ROTATE;
+    }
+  } else {
+    ImGui::SameLine();
+    ImGui::BeginDisabled();
+    ImGui::Button("R");
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("Rotation not allowed for this entity type");
+    }
   }
-  ImGui::SameLine();
-  if (ImGui::Button("S")) {
-    m_currentGizmoOperation = ImGuizmo::SCALE;
+
+  if (canScale) {
+    ImGui::SameLine();
+    if (ImGui::Button("S")) {
+      m_currentGizmoOperation = ImGuizmo::SCALE;
+    }
+  } else {
+    ImGui::SameLine();
+    ImGui::BeginDisabled();
+    ImGui::Button("S");
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("Scaling not allowed for this entity type");
+    }
   }
 
   const char* modes[]      = {"World", "Local"};
@@ -606,23 +629,290 @@ void Editor::renderGizmoControlsWindow() {
   }
 
   ImGui::Separator();
+  ImGui::Text("Selected Entity: %u", static_cast<uint32_t>(m_selectedEntity));
+
+  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+    ImGui::Text("Type: Directional Light");
+    ImGui::Text("Allowed Operations: Rotation only");
+  } else if (registry.all_of<Light, PointLight>(m_selectedEntity)) {
+    ImGui::Text("Type: Point Light");
+    ImGui::Text("Allowed Operations: Translation, Rotation");
+  } else if (registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+    ImGui::Text("Type: Spot Light");
+    ImGui::Text("Allowed Operations: Translation, Rotation");
+  } else {
+    ImGui::Text("Type: Standard Entity");
+    ImGui::Text("Allowed Operations: All");
+  }
+
+  ImGui::Separator();
   ImGui::Text("Keyboard Shortcuts:");
 
-  ImGui::BulletText("1: Translate");
-  ImGui::BulletText("2: Rotate");
-  ImGui::BulletText("3: Scale");
+  ImGui::BulletText("1: Translate (if allowed)");
+  ImGui::BulletText("2: Rotate (if allowed)");
+  ImGui::BulletText("3: Scale (if allowed)");
   ImGui::BulletText("4: Toggle World/Local");
   ImGui::BulletText("5: Toggle Visibility");
+
+  ImGui::End();
+}
+
+bool Editor::isOperationAllowedForEntity(ImGuizmo::OPERATION operation) {
+  if (m_selectedEntity == entt::null) {
+    return false;
+  }
+
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    return false;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+    return operation == ImGuizmo::ROTATE;
+  }
+
+  if (registry.all_of<Light, PointLight>(m_selectedEntity) || registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+    return operation == ImGuizmo::TRANSLATE || operation == ImGuizmo::ROTATE;
+  }
+
+  return true;
+}
+
+void Editor::updateGizmoConstraints() {
+  if (!isOperationAllowedForEntity(m_currentGizmoOperation)) {
+    if (isOperationAllowedForEntity(ImGuizmo::TRANSLATE)) {
+      m_currentGizmoOperation = ImGuizmo::TRANSLATE;
+    } else if (isOperationAllowedForEntity(ImGuizmo::ROTATE)) {
+      m_currentGizmoOperation = ImGuizmo::ROTATE;
+    } else if (isOperationAllowedForEntity(ImGuizmo::SCALE)) {
+      m_currentGizmoOperation = ImGuizmo::SCALE;
+    }
+  }
+}
+
+math::Vector3Df Editor::getGizmoWorldPosition() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    return math::Vector3Df(0.0f, 0.0f, 0.0f);
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+    return m_currentDirectionalLightGizmoPosition;
+  }
+
+  if (registry.all_of<Transform>(m_selectedEntity)) {
+    auto& transform = registry.get<Transform>(m_selectedEntity);
+    return transform.translation;
+  }
+
+  return math::Vector3Df(0.0f, 0.0f, 0.0f);
+}
+
+void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  math::Vector3Df translation, rotation, scale;
+  float           translationArray[3], rotationArray[3], scaleArray[3];
+
+  ImGuizmo::DecomposeMatrixToComponents(
+      const_cast<float*>(modelMatrix.data()), translationArray, rotationArray, scaleArray);
+
+  for (int i = 0; i < 3; i++) {
+    translation(i) = translationArray[i];
+    rotation(i)    = rotationArray[i];
+    scale(i)       = scaleArray[i];
+  }
+
+  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+    auto& dirLight = registry.get<DirectionalLight>(m_selectedEntity);
+
+    math::Quaternionf quat = math::Quaternionf::fromEulerAngles(math::g_degreeToRadian(rotation.x()),
+                                                                math::g_degreeToRadian(rotation.y()),
+                                                                math::g_degreeToRadian(rotation.z()),
+                                                                math::EulerRotationOrder::XYZ);
+
+    math::Vector3Df forward(0.0f, 0.0f, 1.0f);
+    dirLight.direction = quat.rotateVector(forward);
+    dirLight.isDirty   = true;
+
+    GlobalLogger::Log(
+        LogLevel::Info,
+        "DirectionalLight direction updated for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
+  }
+
+  else if (registry.all_of<Transform>(m_selectedEntity)) {
+    auto& transform = registry.get<Transform>(m_selectedEntity);
+
+    if (registry.all_of<Light, PointLight>(m_selectedEntity) || registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+      transform.translation = translation;
+      transform.rotation    = rotation;
+    }
+
+    else {
+      transform.translation = translation;
+      transform.rotation    = rotation;
+      transform.scale       = scale;
+    }
+
+    transform.isDirty = true;
+
+    GlobalLogger::Log(LogLevel::Info,
+                      "Transform updated for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
+  }
+}
+
+void Editor::handleEntitySelection(entt::entity entity) {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  if (registry.valid(entity) && registry.all_of<Light, DirectionalLight>(entity)) {
+
+    auto cameraView = registry.view<Camera, CameraMatrices, Transform>();
+    if (cameraView.begin() != cameraView.end()) {
+      auto        cameraEntity    = *cameraView.begin();
+      const auto& cameraTransform = registry.get<Transform>(cameraEntity);
+      const auto& cameraMatrices  = registry.get<CameraMatrices>(cameraEntity);
+
+      math::Vector3Df cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
+      cameraForward.normalize();
+
+      m_currentDirectionalLightGizmoPosition = cameraTransform.translation + (cameraForward * 5.0f);
+    }
+  }
+
+  m_selectedEntity = entity;
+}
+
+bool Editor::shouldRenderGizmo_() {
+  if (!m_showGizmo || m_selectedEntity == entt::null || !m_frameResources) {
+    return false;
+  }
 
   auto* sceneManager = ServiceLocator::s_get<SceneManager>();
   auto* scene        = sceneManager->getCurrentScene();
 
-  if (scene && scene->getEntityRegistry().valid(m_selectedEntity)) {
-    ImGui::Separator();
-    ImGui::Text("Selected Entity: %u", static_cast<uint32_t>(m_selectedEntity));
+  if (!scene) {
+    return false;
   }
 
-  ImGui::End();
+  auto& registry = scene->getEntityRegistry();
+
+  bool isDirectionalLight = registry.all_of<Light, DirectionalLight>(m_selectedEntity);
+  bool hasTransform       = registry.all_of<Transform>(m_selectedEntity);
+
+  if (!isDirectionalLight && !hasTransform) {
+    return false;
+  }
+
+  return true;
+}
+
+entt::entity Editor::getCameraEntity_() {
+  auto* sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto* scene        = sceneManager->getCurrentScene();
+  if (!scene) {
+    return entt::null;
+  }
+
+  auto& registry   = scene->getEntityRegistry();
+  auto  cameraView = registry.view<Camera, CameraMatrices>();
+
+  if (cameraView.begin() == cameraView.end()) {
+    return entt::null;
+  }
+
+  return cameraView.front();
+}
+
+void Editor::setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2Di& viewportSize) {
+  ImGuizmo::SetOrthographic(false);
+  ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
+  ImGuizmo::SetRect(viewportPos.x,
+                    viewportPos.y,
+                    static_cast<float>(viewportSize.width()),
+                    static_cast<float>(viewportSize.height()));
+}
+
+math::Matrix4f<> Editor::calculateEntityModelMatrix_() {
+  auto* sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto* scene        = sceneManager->getCurrentScene();
+  auto& registry     = scene->getEntityRegistry();
+
+  math::Matrix4f<> modelMatrix = math::Matrix4f<>::Identity();
+
+  bool hasTransform       = registry.all_of<Transform>(m_selectedEntity);
+  bool isDirectionalLight = registry.all_of<Light, DirectionalLight>(m_selectedEntity);
+
+  if (hasTransform) {
+    auto& transform = registry.get<Transform>(m_selectedEntity);
+    modelMatrix     = calculateTransformMatrix(transform);
+  } else if (isDirectionalLight) {
+    modelMatrix = calculateDirectionalLightMatrix_(registry);
+  }
+
+  return modelMatrix;
+}
+
+math::Matrix4f<> Editor::calculateDirectionalLightMatrix_(Registry& registry) {
+  auto& dirLight = registry.get<DirectionalLight>(m_selectedEntity);
+
+  math::Vector3Df gizmoPosition = getGizmoWorldPosition();
+
+  math::Vector3Df direction = dirLight.direction;
+  direction.normalize();
+
+  math::Vector3Df forward(0.0f, 0.0f, 1.0f);
+
+  math::Quaternionf quat = math::Quaternionf::fromVectors(forward, direction);
+
+  math::Matrix3f<> rotMat = quat.toRotationMatrix();
+
+  math::Matrix4f<> modelMatrix = math::Matrix4f<>::Identity();
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      modelMatrix(i, j) = rotMat(i, j);
+    }
+  }
+
+  math::g_addTranslate(modelMatrix, gizmoPosition);
+
+  return modelMatrix;
+}
+
+bool Editor::performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::entity cameraEntity) {
+  auto* sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto* scene        = sceneManager->getCurrentScene();
+  auto& registry     = scene->getEntityRegistry();
+
+  const auto& cameraMatrices = registry.get<CameraMatrices>(cameraEntity);
+
+  float* viewMatrix      = const_cast<float*>(cameraMatrices.view.data());
+  float* projMatrix      = const_cast<float*>(cameraMatrices.projection.data());
+  float* modelMatrix_ptr = const_cast<float*>(modelMatrix.data());
+
+  return ImGuizmo::Manipulate(viewMatrix, projMatrix, m_currentGizmoOperation, m_currentGizmoMode, modelMatrix_ptr);
 }
 
 }  // namespace game_engine

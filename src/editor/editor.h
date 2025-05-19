@@ -4,7 +4,7 @@
 
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/common/rhi_enums.h"
-#include "utils/ui/imgui_rhi_context.h" 
+#include "utils/ui/imgui_rhi_context.h"
 
 #include <ImGuizmo.h>
 
@@ -45,6 +45,21 @@ class Editor {
   void handleGizmoInput();
   void renderGizmoControlsWindow();
 
+  bool            isOperationAllowedForEntity(ImGuizmo::OPERATION operation);
+  void            updateGizmoConstraints();
+  math::Vector3Df getGizmoWorldPosition();
+  void            handleGizmoManipulation(const math::Matrix4f<>& modelMatrix);
+  void            handleEntitySelection(entt::entity entity);
+
+  bool             shouldRenderGizmo_();
+  entt::entity     getCameraEntity_();
+  void             setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2Di& viewportSize);
+  math::Matrix4f<> calculateEntityModelMatrix_();
+  math::Matrix4f<> calculateDirectionalLightMatrix_(Registry& registry);
+  bool             performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::entity cameraEntity);
+
+  // Editor state
+  gfx::renderer::RenderSettings m_renderParams;
 
   Window*                        m_window         = nullptr;
   gfx::rhi::Device*              m_device         = nullptr;
@@ -53,7 +68,7 @@ class Editor {
   std::unique_ptr<gfx::ImGuiRHIContext> m_imguiContext;
   std::vector<ImTextureID>              m_viewportTextureIDs;
 
-  bool               m_pendingViewportResize = true;
+  bool m_pendingViewportResize = true;
 
   entt::entity m_selectedEntity = entt::null;
 
@@ -61,8 +76,8 @@ class Editor {
   ImGuizmo::OPERATION m_currentGizmoOperation = ImGuizmo::TRANSLATE;
   ImGuizmo::MODE      m_currentGizmoMode      = ImGuizmo::WORLD;
 
-  // Editor state
-  gfx::renderer::RenderSettings m_renderParams;
+  math::Vector3Df m_currentDirectionalLightGizmoPosition;
+  //bool            m_isDirectionalLightSelected = false;
 };
 
 }  // namespace game_engine

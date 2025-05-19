@@ -36,7 +36,7 @@
         },
         {
           "type": "model",
-          "path": "assets/models/BoxTextured/glTF/BoxTextured.gltf"
+          "path": "assets/models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
         },
         {
           "type": "movement"
@@ -48,8 +48,8 @@
       "components": [
         {
           "type": "light",
-          "color": [1.0, 0.95, 0.9],
-          "intensity": 1.5
+          "color": [1.0, 0, 0],
+          "intensity": 1
         },
         {
           "type": "directionalLight",
@@ -68,8 +68,8 @@
         },
         {
           "type": "light",
-          "color": [1.0, 0.8, 0.6],
-          "intensity": 50.0
+          "color": [0, 1, 0],
+          "intensity": 1.0
         },
         {
           "type": "pointLight",
@@ -88,8 +88,8 @@
         },
         {
           "type": "light",
-          "color": [1.0, 1.0, 1.0],
-          "intensity": 80.0
+          "color": [0, 0, 1.0],
+          "intensity": 1
         },
         {
           "type": "spotLight",
