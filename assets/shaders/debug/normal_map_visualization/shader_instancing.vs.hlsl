@@ -52,17 +52,31 @@ struct VSOutput
 
 VSOutput main(VSInput input)
 {
+    // TODO: model, VP matrices - column major multiplication, doesn't depend on SPIRV, DXIL version. However, instance matrix do. Consider make it the same regardles of rendering API
+    
     VSOutput output = (VSOutput) 0;
 
-    float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
 #ifdef __spirv__
-    output.Position = mul(modelPos, input.Instance);
+    float4x4 worldMatrix = mul(ModelParam.ModelMatrix, input.Instance);
+    
+    output.Position = mul(float4(input.Position, 1.0), worldMatrix);
+    
+    output.Normal = normalize(mul(input.Normal, (float3x3) worldMatrix));
+    output.Tangent = normalize(mul(input.Tangent, (float3x3) worldMatrix));
+    output.Bitangent = normalize(mul(input.Bitangent, (float3x3) worldMatrix));
 #else
-    output.Position = mul(input.Instance, modelPos);
+    float4x4 worldMatrix = mul(input.Instance, ModelParam.ModelMatrix);
+    
+    output.Position = mul(worldMatrix, float4(input.Position, 1.0));
+    
+    output.Normal = normalize(mul((float3x3) worldMatrix, input.Normal));
+    output.Tangent = normalize(mul((float3x3) worldMatrix, input.Tangent));
+    output.Bitangent = normalize(mul((float3x3) worldMatrix, input.Bitangent));
 #endif
+    
     output.Position = mul(ViewParam.VP, output.Position);
 
     output.TexCoord = input.TexCoord;
-
+    
     return output;
 }

@@ -52,38 +52,23 @@ VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
 
-    float3x3 modelMatrix3x3 = (float3x3) ModelParam.ModelMatrix;
-    float3x3 instanceMatrix3x3 = (float3x3) input.Instance;
-    
-    float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
-    //float3x3 worldMatrix3x3 = mul(instanceMatrix3x3, modelMatrix3x3);
-    float3x3 worldMatrix3x3 = mul(modelMatrix3x3, instanceMatrix3x3);
-    //float3x3 worldMatrix3x3 = instanceMatrix3x3;
-    
 #ifdef __spirv__
-    //float3x3 worldMatrix3x3 = mul(modelMatrix3x3, instanceMatrix3x3);
-
-    //float4 modelPos = mul(ModelParam.ModelMatrix, float4(input.Position, 1.0));
-    output.Position = mul(modelPos, input.Instance);
+    float4x4 worldMatrix = mul(ModelParam.ModelMatrix, input.Instance);
     
-    output.Normal    = normalize(mul(input.Normal,    worldMatrix3x3));
-    output.Tangent   = normalize(mul(input.Tangent,   worldMatrix3x3));
-    output.Bitangent = normalize(mul(input.Bitangent, worldMatrix3x3));
+    output.Position = mul(float4(input.Position, 1.0), worldMatrix);
+    
+    output.Normal = normalize(mul(input.Normal, (float3x3) worldMatrix));
+    output.Tangent = normalize(mul(input.Tangent, (float3x3) worldMatrix));
+    output.Bitangent = normalize(mul(input.Bitangent, (float3x3) worldMatrix));
 #else
-    //float3x3 worldMatrix3x3 = mul(instanceMatrix3x3, modelMatrix3x3);
-    //float3x3 worldMatrix3x3 = mul(modelMatrix3x3, instanceMatrix3x3);
+    float4x4 worldMatrix = mul(input.Instance, ModelParam.ModelMatrix);
     
-    //float4 modelPos = mul(float4(input.Position, 1.0), ModelParam.ModelMatrix);
-    output.Position = mul(input.Instance, modelPos);
+    output.Position = mul(worldMatrix, float4(input.Position, 1.0));
     
-    output.Normal =    normalize(mul(worldMatrix3x3, input.Normal));
-    output.Tangent =   normalize(mul(worldMatrix3x3, input.Tangent));
-    output.Bitangent = normalize(mul(worldMatrix3x3, input.Bitangent));
+    output.Normal = normalize(mul((float3x3) worldMatrix, input.Normal));
+    output.Tangent = normalize(mul((float3x3) worldMatrix, input.Tangent));
+    output.Bitangent = normalize(mul((float3x3) worldMatrix, input.Bitangent));
 #endif
-
-
-    //output.Normal = normalize(mul(worldMatrix3x3, input.Normal));
-    //output.Tangent = normalize(mul(worldMatrix3x3, input.Tangent));
-    //output.Bitangent = normalize(mul(worldMatrix3x3, input.Bitangent));
+    
     return output;
 }

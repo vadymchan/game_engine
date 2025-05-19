@@ -36,7 +36,7 @@
         },
         {
           "type": "model",
-          "path": "assets/models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
+          "path": "assets/models/BoxTextured/glTF/BoxTextured.gltf"
         },
         {
           "type": "movement"
@@ -48,12 +48,12 @@
       "components": [
         {
           "type": "light",
-          "color": [0.11, 0.12, 0.13],
-          "intensity": 0.14
+          "color": [1.0, 0.95, 0.9],
+          "intensity": 1.5
         },
         {
           "type": "directionalLight",
-          "direction": [0.15, -0.16, 0.17]
+          "direction": [-0.577, -0.577, 0.577]
         }
       ]
     },
@@ -62,18 +62,18 @@
       "components": [
         {
           "type": "transform",
-          "position": [0.26, 0.27, 0.28],
+          "position": [2.0, 2.0, -3.0],
           "rotation": [0, 0, 0],
           "scale": [1, 1, 1]
         },
         {
           "type": "light",
-          "color": [0.21, 0.22, 0.23],
-          "intensity": 0.24
+          "color": [1.0, 0.8, 0.6],
+          "intensity": 50.0
         },
         {
           "type": "pointLight",
-          "range": 0.25
+          "range": 12.0
         }
       ]
     },
@@ -82,20 +82,20 @@
       "components": [
         {
           "type": "transform",
-          "position": [0.38, 0.39, 0.31],
-          "rotation": [0.311, 0.312, 0.313],
+          "position": [-2.0, 3.0, -4.0],
+          "rotation": [-45.0, -45.0, 0.0],
           "scale": [1, 1, 1]
         },
         {
           "type": "light",
-          "color": [0.31, 0.32, 0.33],
-          "intensity": 0.34
+          "color": [1.0, 1.0, 1.0],
+          "intensity": 80.0
         },
         {
           "type": "spotLight",
-          "range": 0.35,
-          "innerConeAngle": 0.36,
-          "outerConeAngle": 0.37
+          "range": 20.0,
+          "innerConeAngle": 20.0,
+          "outerConeAngle": 30.0
         }
       ]
     }

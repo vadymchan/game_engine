@@ -13,6 +13,9 @@ SamplerState DefaultSampler : register(s0, space3);
 
 float4 main(PSInput input) : SV_TARGET
 {
+    float3 normal = input.Normal * 0.5 + 0.5;  
+    return float4(normal, 1);
+    
     float3 normalColor = NormalTexture.Sample(DefaultSampler, input.TexCoord).xyz;
     return float4(normalColor, 1.0);
 }

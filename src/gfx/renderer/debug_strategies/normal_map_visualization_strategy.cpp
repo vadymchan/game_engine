@@ -132,13 +132,13 @@ void NormalMapVisualizationStrategy::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
-    if (drawData.materialDescriptorSet) {
-      commandBuffer->bindDescriptorSet(2, drawData.materialDescriptorSet);
-    }
+     if (drawData.materialDescriptorSet) {
+       commandBuffer->bindDescriptorSet(2, drawData.materialDescriptorSet);
+     }
 
-    if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(3, m_frameResources->getDefaultSamplerDescriptorSet());
-    }
+     if (m_frameResources->getDefaultSamplerDescriptorSet()) {
+       commandBuffer->bindDescriptorSet(3, m_frameResources->getDefaultSamplerDescriptorSet());
+     }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
     commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
@@ -262,16 +262,9 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      if (!renderMesh->material || !renderMesh->material->textures.contains("normal_map")) {
-        GlobalLogger::Log(LogLevel::Error,
-                          "Normal map visualization strategy requires a material with a normal map texture");
-        continue;
-      }
-
       rhi::DescriptorSet* materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
       if (!materialDescriptorSet) {
-        GlobalLogger::Log(LogLevel::Error,
-                          "Normal map visualization strategy requires a material with a normal map texture");
+        GlobalLogger::Log(LogLevel::Warning, "Could not create material descriptor set for normal map visualization");
         continue;
       }
 
@@ -371,8 +364,8 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 
         pipelineDesc.setLayouts.push_back(viewLayout);
         pipelineDesc.setLayouts.push_back(modelMatrixLayout);
-        pipelineDesc.setLayouts.push_back(m_materialDescriptorSetLayout);
-        pipelineDesc.setLayouts.push_back(samplerLayout);
+         pipelineDesc.setLayouts.push_back(m_materialDescriptorSetLayout);
+         pipelineDesc.setLayouts.push_back(samplerLayout);
 
         pipelineDesc.renderPass = m_renderPass;
 
@@ -387,11 +380,11 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
       drawData.pipeline                 = pipeline;
       drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
       drawData.materialDescriptorSet    = materialDescriptorSet;
-      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer           = cache.instanceBuffer;
-      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount            = cache.count;
+      drawData.vertexBuffer   = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer    = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer = cache.instanceBuffer;
+      drawData.indexCount     = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount  = cache.count;
 
       m_drawData.push_back(drawData);
     }
@@ -423,11 +416,6 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
     return it->second.descriptorSet;
   }
 
-  auto normalMapIt = material->textures.find("normal_map");
-  if (normalMapIt == material->textures.end() || !normalMapIt->second) {
-    return nullptr;
-  }
-
   std::string descriptorKey = "normal_map_material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
 
   auto descriptorSetPtr = m_resourceManager->getDescriptorSet(descriptorKey);
@@ -436,7 +424,18 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
     descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
   }
 
-  descriptorSetPtr->setTexture(0, normalMapIt->second);
+  rhi::Texture* normalMapTexture = nullptr;
+  auto          normalMapIt      = material->textures.find("normal_map");
+  if (normalMapIt != material->textures.end() && normalMapIt->second) {
+    normalMapTexture = normalMapIt->second;
+  } else {
+    normalMapTexture = m_frameResources->getDefaultNormalTexture();
+
+    GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
+  }
+
+  // Set the texture in the descriptor set
+  descriptorSetPtr->setTexture(0, normalMapTexture);
 
   m_materialCache[material].descriptorSet = descriptorSetPtr;
 
