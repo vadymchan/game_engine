@@ -20,7 +20,7 @@ struct RenderModel;
 
 class SceneSaver {
   public:
-  // Saves the scene to the specified file path
+  
   static bool saveScene(Scene* scene, const std::string& sceneName, const std::filesystem::path& filePath);
 
   private:

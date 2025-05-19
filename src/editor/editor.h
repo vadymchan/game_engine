@@ -87,6 +87,8 @@ class Editor {
   bool        m_showSaveNotification = false;
   ElapsedTime m_notificationTimer;
   FrameTime   m_sceneSaveTimer;
+
+  bool m_setInspectorFocus = false;
 };
 
 }  // namespace game_engine

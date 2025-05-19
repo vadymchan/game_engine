@@ -287,7 +287,14 @@ void Editor::renderSceneHierarchyWindow() {
   ImGui::End();
 }
 
+
+
 void Editor::renderInspectorWindow() {
+  if (m_setInspectorFocus) {
+    ImGui::SetNextWindowFocus();
+    m_setInspectorFocus = false;
+  }
+
   ImGui::Begin("Inspector");
 
   if (m_selectedEntity == entt::null) {
@@ -1020,6 +1027,12 @@ void Editor::setupInputHandlers_() {
     }
 
     saveCurrentScene_();
+    return true;
+  });
+
+  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_I}, [this](const KeyboardEvent& event) {
+    m_setInspectorFocus = true;
+    GlobalLogger::Log(LogLevel::Info, "Inspector window focused");
     return true;
   });
 }
