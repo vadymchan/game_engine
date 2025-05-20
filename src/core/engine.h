@@ -48,6 +48,7 @@
 #include "utils/third_party/stb_util.h"
 #include "utils/time/stopwatch.h"
 #include "utils/time/timing_manager.h"
+#include "utils/resource/resource_deletion_manager.h"
 
 // TODO: consider moving this to another file
 
@@ -84,7 +85,8 @@ class Engine {
     ServiceLocator::s_remove<ImageManager>();
     ServiceLocator::s_remove<ImageLoaderManager>();
     // ServiceLocator::s_remove<gfx::rhi::ShaderManager>();
-    ServiceLocator::s_remove<gfx::renderer::RenderResourceManager>();
+    //ServiceLocator::s_remove<gfx::renderer::RenderResourceManager>();
+    ServiceLocator::s_remove<ResourceDeletionManager>();
     ServiceLocator::s_remove<TextureManager>();
     ServiceLocator::s_remove<BufferManager>();
 
@@ -172,7 +174,9 @@ class Engine {
     ServiceLocator::s_provide<SceneManager>();
     ServiceLocator::s_provide<SystemManager>();
     ServiceLocator::s_provide<TimingManager>();
-    ServiceLocator::s_provide<gfx::renderer::RenderResourceManager>();
+    //ServiceLocator::s_provide<gfx::renderer::RenderResourceManager>();
+    ServiceLocator::s_provide<ResourceDeletionManager>();
+
 
     // config
     // ------------------------------------------------------------------------

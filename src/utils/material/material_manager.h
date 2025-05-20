@@ -19,7 +19,6 @@ class MaterialManager {
   std::vector<Material*> getMaterials(const std::filesystem::path& filepath) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    // Check if materials are already loaded
     auto it = materialCache_.find(filepath);
     if (it != materialCache_.end()) {
       std::vector<Material*> result;
@@ -29,14 +28,12 @@ class MaterialManager {
       return result;
     }
 
-    // Get loader manager from service locator
     auto materialLoaderManager = ServiceLocator::s_get<MaterialLoaderManager>();
     if (!materialLoaderManager) {
       GlobalLogger::Log(LogLevel::Error, "MaterialLoaderManager not available in ServiceLocator.");
       return {};
     }
 
-    // Load materials
     auto materials = materialLoaderManager->loadMaterials(filepath);
     if (!materials.empty()) {
       std::vector<Material*> result;
@@ -56,6 +53,35 @@ class MaterialManager {
     return {};
   }
 
+  bool removeMaterial(Material* material) {
+    if (!material) {
+      GlobalLogger::Log(LogLevel::Error, "Cannot remove null material");
+      return false;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    for (auto it = materialCache_.begin(); it != materialCache_.end(); ++it) {
+      auto& materialVec = it->second;
+      auto  materialIt  = std::find_if(materialVec.begin(),
+                                     materialVec.end(),
+                                     [material](const std::unique_ptr<Material>& m) { return m.get() == material; });
+
+      if (materialIt != materialVec.end()) {
+        GlobalLogger::Log(LogLevel::Info, "Removing material: " + material->materialName);
+        materialVec.erase(materialIt);
+
+        if (materialVec.empty()) {
+          materialCache_.erase(it);
+        }
+        return true;
+      }
+    }
+
+    GlobalLogger::Log(LogLevel::Debug,
+                      "Material not found in manager (may have been removed already): " + material->materialName);
+    return false;
+  }
 
   private:
   std::unordered_map<std::filesystem::path, std::vector<std::unique_ptr<Material>>> materialCache_;

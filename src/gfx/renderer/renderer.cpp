@@ -5,6 +5,7 @@
 #include "gfx/rhi/common/rhi_creators.h"
 #include "platform/common/window.h"
 #include "scene/scene_manager.h"
+#include "utils/resource/resource_deletion_manager.h"
 
 namespace game_engine {
 namespace gfx {
@@ -64,6 +65,11 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 
   setupRenderPasses_();
 
+  auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+  if (deletionManager) {
+    deletionManager->setDefaultFrameDelay(MAX_FRAMES_IN_FLIGHT);
+  }
+
   m_initialized = true;
 
   GlobalLogger::Log(LogLevel::Info, "Renderer initialized successfully");
@@ -83,6 +89,11 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   fence->wait();
   fence->reset();
+
+  auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+  if (deletionManager) {
+    deletionManager->setCurrentFrame(m_currentFrame);
+  }
 
   m_resourceManager->updateScheduledPipelines();
 
@@ -108,7 +119,6 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
       break;
     case ApplicationRenderMode::Editor:
       viewportDimension = renderSettings.renderViewportDimension;
-
       onViewportResize(viewportDimension);
       break;
     default:

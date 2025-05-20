@@ -3,6 +3,7 @@
 #include "gfx/rhi/interface/command_buffer.h"
 #include "gfx/rhi/interface/synchronization.h"
 #include "utils/image/image_manager.h"
+#include "utils/resource/resource_deletion_manager.h"
 #include "utils/service/service_locator.h"
 
 namespace game_engine {
@@ -138,7 +139,6 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
     return nullptr;
   }
 
-  // Create texture descriptor
   gfx::rhi::TextureDesc desc;
   desc.width       = width;
   desc.height      = height;
@@ -150,26 +150,21 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
   desc.createFlags = gfx::rhi::TextureCreateFlag::Rtv;
   desc.debugName   = name.empty() ? "unnamed_render_target" : name.c_str();
 
-  // Generate a name if not provided
   std::string textureName = name.empty() ? generateUniqueName_("RenderTarget") : name;
 
-  // Create the texture
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
   if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Create the texture
   auto texture = m_device->createTexture(desc);
   if (!texture) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create render target '" + textureName + "'");
     return nullptr;
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -194,13 +189,11 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
     return nullptr;
   }
 
-  // Validate that the format is a depth format
   if (!gfx::rhi::g_isDepthFormat(format)) {
     GlobalLogger::Log(LogLevel::Error, "Invalid format for depth stencil, must be a depth format");
     return nullptr;
   }
 
-  // Create texture descriptor
   gfx::rhi::TextureDesc desc;
   desc.width       = width;
   desc.height      = height;
@@ -212,26 +205,21 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
   desc.createFlags = gfx::rhi::TextureCreateFlag::Dsv;
   desc.debugName   = name.empty() ? "unnamed_depth_stencil" : name.c_str();
 
-  // Generate a name if not provided
   std::string textureName = name.empty() ? generateUniqueName_("DepthStencil") : name;
 
-  // Create the texture
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
   if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Create the texture
   auto texture = m_device->createTexture(desc);
   if (!texture) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create depth stencil '" + textureName + "'");
     return nullptr;
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -252,13 +240,11 @@ gfx::rhi::Texture* TextureManager::addTexture(std::unique_ptr<gfx::rhi::Texture>
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
   if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -283,9 +269,26 @@ bool TextureManager::removeTexture(const std::string& name) {
 
   auto it = m_textures.find(name);
   if (it != m_textures.end()) {
-    GlobalLogger::Log(LogLevel::Info, "Removing texture '" + name + "'");
-    m_textures.erase(it);
-    return true;
+    auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+    if (deletionManager) {
+      gfx::rhi::Texture* texturePtr = it->second.get();
+
+      deletionManager->enqueueForDeletion<gfx::rhi::Texture>(
+          texturePtr,
+          [this, name](gfx::rhi::Texture*) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            GlobalLogger::Log(LogLevel::Info, "Texture '" + name + "' deleted");
+            m_textures.erase(name);
+          },
+          name,
+          "Texture");
+
+      return true;
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Removing texture '" + name + "'");
+      m_textures.erase(it);
+      return true;
+    }
   }
 
   GlobalLogger::Log(LogLevel::Warning, "Attempted to remove non-existent texture '" + name + "'");

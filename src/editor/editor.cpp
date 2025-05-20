@@ -7,6 +7,7 @@
 #include "input/input_manager.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_saver.h"
+#include "utils/model/render_model_manager.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/time/timing_manager.h"
@@ -95,28 +96,6 @@ void Editor::render(gfx::renderer::RenderContext& context) {
 
   auto backBufferTexture = m_frameResources->getRenderTargets(context.currentImageIndex).backBuffer;
 
-  if (m_openModelDialog && ImGuiFileDialog::Instance()->Display("LoadModelDlg")) {
-    if (ImGuiFileDialog::Instance()->IsOk()) {
-      std::filesystem::path selected = ImGuiFileDialog::Instance()->GetFilePathName();
-
-      
-      std::filesystem::path rootPath = kModelsRootDir;
-      std::error_code       ec;  
-
-      auto absSelected = std::filesystem::weakly_canonical(selected, ec);
-      auto absRoot     = std::filesystem::weakly_canonical(rootPath, ec);
-
-      if (!ec && absSelected.string().rfind(absRoot.string(), 0) == 0) {
-        
-        GlobalLogger::Log(LogLevel::Info, "Selected model: " + absSelected.string());
-      } else {
-        GlobalLogger::Log(LogLevel::Warning, "Selection outside assets/models is not allowed");
-      }
-    }
-    ImGuiFileDialog::Instance()->Close();
-    m_openModelDialog = false;
-  }
-
   m_imguiContext->endFrame(
       context.commandBuffer.get(), backBufferTexture, m_window->getSize(), context.currentImageIndex);
 }
@@ -159,21 +138,6 @@ void Editor::renderMainMenu() {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
         saveCurrentScene_();
-      }
-      if (ImGui::MenuItem("Load Model...", "Ctrl+O")) {
-        const char* filters = ".gltf,.glb";
-
-       IGFD::FileDialogConfig cfg;
-        cfg.path              = kModelsRootDir;                        
-        cfg.countSelectionMax = 1;                                     
-        cfg.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton  
-                  | ImGuiFileDialogFlags_DisableQuickPathSelection     
-                  | ImGuiFileDialogFlags_ReadOnlyFileNameField;        
-
-
-        ImGuiFileDialog::Instance()->OpenDialog("LoadModelDlg", "Open glTF model", filters, cfg);
-
-        m_openModelDialog = true;
       }
       ImGui::EndMenu();
     }
@@ -298,6 +262,11 @@ void Editor::renderSceneHierarchyWindow() {
     ImGui::Text("Current Scene: %s", sceneManager->getCurrentSceneName().c_str());
     ImGui::Separator();
 
+    if (ImGui::Button("Add Model")) {
+      m_newModelTransform  = Transform();
+      m_openAddModelDialog = true;
+    }
+
     if (ImGui::Button("Add Directional Light")) {
       addDirectionalLight();
     }
@@ -352,6 +321,8 @@ void Editor::renderSceneHierarchyWindow() {
   }
 
   ImGui::End();
+
+  handleAddModelDialog();
 }
 
 void Editor::renderInspectorWindow() {
@@ -1219,6 +1190,37 @@ void Editor::removeSelectedEntity() {
     entityType = "Camera";
   }
 
+  if (registry.all_of<RenderModel*>(m_selectedEntity)) {
+    RenderModel* model = registry.get<RenderModel*>(m_selectedEntity);
+
+    size_t referenceCount = 0;
+    registry.view<RenderModel*>().each([&](auto entity, RenderModel* entityModel) {
+      if (entityModel == model) {
+        referenceCount++;
+      }
+    });
+
+    if (referenceCount == 1) {
+      auto renderModelManager = ServiceLocator::s_get<RenderModelManager>();
+      if (renderModelManager && model) {
+        GlobalLogger::Log(
+            LogLevel::Info,
+            "This is the last reference to render model. Cleaning up resources for: " + model->filePath.string());
+        renderModelManager->removeRenderModel(model);
+      }
+    } else {
+      GlobalLogger::Log(LogLevel::Info,
+                        "Found " + std::to_string(referenceCount - 1)
+                            + " other entities using the same render model. Keeping resources.");
+    }
+
+    if (!entityType.empty()) {
+      entityType += " and ";
+    }
+
+    entityType = "Model";
+  }
+
   registry.destroy(m_selectedEntity);
   GlobalLogger::Log(LogLevel::Info, entityType + " removed");
 
@@ -1256,4 +1258,230 @@ math::Vector3Df Editor::getPositionInFrontOfCamera_() {
   return position;
 }
 
+void Editor::handleAddModelDialog() {
+  if (!m_openAddModelDialog) {
+    return;
+  }
+
+  auto                  pathManager = ServiceLocator::s_get<PathManager>();
+  std::filesystem::path modelsDir   = pathManager->s_getModelPath();
+
+  if (m_modelPathBuffer[0] == '\0' && !m_modelPath.empty()) {
+    if (m_modelPath.is_absolute()) {
+      std::error_code ec;
+      auto            absModelPath = std::filesystem::weakly_canonical(m_modelPath, ec);
+      auto            absModelDir  = std::filesystem::weakly_canonical(modelsDir, ec);
+
+      if (!ec && absModelPath.string().find(absModelDir.string()) == 0) {
+        std::filesystem::path relativePath = std::filesystem::relative(absModelPath, absModelDir, ec);
+        if (!ec) {
+          strncpy(m_modelPathBuffer, relativePath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+        } else {
+          strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+        }
+      } else {
+        strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+      }
+    } else {
+      strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+    }
+
+    m_modelPathBuffer[MAX_PATH_BUFFER_SIZE - 1] = '\0';
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(500, 300), ImGuiCond_FirstUseEver);
+  if (ImGui::Begin("Add Model", &m_openAddModelDialog)) {
+    ImGui::Text("Model Path:");
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 40.0f);
+
+    if (ImGui::InputText("##ModelPath", m_modelPathBuffer, MAX_PATH_BUFFER_SIZE)) {
+      std::filesystem::path inputPath(m_modelPathBuffer);
+
+      if (inputPath.is_absolute()) {
+        std::error_code ec;
+        auto            absInputPath = std::filesystem::weakly_canonical(inputPath, ec);
+        auto            absModelDir  = std::filesystem::weakly_canonical(modelsDir, ec);
+
+        if (!ec && absInputPath.string().find(absModelDir.string()) == 0) {
+          m_modelPath = std::filesystem::relative(absInputPath, absModelDir, ec);
+          if (ec) {
+            m_modelPath = inputPath;
+          }
+        } else {
+          m_modelPath = inputPath;
+        }
+      } else {
+        m_modelPath = inputPath;
+      }
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("...")) {
+      IGFD::FileDialogConfig config;
+      config.path              = modelsDir.string();
+      config.countSelectionMax = 1;
+      config.flags             = ImGuiFileDialogFlags_Modal;
+      ImGuiFileDialog::Instance()->OpenDialog("ModelFileBrowser", "Select Model", ".gltf,.glb", config);
+    }
+
+    bool        pathValid = true;
+    std::string warningMessage;
+
+    if (!m_modelPath.empty()) {
+      std::filesystem::path fullPath;
+
+      if (m_modelPath.is_relative()) {
+        fullPath = modelsDir / m_modelPath;
+      } else {
+        fullPath = m_modelPath;
+      }
+
+      std::error_code ec;
+
+      if (std::filesystem::exists(fullPath, ec)) {
+        auto absSelected = std::filesystem::weakly_canonical(fullPath, ec);
+        auto absRoot     = std::filesystem::weakly_canonical(modelsDir, ec);
+
+        if (!ec && absSelected.string().find(absRoot.string()) != 0) {
+          pathValid      = false;
+          warningMessage = "Warning: Path should be within " + modelsDir.string() + " directory";
+        }
+      } else {
+        pathValid      = false;
+        warningMessage = "Warning: File does not exist";
+      }
+    }
+
+    if (!pathValid) {
+      ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "%s", warningMessage.c_str());
+    }
+
+    ImGui::Separator();
+
+    ImGui::Text("Transform:");
+
+    float position[3] = {
+      m_newModelTransform.translation.x(), m_newModelTransform.translation.y(), m_newModelTransform.translation.z()};
+    if (ImGui::DragFloat3("Position", position, 0.1f)) {
+      m_newModelTransform.translation.x() = position[0];
+      m_newModelTransform.translation.y() = position[1];
+      m_newModelTransform.translation.z() = position[2];
+    }
+
+    float rotation[3]
+        = {m_newModelTransform.rotation.x(), m_newModelTransform.rotation.y(), m_newModelTransform.rotation.z()};
+    if (ImGui::DragFloat3("Rotation", rotation, 1.0f)) {
+      m_newModelTransform.rotation.x() = rotation[0];
+      m_newModelTransform.rotation.y() = rotation[1];
+      m_newModelTransform.rotation.z() = rotation[2];
+    }
+
+    float scale[3] = {m_newModelTransform.scale.x(), m_newModelTransform.scale.y(), m_newModelTransform.scale.z()};
+    if (ImGui::DragFloat3("Scale", scale, 0.1f)) {
+      m_newModelTransform.scale.x() = scale[0];
+      m_newModelTransform.scale.y() = scale[1];
+      m_newModelTransform.scale.z() = scale[2];
+    }
+
+    if (ImGui::Button("Reset Transform")) {
+      m_newModelTransform       = Transform();
+      m_newModelTransform.scale = math::Vector3Df(1.0f, 1.0f, 1.0f);
+    }
+
+    ImGui::Separator();
+
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 160);
+    if (ImGui::Button("Cancel", ImVec2(70, 0))) {
+      m_openAddModelDialog = false;
+    }
+
+    ImGui::SameLine();
+    bool addButtonEnabled = (!m_modelPath.empty() && pathValid);
+    if (!addButtonEnabled) {
+      ImGui::BeginDisabled();
+    }
+
+    if (ImGui::Button("Add", ImVec2(70, 0)) && addButtonEnabled) {
+      std::filesystem::path fullPath = m_modelPath;
+      if (m_modelPath.is_relative()) {
+        fullPath = modelsDir / m_modelPath;
+      }
+
+      createModelEntity(fullPath, m_newModelTransform);
+      GlobalLogger::Log(LogLevel::Info, "Model added: " + fullPath.string());
+      m_openAddModelDialog = false;
+    }
+
+    if (!addButtonEnabled) {
+      ImGui::EndDisabled();
+    }
+
+    if (ImGuiFileDialog::Instance()->Display("ModelFileBrowser")) {
+      if (ImGuiFileDialog::Instance()->IsOk()) {
+        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+
+        std::filesystem::path selectedPath = filePathName;
+        std::error_code       ec;
+
+        auto absSelected = std::filesystem::weakly_canonical(selectedPath, ec);
+        auto absRoot     = std::filesystem::weakly_canonical(modelsDir, ec);
+
+        if (!ec && absSelected.string().find(absRoot.string()) == 0) {
+          std::filesystem::path relativePath = std::filesystem::relative(absSelected, absRoot, ec);
+          if (!ec) {
+            m_modelPath = relativePath;
+
+            strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+            m_modelPathBuffer[MAX_PATH_BUFFER_SIZE - 1] = '\0';
+          } else {
+            m_modelPath = selectedPath;
+            strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+            m_modelPathBuffer[MAX_PATH_BUFFER_SIZE - 1] = '\0';
+          }
+        } else {
+          m_modelPath = selectedPath;
+
+          strncpy(m_modelPathBuffer, m_modelPath.string().c_str(), MAX_PATH_BUFFER_SIZE - 1);
+          m_modelPathBuffer[MAX_PATH_BUFFER_SIZE - 1] = '\0';
+
+          GlobalLogger::Log(LogLevel::Warning, "Selected model path is outside " + modelsDir.string() + " directory.");
+        }
+      }
+      ImGuiFileDialog::Instance()->Close();
+    }
+  }
+  ImGui::End();
+}
+
+void Editor::createModelEntity(const std::filesystem::path& modelPath, const Transform& transform) {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  entt::entity entity = registry.create();
+
+  registry.emplace<Transform>(entity, transform);
+
+  auto modelManager = ServiceLocator::s_get<RenderModelManager>();
+  if (modelManager) {
+    auto renderModel = modelManager->getRenderModel(modelPath.string());
+
+    if (renderModel) {
+      registry.emplace<RenderModel*>(entity, renderModel);
+      handleEntitySelection(entity);
+    } else {
+      GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
+      registry.destroy(entity);
+    }
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "RenderModelManager not available");
+    registry.destroy(entity);
+  }
+}
 }  // namespace game_engine

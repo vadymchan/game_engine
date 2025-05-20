@@ -17,6 +17,8 @@ class RenderModelManager {
 
   RenderModel* getRenderModel(const std::filesystem::path& filepath, std::optional<Model*> outModel = std::nullopt);
 
+  bool removeRenderModel(RenderModel* renderModel);
+
   private:
   std::unordered_map<std::filesystem::path, std::unique_ptr<RenderModel>> renderModelCache_;
   std::mutex                                                              mutex_;

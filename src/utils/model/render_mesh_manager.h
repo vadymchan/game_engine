@@ -24,6 +24,8 @@ class RenderMeshManager {
 
   RenderMesh* getRenderMesh(Mesh* sourceMesh);
 
+  bool removeRenderMesh(RenderMesh* renderMesh);
+
   private:
   // Map of render meshes keyed by CPU mesh pointer
   std::unordered_map<Mesh*, std::unique_ptr<RenderMesh>> m_renderMeshes;

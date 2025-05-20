@@ -22,6 +22,8 @@ class RenderGeometryMeshManager {
 
   RenderGeometryMesh* getRenderGeometryMesh(Mesh* sourceMesh);
 
+  bool removeRenderGeometryMesh(RenderGeometryMesh* gpuMesh);
+
   private:
   // Map of GPU geometry meshes keyed by CPU mesh pointer
   std::unordered_map<Mesh*, std::unique_ptr<RenderGeometryMesh>> m_renderGeometryMeshes;

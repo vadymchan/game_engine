@@ -8,6 +8,7 @@
 #include "utils/ui/imgui_rhi_context.h"
 
 #include <ImGuizmo.h>
+#include <ImGuiFileDialog.h>
 
 namespace game_engine {
 
@@ -72,6 +73,9 @@ class Editor {
 
   math::Vector3Df getPositionInFrontOfCamera_();
 
+  void handleAddModelDialog();
+  void createModelEntity(const std::filesystem::path& modelPath, const Transform& transform);
+
   // Editor state
   gfx::renderer::RenderSettings m_renderParams;
 
@@ -99,8 +103,11 @@ class Editor {
 
   bool m_setInspectorFocus = false;
 
-  static const constexpr char* kModelsRootDir    = "assets/models";
-  bool                         m_openModelDialog = false;
+  bool      m_openAddModelDialog = false;
+  Transform m_newModelTransform;
+  std::filesystem::path m_modelPath;
+  // TODO: consider using standard c++ library
+  char                  m_modelPathBuffer[MAX_PATH_BUFFER_SIZE] = ""; 
 };
 
 }  // namespace game_engine

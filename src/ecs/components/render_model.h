@@ -14,7 +14,6 @@ namespace game_engine {
 struct RenderModel {
   std::filesystem::path    filePath;
   std::vector<RenderMesh*> renderMeshes;
-  //gfx::rhi::Buffer*        modelMatrixBuffer = nullptr;
 };
 
 }  // namespace game_engine
