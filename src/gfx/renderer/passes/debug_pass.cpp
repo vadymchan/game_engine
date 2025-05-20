@@ -1,5 +1,6 @@
 #include "gfx/renderer/passes/debug_pass.h"
 
+#include "gfx/renderer/debug_strategies/light_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/normal_map_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/shader_overdraw_strategy.h"
 #include "gfx/renderer/debug_strategies/vertex_normal_visualization_strategy.h"
@@ -23,7 +24,6 @@ void DebugPass::initialize(rhi::Device*           device,
   m_resourceManager = resourceManager;
   m_frameResources  = frameResources;
   m_shaderManager   = shaderManager;
-
 }
 
 void DebugPass::resize(const math::Dimension2Di& newDimension) {
@@ -83,6 +83,9 @@ void DebugPass::createDebugStrategy_() {
       break;
     case RenderMode::ShaderOverdraw:
       m_debugStrategy = std::make_unique<ShaderOverdrawStrategy>();
+      break;
+    case RenderMode::LightVisualization:
+      m_debugStrategy = std::make_unique<LightVisualizationStrategy>();
       break;
     default:
       // No debug visualization for other render modes

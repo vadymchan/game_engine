@@ -8,6 +8,7 @@
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
+#include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 
 namespace game_engine {
@@ -132,13 +133,13 @@ void NormalMapVisualizationStrategy::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
-     if (drawData.materialDescriptorSet) {
-       commandBuffer->bindDescriptorSet(2, drawData.materialDescriptorSet);
-     }
+    if (drawData.materialDescriptorSet) {
+      commandBuffer->bindDescriptorSet(2, drawData.materialDescriptorSet);
+    }
 
-     if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-       commandBuffer->bindDescriptorSet(3, m_frameResources->getDefaultSamplerDescriptorSet());
-     }
+    if (m_frameResources->getDefaultSamplerDescriptorSet()) {
+      commandBuffer->bindDescriptorSet(3, m_frameResources->getDefaultSamplerDescriptorSet());
+    }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
     commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
@@ -364,8 +365,8 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 
         pipelineDesc.setLayouts.push_back(viewLayout);
         pipelineDesc.setLayouts.push_back(modelMatrixLayout);
-         pipelineDesc.setLayouts.push_back(m_materialDescriptorSetLayout);
-         pipelineDesc.setLayouts.push_back(samplerLayout);
+        pipelineDesc.setLayouts.push_back(m_materialDescriptorSetLayout);
+        pipelineDesc.setLayouts.push_back(samplerLayout);
 
         pipelineDesc.renderPass = m_renderPass;
 
@@ -380,11 +381,11 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
       drawData.pipeline                 = pipeline;
       drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
       drawData.materialDescriptorSet    = materialDescriptorSet;
-      drawData.vertexBuffer   = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer    = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer = cache.instanceBuffer;
-      drawData.indexCount     = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount  = cache.count;
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }

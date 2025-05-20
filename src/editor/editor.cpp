@@ -239,6 +239,11 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::ShaderOverdraw;
   }
 
+  if (ImGui::RadioButton("Light Visualization",
+                         m_renderParams.renderMode == gfx::renderer::RenderMode::LightVisualization)) {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::LightVisualization;
+  }
+
   ImGui::End();
 }
 

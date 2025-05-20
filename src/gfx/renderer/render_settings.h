@@ -18,6 +18,7 @@ enum class RenderMode {
   NormalMapVisualization,
   VertexNormalVisualization,
   ShaderOverdraw,
+  LightVisualization,
 };
 
 enum class PostProcessMode {

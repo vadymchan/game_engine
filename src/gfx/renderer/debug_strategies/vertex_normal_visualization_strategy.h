@@ -2,7 +2,6 @@
 #define GAME_ENGINE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
-#include "gfx/rhi/interface/render_pass.h"
 
 #include <unordered_map>
 #include <vector>
@@ -16,6 +15,7 @@ namespace game_engine::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
+class RenderPass;
 }  // namespace game_engine::gfx::rhi
 
 namespace game_engine {

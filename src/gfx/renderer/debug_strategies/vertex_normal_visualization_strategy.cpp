@@ -7,6 +7,7 @@
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
+#include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 #include "utils/memory/align.h"
 

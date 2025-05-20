@@ -7,6 +7,7 @@
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
+#include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 
 namespace game_engine {
@@ -319,13 +320,13 @@ void WireframeStrategy::prepareDrawCalls_(const RenderContext& context) {
       }
 
       DrawData drawData;
-      drawData.pipeline       = pipeline;
+      drawData.pipeline                 = pipeline;
       drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
-      drawData.vertexBuffer   = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer    = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer = cache.instanceBuffer;
-      drawData.indexCount     = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount  = cache.count;
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }

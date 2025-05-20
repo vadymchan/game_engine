@@ -1,5 +1,6 @@
-#include "gfx/renderer/debug_strategies/shader_overdraw_strategy.h"
+#include "gfx/renderer/debug_strategies/light_visualization_strategy.h"
 
+#include "ecs/components/material.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/vertex.h"
 #include "gfx/renderer/frame_resources.h"
@@ -7,17 +8,16 @@
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
-#include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 
 namespace game_engine {
 namespace gfx {
 namespace renderer {
 
-void ShaderOverdrawStrategy::initialize(rhi::Device*           device,
-                                        RenderResourceManager* resourceManager,
-                                        FrameResources*        frameResources,
-                                        rhi::ShaderManager*    shaderManager) {
+void LightVisualizationStrategy::initialize(rhi::Device*           device,
+                                            RenderResourceManager* resourceManager,
+                                            FrameResources*        frameResources,
+                                            rhi::ShaderManager*    shaderManager) {
   m_device          = device;
   m_resourceManager = resourceManager;
   m_frameResources  = frameResources;
@@ -26,10 +26,25 @@ void ShaderOverdrawStrategy::initialize(rhi::Device*           device,
   m_vertexShader = m_shaderManager->getShader(m_vertexShaderPath_);
   m_pixelShader  = m_shaderManager->getShader(m_pixelShaderPath_);
 
+  // TODO: move to a separate function
+  rhi::DescriptorSetLayoutDesc        materialLayoutDesc;
+  rhi::DescriptorSetLayoutBindingDesc textureBindingDesc;
+  textureBindingDesc.binding    = 0;
+  textureBindingDesc.type       = rhi::ShaderBindingType::TextureSrv;
+  textureBindingDesc.stageFlags = rhi::ShaderStageFlag::Fragment;
+  materialLayoutDesc.bindings.push_back(textureBindingDesc);
+
+  auto materialSetLayout        = m_device->createDescriptorSetLayout(materialLayoutDesc);
+  m_materialDescriptorSetLayout = m_resourceManager->getDescriptorSetLayout("light_visualization_material_layout");
+  if (!m_materialDescriptorSetLayout) {
+    m_materialDescriptorSetLayout = m_resourceManager->addDescriptorSetLayout(std::move(materialSetLayout),
+                                                                              "light_visualization_material_layout");
+  }
+
   setupRenderPass_();
 }
 
-void ShaderOverdrawStrategy::resize(const math::Dimension2Di& newDimension) {
+void LightVisualizationStrategy::resize(const math::Dimension2Di& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -45,7 +60,7 @@ void ShaderOverdrawStrategy::resize(const math::Dimension2Di& newDimension) {
   createFramebuffers_(newDimension);
 }
 
-void ShaderOverdrawStrategy::prepareFrame(const RenderContext& context) {
+void LightVisualizationStrategy::prepareFrame(const RenderContext& context) {
   std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
   std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
 
@@ -74,7 +89,7 @@ void ShaderOverdrawStrategy::prepareFrame(const RenderContext& context) {
   prepareDrawCalls_(context);
 }
 
-void ShaderOverdrawStrategy::render(const RenderContext& context) {
+void LightVisualizationStrategy::render(const RenderContext& context) {
   auto commandBuffer = context.commandBuffer.get();
   if (!commandBuffer || !m_renderPass || m_framebuffers.empty()) {
     return;
@@ -94,8 +109,13 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
   colorClear.color[0] = 0.0f;
   colorClear.color[1] = 0.0f;
   colorClear.color[2] = 0.0f;
-  colorClear.color[3] = 0.0f;
+  colorClear.color[3] = 1.0f;
   clearValues.push_back(colorClear);
+
+  rhi::ClearValue depthClear;
+  depthClear.depthStencil.depth   = 1.0f;
+  depthClear.depthStencil.stencil = 0;
+  clearValues.push_back(depthClear);
 
   commandBuffer->beginRenderPass(m_renderPass, currentFramebuffer, clearValues);
 
@@ -113,6 +133,18 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
       commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
+    if (m_frameResources->getLightDescriptorSet()) {
+      commandBuffer->bindDescriptorSet(2, m_frameResources->getLightDescriptorSet());
+    }
+
+    if (drawData.materialDescriptorSet) {
+      commandBuffer->bindDescriptorSet(3, drawData.materialDescriptorSet);
+    }
+
+    if (m_frameResources->getDefaultSamplerDescriptorSet()) {
+      commandBuffer->bindDescriptorSet(4, m_frameResources->getDefaultSamplerDescriptorSet());
+    }
+
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
     commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
     commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
@@ -123,8 +155,9 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
-void ShaderOverdrawStrategy::cleanup() {
+void LightVisualizationStrategy::cleanup() {
   m_instanceBufferCache.clear();
+  m_materialCache.clear();
   m_drawData.clear();
   m_renderPass = nullptr;
   m_framebuffers.clear();
@@ -132,7 +165,41 @@ void ShaderOverdrawStrategy::cleanup() {
   m_pixelShader  = nullptr;
 }
 
-void ShaderOverdrawStrategy::setupRenderPass_() {
+rhi::DescriptorSet* LightVisualizationStrategy::getOrCreateMaterialDescriptorSet_(Material* material) {
+  if (!material) {
+    return nullptr;
+  }
+
+  auto it = m_materialCache.find(material);
+  if (it != m_materialCache.end() && it->second.descriptorSet) {
+    return it->second.descriptorSet;
+  }
+
+  std::string descriptorKey = "light_visualization_material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
+
+  auto descriptorSetPtr = m_resourceManager->getDescriptorSet(descriptorKey);
+  if (!descriptorSetPtr) {
+    auto descriptorSet = m_device->createDescriptorSet(m_materialDescriptorSetLayout);
+    descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), descriptorKey);
+  }
+
+  rhi::Texture* normalMapTexture = nullptr;
+  auto          normalMapIt      = material->textures.find("normal_map");
+  if (normalMapIt != material->textures.end() && normalMapIt->second) {
+    normalMapTexture = normalMapIt->second;
+  } else {
+    normalMapTexture = m_frameResources->getDefaultNormalTexture();
+    GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
+  }
+
+  descriptorSetPtr->setTexture(0, normalMapTexture);
+
+  m_materialCache[material].descriptorSet = descriptorSetPtr;
+
+  return descriptorSetPtr;
+}
+
+void LightVisualizationStrategy::setupRenderPass_() {
   rhi::RenderPassDesc renderPassDesc;
 
   rhi::RenderPassAttachmentDesc colorAttachmentDesc;
@@ -143,11 +210,21 @@ void ShaderOverdrawStrategy::setupRenderPass_() {
   colorAttachmentDesc.finalLayout   = rhi::ResourceLayout::ColorAttachment;
   renderPassDesc.colorAttachments.push_back(colorAttachmentDesc);
 
+  rhi::RenderPassAttachmentDesc depthAttachmentDesc;
+  depthAttachmentDesc.format             = rhi::TextureFormat::D24S8;
+  depthAttachmentDesc.samples            = rhi::MSAASamples::Count1;
+  depthAttachmentDesc.loadStoreOp        = rhi::AttachmentLoadStoreOp::ClearStore;
+  depthAttachmentDesc.stencilLoadStoreOp = rhi::AttachmentLoadStoreOp::DontcareDontcare;
+  depthAttachmentDesc.initialLayout      = rhi::ResourceLayout::DepthStencilAttachment;
+  depthAttachmentDesc.finalLayout        = rhi::ResourceLayout::DepthStencilAttachment;
+  renderPassDesc.depthStencilAttachment  = depthAttachmentDesc;
+  renderPassDesc.hasDepthStencil         = true;
+
   auto renderPass = m_device->createRenderPass(renderPassDesc);
-  m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "overdraw_render_pass");
+  m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "light_visualization_render_pass");
 }
 
-void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
+void LightVisualizationStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
   if (!m_renderPass) {
     GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
     return;
@@ -157,7 +234,7 @@ void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2Di& dimen
 
   uint32_t framesCount = m_frameResources->getFramesCount();
   for (uint32_t i = 0; i < framesCount; i++) {
-    std::string framebufferKey = "overdraw_framebuffer_" + std::to_string(i);
+    std::string framebufferKey = "light_visualization_framebuffer_" + std::to_string(i);
 
     rhi::Framebuffer* existingFramebuffer = m_resourceManager->getFramebuffer(framebufferKey);
     if (existingFramebuffer) {
@@ -170,7 +247,9 @@ void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2Di& dimen
     framebufferDesc.width  = dimension.width();
     framebufferDesc.height = dimension.height();
     framebufferDesc.colorAttachments.push_back(renderTargets.colorBuffer.get());
-    framebufferDesc.renderPass = m_renderPass;
+    framebufferDesc.depthStencilAttachment = renderTargets.depthBuffer.get();
+    framebufferDesc.hasDepthStencil        = true;
+    framebufferDesc.renderPass             = m_renderPass;
 
     auto framebuffer    = m_device->createFramebuffer(framebufferDesc);
     auto framebufferPtr = m_resourceManager->addFramebuffer(std::move(framebuffer), framebufferKey);
@@ -179,16 +258,16 @@ void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2Di& dimen
   }
 }
 
-void ShaderOverdrawStrategy::updateInstanceBuffer_(RenderModel*                         model,
-                                                   const std::vector<math::Matrix4f<>>& matrices,
-                                                   ModelBufferCache&                    cache) {
+void LightVisualizationStrategy::updateInstanceBuffer_(RenderModel*                         model,
+                                                       const std::vector<math::Matrix4f<>>& matrices,
+                                                       ModelBufferCache&                    cache) {
   if (!cache.instanceBuffer || matrices.size() > cache.capacity) {
     // If we already have a buffer, we'll let the resource manager handle freeing it
 
     // Create a new buffer with some growth room
     uint32_t newCapacity = std::max(static_cast<uint32_t>(matrices.size() * 1.5), 8u);
 
-    std::string bufferKey = "overdraw_instance_buffer_" + std::to_string(reinterpret_cast<uintptr_t>(model));
+    std::string bufferKey = "light_visualization_instance_buffer_" + std::to_string(reinterpret_cast<uintptr_t>(model));
 
     rhi::BufferDesc bufferDesc;
     bufferDesc.size        = newCapacity * sizeof(math::Matrix4f<>);
@@ -209,11 +288,13 @@ void ShaderOverdrawStrategy::updateInstanceBuffer_(RenderModel*                 
   cache.count = static_cast<uint32_t>(matrices.size());
 }
 
-void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
+void LightVisualizationStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewDescriptorSetLayout = m_frameResources->getViewDescriptorSetLayout();
-  auto modelMatrixLayout       = m_frameResources->getModelMatrixDescriptorSetLayout();
+  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
+  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+  auto lightLayout       = m_frameResources->getLightDescriptorSetLayout();
+  auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -221,8 +302,13 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      std::string pipelineKey
-          = "overdraw_pipeline_" + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
+      rhi::DescriptorSet* materialDescriptorSet = nullptr;
+      if (renderMesh->material) {
+        materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
+      }
+
+      std::string pipelineKey = "light_visualization_pipeline_"
+                              + std::to_string(reinterpret_cast<uintptr_t>(renderMesh->gpuMesh->vertexBuffer));
 
       rhi::GraphicsPipeline* pipeline = m_resourceManager->getPipeline(pipelineKey);
 
@@ -252,9 +338,41 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
         positionAttr.semanticName = "POSITION";
         pipelineDesc.vertexAttributes.push_back(positionAttr);
 
+        rhi::VertexInputAttributeDesc texCoordAttr;
+        texCoordAttr.location     = 1;
+        texCoordAttr.binding      = 0;
+        texCoordAttr.format       = rhi::TextureFormat::Rg32f;
+        texCoordAttr.offset       = offsetof(Vertex, texCoords);
+        texCoordAttr.semanticName = "TEXCOORD";
+        pipelineDesc.vertexAttributes.push_back(texCoordAttr);
+
+        rhi::VertexInputAttributeDesc normalAttr;
+        normalAttr.location     = 2;
+        normalAttr.binding      = 0;
+        normalAttr.format       = rhi::TextureFormat::Rgb32f;
+        normalAttr.offset       = offsetof(Vertex, normal);
+        normalAttr.semanticName = "NORMAL";
+        pipelineDesc.vertexAttributes.push_back(normalAttr);
+
+        rhi::VertexInputAttributeDesc tangentAttr;
+        tangentAttr.location     = 3;
+        tangentAttr.binding      = 0;
+        tangentAttr.format       = rhi::TextureFormat::Rgb32f;
+        tangentAttr.offset       = offsetof(Vertex, tangent);
+        tangentAttr.semanticName = "TANGENT";
+        pipelineDesc.vertexAttributes.push_back(tangentAttr);
+
+        rhi::VertexInputAttributeDesc bitangentAttr;
+        bitangentAttr.location     = 4;
+        bitangentAttr.binding      = 0;
+        bitangentAttr.format       = rhi::TextureFormat::Rgb32f;
+        bitangentAttr.offset       = offsetof(Vertex, bitangent);
+        bitangentAttr.semanticName = "BITANGENT";
+        pipelineDesc.vertexAttributes.push_back(bitangentAttr);
+
         for (uint32_t i = 0; i < 4; i++) {
           rhi::VertexInputAttributeDesc matrixCol;
-          matrixCol.location     = 1 + i;
+          matrixCol.location     = 5 + i;
           matrixCol.binding      = 1;
           matrixCol.format       = rhi::TextureFormat::Rgba32f;
           matrixCol.offset       = i * 16;
@@ -266,30 +384,28 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.inputAssembly.primitiveRestartEnable = false;
 
         pipelineDesc.rasterization.polygonMode     = rhi::PolygonMode::Fill;
-        pipelineDesc.rasterization.cullMode        = rhi::CullMode::None;
+        pipelineDesc.rasterization.cullMode        = rhi::CullMode::None;  // No culling for better visualization
         pipelineDesc.rasterization.frontFace       = rhi::FrontFace::Ccw;
         pipelineDesc.rasterization.depthBiasEnable = false;
         pipelineDesc.rasterization.lineWidth       = 1.0f;
 
-        pipelineDesc.depthStencil.depthTestEnable  = false;
-        pipelineDesc.depthStencil.depthWriteEnable = false;
-        pipelineDesc.depthStencil.depthCompareOp   = rhi::CompareOp::Always;
+        pipelineDesc.depthStencil.depthTestEnable   = true;
+        pipelineDesc.depthStencil.depthWriteEnable  = true;
+        pipelineDesc.depthStencil.depthCompareOp    = rhi::CompareOp::Less;
+        pipelineDesc.depthStencil.stencilTestEnable = false;
 
         rhi::ColorBlendAttachmentDesc blendAttachment;
-        blendAttachment.blendEnable         = true;
-        blendAttachment.srcColorBlendFactor = rhi::BlendFactor::SrcAlpha;
-        blendAttachment.dstColorBlendFactor = rhi::BlendFactor::One;
-        blendAttachment.colorBlendOp        = rhi::BlendOp::Add;
-        blendAttachment.srcAlphaBlendFactor = rhi::BlendFactor::One;
-        blendAttachment.dstAlphaBlendFactor = rhi::BlendFactor::One;
-        blendAttachment.alphaBlendOp        = rhi::BlendOp::Add;
-        blendAttachment.colorWriteMask      = rhi::ColorMask::All;
+        blendAttachment.blendEnable    = false;
+        blendAttachment.colorWriteMask = rhi::ColorMask::All;
         pipelineDesc.colorBlend.attachments.push_back(blendAttachment);
 
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
-        pipelineDesc.setLayouts.push_back(viewDescriptorSetLayout);
+        pipelineDesc.setLayouts.push_back(viewLayout);
         pipelineDesc.setLayouts.push_back(modelMatrixLayout);
+        pipelineDesc.setLayouts.push_back(lightLayout);
+        pipelineDesc.setLayouts.push_back(m_materialDescriptorSetLayout);
+        pipelineDesc.setLayouts.push_back(samplerLayout);
 
         pipelineDesc.renderPass = m_renderPass;
 
@@ -303,6 +419,7 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
       DrawData drawData;
       drawData.pipeline                 = pipeline;
       drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
+      drawData.materialDescriptorSet    = materialDescriptorSet;
       drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
       drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
       drawData.instanceBuffer           = cache.instanceBuffer;
@@ -314,7 +431,7 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
   }
 }
 
-void ShaderOverdrawStrategy::cleanupUnusedBuffers_(
+void LightVisualizationStrategy::cleanupUnusedBuffers_(
     const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
   std::vector<RenderModel*> modelsToRemove;
 
@@ -328,6 +445,7 @@ void ShaderOverdrawStrategy::cleanupUnusedBuffers_(
     m_instanceBufferCache.erase(model);
   }
 }
+
 }  // namespace renderer
 }  // namespace gfx
 }  // namespace game_engine

@@ -1,20 +1,21 @@
-#ifndef GAME_ENGINE_SHADER_OVERDRAW_STRATEGY_H
-#define GAME_ENGINE_SHADER_OVERDRAW_STRATEGY_H
+#ifndef GAME_ENGINE_LIGHT_VISUALIZATION_STRATEGY_H
+#define GAME_ENGINE_LIGHT_VISUALIZATION_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
+#include "gfx/rhi/interface/render_pass.h"
 
 #include <unordered_map>
 #include <vector>
 
 namespace game_engine {
 struct RenderModel;
+struct Material;
 }  // namespace game_engine
 
 namespace game_engine::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
-class RenderPass;
 }  // namespace game_engine::gfx::rhi
 
 namespace game_engine {
@@ -22,14 +23,13 @@ namespace gfx {
 namespace renderer {
 
 /**
- * Visualizes shader overdraw by rendering scene with additive blending
- * Areas with high overdraw appear brighter
+ * Visualizes lighting information - light colors and NdotL factors
  */
-class ShaderOverdrawStrategy : public DebugDrawStrategy {
+class LightVisualizationStrategy : public DebugDrawStrategy {
   public:
-  ShaderOverdrawStrategy() = default;
+  LightVisualizationStrategy() = default;
 
-  ~ShaderOverdrawStrategy() override { cleanup(); }
+  ~LightVisualizationStrategy() override { cleanup(); }
 
   void initialize(rhi::Device*           device,
                   RenderResourceManager* resourceManager,
@@ -53,12 +53,15 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
   struct DrawData {
     rhi::GraphicsPipeline* pipeline                 = nullptr;
     rhi::DescriptorSet*    modelMatrixDescriptorSet = nullptr;
+    rhi::DescriptorSet*    materialDescriptorSet    = nullptr;
     rhi::Buffer*           vertexBuffer             = nullptr;
     rhi::Buffer*           indexBuffer              = nullptr;
     rhi::Buffer*           instanceBuffer           = nullptr;
     uint32_t               indexCount               = 0;
     uint32_t               instanceCount            = 0;
   };
+
+  rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
 
   void setupRenderPass_();
   void createFramebuffers_(const math::Dimension2Di& dimension);
@@ -69,8 +72,8 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
   void cleanupUnusedBuffers_(
       const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
 
-  const std::string m_vertexShaderPath_ = "assets/shaders/debug/overdraw/shader_instancing.vs.hlsl";
-  const std::string m_pixelShaderPath_  = "assets/shaders/debug/overdraw/shader.ps.hlsl";
+  const std::string m_vertexShaderPath_ = "assets/shaders/debug/light_visualization/shader_instancing.vs.hlsl";
+  const std::string m_pixelShaderPath_  = "assets/shaders/debug/light_visualization/shader.ps.hlsl";
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;
@@ -88,9 +91,17 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
 
   std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
   std::vector<DrawData>                              m_drawData;
+
+  struct MaterialCache {
+    rhi::DescriptorSet* descriptorSet = nullptr;
+  };
+
+  std::unordered_map<Material*, MaterialCache> m_materialCache;
+  rhi::DescriptorSetLayout*                    m_materialDescriptorSetLayout = nullptr;
 };
+
 }  // namespace renderer
 }  // namespace gfx
 }  // namespace game_engine
 
-#endif  // GAME_ENGINE_SHADER_OVERDRAW_STRATEGY_H
+#endif  // GAME_ENGINE_LIGHT_VISUALIZATION_STRATEGY_H

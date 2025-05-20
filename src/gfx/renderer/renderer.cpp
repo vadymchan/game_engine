@@ -164,7 +164,8 @@ void Renderer::renderFrame(RenderContext& context) {
   auto isDebugPass = context.renderSettings.renderMode == RenderMode::Wireframe
                   || context.renderSettings.renderMode == RenderMode::ShaderOverdraw
                   || context.renderSettings.renderMode == RenderMode::VertexNormalVisualization
-                  || context.renderSettings.renderMode == RenderMode::NormalMapVisualization;
+                  || context.renderSettings.renderMode == RenderMode::NormalMapVisualization
+                  || context.renderSettings.renderMode == RenderMode::LightVisualization;
 
   if (m_debugPass && isDebugPass) {
     m_debugPass->render(context);
