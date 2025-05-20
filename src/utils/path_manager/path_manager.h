@@ -10,6 +10,7 @@ namespace game_engine {
 class PathManager {
   public:
   static std::filesystem::path s_getAssetPath();
+  static std::filesystem::path s_getModelPath();
   static std::filesystem::path s_getShaderPath();
   static std::filesystem::path s_getDebugPath();
   static std::filesystem::path s_getScenesPath();
@@ -17,6 +18,7 @@ class PathManager {
 
   private:
   static constexpr std::string_view s_assetPath          = "assetPath";
+  static constexpr std::string_view s_modelPath          = "modelPath";
   static constexpr std::string_view s_shaderPath         = "shaderPath";
   static constexpr std::string_view s_debugPath          = "debugPath";
   static constexpr std::string_view s_scenesPath         = "scenesPath";

@@ -64,6 +64,14 @@ class Editor {
   void saveCurrentScene_();
   void setupInputHandlers_();
 
+  // TODO: in future consider give to a user the ability to set values
+  void addDirectionalLight();
+  void addPointLight();
+  void addSpotLight();
+  void removeSelectedEntity();
+
+  math::Vector3Df getPositionInFrontOfCamera_();
+
   // Editor state
   gfx::renderer::RenderSettings m_renderParams;
 
@@ -83,12 +91,16 @@ class Editor {
   ImGuizmo::MODE      m_currentGizmoMode      = ImGuizmo::WORLD;
 
   math::Vector3Df m_currentDirectionalLightGizmoPosition;
+  float gizmoDistanceFromCamera = 5.0f;
 
   bool        m_showSaveNotification = false;
   ElapsedTime m_notificationTimer;
   FrameTime   m_sceneSaveTimer;
 
   bool m_setInspectorFocus = false;
+
+  static const constexpr char* kModelsRootDir    = "assets/models";
+  bool                         m_openModelDialog = false;
 };
 
 }  // namespace game_engine

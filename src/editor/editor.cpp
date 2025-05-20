@@ -11,6 +11,8 @@
 #include "utils/service/service_locator.h"
 #include "utils/time/timing_manager.h"
 
+#include <ImGuiFileDialog.h>
+
 namespace game_engine {
 
 bool Editor::initialize(Window*                        window,
@@ -93,6 +95,28 @@ void Editor::render(gfx::renderer::RenderContext& context) {
 
   auto backBufferTexture = m_frameResources->getRenderTargets(context.currentImageIndex).backBuffer;
 
+  if (m_openModelDialog && ImGuiFileDialog::Instance()->Display("LoadModelDlg")) {
+    if (ImGuiFileDialog::Instance()->IsOk()) {
+      std::filesystem::path selected = ImGuiFileDialog::Instance()->GetFilePathName();
+
+      
+      std::filesystem::path rootPath = kModelsRootDir;
+      std::error_code       ec;  
+
+      auto absSelected = std::filesystem::weakly_canonical(selected, ec);
+      auto absRoot     = std::filesystem::weakly_canonical(rootPath, ec);
+
+      if (!ec && absSelected.string().rfind(absRoot.string(), 0) == 0) {
+        
+        GlobalLogger::Log(LogLevel::Info, "Selected model: " + absSelected.string());
+      } else {
+        GlobalLogger::Log(LogLevel::Warning, "Selection outside assets/models is not allowed");
+      }
+    }
+    ImGuiFileDialog::Instance()->Close();
+    m_openModelDialog = false;
+  }
+
   m_imguiContext->endFrame(
       context.commandBuffer.get(), backBufferTexture, m_window->getSize(), context.currentImageIndex);
 }
@@ -135,6 +159,21 @@ void Editor::renderMainMenu() {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
         saveCurrentScene_();
+      }
+      if (ImGui::MenuItem("Load Model...", "Ctrl+O")) {
+        const char* filters = ".gltf,.glb";
+
+       IGFD::FileDialogConfig cfg;
+        cfg.path              = kModelsRootDir;                        
+        cfg.countSelectionMax = 1;                                     
+        cfg.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton  
+                  | ImGuiFileDialogFlags_DisableQuickPathSelection     
+                  | ImGuiFileDialogFlags_ReadOnlyFileNameField;        
+
+
+        ImGuiFileDialog::Instance()->OpenDialog("LoadModelDlg", "Open glTF model", filters, cfg);
+
+        m_openModelDialog = true;
       }
       ImGui::EndMenu();
     }
@@ -259,6 +298,29 @@ void Editor::renderSceneHierarchyWindow() {
     ImGui::Text("Current Scene: %s", sceneManager->getCurrentSceneName().c_str());
     ImGui::Separator();
 
+    if (ImGui::Button("Add Directional Light")) {
+      addDirectionalLight();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Add Point Light")) {
+      addPointLight();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Add Spot Light")) {
+      addSpotLight();
+    }
+
+    if (m_selectedEntity != entt::null) {
+      ImGui::SameLine();
+      if (ImGui::Button("Remove Selected")) {
+        removeSelectedEntity();
+      }
+    }
+
+    ImGui::Separator();
+
     auto entities = registry.view<entt::entity>();
 
     for (auto entity : entities) {
@@ -291,8 +353,6 @@ void Editor::renderSceneHierarchyWindow() {
 
   ImGui::End();
 }
-
-
 
 void Editor::renderInspectorWindow() {
   if (m_setInspectorFocus) {
@@ -868,7 +928,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
       math::Vector3Df cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
       cameraForward.normalize();
 
-      m_currentDirectionalLightGizmoPosition = cameraTransform.translation + (cameraForward * 5.0f);
+      m_currentDirectionalLightGizmoPosition = getPositionInFrontOfCamera_();
     }
   }
 
@@ -1040,6 +1100,160 @@ void Editor::setupInputHandlers_() {
     GlobalLogger::Log(LogLevel::Info, "Inspector window focused");
     return true;
   });
+}
+
+void Editor::addDirectionalLight() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  entt::entity entity = registry.create();
+
+  auto& light     = registry.emplace<Light>(entity);
+  light.color     = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  light.intensity = 1.0f;
+
+  auto& dirLight     = registry.emplace<DirectionalLight>(entity);
+  dirLight.direction = math::Vector3Df(0.0f, -1.0f, 0.0f);
+
+  handleEntitySelection(entity);
+
+  GlobalLogger::Log(LogLevel::Info, "Directional light added");
+}
+
+void Editor::addPointLight() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  entt::entity entity = registry.create();
+
+  auto& transform       = registry.emplace<Transform>(entity);
+  transform.translation = getPositionInFrontOfCamera_();
+  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+
+  auto& light     = registry.emplace<Light>(entity);
+  light.color     = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  light.intensity = 1.0f;
+
+  auto& pointLight = registry.emplace<PointLight>(entity);
+  pointLight.range = 10.0f;
+
+  handleEntitySelection(entity);
+
+  GlobalLogger::Log(LogLevel::Info, "Point light added");
+}
+
+void Editor::addSpotLight() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Error, "No scene is currently loaded");
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  entt::entity entity = registry.create();
+
+  auto& transform       = registry.emplace<Transform>(entity);
+  transform.translation = getPositionInFrontOfCamera_();
+  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+
+  auto& light     = registry.emplace<Light>(entity);
+  light.color     = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  light.intensity = 1.0f;
+
+  auto& spotLight          = registry.emplace<SpotLight>(entity);
+  spotLight.range          = 10.0f;
+  spotLight.innerConeAngle = 15.0f;
+  spotLight.outerConeAngle = 30.0f;
+
+  handleEntitySelection(entity);
+
+  GlobalLogger::Log(LogLevel::Info, "Spot light added");
+}
+
+void Editor::removeSelectedEntity() {
+  if (m_selectedEntity == entt::null) {
+    return;
+  }
+
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  if (!registry.valid(m_selectedEntity)) {
+    m_selectedEntity = entt::null;
+    return;
+  }
+
+  std::string entityType = "Entity";
+  if (registry.all_of<Light, DirectionalLight>(m_selectedEntity)) {
+    entityType = "Directional Light";
+  } else if (registry.all_of<Light, PointLight>(m_selectedEntity)) {
+    entityType = "Point Light";
+  } else if (registry.all_of<Light, SpotLight>(m_selectedEntity)) {
+    entityType = "Spot Light";
+  } else if (registry.all_of<Camera>(m_selectedEntity)) {
+    entityType = "Camera";
+  }
+
+  registry.destroy(m_selectedEntity);
+  GlobalLogger::Log(LogLevel::Info, entityType + " removed");
+
+  m_selectedEntity = entt::null;
+}
+
+math::Vector3Df Editor::getPositionInFrontOfCamera_() {
+  math::Vector3Df position(0.0f, 0.0f, 0.0f);
+
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Warning, "No scene loaded when trying to position in front of camera");
+    return position;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  auto cameraView = registry.view<Camera, CameraMatrices, Transform>();
+  if (cameraView.begin() == cameraView.end()) {
+    GlobalLogger::Log(LogLevel::Warning, "No camera found for positioning");
+    return position;
+  }
+
+  auto        cameraEntity    = *cameraView.begin();
+  const auto& cameraTransform = registry.get<Transform>(cameraEntity);
+  const auto& cameraMatrices  = registry.get<CameraMatrices>(cameraEntity);
+
+  math::Vector3Df cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
+  cameraForward.normalize();
+
+  position = cameraTransform.translation + (cameraForward * gizmoDistanceFromCamera);
+
+  return position;
 }
 
 }  // namespace game_engine

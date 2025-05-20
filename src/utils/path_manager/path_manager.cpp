@@ -10,6 +10,10 @@ std::filesystem::path PathManager::s_getAssetPath() {
   return s_getPath(s_assetPath);
 }
 
+std::filesystem::path PathManager::s_getModelPath() {
+  return s_getPath(s_modelPath);
+}
+
 std::filesystem::path PathManager::s_getShaderPath() {
   return s_getPath(s_shaderPath);
 }

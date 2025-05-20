@@ -37,7 +37,10 @@ cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Alloca
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for DX12" ON "USE_DIRECTX" OFF)
+
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
+cmake_dependent_option(BUILD_IMGUIFILEDIALOG  "Build the ImGuiFileDialog library" ON "BUILD_IMGUI" OFF)
+
 # separately, since they're cross-platform 
 option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON)
 option(USE_DIRECTX_TEX             "Fetch DirectX Tex Library"     ON)
@@ -195,6 +198,15 @@ if(BUILD_IMGUIZMO)
         GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
         # GIT_TAG 664cf2d73864a36b2a8b5091d33fc4578c885eca
         GIT_TAG b10e91756d32395f5c1fefd417899b657ed7cb88
+    )
+endif()
+
+if(BUILD_IMGUIFILEDIALOG)
+    message(STATUS "Fetching ImGuiFileDialog...")
+    FetchContent_Declare(
+        imguifiledialog
+        GIT_REPOSITORY https://github.com/aiekick/ImGuiFileDialog.git
+        GIT_TAG v0.6.7   
     )
 endif()
 
@@ -584,6 +596,33 @@ if(BUILD_IMGUIZMO)
     )
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_IMGUIZMO)
+endif()
+
+if(BUILD_IMGUIFILEDIALOG)
+    FetchContent_MakeAvailable(imguifiledialog)
+
+    add_library(imguifiledialog_library STATIC
+        ${imguifiledialog_SOURCE_DIR}/ImGuiFileDialog.cpp
+    )
+
+    target_link_libraries(imguifiledialog_library PRIVATE imgui_library)
+
+    target_include_directories(imguifiledialog_library PRIVATE
+        ${imguifiledialog_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+    )
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE imguifiledialog_library)
+    
+    target_include_directories(${PROJECT_NAME} 
+        SYSTEM PRIVATE
+        ${imguifiledialog_SOURCE_DIR}
+    )
+
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE ${PROJECT_UPPER}_USE_IMGUIFILEDIALOG
+    )
 endif()
 
 if(BUILD_ASSIMP)

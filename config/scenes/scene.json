@@ -1,105 +1,167 @@
 {
-  "schemaVersion": "1.0",
-  "name": "scene",
-  "entities": [
-    {
-      "name": "MainCamera",
-      "components": [
+    "schemaVersion": "1.0",
+    "name": "scene",
+    "entities": [
         {
-          "type": "transform",
-          "position": [
-            3.741335391998291, 2.3139591217041017, -5.130931377410889
-          ],
-          "rotation": [32.40007781982422, -92.79727172851563, 0.0],
-          "scale": [1.0, 1.0, 1.0]
+            "name": "PointLight",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -1.1032907962799073,
+                        1.5,
+                        -5.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "light",
+                    "color": [
+                        0.0,
+                        1.0,
+                        0.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "pointLight",
+                    "range": 12.0
+                }
+            ]
         },
         {
-          "type": "camera",
-          "cameraType": "perspective",
-          "fov": 0.785398006439209,
-          "near": 0.10000000149011612,
-          "far": 1000.0,
-          "width": 1426.0,
-          "height": 1027.0
+            "name": "SpotLight",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        0.0,
+                        1.5,
+                        -5.0
+                    ],
+                    "rotation": [
+                        90.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "light",
+                    "color": [
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "spotLight",
+                    "range": 20.0,
+                    "innerConeAngle": 20.0,
+                    "outerConeAngle": 30.0
+                }
+            ]
         },
         {
-          "type": "movement"
+            "name": "Model_TwoSidedPlane.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        0.0,
+                        0.0,
+                        -5.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "movement"
+                },
+                {
+                    "type": "model",
+                    "path": "assets/models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
+                }
+            ]
+        },
+        {
+            "name": "DirectionalLight",
+            "components": [
+                {
+                    "type": "light",
+                    "color": [
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "directionalLight",
+                    "direction": [
+                        0.0,
+                        -1.0,
+                        0.0
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "MainCamera",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -2.655397415161133,
+                        1.7133996486663819,
+                        -1.0148011445999146
+                    ],
+                    "rotation": [
+                        12.100021362304688,
+                        155.69821166992188,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "camera",
+                    "cameraType": "perspective",
+                    "fov": 0.785398006439209,
+                    "near": 0.10000000149011612,
+                    "far": 1000.0,
+                    "width": 1426.0,
+                    "height": 1027.0
+                },
+                {
+                    "type": "movement"
+                }
+            ]
         }
-      ]
-    },
-    {
-      "name": "Model_TwoSidedPlane.gltf",
-      "components": [
-        {
-          "type": "transform",
-          "position": [0.0, 0.0, -5.0],
-          "rotation": [0.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0]
-        },
-        {
-          "type": "movement"
-        },
-        {
-          "type": "model",
-          "path": "assets/models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
-        }
-      ]
-    },
-    {
-      "name": "DirectionalLight",
-      "components": [
-        {
-          "type": "light",
-          "color": [1.0, 0.0, 0.0],
-          "intensity": 1.0
-        },
-        {
-          "type": "directionalLight",
-          "direction": [0.0, -1.0, 0.0]
-        }
-      ]
-    },
-    {
-      "name": "PointLight",
-      "components": [
-        {
-          "type": "transform",
-          "position": [-1.1032907962799073, 1.5, -5.0],
-          "rotation": [0.0, -0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0]
-        },
-        {
-          "type": "light",
-          "color": [0.0, 1.0, 0.0],
-          "intensity": 1.0
-        },
-        {
-          "type": "pointLight",
-          "range": 12.0
-        }
-      ]
-    },
-    {
-      "name": "SpotLight",
-      "components": [
-        {
-          "type": "transform",
-          "position": [0.0, 1.5, -5.0],
-          "rotation": [90.0, 0.0, 0.0],
-          "scale": [1.0, 1.0, 1.0]
-        },
-        {
-          "type": "light",
-          "color": [0.0, 0.0, 1.0],
-          "intensity": 1.0
-        },
-        {
-          "type": "spotLight",
-          "range": 20.0,
-          "innerConeAngle": 20.0,
-          "outerConeAngle": 30.0
-        }
-      ]
-    }
-  ]
+    ]
 }

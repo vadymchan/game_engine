@@ -68,7 +68,6 @@ VSOutput main(VSInput input)
 
     output.Position = mul(ViewParam.VP, worldPos);
 
-    // TODO: why
     float3x3 normalMat =
     {
         normalize(worldMatrix[0].xyz),
