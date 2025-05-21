@@ -435,7 +435,6 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
     GlobalLogger::Log(LogLevel::Debug, "Using fallback normal map texture for material: " + material->materialName);
   }
 
-  // Set the texture in the descriptor set
   descriptorSetPtr->setTexture(0, normalMapTexture);
 
   m_materialCache[material].descriptorSet = descriptorSetPtr;

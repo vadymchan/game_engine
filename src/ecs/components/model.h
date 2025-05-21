@@ -8,12 +8,11 @@
 
 namespace game_engine {
 
-// This is the geometry data on CPU side (imported from assimp)
+// This is the geometry data on CPU side (imported from assimp / cgltf)
 struct Model {
   // TODO: no modelNames (consider adding it, maybe filename is already okay)
   std::filesystem::path filePath;
   std::vector<Mesh*>    meshes;
-  //math::Matrix4f<>      modelMatrix = math::Matrix4f<>::Identity();
 };
 
 }  // namespace game_engine

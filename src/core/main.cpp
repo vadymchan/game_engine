@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 
-#include "engine.h"
+#include <core/engine.h>
+#include <core/application.h>
 
 using namespace game_engine;
 
@@ -27,7 +28,7 @@ auto main(int argc, char* argv[]) -> int {
 
   engine.initialize();
 
-  auto game = std::make_unique<game_engine::Game>();
+  auto game = std::make_unique<game_engine::Application>();
 
   engine.setGame(game.get());
 

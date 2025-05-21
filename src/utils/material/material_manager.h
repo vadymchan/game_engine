@@ -78,8 +78,7 @@ class MaterialManager {
       }
     }
 
-    GlobalLogger::Log(LogLevel::Debug,
-                      "Material not found in manager (may have been removed already): " + material->materialName);
+    GlobalLogger::Log(LogLevel::Debug, "Material not found in manager (may have been removed already)");
     return false;
   }
 

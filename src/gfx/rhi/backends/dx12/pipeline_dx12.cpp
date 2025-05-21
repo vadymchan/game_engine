@@ -59,7 +59,6 @@ bool GraphicsPipelineDx12::createRootSignature_() {
   std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> allRanges;
   allRanges.reserve(m_desc_.setLayouts.size());
 
-  // Process each descriptor set layout
   for (size_t i = 0; i < m_desc_.setLayouts.size(); ++i) {
     const auto* layoutBase = m_desc_.setLayouts[i];
     if (!layoutBase) {
@@ -97,7 +96,6 @@ bool GraphicsPipelineDx12::createRootSignature_() {
     rootParam.DescriptorTable.NumDescriptorRanges = static_cast<UINT>(allRanges.back().size());
     rootParam.DescriptorTable.pDescriptorRanges   = allRanges.back().data();
 
-    // Store the root parameter
     rootParameters.push_back(rootParam);
   }
 
@@ -211,18 +209,18 @@ bool GraphicsPipelineDx12::createPipelineState_() {
     psoDesc.GS.BytecodeLength  = geometryShader->GetBufferSize();
   }
 
-  // Setup stream output (not used in this example)
+  // stream output (not used) - for capturing vertex/geometry shader output into a GPU buffer
   psoDesc.StreamOutput.pSODeclaration   = nullptr;
   psoDesc.StreamOutput.NumEntries       = 0;
   psoDesc.StreamOutput.pBufferStrides   = nullptr;
   psoDesc.StreamOutput.NumStrides       = 0;
   psoDesc.StreamOutput.RasterizedStream = 0;
 
-  // Setup the blend state
+  // blend state
   psoDesc.BlendState.AlphaToCoverageEnable  = m_desc_.multisample.alphaToCoverageEnable;
   psoDesc.BlendState.IndependentBlendEnable = TRUE;  // Allow different blend states for each render target
 
-  // Setup blend state for each render target
+  // blend state for each render target
   for (uint32_t i = 0; i < 8; i++) {
     if (i < m_desc_.colorBlend.attachments.size()) {
       const auto& attachment = m_desc_.colorBlend.attachments[i];
@@ -230,7 +228,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
       psoDesc.BlendState.RenderTarget[i].BlendEnable   = attachment.blendEnable;
       psoDesc.BlendState.RenderTarget[i].LogicOpEnable = m_desc_.colorBlend.logicOpEnable;
 
-      // Set blend operations
+      // blend operations
       psoDesc.BlendState.RenderTarget[i].SrcBlend  = g_getBlendFactorDx12(attachment.srcColorBlendFactor);
       psoDesc.BlendState.RenderTarget[i].DestBlend = g_getBlendFactorDx12(attachment.dstColorBlendFactor);
       psoDesc.BlendState.RenderTarget[i].BlendOp   = g_getBlendOpDx12(attachment.colorBlendOp);
@@ -239,13 +237,12 @@ bool GraphicsPipelineDx12::createPipelineState_() {
       psoDesc.BlendState.RenderTarget[i].DestBlendAlpha = g_getBlendFactorDx12(attachment.dstAlphaBlendFactor);
       psoDesc.BlendState.RenderTarget[i].BlendOpAlpha   = g_getBlendOpDx12(attachment.alphaBlendOp);
 
-      // Set logic operation
+      // logic operation
       psoDesc.BlendState.RenderTarget[i].LogicOp = static_cast<D3D12_LOGIC_OP>(m_desc_.colorBlend.logicOp);
 
-      // Set write mask
+      // write mask
       psoDesc.BlendState.RenderTarget[i].RenderTargetWriteMask = g_getColorMaskDx12(attachment.colorWriteMask);
     } else {
-      // Set default blend state for unused render targets
       psoDesc.BlendState.RenderTarget[i].BlendEnable           = FALSE;
       psoDesc.BlendState.RenderTarget[i].LogicOpEnable         = FALSE;
       psoDesc.BlendState.RenderTarget[i].SrcBlend              = D3D12_BLEND_ONE;

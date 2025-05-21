@@ -73,7 +73,7 @@ class FrameResources {
     math::Matrix4f<> modelMatrix;
     entt::entity     entityId;
 
-    uint32_t materialId = 0;  // Material ID for sorting
+    uint32_t materialId = 0;  // for sorting
 
     bool isDirty = false;
   };

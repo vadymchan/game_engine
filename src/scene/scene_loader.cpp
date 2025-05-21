@@ -61,7 +61,9 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
     return nullptr;
   }
 
-  Registry registry;
+  sceneManager->addScene(sceneName, Registry());
+  auto  scene    = sceneManager->getScene(sceneName);
+  auto& registry = scene->getEntityRegistry();
 
   if (document.HasMember("entities") && document["entities"].IsArray()) {
     for (auto& entityJson : document["entities"].GetArray()) {
@@ -69,8 +71,7 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
     }
   }
 
-  sceneManager->addScene(sceneName, std::move(registry));
-  return sceneManager->getScene(sceneName);
+  return scene;
 }
 
 }  // namespace game_engine

@@ -14,7 +14,7 @@ namespace game_engine {
  * @brief Manages all systems within the engine.
  *
  * @details
- * - Users should avoid adding duplicate systems.
+ * - User should avoid adding duplicate systems.
  * - Systems should not overlap in functionality to prevent unintended behavior.
  */
 class SystemManager {

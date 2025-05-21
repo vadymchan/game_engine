@@ -15,18 +15,16 @@ namespace rhi {
 TextureDx12::TextureDx12(const TextureDesc& desc, DeviceDx12* device)
     : Texture(desc)
     , m_device_(device) {
-  // Convert our generic format to DXGI format
   m_dxgiFormat_ = g_getTextureFormatDx12(desc.format);
 
   m_currentLayout_ = desc.initialLayout;
 
-  // Create the resource and views
   if (!createResource_() || !createViews_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 texture");
   }
 
   if (!desc.debugName.empty() && m_resource_) {
-    // Convert string to wide string for DirectX
+    // string -> wstring
     int size = MultiByteToWideChar(CP_UTF8, 0, desc.debugName.c_str(), -1, nullptr, 0);
     if (size > 0) {
       std::wstring wideName(size, 0);
@@ -81,8 +79,6 @@ TextureDx12::~TextureDx12() {
       }
     }
   }
-
-  // m_resource_ and m_allocation_ will be released automatically by ComPtr
 }
 
 bool TextureDx12::createResource_() {
@@ -143,7 +139,6 @@ bool TextureDx12::createResource_() {
     resourceDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
   }
 
-  // Setup D3D12MA allocation
   D3D12MA::ALLOCATION_DESC allocationDesc = {};
   allocationDesc.HeapType                 = D3D12_HEAP_TYPE_DEFAULT;  // Textures typically use DEFAULT heap
 
@@ -167,7 +162,6 @@ bool TextureDx12::createResource_() {
     clearValue                               = &optimizedClearValue;
   }
 
-  // Create the texture resource using D3D12MA
   HRESULT hr = m_device_->getAllocator()->CreateResource(
       &allocationDesc, &resourceDesc, getResourceState(), clearValue, &m_allocation_, IID_PPV_ARGS(&m_resource_));
 
@@ -271,7 +265,7 @@ bool TextureDx12::createViews_() {
         dsvDesc.Texture1D.MipSlice = 0;
         break;
       case TextureType::Texture1DArray:
-        dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+        dsvDesc.ViewDimension                  = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
         dsvDesc.Texture1DArray.FirstArraySlice = 0;
         dsvDesc.Texture1DArray.ArraySize       = m_desc_.arraySize;
         dsvDesc.Texture1DArray.MipSlice        = 0;
@@ -336,11 +330,11 @@ bool TextureDx12::createViews_() {
       srvDesc.Texture1D.ResourceMinLODClamp = 0.0f;
       break;
     case TextureType::Texture1DArray:
-      srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
-      srvDesc.Texture1DArray.MostDetailedMip = 0;
-      srvDesc.Texture1DArray.MipLevels       = m_desc_.mipLevels;
-      srvDesc.Texture1DArray.FirstArraySlice = 0;
-      srvDesc.Texture1DArray.ArraySize       = m_desc_.arraySize;
+      srvDesc.ViewDimension                      = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+      srvDesc.Texture1DArray.MostDetailedMip     = 0;
+      srvDesc.Texture1DArray.MipLevels           = m_desc_.mipLevels;
+      srvDesc.Texture1DArray.FirstArraySlice     = 0;
+      srvDesc.Texture1DArray.ArraySize           = m_desc_.arraySize;
       srvDesc.Texture1DArray.ResourceMinLODClamp = 0.0f;
       break;
     case TextureType::Texture2D:
@@ -452,7 +446,7 @@ void TextureDx12::updateCurrentState_(ResourceLayout state) {
 
 D3D12_CPU_DESCRIPTOR_HANDLE TextureDx12::getRtvHandle(uint32_t mipLevel, uint32_t arraySlice) const {
   // For simplicity, we only support the default RTV handle for the first mip level and array slice
-  // In a more complete implementation, we would create additional descriptors or a descriptor table
+  // TODO: we could create additional descriptors or a descriptor table
   if (mipLevel == 0 && arraySlice == 0) {
     return m_rtvHandle_;
   }
@@ -474,7 +468,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE TextureDx12::getDsvHandle(uint32_t mipLevel, uint32_
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE TextureDx12::getUavHandle(uint32_t mipLevel) const {
-  // Return the UAV handle for the specified mip level if available
   if (mipLevel < m_uavHandles_.size()) {
     return m_uavHandles_[mipLevel];
   }
@@ -490,7 +483,6 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
     return;
   }
 
-  // For DX12, we need to:
   // 1. Create a staging buffer in an upload heap
   // 2. Copy the data to the staging buffer
   // 3. Use a command buffer to copy from the staging buffer to the texture
@@ -518,7 +510,6 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
       &rowSizeInBytes,
       &totalBytes);
 
-  // Create a staging buffer in an upload heap using D3D12MA
   ComPtr<ID3D12Resource>      stagingResource;
   ComPtr<D3D12MA::Allocation> stagingAllocation;
 
@@ -535,10 +526,10 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
   bufferDesc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
   bufferDesc.Flags               = D3D12_RESOURCE_FLAG_NONE;
 
-  // Create allocation description for upload heap
   D3D12MA::ALLOCATION_DESC allocDesc = {};
   allocDesc.HeapType                 = D3D12_HEAP_TYPE_UPLOAD;
 
+  // 1.
   HRESULT hr = m_device_->getAllocator()->CreateResource(&allocDesc,
                                                          &bufferDesc,
                                                          D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -551,7 +542,6 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
     return;
   }
 
-  // Map the staging buffer
   void* mappedData = nullptr;
   hr               = stagingResource->Map(0, nullptr, &mappedData);
 
@@ -560,8 +550,7 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
     return;
   }
 
-  // Copy data to the staging buffer
-  // For row-by-row copy with proper stride
+  // 2.
   uint8_t* srcData = (uint8_t*)data;
   uint8_t* dstData = (uint8_t*)mappedData;
 
@@ -571,7 +560,6 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
 
   stagingResource->Unmap(0, nullptr);
 
-  // Create a command buffer for the copy
   CommandBufferDesc cmdBufferDesc;
   cmdBufferDesc.primary = true;
 
@@ -584,20 +572,16 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
   CommandBufferDx12* cmdBufferDx12 = static_cast<CommandBufferDx12*>(commandBuffer.get());
 
   cmdBufferDx12->reset();
-
-  // Begin the command buffer
   cmdBufferDx12->begin();
 
   auto initialLayout = m_currentLayout_;
 
-  // Transition the texture to COPY_DEST state
   ResourceBarrierDesc barrier = {};
   barrier.texture             = this;
   barrier.oldLayout           = initialLayout;
   barrier.newLayout           = ResourceLayout::TransferDst;
   cmdBufferDx12->resourceBarrier(barrier);
 
-  // Copy from buffer to texture
   D3D12_TEXTURE_COPY_LOCATION src = {};
   src.pResource                   = stagingResource.Get();
   src.Type                        = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
@@ -608,28 +592,22 @@ void TextureDx12::update(const void* data, size_t dataSize, uint32_t mipLevel, u
   dst.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
   dst.SubresourceIndex            = D3D12CalcSubresource(mipLevel, arrayLayer, 0, m_desc_.mipLevels, m_desc_.arraySize);
 
+  // 3.
   cmdBufferDx12->getCommandList()->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 
-  // Transition the texture back to its original state
   barrier.oldLayout = ResourceLayout::TransferDst;
   barrier.newLayout = initialLayout;
   cmdBufferDx12->resourceBarrier(barrier);
 
-  // End the command buffer
   cmdBufferDx12->end();
 
-  // Create a fence to wait for the upload to complete
   FenceDesc fenceDesc;
   fenceDesc.signaled = false;
   auto fence         = m_device_->createFence(fenceDesc);
 
-  // Submit the command buffer
   m_device_->submitCommandBuffer(commandBuffer.get(), fence.get());
 
-  // Wait for the upload to complete
   fence->wait();
-
-  // stagingResource and stagingAllocation will be released when they go out of scope
 }
 
 }  // namespace rhi

@@ -6,6 +6,7 @@
 
 #ifdef GAME_ENGINE_RHI_DX12
 
+#include <mutex>
 #include <vector>
 
 namespace game_engine {
@@ -138,6 +139,7 @@ class DescriptorHeapDx12 {
   uint32_t                     m_capacity       = 0;
   uint32_t                     m_allocated      = 0;
   bool                         m_shaderVisible  = false;
+  mutable std::mutex           m_heapMutex;
 };
 
 /**
@@ -168,6 +170,7 @@ class FrameResourcesManager {
   DeviceDx12* m_device       = nullptr;
   uint32_t    m_frameCount   = 0;
   uint32_t    m_currentFrame = 0;
+  std::mutex  m_frameResourcesMutex;
 
   std::vector<std::unique_ptr<DescriptorHeapDx12>> m_cbvSrvUavHeaps;
   std::vector<std::unique_ptr<DescriptorHeapDx12>> m_samplerHeaps;

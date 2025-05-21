@@ -17,12 +17,7 @@ RenderPassDx12::RenderPassDx12(const RenderPassDesc& desc, DeviceDx12* device)
   }
 }
 
-RenderPassDx12::~RenderPassDx12() {
-  // Nothing to clean up - no native DX12 render pass object
-}
-
 bool RenderPassDx12::initialize_(const RenderPassDesc& desc) {
-  // Store formats of color attachments
   m_colorFormats_.reserve(desc.colorAttachments.size());
   m_colorAttachmentOps_.resize(desc.colorAttachments.size());
 
@@ -31,7 +26,6 @@ bool RenderPassDx12::initialize_(const RenderPassDesc& desc) {
     m_colorAttachmentOps_[i] = desc.colorAttachments[i].loadStoreOp;
   }
 
-  // Store depth/stencil format
   if (desc.hasDepthStencil) {
     m_depthStencilFormat_       = g_getTextureFormatDx12(desc.depthStencilAttachment.format);
     m_depthStencilAttachmentOp_ = desc.depthStencilAttachment.loadStoreOp;
@@ -78,7 +72,7 @@ bool RenderPassDx12::shouldClearDepthStencil() const {
 
 bool RenderPassDx12::shouldClearStencil() const {
   // For simplicity, we're using the same load operation for both depth and stencil
-  // A more sophisticated implementation might track them separately
+  // TODO: more sophisticated implementation that might track them separately
   return shouldClearDepthStencil() && !g_isDepthOnlyFormat(g_getTextureFormatDx12(m_depthStencilFormat_));
 }
 

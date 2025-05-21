@@ -1,13 +1,17 @@
 #include "utils/model/render_model_manager.h"
+
 #include "utils/model/render_mesh_manager.h"
+
+#include <shared_mutex>
 
 namespace game_engine {
 RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, std::optional<Model*> outModel) {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  auto it = renderModelCache_.find(filepath);
-  if (it != renderModelCache_.end()) {
-    return it->second.get();
+  {
+    std::shared_lock<std::shared_mutex> readLock(mutex_);
+    auto                                it = renderModelCache_.find(filepath);
+    if (it != renderModelCache_.end()) {
+      return it->second.get();
+    }
   }
 
   auto renderModelLoaderManager = ServiceLocator::s_get<RenderModelLoaderManager>();
@@ -17,14 +21,28 @@ RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& fil
   }
 
   auto renderModel = renderModelLoaderManager->loadRenderModel(filepath, outModel);
+
   if (renderModel) {
-    RenderModel* modelPtr       = renderModel.get();
-    renderModelCache_[filepath] = std::move(renderModel);
+    RenderModel* modelPtr = renderModel.get();
+    {
+      std::unique_lock<std::shared_mutex> writeLock(mutex_);
+
+      auto it = renderModelCache_.find(filepath);
+      if (it != renderModelCache_.end()) {
+        return it->second.get();
+      }
+      renderModelCache_[filepath] = std::move(renderModel);
+    }
     return modelPtr;
   }
 
   GlobalLogger::Log(LogLevel::Warning, "Failed to load render model: " + filepath.string());
   return nullptr;
+}
+
+bool RenderModelManager::hasRenderModel(const std::filesystem::path& filepath) const {
+  std::shared_lock<std::shared_mutex> readLock(mutex_);
+  return renderModelCache_.find(filepath) != renderModelCache_.end();
 }
 
 bool RenderModelManager::removeRenderModel(RenderModel* renderModel) {
@@ -45,7 +63,7 @@ bool RenderModelManager::removeRenderModel(RenderModel* renderModel) {
     }
   }
 
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::unique_lock<std::shared_mutex> writeLock(mutex_);
 
   auto it = std::find_if(renderModelCache_.begin(), renderModelCache_.end(), [renderModel](const auto& pair) {
     return pair.second.get() == renderModel;

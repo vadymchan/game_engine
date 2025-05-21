@@ -1,23 +1,25 @@
 
-#include "game.h"
+#include "core/application.h"
 
-#include "config/config_manager.h"
-#include "ecs/component_loaders.h"
-#include "ecs/components/light.h"
-#include "engine.h"
-#include "input/input_manager.h"
-#include "utils/hot_reload/hot_reload_manager.h"
-#include "utils/path_manager/path_manager.h"
-#include "utils/service/service_locator.h"
-
+#include <config/config_manager.h>
+#include <ecs/component_loaders.h>
+#include <ecs/components/light.h>
 #include <ecs/components/movement.h>
+#include <ecs/components/camera.h>
+#include <core/engine.h>
+#include <input/input_manager.h>
+#include <scene/scene_loader.h>
+#include <scene/scene_manager.h>
+#include <utils/hot_reload/hot_reload_manager.h>
+#include <utils/path_manager/path_manager.h>
+#include <utils/service/service_locator.h>
 
 #include <random>
 
 namespace game_engine {
 
-void Game::setup() {
-  GlobalLogger::Log(LogLevel::Info, "Game::setup() started");
+void Application::setup() {
+  GlobalLogger::Log(LogLevel::Info, "Application::setup() started");
 
   setupInputHandlers();
 
@@ -36,10 +38,10 @@ void Game::setup() {
   sceneManager->switchToScene(sceneName);
   m_scene_ = sceneManager->getCurrentScene();
 
-  GlobalLogger::Log(LogLevel::Info, "Game::setup() completed");
+  GlobalLogger::Log(LogLevel::Info, "Application::setup() completed");
 }
 
-void Game::onMouseMove(int32_t xOffset, int32_t yOffset) {
+void Application::onMouseMove(int32_t xOffset, int32_t yOffset) {
   if (!m_isRightMouseButtonPressed_) {
     return;
   }
@@ -68,7 +70,7 @@ void Game::onMouseMove(int32_t xOffset, int32_t yOffset) {
   transform.rotation.y() = m_yaw_;
 }
 
-void Game::update(float deltaTime) {
+void Application::update(float deltaTime) {
   // TODO: move to a separate function
   {
     auto& registry     = m_scene_->getEntityRegistry();
@@ -113,14 +115,14 @@ void Game::update(float deltaTime) {
   }
 }
 
-void Game::linkWithEngine(const Engine& engine) {
+void Application::linkWithEngine(const Engine& engine) {
   m_window_ = engine.getWindow();
 }
 
-void Game::release() {
+void Application::release() {
 }
 
-void Game::setupInputHandlers() {
+void Application::setupInputHandlers() {
   auto keyboardEventHandler = ServiceLocator::s_get<InputManager>()->getKeyboardHandler();
 
   // Subscribe to key press events to set action states
@@ -179,7 +181,7 @@ void Game::setupInputHandlers() {
   auto mouseEventHandler = ServiceLocator::s_get<InputManager>()->getMouseHandler();
 
   mouseEventHandler->subscribe({SDL_MOUSEWHEEL}, [this](const MouseWheelEvent& event) {
-    if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+    if ((SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_RIGHT)) == 0) {
       return;
     }
 

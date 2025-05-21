@@ -24,7 +24,7 @@ class DeviceDx12;
 class RenderPassDx12 : public RenderPass {
   public:
   RenderPassDx12(const RenderPassDesc& desc, DeviceDx12* device);
-  ~RenderPassDx12();
+  ~RenderPassDx12() = default;
 
   const std::vector<DXGI_FORMAT>& getColorFormats() const { return m_colorFormats_; }
 

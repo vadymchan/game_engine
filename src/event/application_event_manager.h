@@ -19,7 +19,6 @@ class ApplicationEventManager {
     if (event.type == SDL_QUIT && m_applicationHandler_) {
       m_applicationHandler_->dispatch(event.quit);
     }
-    // TODO: other application events
   }
 
   ApplicationEventHandler* getApplicationHandler() const { return m_applicationHandler_.get(); }

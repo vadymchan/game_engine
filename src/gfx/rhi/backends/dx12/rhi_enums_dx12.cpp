@@ -345,7 +345,6 @@ void g_getDepthFormatForSRV(DXGI_FORMAT& texFormat, DXGI_FORMAT& srvFormat, DXGI
 }
 
 D3D12_FILTER g_getTextureFilterDx12(TextureFilter minification, TextureFilter magnification, bool isComparison) {
-  // Comparison is used for ShadowMap
   if (isComparison) {
     D3D12_FILTER filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
     switch (minification) {

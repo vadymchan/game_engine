@@ -19,7 +19,6 @@ class WindowEventManager {
     if (event.type == SDL_WINDOWEVENT && m_windowHandler_) {
       m_windowHandler_->dispatch(event.window);
     }
-    // TODO: other window events
   }
 
   WindowEventHandler* getWindowHandler() const { return m_windowHandler_.get(); }

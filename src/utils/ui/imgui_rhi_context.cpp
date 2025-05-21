@@ -39,7 +39,6 @@ bool ImGuiRHIContext::initialize(Window* window, rhi::Device* device, uint32_t s
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-  // Setup style
   ImGui::StyleColorsDark();
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     ImGuiStyle& style                 = ImGui::GetStyle();
@@ -367,14 +366,12 @@ void ImGuiRHIContext::renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
   gfx::rhi::ResourceBarrierDesc backBufferBarrier;
   backBufferBarrier.texture   = targetTexture;
   backBufferBarrier.oldLayout = targetTexture->getCurrentLayoutType();
-  // backBufferBarrier.oldLayout = gfx::rhi::ResourceLayout::Undefined;
   backBufferBarrier.newLayout = gfx::rhi::ResourceLayout::ColorAttachment;
   cmdBuffer->resourceBarrier(backBufferBarrier);
 
   rhi::Framebuffer* framebuffer = getOrCreateFramebuffer(targetTexture, viewportDimension, currentFrameIndex);
 
-  // Begin render pass - render pass will handle layout transitions
-  std::vector<rhi::ClearValue> clearValues(1);  // No need to clear, we're drawing on top
+  std::vector<rhi::ClearValue> clearValues(1);
 
   cmdBuffer->beginRenderPass(m_renderPass.get(), framebuffer, clearValues);
 
@@ -409,14 +406,11 @@ void ImGuiRHIContext::renderImGuiDx12(rhi::CommandBuffer*       cmdBuffer,
                                       uint32_t                  currentFrameIndex) {
   auto cmdBufferDx12 = static_cast<rhi::CommandBufferDx12*>(cmdBuffer);
 
-  // Get or create framebuffer for this frame
   rhi::Framebuffer* framebuffer = getOrCreateFramebuffer(targetTexture, viewportDimension, currentFrameIndex);
 
-  // Begin render pass (this will handle resource transitions)
-  std::vector<rhi::ClearValue> clearValues(1);  // No need to clear, we're drawing on top
+  std::vector<rhi::ClearValue> clearValues(1);  
   cmdBuffer->beginRenderPass(m_renderPass.get(), framebuffer, clearValues);
 
-  // Set viewport and scissor
   rhi::Viewport viewport;
   viewport.x        = 0.0f;
   viewport.y        = 0.0f;
@@ -433,15 +427,12 @@ void ImGuiRHIContext::renderImGuiDx12(rhi::CommandBuffer*       cmdBuffer,
   scissor.height = viewportDimension.height();
   cmdBuffer->setScissor(scissor);
 
-  // Set descriptor heaps
   ID3D12DescriptorHeap* heaps[] = {m_dx12ImGuiDescriptorHeap->getHeap()};
   cmdBufferDx12->getCommandList()->SetDescriptorHeaps(1, heaps);
 
-  // Render ImGui
   ImDrawData* drawData = ImGui::GetDrawData();
   ImGui_ImplDX12_RenderDrawData(drawData, cmdBufferDx12->getCommandList());
 
-  // End render pass (this will handle resource transitions back)
   cmdBuffer->endRenderPass();
 }
 

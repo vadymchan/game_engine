@@ -51,7 +51,6 @@ void CommandBufferVk::end() {
     return;
   }
 
-  // End any active render pass
   if (m_isRenderPassActive_) {
     endRenderPass();
   }
@@ -95,7 +94,6 @@ void CommandBufferVk::setPipeline(Pipeline* pipeline) {
     return;
   }
 
-  // Determine the bind point
   VkPipelineBindPoint bindPoint;
   switch (pipelineVk->getType()) {
     case PipelineType::Graphics:
@@ -125,7 +123,7 @@ void CommandBufferVk::setViewport(const Viewport& viewport) {
   viewportVk.x          = viewport.x;
   viewportVk.y          = viewport.y + viewport.height;  // make Dx12 like
   viewportVk.width      = viewport.width;
-  viewportVk.height     = -viewport.height;              // make Dx12 like;
+  viewportVk.height     = -viewport.height;              // make Dx12 like
   viewportVk.minDepth   = viewport.minDepth;
   viewportVk.maxDepth   = viewport.maxDepth;
 
@@ -285,7 +283,6 @@ void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {
   imageBarrier.dstQueueFamilyIndex  = VK_QUEUE_FAMILY_IGNORED;
   imageBarrier.image                = textureVk->getImage();
 
-  // Set aspect mask based on texture format
   if (g_isDepthFormat(textureVk->getFormat())) {
     imageBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     if (!g_isDepthOnlyFormat(textureVk->getFormat())) {
@@ -300,7 +297,6 @@ void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {
   imageBarrier.subresourceRange.baseArrayLayer = 0;
   imageBarrier.subresourceRange.layerCount     = textureVk->getArraySize();
 
-  // Determine access masks based on layouts
   if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
     imageBarrier.srcAccessMask = 0;
   } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
@@ -330,7 +326,6 @@ void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {
     imageBarrier.dstAccessMask = 0;
   }
 
-  // Determine pipeline stages based on access masks
   VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
@@ -363,7 +358,6 @@ void CommandBufferVk::resourceBarrier(const ResourceBarrierDesc& barrier) {
 
   vkCmdPipelineBarrier(m_commandBuffer_, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
 
-  // Update the texture's tracked layout AFTER successful barrier command
   textureVk->updateCurrentLayout_(barrier.newLayout);
 }
 
@@ -388,17 +382,15 @@ void CommandBufferVk::beginRenderPass(RenderPass*                    renderPass,
     return;
   }
 
-  // Transition attachments to their initial layouts before beginning render pass
   framebufferVk->transitionToInitialLayouts(this, renderPassVk);
 
-  // Convert clear values to Vulkan format
   std::vector<VkClearValue> clearValuesVk(clearValues.size());
   for (size_t i = 0; i < clearValues.size(); i++) {
     if (i < framebufferVk->getColorAttachmentCount()) {
-      // Color attachment
+      // color attachment
       memcpy(clearValuesVk[i].color.float32, clearValues[i].color, sizeof(float) * 4);
     } else {
-      // Depth/stencil attachment
+      // depth/stencil attachment
       clearValuesVk[i].depthStencil.depth   = clearValues[i].depthStencil.depth;
       clearValuesVk[i].depthStencil.stencil = clearValues[i].depthStencil.stencil;
     }
@@ -490,14 +482,12 @@ void CommandBufferVk::copyBufferToTexture(Buffer*  srcBuffer,
     return;
   }
 
-  // Transition texture to transfer destination layout
   ResourceBarrierDesc barrier = {};
   barrier.texture             = dstTexture;
   barrier.oldLayout           = dstTextureVk->getCurrentLayoutType();
   barrier.newLayout           = ResourceLayout::TransferDst;
   resourceBarrier(barrier);
 
-  // Calculate subresource dimensions
   uint32_t width = dstTextureVk->getWidth() >> mipLevel;
   width          = (width == 0) ? 1 : width;
 
@@ -507,7 +497,6 @@ void CommandBufferVk::copyBufferToTexture(Buffer*  srcBuffer,
   uint32_t depth = dstTextureVk->getDepth() >> mipLevel;
   depth          = (depth == 0) ? 1 : depth;
 
-  // Setup buffer to image copy
   VkBufferImageCopy region = {};
   region.bufferOffset      = 0;
   region.bufferRowLength   = 0;  // Tightly packed
@@ -529,7 +518,6 @@ void CommandBufferVk::copyBufferToTexture(Buffer*  srcBuffer,
                          1,
                          &region);
 
-  // Transition texture back to original layout
   barrier.oldLayout = ResourceLayout::TransferDst;
   barrier.newLayout = dstTextureVk->getCurrentLayoutType();
   resourceBarrier(barrier);
@@ -552,7 +540,6 @@ void CommandBufferVk::copyTextureToBuffer(Texture* srcTexture,
     return;
   }
 
-  // Transition texture to transfer source layout
   ResourceBarrierDesc barrier = {};
   barrier.texture             = srcTexture;
   barrier.oldLayout           = srcTextureVk->getCurrentLayoutType();
@@ -591,7 +578,6 @@ void CommandBufferVk::copyTextureToBuffer(Texture* srcTexture,
                          1,
                          &region);
 
-  // Transition texture back to original layout
   barrier.oldLayout = ResourceLayout::TransferSrc;
   barrier.newLayout = srcTextureVk->getCurrentLayoutType();
   resourceBarrier(barrier);
@@ -630,7 +616,6 @@ void CommandBufferVk::copyTexture(Texture* srcTexture,
   barrier.newLayout = ResourceLayout::TransferDst;
   resourceBarrier(barrier);
 
-  // region
   VkImageCopy region{};
   region.srcSubresource.aspectMask
       = g_isDepthFormat(srcTexVk->getFormat()) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
@@ -681,18 +666,15 @@ void CommandBufferVk::clearColor(Texture* texture, const float color[4], uint32_
     return;
   }
 
-  // Transition texture to transfer destination layout
   ResourceBarrierDesc barrier = {};
   barrier.texture             = texture;
   barrier.oldLayout           = textureVk->getCurrentLayoutType();
   barrier.newLayout           = ResourceLayout::TransferDst;
   resourceBarrier(barrier);
 
-  // Setup clear value
   VkClearColorValue clearColor = {};
   memcpy(clearColor.float32, color, sizeof(float) * 4);
 
-  // Setup clear range
   VkImageSubresourceRange range = {};
   range.aspectMask              = VK_IMAGE_ASPECT_COLOR_BIT;
   range.baseMipLevel            = mipLevel;
@@ -703,7 +685,6 @@ void CommandBufferVk::clearColor(Texture* texture, const float color[4], uint32_
   vkCmdClearColorImage(
       m_commandBuffer_, textureVk->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
 
-  // Transition texture back to original layout
   barrier.oldLayout = ResourceLayout::TransferDst;
   barrier.newLayout = textureVk->getCurrentLayoutType();
   resourceBarrier(barrier);
@@ -722,25 +703,21 @@ void CommandBufferVk::clearDepthStencil(
     return;
   }
 
-  // Verify this is a depth/stencil format
   if (!g_isDepthFormat(textureVk->getFormat())) {
     GlobalLogger::Log(LogLevel::Error, "Texture is not a depth/stencil texture");
     return;
   }
 
-  // Transition texture to transfer destination layout
   ResourceBarrierDesc barrier = {};
   barrier.texture             = texture;
   barrier.oldLayout           = textureVk->getCurrentLayoutType();
   barrier.newLayout           = ResourceLayout::TransferDst;
   resourceBarrier(barrier);
 
-  // Setup clear value
   VkClearDepthStencilValue clearValue = {};
   clearValue.depth                    = depth;
   clearValue.stencil                  = stencil;
 
-  // Setup clear range
   VkImageSubresourceRange range = {};
   range.aspectMask              = VK_IMAGE_ASPECT_DEPTH_BIT;
   if (!g_isDepthOnlyFormat(textureVk->getFormat())) {
@@ -754,7 +731,6 @@ void CommandBufferVk::clearDepthStencil(
   vkCmdClearDepthStencilImage(
       m_commandBuffer_, textureVk->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearValue, 1, &range);
 
-  // Transition texture back to original layout
   barrier.oldLayout = ResourceLayout::TransferDst;
   barrier.newLayout = textureVk->getCurrentLayoutType();
   resourceBarrier(barrier);
@@ -771,32 +747,104 @@ CommandPoolManager::~CommandPoolManager() {
 bool CommandPoolManager::initialize(VkDevice device, uint32_t queueFamilyIndex) {
   release();
 
-  m_device_           = device;
-  m_queueFamilyIndex_ = queueFamilyIndex;
-
   VkCommandPoolCreateInfo poolInfo = {};
   poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   poolInfo.flags                   = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   poolInfo.queueFamilyIndex        = queueFamilyIndex;
 
-  if (vkCreateCommandPool(device, &poolInfo, nullptr, &m_commandPool_) != VK_SUCCESS) {
+  VkCommandPool newPool = VK_NULL_HANDLE;
+  if (vkCreateCommandPool(device, &poolInfo, nullptr, &newPool) != VK_SUCCESS) {
     return false;
   }
+
+  m_device_           = device;
+  m_queueFamilyIndex_ = queueFamilyIndex;
+  m_mainCommandPool   = newPool;
+  m_mainThreadId      = std::this_thread::get_id();
+
+  m_isInitialized = true;
 
   return true;
 }
 
 void CommandPoolManager::release() {
-  if (m_device_ && m_commandPool_) {
-    vkDestroyCommandPool(m_device_, m_commandPool_, nullptr);
-    m_commandPool_ = VK_NULL_HANDLE;
+  cleanupThreadPools();
+
+  if (m_device_ && m_mainCommandPool != VK_NULL_HANDLE) {
+    vkDestroyCommandPool(m_device_, m_mainCommandPool, nullptr);
+    m_mainCommandPool = VK_NULL_HANDLE;
   }
 
   m_device_           = VK_NULL_HANDLE;
   m_queueFamilyIndex_ = 0;
+  m_isInitialized     = false;
 }
 
-// Реализация CommandBufferVk остается без изменений
+VkCommandPool CommandPoolManager::getPool() const {
+  if (std::this_thread::get_id() == m_mainThreadId) {
+    return m_mainCommandPool;
+  }
+
+  std::thread::id threadId = std::this_thread::get_id();
+
+  {
+    std::lock_guard<std::mutex> lock(m_threadPoolsMutex);
+    auto                        it = m_threadPools.find(threadId);
+    if (it != m_threadPools.end()) {
+      return it->second;
+    }
+  }
+
+  VkCommandPool pool = createThreadPool();
+
+  {
+    std::lock_guard<std::mutex> lock(m_threadPoolsMutex);
+    m_threadPools[threadId] = pool;
+  }
+
+  return pool;
+}
+
+VkCommandPool CommandPoolManager::createThreadPool() const {
+  if (!m_isInitialized || m_device_ == VK_NULL_HANDLE) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot create thread pool: CommandPoolManager not initialized");
+    return VK_NULL_HANDLE;
+  }
+
+  VkCommandPoolCreateInfo poolInfo = {};
+  poolInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  poolInfo.flags                   = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  poolInfo.queueFamilyIndex        = m_queueFamilyIndex_;
+
+  VkCommandPool pool = VK_NULL_HANDLE;
+  if (vkCreateCommandPool(m_device_, &poolInfo, nullptr, &pool) != VK_SUCCESS) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create thread-specific command pool");
+    return m_mainCommandPool;
+  }
+
+  registerThreadPool(pool);
+
+  return pool;
+}
+
+void CommandPoolManager::registerThreadPool(VkCommandPool pool) const {
+  std::thread::id threadId = std::this_thread::get_id();
+
+  std::lock_guard<std::mutex> lock(m_threadPoolsMutex);
+  m_threadPools[threadId] = pool;
+}
+
+void CommandPoolManager::cleanupThreadPools() {
+  std::lock_guard<std::mutex> lock(m_threadPoolsMutex);
+
+  for (auto& pair : m_threadPools) {
+    if (m_device_ && pair.second != VK_NULL_HANDLE) {
+      vkDestroyCommandPool(m_device_, pair.second, nullptr);
+    }
+  }
+
+  m_threadPools.clear();
+}
 
 }  // namespace rhi
 }  // namespace gfx

@@ -20,10 +20,10 @@ struct Material {
   // characteristics of material (e.g. "PBR", "transparent", etc.)
   // std::set<std::string> tags;
 
-  // Scalar parameters (e.g., roughness, metallic)
+  // roughness, metallic
   std::unordered_map<std::string, float> scalarParameters;
 
-  // Vector parameters (e.g., base color)
+  // base color
   std::unordered_map<std::string, math::Vector4Df> vectorParameters;
 
   // Textures associated with the material

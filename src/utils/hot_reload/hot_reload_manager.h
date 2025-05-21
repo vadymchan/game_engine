@@ -1,7 +1,6 @@
 #ifndef GAME_ENGINE_HOT_RELOAD_MANAGER_H
 #define GAME_ENGINE_HOT_RELOAD_MANAGER_H
 
-// NOTE: Not all headers are included here
 #include "utils/file_watcher/file_watcher_manager.h"
 
 namespace game_engine {

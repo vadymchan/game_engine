@@ -1,11 +1,13 @@
 #include "ecs/component_loaders.h"
 
-#include "components/light.h"
-#include "components/movement.h"
-#include "components/render_model.h"
 #include "config/config_manager.h"
 #include "ecs/components/camera.h"
+#include "ecs/components/light.h"
+#include "ecs/components/movement.h"
+#include "ecs/components/render_model.h"
+#include "ecs/components/tags.h"
 #include "ecs/components/transform.h"
+#include "utils/asset/asset_loader.h"
 #include "utils/logger/global_logger.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/path_manager/path_manager.h"
@@ -155,7 +157,7 @@ SpotLight g_loadSpotLight(const ConfigValue& value) {
   return spotLight;
 }
 
-std::string LoadModelPath(const ConfigValue& value) {
+std::string g_loadModelPath(const ConfigValue& value) {
   if (value.HasMember("path") && value["path"].IsString()) {
     return value["path"].GetString();
   }
@@ -201,15 +203,49 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
     } else if (componentType == "movement") {
       registry.emplace<Movement>(entity);
     } else if (componentType == "model") {
-      std::string modelPath = LoadModelPath(component);
+      std::string modelPath = g_loadModelPath(component);
       if (!modelPath.empty()) {
-        auto modelManager = ServiceLocator::s_get<RenderModelManager>();
-        auto renderModel  = modelManager->getRenderModel(modelPath);
+        auto assetLoader = ServiceLocator::s_get<AssetLoader>();
 
-        if (renderModel) {
-          registry.emplace<RenderModel*>(entity, renderModel);
+        if (assetLoader) {
+          GlobalLogger::Log(LogLevel::Info, "Starting async load for model: " + modelPath);
+
+          registry.emplace<ModelLoadingTag>(entity, modelPath);
+
+          assetLoader->loadModel(modelPath, [registry_ptr = &registry, entity, modelPath](bool success) {
+            if (!registry_ptr->valid(entity)) {
+              GlobalLogger::Log(LogLevel::Warning, "Entity no longer exists after model loaded: " + modelPath);
+              return;
+            }
+
+            if (registry_ptr->any_of<ModelLoadingTag>(entity)) {
+              registry_ptr->remove<ModelLoadingTag>(entity);
+            }
+
+            if (success) {
+              auto modelManager = ServiceLocator::s_get<RenderModelManager>();
+              if (modelManager) {
+                auto renderModel = modelManager->getRenderModel(modelPath);
+
+                if (renderModel) {
+                  registry_ptr->emplace<RenderModel*>(entity, renderModel);
+                  GlobalLogger::Log(LogLevel::Info, "Async model loaded and added to entity: " + modelPath);
+                }
+              }
+            } else {
+              GlobalLogger::Log(LogLevel::Error, "Failed to load model asynchronously: " + modelPath);
+            }
+          });
+
         } else {
-          GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath);
+          auto modelManager = ServiceLocator::s_get<RenderModelManager>();
+          auto renderModel  = modelManager->getRenderModel(modelPath);
+
+          if (renderModel) {
+            registry.emplace<RenderModel*>(entity, renderModel);
+          } else {
+            GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath);
+          }
         }
       }
     } else if (componentType == "light") {

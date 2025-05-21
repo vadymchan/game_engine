@@ -21,14 +21,12 @@ std::unique_ptr<Model> AssimpModelLoader::loadModel(const std::filesystem::path&
   auto model      = std::make_unique<Model>();
   model->filePath = filePath;
 
-  // Get the mesh manager from service locator
   auto meshManager = ServiceLocator::s_get<MeshManager>();
   if (!meshManager) {
     GlobalLogger::Log(LogLevel::Error, "MeshManager not available in ServiceLocator.");
     return nullptr;
   }
 
-  // Process meshes and store raw pointers in the model
   model->meshes.reserve(scene->mNumMeshes);
 
   for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
@@ -154,45 +152,37 @@ void AssimpModelLoader::calculateTangentsAndBitangents(aiMesh* ai_mesh, std::vec
       continue;
     }
 
-    // Indices for the triangle vertices
     uint32_t i0 = face.mIndices[0];
     uint32_t i1 = face.mIndices[1];
     uint32_t i2 = face.mIndices[2];
 
-    // Get the vertices of the triangle
     Vertex& v0 = vertices[i0];
     Vertex& v1 = vertices[i1];
     Vertex& v2 = vertices[i2];
 
-    // Positions
     const math::Vector3Df& p0 = v0.position;
     const math::Vector3Df& p1 = v1.position;
     const math::Vector3Df& p2 = v2.position;
 
-    // Texture coordinates
     const math::Vector2Df& uv0 = v0.texCoords;
     const math::Vector2Df& uv1 = v1.texCoords;
     const math::Vector2Df& uv2 = v2.texCoords;
 
-    // Edge vectors
     math::Vector3Df deltaPos1 = p1 - p0;
     math::Vector3Df deltaPos2 = p2 - p0;
 
-    // UV delta vectors
     math::Vector2Df deltaUV1 = uv1 - uv0;
     math::Vector2Df deltaUV2 = uv2 - uv0;
 
     constexpr float epsilon = 1e-6f;
     float           r       = deltaUV1.x() * deltaUV2.y() - deltaUV1.y() * deltaUV2.x();
-    r                       = (std::abs(r) > epsilon) ? 1.0f / r : 1.0f;  // Prevent division by zero
+    r                       = (std::abs(r) > epsilon) ? 1.0f / r : 1.0f;
 
     math::Vector3Df tangent   = r * (deltaPos1 * deltaUV2.y() - deltaPos2 * deltaUV1.y());
     math::Vector3Df bitangent = r * (deltaPos2 * deltaUV1.x() - deltaPos1 * deltaUV2.x());
 
-    // Orthogonalize tangent with respect to the normal and normalize it
     tangent = (tangent - v0.normal * v0.normal.dot(tangent)).normalized();
 
-    // Determine handedness to make tangent and bitangent perpendicular
     float handedness = (v0.normal.cross(tangent).dot(bitangent) < 0.0f) ? -1.0f : 1.0f;
     bitangent        = (v0.normal.cross(tangent) * handedness).normalized();
 

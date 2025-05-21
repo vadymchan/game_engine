@@ -82,10 +82,8 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
     return RenderContext();
   }
 
-  m_currentFrame                = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-  auto& fence                   = m_frameFences[m_currentFrame];
-  auto& imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
-  auto& renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
+  m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+  auto& fence    = m_frameFences[m_currentFrame];
 
   fence->wait();
   fence->reset();
@@ -97,7 +95,7 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   m_resourceManager->updateScheduledPipelines();
 
-  if (!m_swapChain->acquireNextImage(imageAvailableSemaphore.get())) {
+  if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[m_currentFrame].get())) {
     GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");
     return RenderContext();
   }
@@ -136,8 +134,6 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
   context.viewportDimension = viewportDimension;
   context.renderSettings    = renderSettings;
   context.currentImageIndex = m_swapChain->getCurrentImageIndex();
-  context.waitSemaphore     = imageAvailableSemaphore.get();
-  context.signalSemaphore   = renderFinishedSemaphore.get();
 
   m_frameResources->updatePerFrameResources(context);
 
@@ -206,23 +202,23 @@ void Renderer::endFrame(RenderContext& context) {
   context.commandBuffer->end();
 
   std::vector<rhi::Semaphore*> waitSemaphores;
-  if (context.waitSemaphore) {
-    waitSemaphores.push_back(context.waitSemaphore);
+  auto&                        imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
+  if (imageAvailableSemaphore.get()) {
+    waitSemaphores.push_back(imageAvailableSemaphore.get());
   }
 
   std::vector<rhi::Semaphore*> signalSemaphores;
-  if (context.signalSemaphore) {
-    signalSemaphores.push_back(context.signalSemaphore);
+  auto&                        renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
+  if (renderFinishedSemaphore.get()) {
+    signalSemaphores.push_back(renderFinishedSemaphore.get());
   }
 
   m_device->submitCommandBuffer(
       context.commandBuffer.get(), m_frameFences[m_currentFrame].get(), waitSemaphores, signalSemaphores);
 
-  m_swapChain->present(context.signalSemaphore);
+  m_swapChain->present(renderFinishedSemaphore.get());
 
   recycleCommandBuffer_(std::move(context.commandBuffer));
-
-  // m_frameResources->clearDirtyFlags(context);
 
   m_frameIndex++;
 }

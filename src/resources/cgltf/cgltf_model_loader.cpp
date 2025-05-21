@@ -2,6 +2,7 @@
 
 #include "resources/cgltf/cgltf_model_loader.h"
 
+#include "ecs/components/model.h"
 #include "resources/cgltf/cgltf_common.h"
 #include "utils/logger/global_logger.h"
 #include "utils/model/mesh_manager.h"
@@ -62,17 +63,6 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
           math::Matrix4f<> worldMatrix = calculateWorldMatrix(meshNode, localMatrix);
           auto             zFlipMatrix = math::g_scale(math::Vector3Df(1.0f, 1.0f, -1.0f));
           worldMatrix                  = worldMatrix * zFlipMatrix;  // Flip Z axis to match OpenGL coordinate system
-
-          // for (int col = 0; col < 4; ++col) {
-          //   worldMatrix(2, col) = -worldMatrix(2, col);
-          // }
-
-          // bool mirrored = worldMatrix.determinant<float>() < 0.0f;
-          // if (mirrored) {
-          //   for (size_t k = 0; k + 2 < mesh->indices.size(); k += 3) {
-          //     std::swap(mesh->indices[k + 1], mesh->indices[k + 2]);
-          //   }
-          // }
 
           mesh->transformMatrix = worldMatrix;
         }
@@ -230,7 +220,6 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* m
     cgltf_accessor_read_float(position_accessor, i, position, 3);
     vertex.position = math::Vector3Df(position[0], position[1], position[2]);
 
-    // Normal
     if (normal_accessor) {
       float normal[3] = {0, 0, 0};
       cgltf_accessor_read_float(normal_accessor, i, normal, 3);
@@ -239,17 +228,14 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* m
       vertex.normal = math::Vector3Df(0.0f, 0.0f, 0.0f);
     }
 
-    // TexCoord
     if (texcoord_accessor) {
       float texcoord[2] = {0, 0};
       cgltf_accessor_read_float(texcoord_accessor, i, texcoord, 2);
       vertex.texCoords = math::Vector2Df(texcoord[0], texcoord[1]);
-      // texcoord[1]      = 1.0f - texcoord[1];  // Flip Y coordinate
     } else {
       vertex.texCoords = math::Vector2Df(0.0f, 0.0f);
     }
 
-    // Tangent
     if (tangent_accessor) {
       float tangent[4] = {0, 0, 0, 1};  // xyzw, w is handedness
       cgltf_accessor_read_float(tangent_accessor, i, tangent, 4);
@@ -261,7 +247,6 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* m
       vertex.bitangent = math::Vector3Df(0.0f, 0.0f, 0.0f);
     }
 
-    // Color
     if (color_accessor) {
       float color[4] = {1, 1, 1, 1};
       cgltf_accessor_read_float(color_accessor, i, color, 4);
@@ -300,7 +285,6 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
     return;
   }
 
-  // Basic tangent calculation as a fallback
   for (size_t i = 0; i < mesh->indices.size(); i += 3) {
     uint32_t i0 = mesh->indices[i];
     uint32_t i1 = mesh->indices[i + 1];
@@ -310,14 +294,12 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
     Vertex& v1 = mesh->vertices[i1];
     Vertex& v2 = mesh->vertices[i2];
 
-    // Calculate edges and UV deltas
     math::Vector3Df edge1 = v1.position - v0.position;
     math::Vector3Df edge2 = v2.position - v0.position;
 
     math::Vector2Df deltaUV1 = v1.texCoords - v0.texCoords;
     math::Vector2Df deltaUV2 = v2.texCoords - v0.texCoords;
 
-    // Calculate tangent and bitangent
     float f = 1.0f / (deltaUV1.x() * deltaUV2.y() - deltaUV2.x() * deltaUV1.y());
     if (!std::isfinite(f)) {
       f = 0.0f;  // Handle degenerate triangles
@@ -348,12 +330,11 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
 }
 
 #ifdef GAME_ENGINE_USE_MIKKTS
-// MikkTSpace interface implementation
+
 struct MikkTSpaceContext {
   Mesh* mesh;
 };
 
-// MikkTSpace callbacks
 static int getNumFaces(const SMikkTSpaceContext* context) {
   MikkTSpaceContext* userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
   return static_cast<int>(userContext->mesh->indices.size() / 3);
@@ -393,10 +374,8 @@ static void setTangent(const SMikkTSpaceContext* context, const float tangent[],
   MikkTSpaceContext* userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
   int                index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
 
-  // Set tangent
   userContext->mesh->vertices[index].tangent = math::Vector3Df(tangent[0], tangent[1], tangent[2]);
 
-  // Calculate bitangent from normal, tangent and sign
   const math::Vector3Df& normal                = userContext->mesh->vertices[index].normal;
   userContext->mesh->vertices[index].bitangent = normal.cross(userContext->mesh->vertices[index].tangent) * sign;
 }
@@ -422,7 +401,6 @@ void CgltfModelLoader::generateMikkTSpaceTangents(Mesh* mesh) {
 
   if (!genTangSpaceDefault(&context)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to generate tangents using MikkTSpace");
-    // Fall back to basic tangent calculation
     calculateTangents(mesh);
   } else {
     GlobalLogger::Log(LogLevel::Debug, "MikkTSpace tangent generation completed");

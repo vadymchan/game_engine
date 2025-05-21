@@ -14,6 +14,7 @@
 #include "utils/service/service_locator.h"
 
 #include <cgltf.h>
+#include <math_library/matrix.h>
 
 namespace game_engine {
 
@@ -26,7 +27,7 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
     return nullptr;
   }
 
-      auto scene = CgltfSceneCache::getOrLoad(filePath);
+  auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene for material mapping: " + filePath.string());
     return nullptr;

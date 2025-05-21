@@ -57,10 +57,8 @@ std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::processMaterials(co
     aiMaterial* ai_material = scene->mMaterials[i];
     auto        material    = std::make_unique<Material>();
 
-    // Set the file path for the material
     material->filePath = filePath;
 
-    // Material name
     aiString name;
     if (ai_material->Get(AI_MATKEY_NAME, name) == AI_SUCCESS) {
       material->materialName = name.C_Str();
@@ -68,7 +66,6 @@ std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::processMaterials(co
       material->materialName = "Material_" + std::to_string(i);
     }
 
-    // Scalar parameters
     for (const auto& param : scalarParametersToFetch) {
       float value;
       if (AI_SUCCESS == ai_material->Get(param.pKey, param.type, param.index, value)) {
@@ -76,7 +73,6 @@ std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::processMaterials(co
       }
     }
 
-    // Vector parameters
     for (const auto& param : vectorParametersToFetch) {
       aiColor3D color;
       if (AI_SUCCESS == ai_material->Get(param.pKey, param.type, param.index, color)) {
@@ -86,8 +82,8 @@ std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::processMaterials(co
 
     // Load textures
     // Currently assumes that textures are located in the same directory as
-    // the material file. Consider adding logic to handle different texture
-    // directories if needed.
+    // the material file.
+    // TODO: Consider adding logic to handle different texture directories if needed.
     for (int type = aiTextureType_NONE + 1; type <= AI_TEXTURE_TYPE_MAX; ++type) {
       loadTextures(ai_material, static_cast<aiTextureType>(type), material.get(), filePath);
     }
@@ -97,7 +93,6 @@ std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::processMaterials(co
   return materials;
 }
 
-// Function to load textures and add to the material's textures map
 void AssimpMaterialLoader::loadTextures(aiMaterial*                  mat,
                                         aiTextureType                type,
                                         Material*                    material,
@@ -107,7 +102,6 @@ void AssimpMaterialLoader::loadTextures(aiMaterial*                  mat,
     if (mat->GetTexture(type, i, &path) == AI_SUCCESS) {
       std::filesystem::path fullPath = basePath.parent_path() / path.C_Str();
 
-      // Get the image from ImageManager (raw pointer, not owned by us)
       auto imageManager = ServiceLocator::s_get<ImageManager>();
       if (!imageManager) {
         GlobalLogger::Log(LogLevel::Error, "ImageManager not available");
@@ -117,21 +111,17 @@ void AssimpMaterialLoader::loadTextures(aiMaterial*                  mat,
       auto image = imageManager->getImage(fullPath);
 
       if (image) {
-        // Get TextureManager from ServiceLocator
         auto textureManager = ServiceLocator::s_get<TextureManager>();
         if (!textureManager) {
           GlobalLogger::Log(LogLevel::Error, "TextureManager not found in ServiceLocator");
           continue;
         }
 
-        // Create texture name based on file path
         std::string textureName = fullPath.filename().string();
 
-        // Let texture manager create and own the texture
         auto texture = textureManager->createTexture(image, textureName);
 
         if (texture) {
-          // Material now stores raw pointers to textures
           material->textures[aiTextureTypeToString(type)] = texture;
         }
       }

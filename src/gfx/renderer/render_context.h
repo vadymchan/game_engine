@@ -21,10 +21,6 @@ struct RenderContext {
   math::Dimension2Di                  viewportDimension;
   RenderSettings                      renderSettings;
   uint32_t                            currentImageIndex = 0;
-
-  // TODO: currently used only in renderer, cosider remove from RenderContext
-  rhi::Semaphore* waitSemaphore   = nullptr;
-  rhi::Semaphore* signalSemaphore = nullptr;
 };
 
 }  // namespace renderer

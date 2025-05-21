@@ -4,12 +4,14 @@
 // TODO: consider moving this file to another directory
 
 #include "gfx/rhi/common/rhi_enums.h"
-#include "utils/logger/global_logger.h"
 #include "platform/windows/windows_platform_setup.h"
+#include "utils/logger/global_logger.h"
 
+#include <codecvt>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <locale>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -104,8 +106,7 @@ class DxcUtil {
       return nullptr;
     }
 
-    GlobalLogger::Log(LogLevel::Info,
-                      "Compiling shader for target: " + std::string(targetProfile.begin(), targetProfile.end()));
+    GlobalLogger::Log(LogLevel::Info, "Compiling shader for target: " + wstring_to_utf8(targetProfile));
 
     IDxcCompiler3* compilerRaw = nullptr;
     IDxcUtils*     utilsRaw    = nullptr;
@@ -206,6 +207,22 @@ class DxcUtil {
   }
 
   private:
+  DxcUtil() = default;
+
+  ~DxcUtil() {
+    if (m_libHandle) {
+#if defined(_WIN32)
+      FreeLibrary(m_libHandle);
+#else
+      dlclose(m_libHandle);
+#endif
+      m_libHandle = nullptr;
+    }
+  }
+
+  DxcUtil(const DxcUtil&)            = delete;
+  DxcUtil& operator=(const DxcUtil&) = delete;
+
   bool initialize() {
     if (m_libHandle) {
       return true;
@@ -274,24 +291,11 @@ class DxcUtil {
     return ss.str();
   }
 
-  private:
-  DxcUtil() = default;
-
-  ~DxcUtil() {
-    if (m_libHandle) {
-#if defined(_WIN32)
-      FreeLibrary(m_libHandle);
-#else
-      dlclose(m_libHandle);
-#endif
-      m_libHandle = nullptr;
-    }
+  static std::string wstring_to_utf8(const std::wstring& wstr) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    return conv.to_bytes(wstr);
   }
 
-  DxcUtil(const DxcUtil&)            = delete;
-  DxcUtil& operator=(const DxcUtil&) = delete;
-
-  private:
   DxcLibHandle          m_libHandle   = nullptr;
   DxcCreateInstanceProc m_dxcCreateFn = nullptr;
 };

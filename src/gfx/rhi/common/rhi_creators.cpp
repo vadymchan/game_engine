@@ -1,8 +1,6 @@
 #include "gfx/rhi/common/rhi_creators.h"
 #include "gfx/rhi/interface/device.h"
 
-// API-specific implementations
-
 //#ifdef GAME_ENGINE_RHI_VULKAN
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 //#endif

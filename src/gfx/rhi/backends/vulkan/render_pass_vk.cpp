@@ -53,17 +53,14 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
     m_depthStencilAttachmentOp_ = desc.depthStencilAttachment.loadStoreOp;
   }
 
-  // Create attachment descriptions
   std::vector<VkAttachmentDescription> attachmentDescs;
   attachmentDescs.reserve(desc.colorAttachments.size() + (desc.hasDepthStencil ? 1 : 0));
 
-  // Color attachments
   for (const auto& colorAttachment : desc.colorAttachments) {
     VkAttachmentDescription attachmentDesc = {};
     attachmentDesc.format                  = g_getTextureFormatVk(colorAttachment.format);
     attachmentDesc.samples                 = static_cast<VkSampleCountFlagBits>(colorAttachment.samples);
 
-    // Get load/store ops
     VkAttachmentLoadOp  loadOp;
     VkAttachmentStoreOp storeOp;
     g_getAttachmentLoadStoreOpVk(loadOp, storeOp, colorAttachment.loadStoreOp);
@@ -78,13 +75,11 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
     attachmentDescs.push_back(attachmentDesc);
   }
 
-  // Depth/stencil attachment (if any)
   VkAttachmentDescription depthAttachmentDesc = {};
   if (desc.hasDepthStencil) {
     depthAttachmentDesc.format  = g_getTextureFormatVk(desc.depthStencilAttachment.format);
     depthAttachmentDesc.samples = static_cast<VkSampleCountFlagBits>(desc.depthStencilAttachment.samples);
 
-    // Get load/store ops
     VkAttachmentLoadOp  loadOp, stencilLoadOp;
     VkAttachmentStoreOp storeOp, stencilStoreOp;
     g_getAttachmentLoadStoreOpVk(loadOp, storeOp, desc.depthStencilAttachment.loadStoreOp);
@@ -100,7 +95,6 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
     attachmentDescs.push_back(depthAttachmentDesc);
   }
 
-  // Color attachment references
   std::vector<VkAttachmentReference> colorAttachmentRefs;
   colorAttachmentRefs.reserve(desc.colorAttachments.size());
 
@@ -111,14 +105,13 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
     colorAttachmentRefs.push_back(attachmentRef);
   }
 
-  // Depth attachment reference (if any)
   VkAttachmentReference depthAttachmentRef = {};
   if (desc.hasDepthStencil) {
     depthAttachmentRef.attachment = static_cast<uint32_t>(desc.colorAttachments.size());
     depthAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
   }
 
-  // Subpass description (just one subpass for now)
+  // just one subpass for now
   VkSubpassDescription subpass = {};
   subpass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
@@ -128,7 +121,6 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
   }
 
-  // Create a simple dependency for the subpass
   VkSubpassDependency dependency = {};
   dependency.srcSubpass          = VK_SUBPASS_EXTERNAL;
   dependency.dstSubpass          = 0;
@@ -141,7 +133,6 @@ bool RenderPassVk::initialize_(const RenderPassDesc& desc) {
                            | (desc.hasDepthStencil ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT : 0);
   dependency.dependencyFlags = 0;
 
-  // Create the render pass
   VkRenderPassCreateInfo renderPassInfo = {};
   renderPassInfo.sType                  = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderPassInfo.attachmentCount        = static_cast<uint32_t>(attachmentDescs.size());
@@ -177,7 +168,7 @@ ResourceLayout RenderPassVk::getColorAttachmentFinalLayout(uint32_t index) const
   }
 
   GlobalLogger::Log(LogLevel::Warning, "Invalid color attachment index for final layout");
-  return ResourceLayout::ColorAttachment;  // Default fallback
+  return ResourceLayout::ColorAttachment;
 }
 
 ResourceLayout RenderPassVk::getDepthStencilAttachmentFinalLayout() const {
@@ -208,7 +199,7 @@ bool RenderPassVk::shouldClearDepthStencil() const {
 }
 
 bool RenderPassVk::shouldClearStencil() const {
-  // For simplicity, we're using the same load operation for both depth and stencil
+  // using the same load operation for both depth and stencil (for simplicity)
   return shouldClearDepthStencil();
 }
 

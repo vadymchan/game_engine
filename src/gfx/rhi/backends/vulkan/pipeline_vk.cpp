@@ -22,7 +22,6 @@ GraphicsPipelineVk::GraphicsPipelineVk(const GraphicsPipelineDesc& desc, DeviceV
 }
 
 GraphicsPipelineVk::~GraphicsPipelineVk() {
-  // Clean up Vulkan resources
   if (m_pipeline_ != VK_NULL_HANDLE) {
     vkDestroyPipeline(m_device_->getDevice(), m_pipeline_, nullptr);
     m_pipeline_ = VK_NULL_HANDLE;
@@ -35,7 +34,6 @@ GraphicsPipelineVk::~GraphicsPipelineVk() {
 }
 
 bool GraphicsPipelineVk::rebuild() {
-  // We only need to recreate the pipeline itself, not the layout
   if (createPipeline_()) {
     GlobalLogger::Log(LogLevel::Info, "Successfully rebuilt Vulkan graphics pipeline");
     m_updateFrame = -1;
@@ -47,68 +45,56 @@ bool GraphicsPipelineVk::rebuild() {
 }
 
 bool GraphicsPipelineVk::initialize_() {
-  // Create pipeline layout first (needed for the pipeline creation)
   if (!createPipelineLayout_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create pipeline layout");
     return false;
   }
 
-  // Create the pipeline
   return createPipeline_();
 }
 
 bool GraphicsPipelineVk::createPipeline_() {
-  // Setup shader stages
   std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
   if (!createShaderStages_(shaderStages)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create shader stages");
     return false;
   }
 
-  // Setup vertex input
   VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
   if (!createVertexInputState_(vertexInputInfo)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create vertex input state");
     return false;
   }
 
-  // Setup input assembly
   VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
   if (!createInputAssemblyState_(inputAssembly)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create input assembly state");
     return false;
   }
 
-  // Setup viewport state
-  // For simplicity, we'll use dynamic viewports and scissors
   VkPipelineViewportStateCreateInfo viewportState = {};
   viewportState.sType                             = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
   viewportState.viewportCount                     = 1;
   viewportState.scissorCount                      = 1;
-  // Actual viewport and scissor will be set via dynamic state
 
-  // Setup rasterization state
   VkPipelineRasterizationStateCreateInfo rasterizer = {};
   if (!createRasterizationState_(rasterizer)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create rasterization state");
     return false;
   }
 
-  // Setup multisample state
   VkPipelineMultisampleStateCreateInfo multisampling = {};
   if (!createMultisampleState_(multisampling)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create multisample state");
     return false;
   }
 
-  // Setup depth-stencil state
   VkPipelineDepthStencilStateCreateInfo depthStencil = {};
   if (!createDepthStencilState_(depthStencil)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create depth-stencil state");
     return false;
   }
 
-  // Setup color blend state
   VkPipelineColorBlendStateCreateInfo colorBlending = {};
   if (!createColorBlendState_(colorBlending)) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create color blend state");
@@ -146,8 +132,6 @@ bool GraphicsPipelineVk::createPipeline_() {
   pipelineInfo.basePipelineHandle           = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex            = -1;
 
-
-  // Destroy existing pipeline if it exists
   if (m_pipeline_ != VK_NULL_HANDLE) {
     // TODO: temp, dirty fix. Consider add delayed destroy for old pipeline
     m_device_->waitIdle();
@@ -261,15 +245,13 @@ bool GraphicsPipelineVk::createMultisampleState_(VkPipelineMultisampleStateCreat
   multisampling       = {};
   multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 
-  // Convert our MSAASamples enum to VkSampleCountFlagBits
-  // For simplicity, we're using a direct cast here, assuming the values match
+  // TODO: consider write helper funtion
   multisampling.rasterizationSamples
       = static_cast<VkSampleCountFlagBits>(static_cast<uint32_t>(m_desc_.multisample.rasterizationSamples));
 
   multisampling.sampleShadingEnable = m_desc_.multisample.sampleShadingEnable ? VK_TRUE : VK_FALSE;
   multisampling.minSampleShading    = m_desc_.multisample.minSampleShading;
 
-  // Sample mask
   static uint32_t sampleMask = m_desc_.multisample.sampleMask;
   multisampling.pSampleMask  = &sampleMask;
 
@@ -288,7 +270,6 @@ bool GraphicsPipelineVk::createDepthStencilState_(VkPipelineDepthStencilStateCre
   depthStencil.depthBoundsTestEnable = m_desc_.depthStencil.depthBoundsTestEnable ? VK_TRUE : VK_FALSE;
   depthStencil.stencilTestEnable     = m_desc_.depthStencil.stencilTestEnable ? VK_TRUE : VK_FALSE;
 
-  // Front face stencil operations
   depthStencil.front.failOp      = g_getStencilOpVk(m_desc_.depthStencil.front.failOp);
   depthStencil.front.passOp      = g_getStencilOpVk(m_desc_.depthStencil.front.passOp);
   depthStencil.front.depthFailOp = g_getStencilOpVk(m_desc_.depthStencil.front.depthFailOp);
@@ -297,7 +278,6 @@ bool GraphicsPipelineVk::createDepthStencilState_(VkPipelineDepthStencilStateCre
   depthStencil.front.writeMask   = m_desc_.depthStencil.front.writeMask;
   depthStencil.front.reference   = m_desc_.depthStencil.front.reference;
 
-  // Back face stencil operations
   depthStencil.back.failOp      = g_getStencilOpVk(m_desc_.depthStencil.back.failOp);
   depthStencil.back.passOp      = g_getStencilOpVk(m_desc_.depthStencil.back.passOp);
   depthStencil.back.depthFailOp = g_getStencilOpVk(m_desc_.depthStencil.back.depthFailOp);
@@ -313,11 +293,9 @@ bool GraphicsPipelineVk::createDepthStencilState_(VkPipelineDepthStencilStateCre
 }
 
 bool GraphicsPipelineVk::createColorBlendState_(VkPipelineColorBlendStateCreateInfo& colorBlending) {
-  // Static array to hold color attachment blend states
   static std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
   colorBlendAttachments.clear();
 
-  // Convert from our generic blend state to Vulkan-specific ones
   for (const auto& attachment : m_desc_.colorBlend.attachments) {
     VkPipelineColorBlendAttachmentState attachmentState = {};
     attachmentState.blendEnable                         = attachment.blendEnable ? VK_TRUE : VK_FALSE;
@@ -332,8 +310,8 @@ bool GraphicsPipelineVk::createColorBlendState_(VkPipelineColorBlendStateCreateI
     colorBlendAttachments.push_back(attachmentState);
   }
 
-  // If no blend attachments were provided, add a default one
   if (colorBlendAttachments.empty()) {
+    GlobalLogger::Log(LogLevel::Warning, "No color blend attachments provided, using default attachment");
     VkPipelineColorBlendAttachmentState defaultAttachment = {};
     defaultAttachment.blendEnable                         = VK_FALSE;
     defaultAttachment.colorWriteMask
@@ -345,11 +323,10 @@ bool GraphicsPipelineVk::createColorBlendState_(VkPipelineColorBlendStateCreateI
   colorBlending.sType         = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
   colorBlending.logicOpEnable = m_desc_.colorBlend.logicOpEnable ? VK_TRUE : VK_FALSE;
   colorBlending.logicOp
-      = static_cast<VkLogicOp>(m_desc_.colorBlend.logicOp);  // This assumes BlendOp values match VkLogicOp
+      = static_cast<VkLogicOp>(m_desc_.colorBlend.logicOp);  // TODO: consider add converter
   colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
   colorBlending.pAttachments    = colorBlendAttachments.data();
 
-  // Copy blend constants
   for (int i = 0; i < 4; i++) {
     colorBlending.blendConstants[i] = m_desc_.colorBlend.blendConstants[i];
   }

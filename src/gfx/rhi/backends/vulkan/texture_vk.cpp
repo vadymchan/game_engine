@@ -127,7 +127,7 @@ bool TextureVk::createImage_() {
 
   imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
-  imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;  // Always allow sampling in shaders
+  imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
 
   if (hasRtvUsage()) {
     imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -141,23 +141,18 @@ bool TextureVk::createImage_() {
     imageInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
   }
 
-  // Always allow texture to be the target of transfer operations for uploads
   imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-  // For mip generation and transfers
   if (m_desc_.mipLevels > 1 || ((m_desc_.createFlags & TextureCreateFlag::TransferSrc) != TextureCreateFlag::None)) {
     imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
   }
 
-  // Sharing and initial layout
   imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
   imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-  // VMA allocation info
   VmaAllocationCreateInfo allocInfo = {};
   allocInfo.usage                   = VMA_MEMORY_USAGE_GPU_ONLY;  // Textures typically use GPU-only memory
 
-  // Create the image with VMA
   VkResult result = vmaCreateImage(
       m_device_->getAllocator(), &imageInfo, &allocInfo, &m_image_, &m_allocation_, &m_allocationInfo_);
 
@@ -174,7 +169,6 @@ bool TextureVk::createImageView_() {
   viewInfo.sType                 = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   viewInfo.image                 = m_image_;
 
-  // Set view type based on texture type
   switch (m_desc_.type) {
     case TextureType::Texture1D:
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
@@ -192,7 +186,9 @@ bool TextureVk::createImageView_() {
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
       break;
     case TextureType::Texture3DArray:
-      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;  // No direct 3D array in Vulkan
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+      GlobalLogger::Log(LogLevel::Warning,
+                        "3D array textures are not directly supported in Vulkan. Using 3D view instead.");
       break;
     case TextureType::TextureCube:
       viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
@@ -202,23 +198,17 @@ bool TextureVk::createImageView_() {
       return false;
   }
 
-  // Set format
   viewInfo.format = m_vkFormat_;
 
-  // Set swizzle (identity mapping)
   viewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
   viewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
   viewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
   viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-  // Set subresource range
   viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-  // If this is a depth/stencil format, set the appropriate aspect mask
   if (g_isDepthFormat(m_desc_.format)) {
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-    // Add stencil aspect if the format has stencil component
     if (!g_isDepthOnlyFormat(m_desc_.format)) {
       viewInfo.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
     }
@@ -229,7 +219,6 @@ bool TextureVk::createImageView_() {
   viewInfo.subresourceRange.baseArrayLayer = 0;
   viewInfo.subresourceRange.layerCount     = m_desc_.arraySize;
 
-  // Create the image view
   if (vkCreateImageView(m_device_->getDevice(), &viewInfo, nullptr, &m_imageView_) != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan image view");
     return false;
@@ -248,7 +237,6 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
     return;
   }
 
-  // Create a staging buffer using VMA
   VmaAllocation stagingAllocation = VK_NULL_HANDLE;
   VkBuffer      stagingBuffer     = m_device_->createStagingBuffer(data, dataSize, stagingAllocation);
 
@@ -257,13 +245,11 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
     return;
   }
 
-  // Create a command buffer for the transfer
   CommandBufferDesc cmdBufferDesc;
   cmdBufferDesc.primary = true;
 
   auto commandBuffer = m_device_->createCommandBuffer(cmdBufferDesc);
   if (!commandBuffer) {
-    // Clean up staging resources
     vmaDestroyBuffer(m_device_->getAllocator(), stagingBuffer, stagingAllocation);
     GlobalLogger::Log(LogLevel::Error, "Failed to create command buffer for texture update");
     return;
@@ -275,17 +261,14 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
 
   cmdBufferVk->reset();
 
-  // Begin command buffer
   cmdBufferVk->begin();
 
-  // Transition layout to transfer destination
   ResourceBarrierDesc barrier = {};
   barrier.texture             = this;
   barrier.oldLayout           = initialLayout;
   barrier.newLayout           = ResourceLayout::TransferDst;
   cmdBufferVk->resourceBarrier(barrier);
 
-  // Calculate subresource dimensions for this mip level
   uint32_t mipWidth = m_desc_.width >> mipLevel;
   mipWidth          = mipWidth > 0 ? mipWidth : 1;
 
@@ -295,7 +278,6 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
   uint32_t mipDepth = m_desc_.depth >> mipLevel;
   mipDepth          = mipDepth > 0 ? mipDepth : 1;
 
-  // Set up buffer to image copy
   VkBufferImageCopy region = {};
   region.bufferOffset      = 0;
   region.bufferRowLength   = 0;  // Tightly packed
@@ -310,30 +292,23 @@ void TextureVk::update(const void* data, size_t dataSize, uint32_t mipLevel, uin
   region.imageOffset = {0, 0, 0};
   region.imageExtent = {mipWidth, mipHeight, mipDepth};
 
-  // Copy buffer to image
   vkCmdCopyBufferToImage(
       cmdBufferVk->getCommandBuffer(), stagingBuffer, m_image_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-  // Transition layout back to original
   barrier.oldLayout = ResourceLayout::TransferDst;
   barrier.newLayout = (initialLayout == ResourceLayout::Undefined) ? ResourceLayout::General : initialLayout;
   cmdBufferVk->resourceBarrier(barrier);
 
-  // End and submit command buffer
   cmdBufferVk->end();
 
-  // Create a fence to wait for the upload to complete
   FenceDesc fenceDesc;
   fenceDesc.signaled = false;
   auto fence         = m_device_->createFence(fenceDesc);
 
-  // Submit the command buffer
   m_device_->submitCommandBuffer(commandBuffer.get(), fence.get());
 
-  // Wait for the upload to complete
   fence->wait();
 
-  // Clean up staging resources using VMA
   vmaDestroyBuffer(m_device_->getAllocator(), stagingBuffer, stagingAllocation);
 }
 }  // namespace rhi

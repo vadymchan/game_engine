@@ -17,9 +17,6 @@ class SceneLoader {
   static Scene* loadSceneFromFile(const std::filesystem::path& configPath,
                                   SceneManager*                sceneManager,
                                   const std::string&           customSceneName = "");
-
-  private:
-  // maybe we need here helper methods
 };
 
 }  // namespace game_engine

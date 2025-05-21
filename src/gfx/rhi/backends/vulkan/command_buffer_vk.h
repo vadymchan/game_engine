@@ -5,6 +5,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include <mutex>
+
 namespace game_engine {
 namespace gfx {
 namespace rhi {
@@ -77,7 +79,7 @@ class CommandBufferVk : public CommandBuffer {
   VkCommandPool   m_commandPool_;
 
   // Current state tracking
-  GraphicsPipelineVk*         m_currentPipeline_    = nullptr;
+  GraphicsPipelineVk* m_currentPipeline_    = nullptr;
   RenderPassVk*       m_currentRenderPass_  = nullptr;
   FramebufferVk*      m_currentFramebuffer_ = nullptr;
   bool                m_isRenderPassActive_ = false;
@@ -95,12 +97,24 @@ class CommandPoolManager {
   bool initialize(VkDevice device, uint32_t queueFamilyIndex);
   void release();
 
-  VkCommandPool getPool() const { return m_commandPool_; }
+  VkCommandPool getPool() const;
 
   private:
+  VkCommandPool createThreadPool() const;
+
+  void registerThreadPool(VkCommandPool pool) const;
+
+  void cleanupThreadPools();
+
+  bool m_isInitialized = false;
+
   VkDevice      m_device_           = VK_NULL_HANDLE;
-  VkCommandPool m_commandPool_      = VK_NULL_HANDLE;
+  VkCommandPool m_mainCommandPool   = VK_NULL_HANDLE;
   uint32_t      m_queueFamilyIndex_ = 0;
+
+  std::thread::id                                            m_mainThreadId;
+  mutable std::mutex                                         m_threadPoolsMutex;
+  mutable std::unordered_map<std::thread::id, VkCommandPool> m_threadPools;
 };
 
 }  // namespace rhi

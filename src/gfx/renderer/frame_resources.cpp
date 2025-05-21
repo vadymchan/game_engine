@@ -253,7 +253,7 @@ void FrameResources::createDefaultTextures_() {
     auto texture = m_device->createTexture(texDesc);
 
     // normal facing up (0.5, 0.5, 1.0, 1.0) encoded as RGBA
-    uint32_t normalPixel = 0xFF'80'80'FF;  // RGBA order in memory
+    const uint8_t normalPixel[4] = {0x80, 0x80, 0xFF, 0xFF};
     m_device->updateTexture(texture.get(), &normalPixel, sizeof(normalPixel));
 
     m_defaultNormalTexture = m_resourceManager->addTexture(std::move(texture), "default_normal_texture");

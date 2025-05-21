@@ -54,30 +54,21 @@ class DeviceVk : public Device {
 
   void waitIdle() override;
 
-  VkInstance getInstance() const { return m_instance_; }
-
-  VkPhysicalDevice getPhysicalDevice() const { return m_physicalDevice_; }
-
-  VkDevice getDevice() const { return m_device_; }
-
-  VmaAllocator getAllocator() const { return m_allocator_; }
-
-  VkSurfaceKHR getSurface() const { return m_surface_; }
-
-  VkQueue getGraphicsQueue() const { return m_graphicsQueue_; }
-
-  VkQueue getPresentQueue() const { return m_presentQueue_; }
-
-  VkQueue getComputeQueue() const { return m_computeQueue_; }
-
-  QueueFamilyIndices getQueueFamilyIndices() const { return m_queueFamilyIndices_; }
-
+  VkInstance                        getInstance() const { return m_instance_; }
+  VkPhysicalDevice                  getPhysicalDevice() const { return m_physicalDevice_; }
+  VkDevice                          getDevice() const { return m_device_; }
+  VmaAllocator                      getAllocator() const { return m_allocator_; }
+  VkSurfaceKHR                      getSurface() const { return m_surface_; }
+  VkQueue                           getGraphicsQueue() const { return m_graphicsQueue_; }
+  VkQueue                           getPresentQueue() const { return m_presentQueue_; }
+  VkQueue                           getComputeQueue() const { return m_computeQueue_; }
+  QueueFamilyIndices                getQueueFamilyIndices() const { return m_queueFamilyIndices_; }
   const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() const { return m_deviceProperties_; }
+  const VkPhysicalDeviceFeatures&   getPhysicalDeviceFeatures() const { return m_deviceFeatures_; }
 
-  const VkPhysicalDeviceFeatures& getPhysicalDeviceFeatures() const { return m_deviceFeatures_; }
+  std::mutex& getQueueMutex() { return m_queueSubmitMutex; }
 
-  CommandPoolManager& getCommandPoolManager() { return m_commandPoolManager_; }
-
+  CommandPoolManager&    getCommandPoolManager() { return m_commandPoolManager_; }
   DescriptorPoolManager& getDescriptorPoolManager() { return m_descriptorPoolManager_; }
 
   VkBuffer createStagingBuffer(const void* data, size_t size, VmaAllocation& allocation);
@@ -101,10 +92,11 @@ class DeviceVk : public Device {
   VkPhysicalDeviceFeatures   m_deviceFeatures_{};
   QueueFamilyIndices         m_queueFamilyIndices_;
 
-  VkDevice m_device_        = VK_NULL_HANDLE;
-  VkQueue  m_graphicsQueue_ = VK_NULL_HANDLE;
-  VkQueue  m_presentQueue_  = VK_NULL_HANDLE;
-  VkQueue  m_computeQueue_  = VK_NULL_HANDLE;
+  VkDevice   m_device_        = VK_NULL_HANDLE;
+  VkQueue    m_graphicsQueue_ = VK_NULL_HANDLE;
+  VkQueue    m_presentQueue_  = VK_NULL_HANDLE;
+  VkQueue    m_computeQueue_  = VK_NULL_HANDLE;
+  std::mutex m_queueSubmitMutex;
 
   VmaAllocator m_allocator_ = VK_NULL_HANDLE;
 

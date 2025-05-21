@@ -51,14 +51,11 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
     return nullptr;
   }
 
-  // Calculate total pixel data size
   size_t totalBytes = scratchImage.GetPixelsSize();
 
-  // Copy pixel data into Image::pixels
   std::vector<std::byte> pixels(reinterpret_cast<std::byte*>(scratchImage.GetPixels()),
                                 reinterpret_cast<std::byte*>(scratchImage.GetPixels()) + totalBytes);
 
-  // Populate Image struct
   auto image       = std::make_unique<Image>();
   image->width     = metadata.width;
   image->height    = metadata.height;
@@ -69,7 +66,6 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
   image->dimension = determineDimension_(metadata);
   image->pixels    = std::move(pixels);
 
-  // Populate SubImages
   image->subImages.reserve(image->mipLevels * image->arraySize * image->depth);
 
   for (auto mip = 0; mip < image->mipLevels; ++mip) {

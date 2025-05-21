@@ -23,25 +23,21 @@ namespace game_engine {
 namespace gfx {
 namespace rhi {
 
-// Descriptor heap constants
 constexpr uint32_t DESCRIPTOR_HEAP_CAPACITY_CPU_RTV         = 256;
 constexpr uint32_t DESCRIPTOR_HEAP_CAPACITY_CPU_DSV         = 256;
 constexpr uint32_t DESCRIPTOR_HEAP_CAPACITY_CPU_CBV_SRV_UAV = 10'000;
 constexpr uint32_t DESCRIPTOR_HEAP_CAPACITY_CPU_SAMPLER     = 256;
 
-// Command pool constants
 constexpr uint32_t COMMAND_ALLOCATOR_POOL_SIZE = 8;
 
 DeviceDx12::DeviceDx12(const DeviceDesc& desc)
     : Device(desc) {
-  // Enable debug layer in debug builds
 #ifdef _DEBUG
   {
     ComPtr<ID3D12Debug> debugController;
     if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
       debugController->EnableDebugLayer();
 
-      // Enable additional GPU-based validation
       ComPtr<ID3D12Debug1> debugController1;
       if (SUCCEEDED(debugController.As(&debugController1))) {
         debugController1->SetEnableGPUBasedValidation(TRUE);
@@ -57,7 +53,6 @@ DeviceDx12::DeviceDx12(const DeviceDesc& desc)
 }
 
 DeviceDx12::~DeviceDx12() {
-  // Wait for any pending GPU work
   waitIdle();
 
   m_cpuRtvHeap.release();
@@ -77,7 +72,6 @@ bool DeviceDx12::createFactory_() {
   UINT dxgiFactoryFlags = 0;
 
 #ifdef _DEBUG
-  // Enable additional debugging in debug builds
   dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
@@ -91,7 +85,6 @@ bool DeviceDx12::createFactory_() {
 }
 
 bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
-  // First try to find a high-performance adapter
   for (UINT i = 0;; ++i) {
     ComPtr<IDXGIAdapter1> currentAdapter;
 
@@ -100,14 +93,13 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
       break;
     }
 
-    // Check if adapter is compatible with D3D12
     if (SUCCEEDED(D3D12CreateDevice(currentAdapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
-      // Get adapter description for debugging
+
       DXGI_ADAPTER_DESC1 desc;
       currentAdapter->GetDesc1(&desc);
 
       if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
-        continue;  // Skip software adapter
+        continue; 
       }
 
 #ifdef _DEBUG
@@ -121,7 +113,6 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
     }
   }
 
-  // If we didn't find a suitable adapter, fallback to enumeration order
   for (UINT i = 0;; ++i) {
     ComPtr<IDXGIAdapter1> currentAdapter;
 
@@ -132,12 +123,10 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
     DXGI_ADAPTER_DESC1 desc;
     currentAdapter->GetDesc1(&desc);
 
-    // Skip software adapter
     if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
       continue;
     }
 
-    // Check D3D12 compatibility
     if (SUCCEEDED(D3D12CreateDevice(currentAdapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
 #ifdef _DEBUG
       wchar_t debugMessage[256];
@@ -150,37 +139,33 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
     }
   }
 
-  // TODO: log - No suitable adapter found
+  
   return false;
 }
 
 bool DeviceDx12::createDevice_() {
-  // Find a suitable adapter
+
   ComPtr<IDXGIAdapter1> adapter;
   if (!findAdapter_(adapter.GetAddressOf())) {
-    // Handle error: no suitable adapter found
+    GlobalLogger::Log(LogLevel::Error, "No suitable DirectX 12 adapter found!");
     return false;
   }
 
-  // Store as IDXGIAdapter3 for additional functionality
   adapter.As(&m_adapter_);
 
-  // Create the D3D12 device
   HRESULT hr = D3D12CreateDevice(m_adapter_.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device_));
 
   if (FAILED(hr)) {
-    // Handle error
+    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 device!");
     return false;
   }
 
 #ifdef _DEBUG
-  // Setup debug message filtering
   ComPtr<ID3D12InfoQueue> infoQueue;
   if (SUCCEEDED(m_device_.As(&infoQueue))) {
     infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
     infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 
-    // Suppress specific messages (optional)
     D3D12_MESSAGE_ID suppressIds[] = {D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE, D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE};
 
     D3D12_INFO_QUEUE_FILTER filter = {};
@@ -194,7 +179,6 @@ bool DeviceDx12::createDevice_() {
 }
 
 bool DeviceDx12::createCommandQueue_() {
-  // Create the command queue
   D3D12_COMMAND_QUEUE_DESC queueDesc = {};
   queueDesc.Type                     = D3D12_COMMAND_LIST_TYPE_DIRECT;
   queueDesc.Priority                 = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
@@ -203,7 +187,7 @@ bool DeviceDx12::createCommandQueue_() {
 
   HRESULT hr = m_device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue_));
   if (FAILED(hr)) {
-    // Handle error
+    GlobalLogger::Log(LogLevel::Error, "Failed to create DirectX 12 command queue");
     return false;
   }
 
@@ -297,10 +281,8 @@ std::unique_ptr<DescriptorSetLayout> DeviceDx12::createDescriptorSetLayout(const
 }
 
 std::unique_ptr<DescriptorSet> DeviceDx12::createDescriptorSet(const DescriptorSetLayout* layout) {
-  // Check that layout is the correct type
   const DescriptorSetLayoutDx12* descriptorSetLayoutDx12 = dynamic_cast<const DescriptorSetLayoutDx12*>(layout);
   if (!descriptorSetLayoutDx12) {
-    // TODO: log error
     return nullptr;
   }
 
@@ -325,7 +307,6 @@ std::unique_ptr<CommandBuffer> DeviceDx12::createCommandBuffer(const CommandBuff
     return nullptr;
   }
 
-  // Create a command list (or bundle if requested)
   ComPtr<ID3D12GraphicsCommandList> commandList;
   HRESULT                           hr
       = m_device_->CreateCommandList(0,
@@ -335,12 +316,11 @@ std::unique_ptr<CommandBuffer> DeviceDx12::createCommandBuffer(const CommandBuff
                                      IID_PPV_ARGS(&commandList));
 
   if (FAILED(hr)) {
-    // Return allocator to the pool
+    GlobalLogger::Log(LogLevel::Error, "Failed to create command list");
     m_commandAllocatorManager_.returnCommandAllocator(commandAllocator);
     return nullptr;
   }
 
-  // Close the command list so it can be reset and reused
   commandList->Close();
 
   return std::make_unique<CommandBufferDx12>(this, std::move(commandList), commandAllocator);
@@ -351,7 +331,7 @@ std::unique_ptr<Fence> DeviceDx12::createFence(const FenceDesc& desc) {
 }
 
 std::unique_ptr<Semaphore> DeviceDx12::createSemaphore() {
-  // In DX12, semaphores are implemented as fences
+  // In DX12 implementation, semaphores are implemented as fences
   return std::make_unique<SemaphoreDx12>(this);
 }
 
@@ -365,35 +345,30 @@ std::unique_ptr<SwapChain> DeviceDx12::createSwapChain(const SwapchainDesc& desc
 }
 
 void DeviceDx12::updateBuffer(Buffer* buffer, const void* data, size_t size, size_t offset) {
-  // Check if the buffer is of the correct type
   BufferDx12* bufferDx12 = dynamic_cast<BufferDx12*>(buffer);
   if (!bufferDx12) {
     GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
     return;
   }
 
-  // Check data
   if (!data || size == 0) {
     GlobalLogger::Log(LogLevel::Warning, "No data to update");
     return;
   }
 
-  // Check that size + offset does not exceed the buffer size
   if (offset + size > bufferDx12->getSize()) {
     GlobalLogger::Log(LogLevel::Error, "Update exceeds buffer size");
     return;
   }
 
-  // If this is an upload heap buffer, update it directly
   if (bufferDx12->isUploadHeapBuffer_()) {
     if (bufferDx12->update_(data, size, offset)) {
       return;
     }
   }
 
-  // For default heap buffers, use a staging buffer and copy
+  // For default heap buffers, use a staging (temporary upload) buffer and copy
 
-  // Create a temporary upload buffer
   BufferDesc uploadDesc;
   uploadDesc.size        = size;
   uploadDesc.type        = BufferType::Dynamic;
@@ -403,40 +378,29 @@ void DeviceDx12::updateBuffer(Buffer* buffer, const void* data, size_t size, siz
   std::unique_ptr<Buffer> stagingBuffer     = createBuffer(uploadDesc);
   BufferDx12*             stagingBufferDx12 = static_cast<BufferDx12*>(stagingBuffer.get());
 
-  // Update the staging buffer
   if (!stagingBufferDx12->update_(data, size, 0)) {
     GlobalLogger::Log(LogLevel::Error, "updateBuffer: Failed to update staging buffer");
     return;
   }
 
-  // Create a command buffer for the copy operation
   CommandBufferDesc cmdBufferDesc;
   cmdBufferDesc.primary = true;
   auto cmdBuffer        = createCommandBuffer(cmdBufferDesc);
 
   cmdBuffer->reset();
-
-  // Begin recording
   cmdBuffer->begin();
-
-  // Copy from the staging buffer to the target buffer
   cmdBuffer->copyBuffer(stagingBuffer.get(), buffer, 0, offset, size);
-
-  // End recording
   cmdBuffer->end();
 
-  // Submit and wait for completion
   FenceDesc fenceDesc;
   auto      fence = createFence(fenceDesc);
   submitCommandBuffer(cmdBuffer.get(), fence.get());
   fence->wait();
 
-  // The staging buffer will be freed when it goes out of scope
 }
 
 void DeviceDx12::updateTexture(
     Texture* texture, const void* data, size_t dataSize, uint32_t mipLevel, uint32_t arrayLayer) {
-  // Check that texture is the correct type
   TextureDx12* textureDx12 = dynamic_cast<TextureDx12*>(texture);
   if (!textureDx12) {
     return;
@@ -449,19 +413,18 @@ void DeviceDx12::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
                                      Fence*                         signalFence,
                                      const std::vector<Semaphore*>& waitSemaphores,
                                      const std::vector<Semaphore*>& signalSemaphores) {
-  // Check that command buffer is the correct type
   CommandBufferDx12* cmdBufferDx12 = dynamic_cast<CommandBufferDx12*>(cmdBuffer);
   if (!cmdBufferDx12) {
     return;
   }
 
-  // Get the command list
   ID3D12CommandList* ppCommandLists[] = {cmdBufferDx12->getCommandList()};
 
-  // Submit the command list to the queue
-  m_commandQueue_->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
+  {
+    std::lock_guard<std::mutex> lock(m_queueSubmitMutex);
+    m_commandQueue_->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
+  }
 
-  // Signal the fence if provided
   if (signalFence) {
     FenceDx12* fenceDx12 = dynamic_cast<FenceDx12*>(signalFence);
     if (fenceDx12) {
@@ -469,7 +432,6 @@ void DeviceDx12::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     }
   }
 
-  // Signal any provided semaphores (in DX12, semaphores are just fences)
   for (Semaphore* semaphore : signalSemaphores) {
     SemaphoreDx12* semaphoreDx12 = dynamic_cast<SemaphoreDx12*>(semaphore);
     if (semaphoreDx12) {
@@ -479,30 +441,25 @@ void DeviceDx12::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
 }
 
 void DeviceDx12::waitIdle() {
-  // Create a fence to wait on
   ComPtr<ID3D12Fence> fence;
   HRESULT             hr = m_device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
   if (FAILED(hr)) {
     return;
   }
 
-  // Create an event to wait on
   HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   if (!eventHandle) {
     return;
   }
 
-  // Signal the fence
   const UINT64 fenceValue = 1;
   m_commandQueue_->Signal(fence.Get(), fenceValue);
 
-  // Wait for the fence to be signaled
   if (fence->GetCompletedValue() < fenceValue) {
     fence->SetEventOnCompletion(fenceValue, eventHandle);
     WaitForSingleObject(eventHandle, INFINITE);
   }
 
-  // Clean up
   CloseHandle(eventHandle);
 }
 

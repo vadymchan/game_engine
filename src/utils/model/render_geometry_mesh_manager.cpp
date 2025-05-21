@@ -15,7 +15,6 @@ RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
     return nullptr;
   }
 
-  // Check if GPU geometry already exists for this mesh
   auto it = m_renderGeometryMeshes.find(sourceMesh);
   if (it != m_renderGeometryMeshes.end()) {
     GlobalLogger::Log(LogLevel::Warning, "Render geometry already exists for this mesh. Overwriting.");

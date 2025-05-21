@@ -5,6 +5,7 @@
 #include "gfx/renderer/debug_strategies/shader_overdraw_strategy.h"
 #include "gfx/renderer/debug_strategies/vertex_normal_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/wireframe_strategy.h"
+#include "utils/logger/global_logger.h"
 
 namespace game_engine {
 namespace gfx {
@@ -88,7 +89,8 @@ void DebugPass::createDebugStrategy_() {
       m_debugStrategy = std::make_unique<LightVisualizationStrategy>();
       break;
     default:
-      // No debug visualization for other render modes
+      GlobalLogger::Log(LogLevel::Error,
+                        "DebugPass: Unsupported render mode: " + std::to_string(static_cast<int>(m_currentRenderMode)));
       break;
   }
 }

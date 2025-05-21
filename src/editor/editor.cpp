@@ -4,9 +4,11 @@
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
 #include "ecs/components/render_model.h"
+#include "ecs/components/tags.h"
 #include "input/input_manager.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_saver.h"
+#include "utils/asset/asset_loader.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
@@ -293,9 +295,14 @@ void Editor::renderSceneHierarchyWindow() {
     auto entities = registry.view<entt::entity>();
 
     for (auto entity : entities) {
-      std::string label = "Entity " + std::to_string(static_cast<uint32_t>(entity));
+      std::string label     = "Entity " + std::to_string(static_cast<uint32_t>(entity));
+      bool        isLoading = false;
 
-      if (registry.all_of<RenderModel*>(entity)) {
+      if (registry.all_of<ModelLoadingTag>(entity)) {
+        auto& loadingTag  = registry.get<ModelLoadingTag>(entity);
+        label            += " (Loading: " + loadingTag.modelPath.filename().string() + ")";
+        isLoading         = true;
+      } else if (registry.all_of<RenderModel*>(entity)) {
         auto* model = registry.get<RenderModel*>(entity);
         if (model && !model->filePath.empty()) {
           label += " (" + model->filePath.filename().string() + ")";
@@ -312,8 +319,14 @@ void Editor::renderSceneHierarchyWindow() {
 
       bool isSelected = (entity == m_selectedEntity);
 
-      if (ImGui::Selectable(label.c_str(), isSelected)) {
-        handleEntitySelection(entity);
+      if (isLoading) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 0.7f));
+        ImGui::Selectable(label.c_str(), isSelected, ImGuiSelectableFlags_Disabled);
+        ImGui::PopStyleColor();
+      } else {
+        if (ImGui::Selectable(label.c_str(), isSelected)) {
+          handleEntitySelection(entity);
+        }
       }
     }
   } else {
@@ -1465,23 +1478,74 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
   auto& registry = scene->getEntityRegistry();
 
   entt::entity entity = registry.create();
-
   registry.emplace<Transform>(entity, transform);
 
-  auto modelManager = ServiceLocator::s_get<RenderModelManager>();
-  if (modelManager) {
-    auto renderModel = modelManager->getRenderModel(modelPath.string());
+  auto assetLoader = ServiceLocator::s_get<AssetLoader>();
 
-    if (renderModel) {
-      registry.emplace<RenderModel*>(entity, renderModel);
-      handleEntitySelection(entity);
-    } else {
-      GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
-      registry.destroy(entity);
-    }
+  if (assetLoader) {
+    registry.emplace<ModelLoadingTag>(entity, modelPath);
+
+    assetLoader->loadModel(modelPath.string(), [this, entity, modelPath](bool success) {
+      auto sceneManager = ServiceLocator::s_get<SceneManager>();
+      if (!sceneManager) {
+        return;
+      }
+
+      auto scene = sceneManager->getCurrentScene();
+      if (!scene) {
+        return;
+      }
+
+      auto& registry = scene->getEntityRegistry();
+
+      if (!registry.valid(entity)) {
+        GlobalLogger::Log(LogLevel::Warning, "Entity was destroyed while model was loading");
+        return;
+      }
+
+      if (registry.any_of<ModelLoadingTag>(entity)) {
+        registry.remove<ModelLoadingTag>(entity);
+      }
+
+      if (success) {
+        auto modelManager = ServiceLocator::s_get<RenderModelManager>();
+        if (modelManager) {
+          auto renderModel = modelManager->getRenderModel(modelPath.string());
+
+          if (renderModel) {
+            registry.emplace<RenderModel*>(entity, renderModel);
+
+            handleEntitySelection(entity);
+
+            GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
+          }
+        }
+      } else {
+        GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
+      }
+    });
+
+    GlobalLogger::Log(LogLevel::Info, "Started async loading for model: " + modelPath.string());
+
   } else {
-    GlobalLogger::Log(LogLevel::Error, "RenderModelManager not available");
-    registry.destroy(entity);
+    auto modelManager = ServiceLocator::s_get<RenderModelManager>();
+    if (modelManager) {
+      auto renderModel = modelManager->getRenderModel(modelPath.string());
+
+      if (renderModel) {
+        registry.emplace<RenderModel*>(entity, renderModel);
+
+        handleEntitySelection(entity);
+      } else {
+        GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
+        registry.destroy(entity);
+        return;
+      }
+    } else {
+      GlobalLogger::Log(LogLevel::Error, "RenderModelManager not available");
+      registry.destroy(entity);
+      return;
+    }
   }
 }
 }  // namespace game_engine

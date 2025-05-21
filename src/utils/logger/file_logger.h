@@ -19,7 +19,6 @@ class FileLogger : public ILogger {
              bool               multiThreaded  = true,
              bool               truncateOnOpen = false);
 
-  // Explicit destructor to clean up resources
   ~FileLogger() override;
 
   void log(LogLevel                    level,

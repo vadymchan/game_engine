@@ -6,7 +6,7 @@
 
 #include <filesystem>
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace game_engine {
@@ -17,11 +17,13 @@ class RenderModelManager {
 
   RenderModel* getRenderModel(const std::filesystem::path& filepath, std::optional<Model*> outModel = std::nullopt);
 
+  bool hasRenderModel(const std::filesystem::path& filepath) const;
+
   bool removeRenderModel(RenderModel* renderModel);
 
   private:
   std::unordered_map<std::filesystem::path, std::unique_ptr<RenderModel>> renderModelCache_;
-  std::mutex                                                              mutex_;
+  mutable std::shared_mutex                                               mutex_;
 };
 
 }  // namespace game_engine

@@ -11,7 +11,6 @@ namespace rhi {
 BufferVk::BufferVk(const BufferDesc& desc, DeviceVk* device)
     : Buffer(desc)
     , m_device_(device) {
-  // Determine usage flags and memory based on buffer type and creation flags
   VkBufferUsageFlags    usage    = getBufferUsageFlags_();
   VkMemoryPropertyFlags memProps = getMemoryPropertyFlags_();
 
@@ -24,7 +23,6 @@ BufferVk::BufferVk(const BufferDesc& desc, DeviceVk* device)
   if ((memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
       && (m_desc_.type == BufferType::Dynamic
           || ((m_desc_.createFlags & BufferCreateFlag::CpuAccess) != BufferCreateFlag::None))) {
-    // With VMA, if we requested VMA_ALLOCATION_CREATE_MAPPED_BIT, the memory is already mapped
     if (m_allocationInfo_.pMappedData != nullptr) {
       m_mappedData_ = m_allocationInfo_.pMappedData;
       m_isMapped_   = true;
@@ -49,7 +47,6 @@ BufferVk::BufferVk(const BufferDesc& desc, DeviceVk* device)
 }
 
 BufferVk::~BufferVk() {
-  // Cleanup with VMA is much simpler than manual memory management
   if (m_device_ && m_buffer_ != VK_NULL_HANDLE) {
     vmaDestroyBuffer(m_device_->getAllocator(), m_buffer_, m_allocation_);
     m_buffer_     = VK_NULL_HANDLE;
@@ -64,20 +61,15 @@ bool BufferVk::update_(const void* data, size_t size, size_t offset) {
     return false;
   }
 
-  // Check that size + offset does not exceed the buffer size
   if (offset + size > m_desc_.size) {
     GlobalLogger::Log(LogLevel::Error, "Buffer update exceeds buffer size");
     return false;
   }
 
-  // Check if the buffer is permanently mapped
   if (m_isMapped_ && m_mappedData_) {
-    // Copy data directly into the mapped memory
     char* mappedCharPtr = static_cast<char*>(m_mappedData_);
     memcpy(mappedCharPtr + offset, data, size);
 
-    // Ensure the writes are visible to the GPU
-    // For non-coherent memory, we need to flush the range
     if (!(getMemoryPropertyFlags_() & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
       VmaAllocationInfo allocInfo;
       vmaGetAllocationInfo(m_device_->getAllocator(), m_allocation_, &allocInfo);
@@ -92,8 +84,6 @@ bool BufferVk::update_(const void* data, size_t size, size_t offset) {
     return true;
   }
 
-  // For other buffer types, Device will use a staging buffer
-  // and command buffers, but that logic is in DeviceVk::updateBuffer
   return false;
 }
 
@@ -107,14 +97,12 @@ bool BufferVk::map_(void** ppData) {
     return true;
   }
 
-  // Check if the buffer is mappable
   VkMemoryPropertyFlags memProps = getMemoryPropertyFlags_();
   if (!(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
     GlobalLogger::Log(LogLevel::Error, "Cannot map a non-host-visible buffer");
     return false;
   }
 
-  // Map memory using VMA
   VkResult result = vmaMapMemory(m_device_->getAllocator(), m_allocation_, ppData);
   if (result != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to map buffer memory");
@@ -131,24 +119,20 @@ void BufferVk::unmap_() {
     return;
   }
 
-  // Unmap using VMA
   vmaUnmapMemory(m_device_->getAllocator(), m_allocation_);
   m_mappedData_ = nullptr;
   m_isMapped_   = false;
 }
 
 bool BufferVk::createBuffer_(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
-  // Create buffer using VMA
   VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size               = m_desc_.size;
   bufferInfo.usage              = usage;
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
-  // Set up VMA allocation info
   VmaAllocationCreateInfo allocInfo = {};
 
-  // Convert memory properties to VMA usage
   if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
     if (properties & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
       // For CPU reads (readback)
@@ -158,20 +142,16 @@ bool BufferVk::createBuffer_(VkBufferUsageFlags usage, VkMemoryPropertyFlags pro
       allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
     }
 
-    // Request mapping on creation if buffer should be mapped
     if (m_desc_.type == BufferType::Dynamic
         || (m_desc_.createFlags & BufferCreateFlag::CpuAccess) != BufferCreateFlag::None) {
       allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
     }
   } else {
-    // GPU-only memory
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
   }
 
-  // Required memory properties can be explicitly specified
   allocInfo.requiredFlags = properties;
 
-  // Create the buffer with allocation
   VkResult result = vmaCreateBuffer(
       m_device_->getAllocator(), &bufferInfo, &allocInfo, &m_buffer_, &m_allocation_, &m_allocationInfo_);
 
@@ -179,14 +159,12 @@ bool BufferVk::createBuffer_(VkBufferUsageFlags usage, VkMemoryPropertyFlags pro
 }
 
 VkBufferUsageFlags BufferVk::getBufferUsageFlags_() const {
-  VkBufferUsageFlags usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;  // Always allow as copy destination
+  VkBufferUsageFlags usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;  
 
-  // Add transfer source bit for any buffer that can be read back
   if ((m_desc_.createFlags & BufferCreateFlag::Readback) != BufferCreateFlag::None) {
     usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   }
 
-  // Add specific usage flags based on creation flags
   if ((m_desc_.createFlags & BufferCreateFlag::VertexBuffer) != BufferCreateFlag::None) {
     usage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
   }
@@ -240,21 +218,16 @@ VkBufferUsageFlags BufferVk::getBufferUsageFlags_() const {
 VkMemoryPropertyFlags BufferVk::getMemoryPropertyFlags_() const {
   VkMemoryPropertyFlags props = 0;
 
-  // Determine memory properties based on buffer type
   if (m_desc_.type == BufferType::Static) {
-    // Static buffers are typically in device-local (GPU) memory
     props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    // If CpuAccess is set, make it host visible and coherent
     if ((m_desc_.createFlags & BufferCreateFlag::CpuAccess) != BufferCreateFlag::None) {
       props = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     }
   } else if (m_desc_.type == BufferType::Dynamic) {
-    // Dynamic buffers are host visible and coherent
     props = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
   }
 
-  // For readback buffers, they need to be host visible and cached
   if ((m_desc_.createFlags & BufferCreateFlag::Readback) != BufferCreateFlag::None) {
     props = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
   }

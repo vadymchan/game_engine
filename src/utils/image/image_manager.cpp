@@ -20,7 +20,6 @@ Image* ImageManager::getImage(const std::filesystem::path& filepath) {
 
   auto image = imageLoaderManager->loadImage(filepath);
   if (image) {
-    // Save pointer to return before we transfer ownership to the cache
     Image* imagePtr         = image.get();
     m_imageCache_[filepath] = std::move(image);
     return imagePtr;

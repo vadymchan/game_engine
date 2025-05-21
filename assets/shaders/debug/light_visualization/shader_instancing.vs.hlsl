@@ -64,13 +64,20 @@ VSOutput main(VSInput input)
     output.WorldPos = worldPos.xyz;
     output.Position = mul(ViewParam.VP, worldPos);
 
+    //float3x3 normalMat =
+    //{
+    //    normalize(worldMatrix[0].xyz),
+    //    normalize(worldMatrix[1].xyz),
+    //    normalize(worldMatrix[2].xyz)
+    //};
+
     float3x3 normalMat =
     {
-        normalize(worldMatrix[0].xyz),
-        normalize(worldMatrix[1].xyz),
-        normalize(worldMatrix[2].xyz)
+        worldMatrix[0].xyz,
+        worldMatrix[1].xyz,
+        worldMatrix[2].xyz
     };
-
+    
 #ifdef __spirv__
     output.Normal    = normalize(mul(input.Normal,    normalMat));
     output.Tangent   = normalize(mul(input.Tangent,   normalMat));

@@ -22,7 +22,6 @@ FramebufferDx12::FramebufferDx12(const FramebufferDesc& desc, DeviceDx12* device
 }
 
 bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
-  // Store color attachments
   m_colorAttachments_.clear();
   m_rtvHandles_.clear();
 
@@ -35,7 +34,6 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
 
     m_colorAttachments_.push_back(textureDx12);
 
-    // Get RTV handle
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = textureDx12->getRtvHandle();
     if (rtvHandle.ptr == 0) {
       GlobalLogger::Log(LogLevel::Error, "Texture doesn't have a valid RTV");
@@ -45,7 +43,6 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
     m_rtvHandles_.push_back(rtvHandle);
   }
 
-  // Store depth/stencil attachment
   if (desc.hasDepthStencil && desc.depthStencilAttachment) {
     m_depthStencilAttachment_ = dynamic_cast<TextureDx12*>(desc.depthStencilAttachment);
     if (!m_depthStencilAttachment_) {
@@ -53,7 +50,6 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
       return false;
     }
 
-    // Get DSV handle
     m_dsvHandle_ = m_depthStencilAttachment_->getDsvHandle();
     if (m_dsvHandle_.ptr == 0) {
       GlobalLogger::Log(LogLevel::Error, "Texture doesn't have a valid DSV");
@@ -65,7 +61,7 @@ bool FramebufferDx12::initialize_(const FramebufferDesc& desc) {
 }
 
 void FramebufferDx12::transitionToRenderTargetState(CommandBufferDx12* cmdBuffer) {
-  // Transition color attachments to render target state
+  // color attachments 
   for (auto* texture : m_colorAttachments_) {
     ResourceBarrierDesc barrier = {};
     barrier.texture             = texture;
@@ -74,7 +70,7 @@ void FramebufferDx12::transitionToRenderTargetState(CommandBufferDx12* cmdBuffer
     cmdBuffer->resourceBarrier(barrier);
   }
 
-  // Transition depth/stencil attachment if present
+  // depth/stencil attachment
   if (m_hasDepthStencil_ && m_depthStencilAttachment_) {
     ResourceBarrierDesc barrier = {};
     barrier.texture             = m_depthStencilAttachment_;

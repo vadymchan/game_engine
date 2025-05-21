@@ -21,7 +21,6 @@ class GlobalLogger {
   static void Shutdown();
 
   private:
-  // Owns all registered loggers
   static inline std::vector<std::unique_ptr<ILogger>> s_loggers;
 };
 

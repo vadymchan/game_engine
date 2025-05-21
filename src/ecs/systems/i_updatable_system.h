@@ -16,7 +16,6 @@ class IUpdatableSystem {
   public:
   virtual ~IUpdatableSystem() = default;
 
-  // Scene is passed as a raw pointer since it's owned by the SceneManager
   virtual void update(Scene* scene, float deltaTime) = 0;
 };
 

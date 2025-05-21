@@ -15,8 +15,7 @@ namespace game_engine {
 
 class Engine;
 
-// TODO: consider renaming class (e.g. Application)
-class Game {
+class Application {
   public:
   enum class Action {
     MoveForward,
@@ -28,9 +27,9 @@ class Game {
     Count,
   };
 
-  Game() {}
+  Application() {}
 
-  virtual ~Game() {}
+  virtual ~Application() {}
 
   void processInput() {}
 
