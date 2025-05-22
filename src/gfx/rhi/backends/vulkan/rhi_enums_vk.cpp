@@ -146,6 +146,25 @@ static const std::unordered_map<BlendOp, VkBlendOp> blendOpMapping = {
   { BlendOp::MaxValue,        VK_BLEND_OP_MAX              }
 };
 
+static const std::unordered_map<LogicOp, VkLogicOp> logicOpMapping = {
+  { LogicOp::Clear,        VK_LOGIC_OP_CLEAR         },
+  { LogicOp::And,          VK_LOGIC_OP_AND           },
+  { LogicOp::AndReverse,   VK_LOGIC_OP_AND_REVERSE   },
+  { LogicOp::Copy,         VK_LOGIC_OP_COPY          },
+  { LogicOp::AndInverted,  VK_LOGIC_OP_AND_INVERTED  },
+  { LogicOp::NoOp,         VK_LOGIC_OP_NO_OP         },
+  { LogicOp::Xor,          VK_LOGIC_OP_XOR           },
+  { LogicOp::Or,           VK_LOGIC_OP_OR            },
+  { LogicOp::Nor,          VK_LOGIC_OP_NOR           },
+  { LogicOp::Equivalent,   VK_LOGIC_OP_EQUIVALENT    },
+  { LogicOp::Invert,       VK_LOGIC_OP_INVERT        },
+  { LogicOp::OrReverse,    VK_LOGIC_OP_OR_REVERSE    },
+  { LogicOp::CopyInverted, VK_LOGIC_OP_COPY_INVERTED },
+  { LogicOp::OrInverted,   VK_LOGIC_OP_OR_INVERTED   },
+  { LogicOp::Nand,         VK_LOGIC_OP_NAND          },
+  { LogicOp::Set,          VK_LOGIC_OP_SET           }
+};
+
 static const std::unordered_map<ResourceLayout, VkImageLayout> imageLayoutMapping = {
   { ResourceLayout::Undefined,                      VK_IMAGE_LAYOUT_UNDEFINED                                  },
   { ResourceLayout::General,                        VK_IMAGE_LAYOUT_GENERAL                                    },
@@ -509,6 +528,10 @@ VkBlendFactor g_getBlendFactorVk(BlendFactor blendFactor) {
 
 VkBlendOp g_getBlendOpVk(BlendOp blendOp) {
   return getEnumMapping(blendOpMapping, blendOp, VK_BLEND_OP_MAX_ENUM);
+}
+
+VkLogicOp g_getLogicOpVk(LogicOp logicOp) {
+  return getEnumMapping(logicOpMapping, logicOp, VK_LOGIC_OP_NO_OP);
 }
 
 VkImageLayout g_getImageLayoutVk(ResourceLayout resourceLayout) {

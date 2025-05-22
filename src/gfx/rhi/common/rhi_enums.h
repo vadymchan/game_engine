@@ -164,6 +164,26 @@ enum class BlendOp : uint8_t {
   Count
 };
 
+enum class LogicOp : uint8_t {
+  Clear,
+  And,
+  AndReverse,
+  Copy,
+  AndInverted,
+  NoOp,
+  Xor,
+  Or,
+  Nor,
+  Equivalent,
+  Invert,
+  OrReverse,
+  CopyInverted,
+  OrInverted,
+  Nand,
+  Set,
+  Count
+};
+
 enum class StencilOp : uint8_t {
   Keep,
   Zero,
@@ -220,13 +240,33 @@ enum class CullMode : uint8_t {
 
 enum class MSAASamples : uint32_t {
   Count1  = 0x00'00'00'01,
-  Count2  = 0x00'00'00'10,
-  Count4  = 0x00'00'01'00,
-  Count8  = 0x00'00'10'00,
-  Count16 = 0x00'01'00'00,
-  Count32 = 0x00'10'00'00,
-  Count64 = 0x01'00'00'00
+  Count2  = 0x00'00'00'02,
+  Count4  = 0x00'00'00'04,
+  Count8  = 0x00'00'00'08,
+  Count16 = 0x00'00'00'10,
+  Count32 = 0x00'00'00'20,
+  Count64 = 0x00'00'00'40
 };
+
+inline uint32_t g_getMSAASampleCount(MSAASamples samples) {
+  switch (samples) {
+    case MSAASamples::Count1:
+      return 1;
+    case MSAASamples::Count2:
+      return 2;
+    case MSAASamples::Count4:
+      return 4;
+    case MSAASamples::Count8:
+      return 8;
+    case MSAASamples::Count16:
+      return 16;
+    case MSAASamples::Count32:
+      return 32;
+    case MSAASamples::Count64:
+      return 64;
+  }
+  return 1;
+}
 
 enum class AttachmentLoadStoreOp : uint8_t {
   LoadStore,
@@ -323,7 +363,7 @@ enum class PipelineType {
 enum class BufferCreateFlag : uint32_t {
   None                            = 0,
   CpuAccess                       = 0x00'00'00'01,
-  Uav                             = 0x00'00'00'02, // RW buffers
+  Uav                             = 0x00'00'00'02,  // RW buffers
   Readback                        = 0x00'00'00'04,
   AccelerationStructureBuildInput = 0x00'00'00'08,
   VertexBuffer                    = 0x00'00'00'10,
@@ -331,8 +371,8 @@ enum class BufferCreateFlag : uint32_t {
   IndirectCommand                 = 0x00'00'00'40,
   ShaderBindingTable              = 0x00'00'00'80,
   AccelerationStructure           = 0x00'00'01'00,
-  ConstantBuffer                  = 0x00'00'02'00,  
-  InstanceBuffer                  = 0x00'00'04'00,  
+  ConstantBuffer                  = 0x00'00'02'00,
+  InstanceBuffer                  = 0x00'00'04'00,
   ShaderResource                  = 0x00'00'08'00,  // Read-only buffers
 };
 

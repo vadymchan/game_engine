@@ -184,7 +184,6 @@ bool GraphicsPipelineVk::createVertexInputState_(VkPipelineVertexInputStateCreat
   bindingDescriptions.clear();
   attributeDescriptions.clear();
 
-  // Convert from our generic binding descriptions to Vulkan-specific ones
   for (const auto& binding : m_desc_.vertexBindings) {
     VkVertexInputBindingDescription bindingDesc = {};
     bindingDesc.binding                         = binding.binding;
@@ -194,7 +193,6 @@ bool GraphicsPipelineVk::createVertexInputState_(VkPipelineVertexInputStateCreat
     bindingDescriptions.push_back(bindingDesc);
   }
 
-  // Convert from our generic attribute descriptions to Vulkan-specific ones
   for (const auto& attribute : m_desc_.vertexAttributes) {
     VkVertexInputAttributeDescription attributeDesc = {};
     attributeDesc.location                          = attribute.location;
@@ -245,9 +243,8 @@ bool GraphicsPipelineVk::createMultisampleState_(VkPipelineMultisampleStateCreat
   multisampling       = {};
   multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 
-  // TODO: consider write helper funtion
   multisampling.rasterizationSamples
-      = static_cast<VkSampleCountFlagBits>(static_cast<uint32_t>(m_desc_.multisample.rasterizationSamples));
+      = static_cast<VkSampleCountFlagBits>(g_getMSAASampleCount(m_desc_.multisample.rasterizationSamples));
 
   multisampling.sampleShadingEnable = m_desc_.multisample.sampleShadingEnable ? VK_TRUE : VK_FALSE;
   multisampling.minSampleShading    = m_desc_.multisample.minSampleShading;
@@ -319,11 +316,10 @@ bool GraphicsPipelineVk::createColorBlendState_(VkPipelineColorBlendStateCreateI
     colorBlendAttachments.push_back(defaultAttachment);
   }
 
-  colorBlending               = {};
-  colorBlending.sType         = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-  colorBlending.logicOpEnable = m_desc_.colorBlend.logicOpEnable ? VK_TRUE : VK_FALSE;
-  colorBlending.logicOp
-      = static_cast<VkLogicOp>(m_desc_.colorBlend.logicOp);  // TODO: consider add converter
+  colorBlending                 = {};
+  colorBlending.sType           = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+  colorBlending.logicOpEnable   = m_desc_.colorBlend.logicOpEnable ? VK_TRUE : VK_FALSE;
+  colorBlending.logicOp         = g_getLogicOpVk(m_desc_.colorBlend.logicOp);
   colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
   colorBlending.pAttachments    = colorBlendAttachments.data();
 
@@ -338,7 +334,6 @@ bool GraphicsPipelineVk::createPipelineLayout_() {
   std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 
   for (const auto& setLayout : m_desc_.setLayouts) {
-
     const DescriptorSetLayoutVk* setLayoutVk = dynamic_cast<const DescriptorSetLayoutVk*>(setLayout);
     if (!setLayoutVk) {
       GlobalLogger::Log(LogLevel::Error, "Invalid descriptor set layout type for Vulkan pipeline");

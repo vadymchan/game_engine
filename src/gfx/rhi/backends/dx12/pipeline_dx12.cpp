@@ -238,7 +238,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
       psoDesc.BlendState.RenderTarget[i].BlendOpAlpha   = g_getBlendOpDx12(attachment.alphaBlendOp);
 
       // logic operation
-      psoDesc.BlendState.RenderTarget[i].LogicOp = static_cast<D3D12_LOGIC_OP>(m_desc_.colorBlend.logicOp);
+      psoDesc.BlendState.RenderTarget[i].LogicOp = g_getLogicOpDx12(m_desc_.colorBlend.logicOp);
 
       // write mask
       psoDesc.BlendState.RenderTarget[i].RenderTargetWriteMask = g_getColorMaskDx12(attachment.colorWriteMask);
@@ -313,26 +313,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
 
   psoDesc.DSVFormat = renderPassDx12->getDepthStencilFormat();
 
-  switch (m_desc_.multisample.rasterizationSamples) {
-    case MSAASamples::Count1:
-      psoDesc.SampleDesc.Count = 1;
-      break;
-    case MSAASamples::Count2:
-      psoDesc.SampleDesc.Count = 2;
-      break;
-    case MSAASamples::Count4:
-      psoDesc.SampleDesc.Count = 4;
-      break;
-    case MSAASamples::Count8:
-      psoDesc.SampleDesc.Count = 8;
-      break;
-    case MSAASamples::Count16:
-      psoDesc.SampleDesc.Count = 16;
-      break;
-    default:
-      psoDesc.SampleDesc.Count = 1;
-      break;
-  }
+  psoDesc.SampleDesc.Count   = g_getMSAASampleCount(m_desc_.multisample.rasterizationSamples);
   psoDesc.SampleDesc.Quality = 0;
 
   psoDesc.NodeMask                        = 0;

@@ -49,6 +49,8 @@ VkBlendFactor g_getBlendFactorVk(BlendFactor blendFactor);
 
 VkBlendOp g_getBlendOpVk(BlendOp blendOp);
 
+VkLogicOp g_getLogicOpVk(LogicOp logicOp);
+
 VkImageLayout  g_getImageLayoutVk(ResourceLayout resourceLayout);
 ResourceLayout g_getImageLayoutVk(VkImageLayout resourceLayout);
 

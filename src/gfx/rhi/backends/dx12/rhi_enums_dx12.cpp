@@ -157,6 +157,25 @@ static const std::unordered_map<BlendOp, D3D12_BLEND_OP> blendOpMapping = {
   { BlendOp::MaxValue,        D3D12_BLEND_OP_MAX          }
 };
 
+static const std::unordered_map<LogicOp, D3D12_LOGIC_OP> logicOpMapping = {
+  { LogicOp::Clear,        D3D12_LOGIC_OP_CLEAR         },
+  { LogicOp::And,          D3D12_LOGIC_OP_AND           },
+  { LogicOp::AndReverse,   D3D12_LOGIC_OP_AND_REVERSE   },
+  { LogicOp::Copy,         D3D12_LOGIC_OP_COPY          },
+  { LogicOp::AndInverted,  D3D12_LOGIC_OP_AND_INVERTED  },
+  { LogicOp::NoOp,         D3D12_LOGIC_OP_NOOP          },
+  { LogicOp::Xor,          D3D12_LOGIC_OP_XOR           },
+  { LogicOp::Or,           D3D12_LOGIC_OP_OR            },
+  { LogicOp::Nor,          D3D12_LOGIC_OP_NOR           },
+  { LogicOp::Equivalent,   D3D12_LOGIC_OP_EQUIV         },
+  { LogicOp::Invert,       D3D12_LOGIC_OP_INVERT        },
+  { LogicOp::OrReverse,    D3D12_LOGIC_OP_OR_REVERSE    },
+  { LogicOp::CopyInverted, D3D12_LOGIC_OP_COPY_INVERTED },
+  { LogicOp::OrInverted,   D3D12_LOGIC_OP_OR_INVERTED   },
+  { LogicOp::Nand,         D3D12_LOGIC_OP_NAND          },
+  { LogicOp::Set,          D3D12_LOGIC_OP_SET           }
+};
+
 static const std::unordered_map<ResourceLayout, D3D12_RESOURCE_STATES> resourceLayoutMapping = {
   { ResourceLayout::Undefined,                      D3D12_RESOURCE_STATE_COMMON                                                                                                   },
   { ResourceLayout::General,                        D3D12_RESOURCE_STATE_COMMON                                                                                                   },
@@ -581,6 +600,10 @@ D3D12_BLEND g_getBlendFactorDx12(BlendFactor type) {
 
 D3D12_BLEND_OP g_getBlendOpDx12(BlendOp blendOp) {
   return getEnumMapping(blendOpMapping, blendOp, D3D12_BLEND_OP_ADD);
+}
+
+D3D12_LOGIC_OP g_getLogicOpDx12(LogicOp logicOp) {
+  return getEnumMapping(logicOpMapping, logicOp, D3D12_LOGIC_OP_NOOP);
 }
 
 D3D12_RESOURCE_STATES g_getResourceLayoutDx12(ResourceLayout resourceLayout) {

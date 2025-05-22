@@ -45,6 +45,8 @@ D3D12_BLEND g_getBlendFactorDx12(BlendFactor type);
 
 D3D12_BLEND_OP g_getBlendOpDx12(BlendOp blendOp);
 
+D3D12_LOGIC_OP g_getLogicOpDx12(LogicOp logicOp);
+
 uint8_t g_getColorMaskDx12(ColorMask type);
 
 D3D12_FILTER g_getTextureFilterDx12(TextureFilter minification, TextureFilter magnification, bool isComparison = false);
