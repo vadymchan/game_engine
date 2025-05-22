@@ -395,7 +395,6 @@ void NormalMapVisualizationStrategy::prepareDrawCalls_(const RenderContext& cont
 void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
     const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
   std::vector<RenderModel*> modelsToRemove;
-
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
@@ -405,10 +404,36 @@ void NormalMapVisualizationStrategy::cleanupUnusedBuffers_(
   for (auto model : modelsToRemove) {
     m_instanceBufferCache.erase(model);
   }
+
+  std::unordered_set<Material*> activeMaterials;
+
+  for (const auto& [model, matrices] : currentFrameInstances) {
+    for (const auto& renderMesh : model->renderMeshes) {
+      if (renderMesh->material) {
+        activeMaterials.insert(renderMesh->material);
+      }
+    }
+  }
+
+  std::vector<Material*> materialsToRemove;
+  for (const auto& [material, cache] : m_materialCache) {
+    if (!activeMaterials.contains(material)) {
+      materialsToRemove.push_back(material);
+    }
+  }
+
+  for (auto material : materialsToRemove) {
+    GlobalLogger::Log(
+        LogLevel::Debug,
+        "Normal map visualization: Removing cached material descriptor set for deleted material at address: "
+            + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    m_materialCache.erase(material);
+  }
 }
 
 rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescriptorSet_(Material* material) {
   if (!material) {
+    GlobalLogger::Log(LogLevel::Error, "Material is null");
     return nullptr;
   }
 

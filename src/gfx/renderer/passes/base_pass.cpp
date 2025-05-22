@@ -367,8 +367,14 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.depthStencil.stencilTestEnable = false;
 
         rhi::ColorBlendAttachmentDesc blendAttachment;
-        blendAttachment.blendEnable    = false;
-        blendAttachment.colorWriteMask = rhi::ColorMask::All;
+        blendAttachment.blendEnable         = true;
+        blendAttachment.srcColorBlendFactor = rhi::BlendFactor::SrcAlpha;
+        blendAttachment.dstColorBlendFactor = rhi::BlendFactor::OneMinusSrcAlpha;
+        blendAttachment.colorBlendOp        = rhi::BlendOp::Add;
+        blendAttachment.srcAlphaBlendFactor = rhi::BlendFactor::One;
+        blendAttachment.dstAlphaBlendFactor = rhi::BlendFactor::OneMinusSrcAlpha;
+        blendAttachment.alphaBlendOp        = rhi::BlendOp::Add;
+        blendAttachment.colorWriteMask      = rhi::ColorMask::All;
         pipelineDesc.colorBlend.attachments.push_back(blendAttachment);
 
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
