@@ -44,6 +44,7 @@ class Editor {
   void renderSceneHierarchyWindow();
   void renderInspectorWindow();
   void renderNotifications();
+  void renderControlsWindow();
 
   void renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos);
   void handleGizmoInput();
@@ -108,6 +109,8 @@ class Editor {
   std::filesystem::path m_modelPath;
   // TODO: consider using standard c++ library
   char                  m_modelPathBuffer[MAX_PATH_BUFFER_SIZE] = ""; 
+
+  bool m_showControlsWindow = false;
 };
 
 }  // namespace game_engine

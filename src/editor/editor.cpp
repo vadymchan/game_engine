@@ -93,6 +93,7 @@ void Editor::render(gfx::renderer::RenderContext& context) {
   renderSceneHierarchyWindow();
   renderInspectorWindow();
   renderGizmoControlsWindow();
+  renderControlsWindow();
 
   renderNotifications();
 
@@ -143,6 +144,14 @@ void Editor::renderMainMenu() {
       }
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Help")) {
+      if (ImGui::MenuItem("Controls", "F1")) {
+        m_showControlsWindow = true;
+      }
+      ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
   }
 }
@@ -603,6 +612,40 @@ void Editor::renderNotifications() {
     }
   }
 }
+
+void Editor::renderControlsWindow() {
+  if (!m_showControlsWindow) {
+    return;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(400, 500), ImGuiCond_FirstUseEver);
+
+  if (ImGui::Begin("Controls", &m_showControlsWindow)) {
+    ImGui::Text("Camera Controls:");
+    ImGui::BulletText("Right Mouse Button: Enable camera look");
+    ImGui::BulletText("W/A/S/D: Move camera");
+    ImGui::BulletText("E/Q: Move up/down");
+    ImGui::BulletText("Mouse Wheel (while RMB): Change movement speed");
+
+    ImGui::Separator();
+
+    ImGui::Text("Gizmo Controls:");
+    ImGui::BulletText("1: Translate mode");
+    ImGui::BulletText("2: Rotate mode");
+    ImGui::BulletText("3: Scale mode");
+    ImGui::BulletText("4: Toggle World/Local space");
+    ImGui::BulletText("5: Toggle gizmo visibility");
+
+    ImGui::Separator();
+
+    ImGui::Text("Scene Controls:");
+    ImGui::BulletText("Ctrl+S: Save scene");
+    ImGui::BulletText("I: Focus Inspector window");
+    ImGui::BulletText("F1: Show this help window");
+  }
+  ImGui::End();
+}
+
 void Editor::renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos) {
   if (!shouldRenderGizmo_()) {
     return;
@@ -1082,6 +1125,12 @@ void Editor::setupInputHandlers_() {
   keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_I}, [this](const KeyboardEvent& event) {
     m_setInspectorFocus = true;
     GlobalLogger::Log(LogLevel::Info, "Inspector window focused");
+    return true;
+  });
+
+  keyboardEventHandler->subscribe({SDL_KEYDOWN, SDL_SCANCODE_F1}, [this](const KeyboardEvent& event) {
+    m_showControlsWindow = !m_showControlsWindow;
+    GlobalLogger::Log(LogLevel::Info, "Controls window toggled");
     return true;
   });
 }
