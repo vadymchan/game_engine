@@ -7,8 +7,8 @@
 #include "utils/time/stopwatch.h"
 #include "utils/ui/imgui_rhi_context.h"
 
-#include <ImGuizmo.h>
 #include <ImGuiFileDialog.h>
+#include <ImGuizmo.h>
 
 namespace game_engine {
 
@@ -63,6 +63,8 @@ class Editor {
   math::Matrix4f<> calculateDirectionalLightMatrix_(Registry& registry);
   bool             performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::entity cameraEntity);
 
+  void clearUIFocus_();
+
   void saveCurrentScene_();
   void setupInputHandlers_();
 
@@ -70,12 +72,23 @@ class Editor {
   void addDirectionalLight();
   void addPointLight();
   void addSpotLight();
+
   void removeSelectedEntity();
 
   math::Vector3Df getPositionInFrontOfCamera_();
 
   void handleAddModelDialog();
   void createModelEntity(const std::filesystem::path& modelPath, const Transform& transform);
+
+  void renderEntityList_(Registry& registry);
+
+  void scanAvailableScenes_();
+  void createNewScene_();
+  void createDefaultCamera_();
+  void switchToScene_(const std::string& sceneName);
+  void renderNewSceneDialog_();
+  bool hasLoadingModels_() const;
+  void checkPendingSceneSwitch_();
 
   // Editor state
   gfx::renderer::RenderSettings m_renderParams;
@@ -96,7 +109,7 @@ class Editor {
   ImGuizmo::MODE      m_currentGizmoMode      = ImGuizmo::WORLD;
 
   math::Vector3Df m_currentDirectionalLightGizmoPosition;
-  float gizmoDistanceFromCamera = 5.0f;
+  float           gizmoDistanceFromCamera = 5.0f;
 
   bool        m_showSaveNotification = false;
   ElapsedTime m_notificationTimer;
@@ -104,13 +117,26 @@ class Editor {
 
   bool m_setInspectorFocus = false;
 
-  bool      m_openAddModelDialog = false;
-  Transform m_newModelTransform;
+  bool                  m_openAddModelDialog = false;
+  Transform             m_newModelTransform;
   std::filesystem::path m_modelPath;
   // TODO: consider using standard c++ library
-  char                  m_modelPathBuffer[MAX_PATH_BUFFER_SIZE] = ""; 
+  char                  m_modelPathBuffer[MAX_PATH_BUFFER_SIZE] = "";
 
   bool m_showControlsWindow = false;
+
+  char m_hierarchySearchBuffer[256] = "";
+  enum class SortOrder {
+    None,
+    Ascending,
+    Descending
+  };
+  SortOrder m_hierarchySortOrder = SortOrder::None;
+
+  std::vector<std::string> m_availableScenes;
+  bool                     m_showNewSceneDialog      = false;
+  char                     m_newSceneNameBuffer[256] = "";
+  std::string              m_pendingSceneSwitch      = "";
 };
 
 }  // namespace game_engine

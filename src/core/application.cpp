@@ -71,6 +71,10 @@ void Application::onMouseMove(int32_t xOffset, int32_t yOffset) {
 }
 
 void Application::update(float deltaTime) {
+  // TODO: make event driven
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  m_scene_          = sceneManager->getCurrentScene();
+
   // TODO: move to a separate function
   {
     auto& registry     = m_scene_->getEntityRegistry();

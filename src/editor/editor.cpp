@@ -6,6 +6,7 @@
 #include "ecs/components/render_model.h"
 #include "ecs/components/tags.h"
 #include "input/input_manager.h"
+#include "scene/scene_loader.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_saver.h"
 #include "utils/asset/asset_loader.h"
@@ -15,6 +16,10 @@
 #include "utils/time/timing_manager.h"
 
 #include <ImGuiFileDialog.h>
+#include <ecs/components/movement.h>
+
+#include <algorithm>
+#include <cctype>
 
 namespace game_engine {
 
@@ -57,6 +62,19 @@ void Editor::render(gfx::renderer::RenderContext& context) {
   if (!m_imguiContext) {
     return;
   }
+
+  auto     contextManager = ServiceLocator::s_get<InputContextManager>();
+  ImGuiIO& io             = ImGui::GetIO();
+
+  static bool wasUIActive = false;
+  bool        isUIActive  = io.WantCaptureKeyboard;
+
+  if (isUIActive && !wasUIActive) {
+    contextManager->pushContext(InputContext::UI);
+  } else if (!isUIActive && wasUIActive) {
+    contextManager->popContext();
+  }
+  wasUIActive = isUIActive;
 
   if (m_pendingViewportResize) {
     resizeViewport(context);
@@ -145,6 +163,59 @@ void Editor::renderMainMenu() {
       ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("Scene")) {
+      if (ImGui::MenuItem("New Scene")) {
+        if (!hasLoadingModels_()) {
+          m_showNewSceneDialog    = true;
+          m_newSceneNameBuffer[0] = '\0';
+        }
+      }
+
+      if (ImGui::IsItemHovered() && hasLoadingModels_()) {
+        ImGui::SetTooltip("Wait for models to finish loading before creating new scene");
+      }
+
+      ImGui::Separator();
+
+      scanAvailableScenes_();
+
+      auto        sceneManager     = ServiceLocator::s_get<SceneManager>();
+      std::string currentSceneName = sceneManager->getCurrentSceneName();
+
+      for (const auto& sceneName : m_availableScenes) {
+        bool isCurrentScene = (sceneName == currentSceneName);
+        bool isPending      = (!m_pendingSceneSwitch.empty()
+                          && (m_pendingSceneSwitch == sceneName || m_pendingSceneSwitch == "CREATE:" + sceneName));
+
+        if (isPending) {
+          ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
+        }
+
+        std::string displayName = sceneName;
+        if (isPending) {
+          displayName += " (pending...)";
+        }
+
+        bool canSelect = !isCurrentScene && !hasLoadingModels_();
+
+        if (ImGui::MenuItem(displayName.c_str(), nullptr, isCurrentScene, canSelect)) {
+          if (!isCurrentScene) {
+            switchToScene_(sceneName);
+          }
+        }
+
+        if (isPending) {
+          ImGui::PopStyleColor();
+        }
+      }
+
+      if (m_availableScenes.empty()) {
+        ImGui::MenuItem("No scenes available", nullptr, false, false);
+      }
+
+      ImGui::EndMenu();
+    }
+
     if (ImGui::BeginMenu("Help")) {
       if (ImGui::MenuItem("Controls", "F1")) {
         m_showControlsWindow = true;
@@ -154,6 +225,8 @@ void Editor::renderMainMenu() {
 
     ImGui::EndMainMenuBar();
   }
+
+  renderNewSceneDialog_();
 }
 
 void Editor::renderPerformanceWindow() {
@@ -170,7 +243,6 @@ void Editor::renderPerformanceWindow() {
   ImGui::Text("FPS: %.1f", fps);
   ImGui::Text("Frame Time: %.1f ms", frameTime);
 
-  // Frame time history graph
   static const int historyCount                   = 300;
   static float     frameTimeHistory[historyCount] = {0};
   static int       historyIndex                   = 0;
@@ -215,11 +287,19 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
     ImGui::Image(currentTextureID, renderWindow);
 
     handleGizmoInput();
-
     renderGizmo(newDimension, viewportPos);
 
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGuizmo::IsOver()) {
-      GlobalLogger::Log(LogLevel::Info, "Viewport clicked, but not over gizmo");
+    bool leftClicked  = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+    bool rightClicked = ImGui::IsItemClicked(ImGuiMouseButton_Right);
+
+    if ((leftClicked || rightClicked) && !ImGuizmo::IsOver()) {
+      clearUIFocus_();
+
+      ImGui::SetWindowFocus("Render Window");
+
+      const char* buttonName = leftClicked ? "Left" : "Right";
+      GlobalLogger::Log(LogLevel::Info,
+                        std::string("Viewport clicked with ") + buttonName + " mouse button - focused on viewport");
     }
   } else {
     ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Render texture not available");
@@ -271,6 +351,50 @@ void Editor::renderSceneHierarchyWindow() {
     auto& registry = scene->getEntityRegistry();
 
     ImGui::Text("Current Scene: %s", sceneManager->getCurrentSceneName().c_str());
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 100.0f);
+    ImGui::InputTextWithHint(
+        "##HierarchySearch", "Search entities...", m_hierarchySearchBuffer, sizeof(m_hierarchySearchBuffer));
+
+    ImGui::SameLine();
+
+    ImGuiDir    arrowDir = ImGuiDir_None;
+    const char* buttonId = "##SortButton";
+
+    switch (m_hierarchySortOrder) {
+      case SortOrder::None:
+        if (ImGui::Button("Sort##SortButton")) {
+          m_hierarchySortOrder = SortOrder::Ascending;
+        }
+        break;
+      case SortOrder::Ascending:
+        if (ImGui::ArrowButton("##SortButtonUp", ImGuiDir_Up)) {
+          m_hierarchySortOrder = SortOrder::Descending;
+        }
+        break;
+      case SortOrder::Descending:
+        if (ImGui::ArrowButton("##SortButtonDown", ImGuiDir_Down)) {
+          m_hierarchySortOrder = SortOrder::None;
+        }
+        break;
+    }
+
+    if (ImGui::IsItemHovered()) {
+      const char* tooltipText = "";
+      switch (m_hierarchySortOrder) {
+        case SortOrder::None:
+          tooltipText = "Click to sort A-Z";
+          break;
+        case SortOrder::Ascending:
+          tooltipText = "Sorting A-Z, click for Z-A";
+          break;
+        case SortOrder::Descending:
+          tooltipText = "Sorting Z-A, click to disable";
+          break;
+      }
+      ImGui::SetTooltip("%s", tooltipText);
+    }
+
     ImGui::Separator();
 
     if (ImGui::Button("Add Model")) {
@@ -301,43 +425,7 @@ void Editor::renderSceneHierarchyWindow() {
 
     ImGui::Separator();
 
-    auto entities = registry.view<entt::entity>();
-
-    for (auto entity : entities) {
-      std::string label     = "Entity " + std::to_string(static_cast<uint32_t>(entity));
-      bool        isLoading = false;
-
-      if (registry.all_of<ModelLoadingTag>(entity)) {
-        auto& loadingTag  = registry.get<ModelLoadingTag>(entity);
-        label            += " (Loading: " + loadingTag.modelPath.filename().string() + ")";
-        isLoading         = true;
-      } else if (registry.all_of<RenderModel*>(entity)) {
-        auto* model = registry.get<RenderModel*>(entity);
-        if (model && !model->filePath.empty()) {
-          label += " (" + model->filePath.filename().string() + ")";
-        }
-      } else if (registry.all_of<Camera>(entity)) {
-        label += " (Camera)";
-      } else if (registry.all_of<Light, DirectionalLight>(entity)) {
-        label += " (Directional Light)";
-      } else if (registry.all_of<Light, PointLight>(entity)) {
-        label += " (Point Light)";
-      } else if (registry.all_of<Light, SpotLight>(entity)) {
-        label += " (Spot Light)";
-      }
-
-      bool isSelected = (entity == m_selectedEntity);
-
-      if (isLoading) {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 0.7f));
-        ImGui::Selectable(label.c_str(), isSelected, ImGuiSelectableFlags_Disabled);
-        ImGui::PopStyleColor();
-      } else {
-        if (ImGui::Selectable(label.c_str(), isSelected)) {
-          handleEntitySelection(entity);
-        }
-      }
-    }
+    renderEntityList_(registry);
   } else {
     ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No scene is currently loaded");
   }
@@ -425,9 +513,9 @@ void Editor::renderInspectorWindow() {
       }
 
       if (camera.type == CameraType::Perspective) {
-        float fov = camera.fov;
-        if (ImGui::SliderFloat("FOV", &fov, 10.0f, 120.0f, "%.1f")) {
-          camera.fov = fov;
+        float fovDegrees = math::g_radianToDegree(camera.fov);
+        if (ImGui::SliderFloat("FOV", &fovDegrees, 10.0f, 120.0f, "%.1f")) {
+          camera.fov = math::g_degreeToRadian(fovDegrees);
         }
       }
 
@@ -1073,6 +1161,17 @@ bool Editor::performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::enti
   return ImGuizmo::Manipulate(viewMatrix, projMatrix, m_currentGizmoOperation, m_currentGizmoMode, modelMatrix_ptr);
 }
 
+void Editor::clearUIFocus_() {
+  ImGui::SetKeyboardFocusHere(-1);
+
+  auto contextManager = ServiceLocator::s_get<InputContextManager>();
+  while (contextManager->getCurrentContext() != InputContext::Game) {
+    contextManager->popContext();
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "UI focus cleared - returned to Game context");
+}
+
 void Editor::saveCurrentScene_() {
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
   auto scene        = sceneManager->getCurrentScene();
@@ -1597,4 +1696,302 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
     }
   }
 }
+
+void Editor::renderEntityList_(Registry& registry) {
+  auto entities = registry.view<entt::entity>();
+
+  struct EntityInfo {
+    entt::entity entity;
+    std::string  label;
+    bool         isLoading;
+  };
+
+  std::vector<EntityInfo> entityInfos;
+
+  for (auto entity : entities) {
+    EntityInfo info;
+    info.entity    = entity;
+    info.isLoading = false;
+
+    std::string label = "Entity " + std::to_string(static_cast<uint32_t>(entity));
+
+    if (registry.all_of<ModelLoadingTag>(entity)) {
+      auto& loadingTag  = registry.get<ModelLoadingTag>(entity);
+      label            += " (Loading: " + loadingTag.modelPath.filename().string() + ")";
+      info.isLoading    = true;
+    } else if (registry.all_of<RenderModel*>(entity)) {
+      auto* model = registry.get<RenderModel*>(entity);
+      if (model && !model->filePath.empty()) {
+        label += " (" + model->filePath.filename().string() + ")";
+      }
+    } else if (registry.all_of<Camera>(entity)) {
+      label += " (Camera)";
+    } else if (registry.all_of<Light, DirectionalLight>(entity)) {
+      label += " (Directional Light)";
+    } else if (registry.all_of<Light, PointLight>(entity)) {
+      label += " (Point Light)";
+    } else if (registry.all_of<Light, SpotLight>(entity)) {
+      label += " (Spot Light)";
+    }
+
+    info.label = label;
+
+    if (strlen(m_hierarchySearchBuffer) > 0) {
+      std::string searchTerm = m_hierarchySearchBuffer;
+      std::string labelLower = label;
+      std::transform(searchTerm.begin(), searchTerm.end(), searchTerm.begin(), ::tolower);
+      std::transform(labelLower.begin(), labelLower.end(), labelLower.begin(), ::tolower);
+
+      if (labelLower.find(searchTerm) == std::string::npos) {
+        continue;
+      }
+    }
+
+    entityInfos.push_back(info);
+  }
+
+  if (m_hierarchySortOrder != SortOrder::None) {
+    std::sort(entityInfos.begin(), entityInfos.end(), [this](const EntityInfo& a, const EntityInfo& b) {
+      if (m_hierarchySortOrder == SortOrder::Ascending) {
+        return a.label < b.label;
+      } else {  // Descending
+        return a.label > b.label;
+      }
+    });
+  }
+
+  for (const auto& info : entityInfos) {
+    bool isSelected = (info.entity == m_selectedEntity);
+
+    if (info.isLoading) {
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 0.7f));
+      ImGui::Selectable(info.label.c_str(), isSelected, ImGuiSelectableFlags_Disabled);
+      ImGui::PopStyleColor();
+    } else {
+      if (ImGui::Selectable(info.label.c_str(), isSelected)) {
+        handleEntitySelection(info.entity);
+      }
+    }
+  }
+}
+
+void Editor::scanAvailableScenes_() {
+  static std::filesystem::file_time_type lastScanTime{};
+
+  auto pathManager = ServiceLocator::s_get<PathManager>();
+  auto scenesPath  = pathManager->s_getScenesPath();
+
+  if (!std::filesystem::exists(scenesPath)) {
+    m_availableScenes.clear();
+    return;
+  }
+
+  auto currentModTime = std::filesystem::last_write_time(scenesPath);
+  if (currentModTime == lastScanTime && !m_availableScenes.empty()) {
+    return;
+  }
+  lastScanTime = currentModTime;
+
+  m_availableScenes.clear();
+
+  std::error_code ec;
+  for (const auto& entry : std::filesystem::directory_iterator(scenesPath, ec)) {
+    if (ec) {
+      break;
+    }
+
+    if (entry.is_regular_file() && entry.path().extension() == ".json") {
+      std::string sceneName = entry.path().stem().string();
+      m_availableScenes.push_back(sceneName);
+    }
+  }
+
+  std::sort(m_availableScenes.begin(), m_availableScenes.end());
+}
+
+void Editor::switchToScene_(const std::string& sceneName) {
+  if (hasLoadingModels_()) {
+    GlobalLogger::Log(LogLevel::Info, "Waiting for models to finish loading before switching to scene: " + sceneName);
+    m_pendingSceneSwitch = sceneName;
+    return;
+  }
+
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+
+  if (!sceneManager->hasScene(sceneName)) {
+    auto scene = SceneLoader::loadScene(sceneName, sceneManager);
+    if (!scene) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to load scene: " + sceneName);
+      return;
+    }
+  }
+
+  if (sceneManager->switchToScene(sceneName)) {
+    m_selectedEntity = entt::null;
+    GlobalLogger::Log(LogLevel::Info, "Switched to scene: " + sceneName);
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to switch to scene: " + sceneName);
+  }
+}
+
+void Editor::createNewScene_() {
+  std::string sceneName = m_newSceneNameBuffer;
+
+  if (sceneName.empty()) {
+    GlobalLogger::Log(LogLevel::Warning, "Scene name cannot be empty");
+    return;
+  }
+
+  if (hasLoadingModels_()) {
+    GlobalLogger::Log(LogLevel::Info, "Waiting for models to finish loading before creating new scene...");
+    m_pendingSceneSwitch = "CREATE:" + sceneName;
+    return;
+  }
+
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+
+  if (sceneManager->hasScene(sceneName)) {
+    GlobalLogger::Log(LogLevel::Warning, "Scene already exists: " + sceneName);
+    return;
+  }
+
+  Registry emptyRegistry;
+  sceneManager->addScene(sceneName, std::move(emptyRegistry));
+
+  if (sceneManager->switchToScene(sceneName)) {
+    GlobalLogger::Log(LogLevel::Info, "Created and switched to new scene: " + sceneName);
+    createDefaultCamera_();
+    saveCurrentScene_();
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Failed to switch to new scene: " + sceneName);
+  }
+}
+
+void Editor::createDefaultCamera_() {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    GlobalLogger::Log(LogLevel::Error, "No current scene when creating default camera");
+    return;
+  }
+
+  auto& registry = scene->getEntityRegistry();
+
+  entt::entity cameraEntity = registry.create();
+
+  auto& transform       = registry.emplace<Transform>(cameraEntity);
+  transform.translation = math::Vector3Df(0.0f, 0.0f, 0.0f);
+  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+
+  auto& camera    = registry.emplace<Camera>(cameraEntity);
+  camera.type     = CameraType::Perspective;
+  camera.fov      = math::g_degreeToRadian(60.0f);
+  camera.nearClip = 0.01f;
+  camera.farClip  = 1000.0f;
+
+  camera.width  = static_cast<float>(m_renderParams.renderViewportDimension.width());
+  camera.height = static_cast<float>(m_renderParams.renderViewportDimension.height());
+
+  if (camera.width <= 0.0f) {
+    camera.width = 1920.0f;
+  }
+  if (camera.height <= 0.0f) {
+    camera.height = 1080.0f;
+  }
+
+  registry.emplace<Movement>(cameraEntity);
+
+  GlobalLogger::Log(LogLevel::Info, "Created default camera at origin (0,0,0) for new scene");
+}
+
+void Editor::renderNewSceneDialog_() {
+  if (!m_showNewSceneDialog) {
+    return;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(300, 120), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+  if (ImGui::Begin("New Scene", &m_showNewSceneDialog, ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoResize)) {
+    ImGui::Text("Scene Name:");
+    ImGui::SetNextItemWidth(-1);
+
+    bool enterPressed = ImGui::InputText(
+        "##SceneName", m_newSceneNameBuffer, sizeof(m_newSceneNameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+
+    ImGui::Separator();
+
+    float buttonWidth = 70.0f;
+    ImGui::SetCursorPosX(ImGui::GetWindowWidth()
+                         - (buttonWidth * 2 + ImGui::GetStyle().ItemSpacing.x + ImGui::GetStyle().WindowPadding.x));
+
+    if (ImGui::Button("Cancel", ImVec2(buttonWidth, 0))) {
+      m_showNewSceneDialog = false;
+    }
+
+    ImGui::SameLine();
+
+    bool canCreate = strlen(m_newSceneNameBuffer) > 0;
+    if (!canCreate) {
+      ImGui::BeginDisabled();
+    }
+
+    if ((ImGui::Button("Create", ImVec2(buttonWidth, 0)) || enterPressed) && canCreate) {
+      createNewScene_();
+      m_showNewSceneDialog = false;
+    }
+
+    if (!canCreate) {
+      ImGui::EndDisabled();
+    }
+  }
+  ImGui::End();
+}
+
+bool Editor::hasLoadingModels_() const {
+  auto sceneManager = ServiceLocator::s_get<SceneManager>();
+  auto scene        = sceneManager->getCurrentScene();
+
+  if (!scene) {
+    return false;
+  }
+
+  auto& registry    = scene->getEntityRegistry();
+  auto  loadingView = registry.view<ModelLoadingTag>();
+
+  return !loadingView.empty();
+}
+
+void Editor::checkPendingSceneSwitch_() {
+  if (m_pendingSceneSwitch.empty()) {
+    return;
+  }
+
+  if (hasLoadingModels_()) {
+    return;
+  }
+
+  std::string pendingOperation = m_pendingSceneSwitch;
+  m_pendingSceneSwitch.clear();
+
+  if (pendingOperation.starts_with("CREATE:")) {
+    std::string sceneName = pendingOperation.substr(7);
+
+    auto     sceneManager = ServiceLocator::s_get<SceneManager>();
+    Registry emptyRegistry;
+    sceneManager->addScene(sceneName, std::move(emptyRegistry));
+
+    if (sceneManager->switchToScene(sceneName)) {
+      GlobalLogger::Log(LogLevel::Info, "Created and switched to new scene: " + sceneName);
+      saveCurrentScene_();
+    } else {
+      GlobalLogger::Log(LogLevel::Error, "Failed to switch to new scene: " + sceneName);
+    }
+  } else {
+    switchToScene_(pendingOperation);
+  }
+}
+
 }  // namespace game_engine

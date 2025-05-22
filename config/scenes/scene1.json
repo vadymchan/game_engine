@@ -1,0 +1,41 @@
+{
+    "schemaVersion": "1.0",
+    "name": "scene1",
+    "entities": [
+        {
+            "name": "MainCamera",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "camera",
+                    "cameraType": "perspective",
+                    "fov": 1.0471975803375245,
+                    "near": 0.009999999776482582,
+                    "far": 1000.0,
+                    "width": 1426.0,
+                    "height": 1027.0
+                },
+                {
+                    "type": "movement"
+                }
+            ]
+        }
+    ]
+}

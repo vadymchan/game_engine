@@ -3,17 +3,17 @@
     "name": "scene",
     "entities": [
         {
-            "name": "SpotLight",
+            "name": "Model_MetalRoughSpheres.gltf",
             "components": [
                 {
                     "type": "transform",
                     "position": [
                         0.0,
-                        1.5,
-                        -5.0
+                        0.0,
+                        0.0
                     ],
                     "rotation": [
-                        90.0,
+                        0.0,
                         0.0,
                         0.0
                     ],
@@ -21,142 +21,11 @@
                         1.0,
                         1.0,
                         1.0
-                    ]
-                },
-                {
-                    "type": "light",
-                    "color": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "intensity": 1.0
-                },
-                {
-                    "type": "spotLight",
-                    "range": 20.0,
-                    "innerConeAngle": 20.0,
-                    "outerConeAngle": 30.0
-                }
-            ]
-        },
-        {
-            "name": "PointLight",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -5.540412425994873,
-                        1.108081340789795,
-                        -5.050463676452637
-                    ],
-                    "rotation": [
-                        0.0,
-                        -0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ]
-                },
-                {
-                    "type": "light",
-                    "color": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "intensity": 69.9000015258789
-                },
-                {
-                    "type": "pointLight",
-                    "range": 12.0
-                }
-            ]
-        },
-        {
-            "name": "Model_Avocado.gltf",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -5.461182117462158,
-                        0.6971790790557861,
-                        -4.853528022766113
-                    ],
-                    "rotation": [
-                        0.0,
-                        -0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        8.129999160766602,
-                        8.129999160766602,
-                        8.129999160766602
                     ]
                 },
                 {
                     "type": "model",
-                    "path": "assets/models\\Avocado\\glTF\\Avocado.gltf"
-                }
-            ]
-        },
-        {
-            "name": "MainCamera",
-            "components": [
-                {
-                    "type": "transform",
-                    "position": [
-                        -2.593919277191162,
-                        3.5980286598205568,
-                        -12.356136322021485
-                    ],
-                    "rotation": [
-                        18.39980125427246,
-                        2.791840076446533,
-                        0.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ]
-                },
-                {
-                    "type": "camera",
-                    "cameraType": "perspective",
-                    "fov": 0.785398006439209,
-                    "near": 0.0010000000474974514,
-                    "far": 1000.0,
-                    "width": 1426.0,
-                    "height": 1027.0
-                },
-                {
-                    "type": "movement"
-                }
-            ]
-        },
-        {
-            "name": "DirectionalLight",
-            "components": [
-                {
-                    "type": "light",
-                    "color": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "intensity": 1.0
-                },
-                {
-                    "type": "directionalLight",
-                    "direction": [
-                        0.0,
-                        -1.0,
-                        0.0
-                    ]
+                    "path": "assets/models\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf"
                 }
             ]
         },
@@ -191,17 +60,137 @@
             ]
         },
         {
-            "name": "Model_MetalRoughSpheres.gltf",
+            "name": "DirectionalLight",
+            "components": [
+                {
+                    "type": "light",
+                    "color": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "directionalLight",
+                    "direction": [
+                        0.0,
+                        -1.0,
+                        0.0
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "MainCamera",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -5.320054054260254,
+                        1.1040433645248414,
+                        -5.3879008293151859
+                    ],
+                    "rotation": [
+                        6.399759769439697,
+                        3.592064380645752,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "camera",
+                    "cameraType": "perspective",
+                    "fov": 1.57254159450531,
+                    "near": 0.0010000000474974514,
+                    "far": 1000.0,
+                    "width": 1426.0,
+                    "height": 1027.0
+                },
+                {
+                    "type": "movement"
+                }
+            ]
+        },
+        {
+            "name": "Model_Avocado.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -5.461182117462158,
+                        0.6971790790557861,
+                        -4.853528022766113
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        8.129999160766602,
+                        8.129999160766602,
+                        8.129999160766602
+                    ]
+                },
+                {
+                    "type": "model",
+                    "path": "assets/models\\Avocado\\glTF\\Avocado.gltf"
+                }
+            ]
+        },
+        {
+            "name": "PointLight",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -5.588976860046387,
+                        1.108081340789795,
+                        -5.050463676452637
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "light",
+                    "color": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "intensity": 3.200000047683716
+                },
+                {
+                    "type": "pointLight",
+                    "range": 12.0
+                }
+            ]
+        },
+        {
+            "name": "SpotLight",
             "components": [
                 {
                     "type": "transform",
                     "position": [
                         0.0,
-                        0.0,
-                        0.0
+                        1.5,
+                        -5.0
                     ],
                     "rotation": [
-                        0.0,
+                        90.0,
                         0.0,
                         0.0
                     ],
@@ -212,8 +201,19 @@
                     ]
                 },
                 {
-                    "type": "model",
-                    "path": "assets/models\\MetalRoughSpheres\\glTF\\MetalRoughSpheres.gltf"
+                    "type": "light",
+                    "color": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "spotLight",
+                    "range": 20.0,
+                    "innerConeAngle": 20.0,
+                    "outerConeAngle": 30.0
                 }
             ]
         }

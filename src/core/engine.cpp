@@ -64,6 +64,7 @@ Engine::~Engine() {
   ServiceLocator::s_remove<FileWatcherManager>();
   ServiceLocator::s_remove<HotReloadManager>();
   ServiceLocator::s_remove<InputManager>();
+  ServiceLocator::s_remove<InputContextManager>();
   ServiceLocator::s_remove<WindowEventManager>();
   ServiceLocator::s_remove<ApplicationEventManager>();
   ServiceLocator::s_remove<SceneManager>();
@@ -152,6 +153,7 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<FileWatcherManager>();
   ServiceLocator::s_provide<HotReloadManager>();
   ServiceLocator::s_provide<InputManager>(std::move(keyboardEventHandler), std::move(mouseEventHandler));
+  ServiceLocator::s_provide<InputContextManager>();
   ServiceLocator::s_provide<WindowEventManager>(std::move(windowEventHandler));
   ServiceLocator::s_provide<ApplicationEventManager>(std::move(applicationEventHandler));
   ServiceLocator::s_provide<SceneManager>();
@@ -159,6 +161,10 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<TimingManager>();
   ServiceLocator::s_provide<ResourceDeletionManager>();
   ServiceLocator::s_provide<AssetLoader>(std::move(assetLoader));
+
+  auto inputManager      = ServiceLocator::s_get<InputManager>();
+  auto contextManagerPtr = ServiceLocator::s_get<InputContextManager>();
+  inputManager->setContextManager(contextManagerPtr);
 
   // config
   // ------------------------------------------------------------------------
