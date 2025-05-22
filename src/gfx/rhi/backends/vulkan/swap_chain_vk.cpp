@@ -281,6 +281,7 @@ bool SwapChainVk::present(Semaphore* waitSemaphore) {
 
   VkResult result;
   {
+    // TODO: temp fix (this reduces threading issue with main thread and worker thread (for asset loading))
     std::lock_guard<std::mutex> lock(m_device_->getQueueMutex());
     result = vkQueuePresentKHR(m_device_->getPresentQueue(), &presentInfo);
   }

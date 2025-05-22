@@ -295,6 +295,40 @@ bool TextureManager::removeTexture(const std::string& name) {
   return false;
 }
 
+bool TextureManager::removeTexture(gfx::rhi::Texture* texture) {
+  if (!texture) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot remove null texture");
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(m_mutex);
+  auto                        it = findTexture_(texture);
+  if (it != m_textures.end()) {
+    std::string textureName = it->first;
+
+    auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+    if (deletionManager) {
+      deletionManager->enqueueForDeletion<gfx::rhi::Texture>(
+          texture,
+          [this, textureName](gfx::rhi::Texture*) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            GlobalLogger::Log(LogLevel::Info, "Texture '" + textureName + "' deleted");
+            m_textures.erase(textureName);
+          },
+          textureName,
+          "Texture");
+      return true;
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Removing texture '" + textureName + "'");
+      m_textures.erase(it);
+      return true;
+    }
+  }
+
+  GlobalLogger::Log(LogLevel::Warning, "Texture not found in manager");
+  return false;
+}
+
 bool TextureManager::hasTexture(const std::string& name) const {
   std::lock_guard<std::mutex> lock(m_mutex);
   return m_textures.contains(name);

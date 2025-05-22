@@ -36,6 +36,7 @@ class TextureManager {
   gfx::rhi::Texture* getTexture(const std::string& name) const;
 
   bool removeTexture(const std::string& name);
+  bool removeTexture(gfx::rhi::Texture* texture);
 
   bool hasTexture(const std::string& name) const;
 

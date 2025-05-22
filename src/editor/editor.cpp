@@ -3,6 +3,7 @@
 #include "config/config_manager.h"
 #include "ecs/components/camera.h"
 #include "ecs/components/light.h"
+#include "ecs/components/movement.h"
 #include "ecs/components/render_model.h"
 #include "ecs/components/tags.h"
 #include "input/input_manager.h"
@@ -16,7 +17,6 @@
 #include "utils/time/timing_manager.h"
 
 #include <ImGuiFileDialog.h>
-#include <ecs/components/movement.h>
 
 #include <algorithm>
 #include <cctype>
@@ -1017,9 +1017,6 @@ void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
     }
 
     transform.isDirty = true;
-
-    GlobalLogger::Log(LogLevel::Info,
-                      "Transform updated for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
   }
 }
 

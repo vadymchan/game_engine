@@ -1,8 +1,8 @@
 #include "utils/model/render_geometry_mesh_manager.h"
 
+#include "utils/buffer/buffer_manager.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
-#include "utils/buffer/buffer_manager.h"
 
 namespace game_engine {
 

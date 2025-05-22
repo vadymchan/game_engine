@@ -259,9 +259,16 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      rhi::DescriptorSet* materialDescriptorSet = nullptr;
-      if (renderMesh->material) {
-        materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
+      if (!renderMesh->material) {
+        GlobalLogger::Log(LogLevel::Debug, "RenderMesh has null material, skipping");
+        continue;
+      }
+
+      rhi::DescriptorSet* materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
+
+      if (!materialDescriptorSet) {
+        GlobalLogger::Log(LogLevel::Debug, "Could not create valid material descriptor set, skipping");
+        continue;
       }
 
       std::string pipelineKey
@@ -399,7 +406,6 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 void BasePass::cleanupUnusedBuffers_(
     const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
   std::vector<RenderModel*> modelsToRemove;
-
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
@@ -409,9 +415,38 @@ void BasePass::cleanupUnusedBuffers_(
   for (auto model : modelsToRemove) {
     m_instanceBufferCache.erase(model);
   }
+
+  std::unordered_set<Material*> activeMaterials;
+
+  for (const auto& [model, matrices] : currentFrameInstances) {
+    for (const auto& renderMesh : model->renderMeshes) {
+      if (renderMesh->material) {
+        activeMaterials.insert(renderMesh->material);
+      }
+    }
+  }
+
+  std::vector<Material*> materialsToRemove;
+  for (const auto& [material, cache] : m_materialCache) {
+    if (!activeMaterials.contains(material)) {
+      materialsToRemove.push_back(material);
+    }
+  }
+
+  for (auto material : materialsToRemove) {
+    GlobalLogger::Log(LogLevel::Debug,
+                      "Removing cached material parameters for deleted material at address: "
+                          + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    m_materialCache.erase(material);
+  }
 }
 
 rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* material) {
+  if (!material) {
+    GlobalLogger::Log(LogLevel::Error, "Material is null");
+    return nullptr;
+  }
+
   auto it = m_materialCache.find(material);
   if (it != m_materialCache.end() && it->second.descriptorSet) {
     return it->second.descriptorSet;
@@ -439,13 +474,17 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
   std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
   uint32_t                 binding      = 1;
 
+  bool allTexturesValid = true;
+
   for (const auto& textureName : textureNames) {
-    auto          it      = material->textures.find(textureName);
     rhi::Texture* texture = nullptr;
 
-    if (it != material->textures.end() && it->second) {
-      texture = it->second;
-    } else {
+    auto textureIt = material->textures.find(textureName);
+    if (textureIt != material->textures.end() && textureIt->second) {
+      texture = textureIt->second;
+    }
+
+    if (!texture) {
       if (textureName == "albedo") {
         texture = m_frameResources->getDefaultWhiteTexture();
       } else if (textureName == "normal_map") {
@@ -454,24 +493,30 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
         texture = m_frameResources->getDefaultBlackTexture();
       }
 
+      GlobalLogger::Log(LogLevel::Debug,
+                        "Using fallback texture for '" + textureName + "' in material: " + material->materialName);
+    }
+
+    if (!texture) {
       GlobalLogger::Log(
-          LogLevel::Debug,
-          "Using fallback texture for missing " + textureName + " in material: " + material->materialName);
+          LogLevel::Error,
+          "No texture available (including fallback) for '" + textureName + "' in material: " + material->materialName);
+      allTexturesValid = false;
+      break;
     }
 
-    if (texture) {
-      descriptorSetPtr->setTexture(binding, texture);
-    } else {
-      GlobalLogger::Log(LogLevel::Error,
-                        "Texture not found for " + textureName + " in material: " + material->materialName);
-    }
-
+    descriptorSetPtr->setTexture(binding, texture);
     binding++;
   }
 
-  m_materialCache[material].descriptorSet = descriptorSetPtr;
-
-  return descriptorSetPtr;
+  if (allTexturesValid) {
+    m_materialCache[material].descriptorSet = descriptorSetPtr;
+    return descriptorSetPtr;
+  } else {
+    GlobalLogger::Log(LogLevel::Warning,
+                      "Material descriptor set creation failed due to invalid textures: " + material->materialName);
+    return nullptr;
+  }
 }
 }  // namespace renderer
 }  // namespace gfx

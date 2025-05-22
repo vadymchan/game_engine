@@ -3,6 +3,7 @@
 
 #include "utils/material/material_loader_manager.h"
 #include "utils/service/service_locator.h"
+#include "utils/texture/texture_manager.h"
 
 #include <filesystem>
 #include <memory>
@@ -69,8 +70,24 @@ class MaterialManager {
 
       if (materialIt != materialVec.end()) {
         GlobalLogger::Log(LogLevel::Info, "Removing material: " + material->materialName);
-        materialVec.erase(materialIt);
 
+        auto textureManager = ServiceLocator::s_get<TextureManager>();
+        if (textureManager) {
+          for (const auto& [textureName, texturePtr] : material->textures) {
+            if (texturePtr) {
+              GlobalLogger::Log(
+                  LogLevel::Debug,
+                  "Releasing texture '" + textureName + "' from material '" + material->materialName + "'");
+              textureManager->removeTexture(texturePtr);
+            }
+          }
+        } else {
+          GlobalLogger::Log(LogLevel::Warning, "TextureManager not available, textures may not be properly released");
+        }
+
+        GlobalLogger::Log(LogLevel::Info, "Material '" + material->materialName + "' deleted");
+
+        materialVec.erase(materialIt);
         if (materialVec.empty()) {
           materialCache_.erase(it);
         }

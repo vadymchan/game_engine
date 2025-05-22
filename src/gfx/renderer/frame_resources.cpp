@@ -82,6 +82,7 @@ void FrameResources::cleanup() {
   m_defaultSampler              = nullptr;
 
   m_modelMatrixCache.clear();
+  m_materialParamCache.clear();
 
   m_sortedModels.clear();
   m_modelsMap.clear();
@@ -119,6 +120,11 @@ rhi::DescriptorSetLayout* FrameResources::getLightDescriptorSetLayout() const {
 }
 
 rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(Material* material) {
+  if (!material) {
+    GlobalLogger::Log(LogLevel::Warning, "Material is null");
+    return nullptr;
+  }
+
   auto it = m_materialParamCache.find(material);
   if (it != m_materialParamCache.end() && it->second.paramBuffer) {
     return it->second.paramBuffer;
@@ -385,6 +391,7 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
 void FrameResources::updateModelList_(const RenderContext& context) {
   bool                             needRebuildRenderArray = false;
   std::unordered_set<entt::entity> currentEntityIds;
+  std::unordered_set<Material*>    activeMaterials;
 
   auto& registry = context.scene->getEntityRegistry();
   auto  view     = registry.view<Transform, RenderModel*>();
@@ -393,6 +400,12 @@ void FrameResources::updateModelList_(const RenderContext& context) {
     currentEntityIds.insert(entity);
     auto& transform   = view.get<Transform>(entity);
     auto& renderModel = view.get<RenderModel*>(entity);
+
+    for (const auto& renderMesh : renderModel->renderMeshes) {
+      if (renderMesh->material) {
+        activeMaterials.insert(renderMesh->material);
+      }
+    }
 
     auto it = m_modelsMap.find(entity);
     if (it != m_modelsMap.end()) {
@@ -425,6 +438,20 @@ void FrameResources::updateModelList_(const RenderContext& context) {
     } else {
       ++it;
     }
+  }
+
+  std::vector<Material*> materialsToRemove;
+  for (const auto& [material, cache] : m_materialParamCache) {
+    if (!activeMaterials.contains(material)) {
+      materialsToRemove.push_back(material);
+    }
+  }
+
+  for (auto material : materialsToRemove) {
+    GlobalLogger::Log(LogLevel::Debug,
+                      "Removing cached material parameters for deleted material at address: "
+                          + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    m_materialParamCache.erase(material);
   }
 
   if (needRebuildRenderArray) {

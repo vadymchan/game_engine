@@ -90,7 +90,7 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
   if (deletionManager) {
-    deletionManager->setCurrentFrame(m_currentFrame);
+    deletionManager->setCurrentFrame(m_frameIndex);
   }
 
   m_resourceManager->updateScheduledPipelines();

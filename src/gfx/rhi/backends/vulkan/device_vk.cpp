@@ -524,6 +524,7 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
   }
 
   {
+    // TODO: I have threading issue here - both main thread and worker thread (for loading assets) are using queue even though there's already mutex here
     std::lock_guard<std::mutex> lock(m_queueSubmitMutex);
     if (vkQueueSubmit(m_graphicsQueue_, 1, &submitInfo, fenceVk) != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error, "Failed to submit command buffer");
