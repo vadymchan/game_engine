@@ -201,8 +201,12 @@ float3 CalcSpot(SpotLightData light, float3 N, float3 V, float3 worldPos,
 // PBR
 float4 main(PSInput input) : SV_TARGET
 {
-    float3 albedo = DiffuseTexture.Sample(DefaultSampler, input.TexCoord).rgb *
-                    material.baseColor.rgb;
+    float4 diffuseSample = DiffuseTexture.Sample(DefaultSampler, input.TexCoord);
+    float3 albedo = diffuseSample.rgb * material.baseColor.rgb;
+    float alpha = diffuseSample.a * material.opacity;
+    
+    clip(alpha - 0.1);
+    
     float2 mr = MetallicRoughnessTexture.Sample(DefaultSampler, input.TexCoord).gb;
     float roughness = saturate(mr.x * material.roughness);
     float metallic = saturate(mr.y * material.metallic);
