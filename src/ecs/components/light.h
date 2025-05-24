@@ -5,11 +5,12 @@
 
 namespace game_engine {
 
-// TODO: remove Light, remain only specific light types
+// TODO: consider adding a base class inside all light types(Directional, Point, Spot) for better cache locality
 struct Light {
   math::Vector3Df color;
   float           intensity;
   bool            isDirty = true;
+  bool            enabled = true;
 };
 
 struct DirectionalLight {

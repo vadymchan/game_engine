@@ -46,13 +46,13 @@
                 {
                     "type": "transform",
                     "position": [
-                        0.0,
-                        0.0,
-                        -5.0
+                        -1.859574556350708,
+                        3.818899154663086,
+                        -5.955410957336426
                     ],
                     "rotation": [
                         0.0,
-                        0.0,
+                        -0.0,
                         0.0
                     ],
                     "scale": [
@@ -66,7 +66,7 @@
                 },
                 {
                     "type": "model",
-                    "path": "assets/models/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
+                    "path": "assets/models/gltf/2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
                 }
             ]
         },
@@ -98,13 +98,13 @@
                 {
                     "type": "transform",
                     "position": [
-                        -2.370248556137085,
-                        1.4193428754806519,
-                        -8.401583671569825
+                        -3.4437644481658937,
+                        4.247684001922607,
+                        -9.833830833435059
                     ],
                     "rotation": [
-                        11.800079345703125,
-                        0.4923337399959564,
+                        12.200035095214844,
+                        -6.507186412811279,
                         0.0
                     ],
                     "scale": [
@@ -133,9 +133,9 @@
                 {
                     "type": "transform",
                     "position": [
-                        -5.461182117462158,
-                        0.6971790790557861,
-                        -4.853528022766113
+                        -5.749522686004639,
+                        2.149754285812378,
+                        -6.345746994018555
                     ],
                     "rotation": [
                         0.0,
@@ -150,7 +150,7 @@
                 },
                 {
                     "type": "model",
-                    "path": "assets/models\\Avocado\\glTF\\Avocado.gltf"
+                    "path": "assets/models/gltf/2.0/Avocado\\glTF\\Avocado.gltf"
                 }
             ]
         },

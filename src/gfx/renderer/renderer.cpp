@@ -160,8 +160,14 @@ void Renderer::renderFrame(RenderContext& context) {
     m_finalPass->prepareFrame(context);
   }
 
-  bool exclusiveMode
-      = m_debugPass && context.renderSettings.renderMode != RenderMode::Solid && m_debugPass->isExclusive();
+  //bool isMeshHighlight = context.renderSettings.renderMode == RenderMode::MeshHighlight;
+
+  bool exclusiveMode = m_debugPass && context.renderSettings.renderMode != RenderMode::Solid /*&& !isMeshHighlight*/
+                    && m_debugPass->isExclusive();
+
+  //if (isMeshHighlight) {
+  //  m_debugPass->render(context);
+  //}
 
   if (!exclusiveMode && m_basePass) {
     m_basePass->render(context);
@@ -171,7 +177,9 @@ void Renderer::renderFrame(RenderContext& context) {
                   || context.renderSettings.renderMode == RenderMode::ShaderOverdraw
                   || context.renderSettings.renderMode == RenderMode::VertexNormalVisualization
                   || context.renderSettings.renderMode == RenderMode::NormalMapVisualization
-                  || context.renderSettings.renderMode == RenderMode::LightVisualization;
+                  || context.renderSettings.renderMode == RenderMode::LightVisualization
+                  || context.renderSettings.renderMode == RenderMode::WorldGrid
+                  || context.renderSettings.renderMode == RenderMode::MeshHighlight;
 
   if (m_debugPass && isDebugPass) {
     m_debugPass->render(context);

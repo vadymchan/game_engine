@@ -732,6 +732,39 @@ void CommandBufferDx12::clearDepthStencil(
   m_commandList_->ResourceBarrier(1, &barrier);
 }
 
+void CommandBufferDx12::beginDebugMarker(const std::string& name, const float color[4]) {
+  UINT pixelColor = 0xFF'00'FF'00;                    // Default green
+
+  if (color) {
+    pixelColor = ((UINT)(color[3] * 255.0f) << 24) |  // A
+                 ((UINT)(color[2] * 255.0f) << 16) |  // B
+                 ((UINT)(color[1] * 255.0f) << 8) |   // G
+                 ((UINT)(color[0] * 255.0f) << 0);    // R
+  }
+
+  m_commandList_->BeginEvent(pixelColor, name.c_str(), (UINT)name.length());
+}
+
+void CommandBufferDx12::endDebugMarker() {
+  m_commandList_->EndEvent();
+}
+
+void CommandBufferDx12::insertDebugMarker(const std::string& name, const float color[4]) {
+  UINT pixelColor = 0xFF'00'FF'00;  // Default green
+
+  if (color) {
+    // clang-format off
+    pixelColor = 
+            ((UINT)(color[3] * 255.0f) << 24) | // A
+            ((UINT)(color[2] * 255.0f) << 16) | // B
+            ((UINT)(color[1] * 255.0f) << 8)  | // G
+            ((UINT)(color[0] * 255.0f) << 0);   // R
+    // clang-format on
+  }
+
+  m_commandList_->SetMarker(pixelColor, name.c_str(), (UINT)name.length());
+}
+
 void CommandBufferDx12::bindDescriptorHeaps() {
   ID3D12DescriptorHeap* heaps[2];
   uint32_t              heapCount = 0;

@@ -313,7 +313,7 @@ void VertexNormalVisualizationStrategy::prepareDrawCalls_(const RenderContext& c
 
         pipelineDesc.depthStencil.depthTestEnable   = true;
         pipelineDesc.depthStencil.depthWriteEnable  = false;  // Don't write to depth
-        pipelineDesc.depthStencil.depthCompareOp    = rhi::CompareOp::Lequal;
+        pipelineDesc.depthStencil.depthCompareOp    = rhi::CompareOp::LessEqual;
         pipelineDesc.depthStencil.stencilTestEnable = false;
 
         rhi::ColorBlendAttachmentDesc blendAttachment;

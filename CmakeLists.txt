@@ -52,6 +52,8 @@ cmake_dependent_option(BUILD_LIBKTX        "  – libktx (KTX2/BasisU loader)"  
 cmake_dependent_option(BUILD_MESHOPTIMIZER "  – meshoptimizer runtime (EXT_meshopt decoder)" ON  "USE_GLTF" OFF)
 cmake_dependent_option(BUILD_MIKK_T_SPACE  "  – MikkTSpace tangent generator"                ON  "USE_GLTF" OFF)
 
+option(USE_GLTF_SAMPLE_MODELS "Enable importing glTF Sample Models" OFF)
+
 
 # WIP - change build directory
 # set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
@@ -408,6 +410,17 @@ if(BUILD_MIKK_T_SPACE)
         GIT_TAG        3e895b49d05ea07e4c2133156cfa94369e19e409
     )
 endif()
+
+if(USE_GLTF_SAMPLE_MODELS)
+    message(STATUS "Fetching glTF-Sample-Models...")
+    FetchContent_Declare(
+        gltf_sample_models
+        GIT_REPOSITORY https://github.com/KhronosGroup/glTF-Sample-Models.git
+        GIT_TAG        d7a3cc8e51d7c573771ae77a57f16b0662a905c6
+        GIT_SHALLOW    TRUE
+    )
+endif()
+
 
 # old hierarchy
 # file(GLOB_RECURSE SOURCES "src/*.cpp")
@@ -790,6 +803,15 @@ if(BUILD_MIKK_T_SPACE)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${mikktspace_SOURCE_DIR})
     target_link_libraries(${PROJECT_NAME} PRIVATE mikktspace_lib)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_MIKKTS)
+endif()
+
+if(USE_GLTF_SAMPLE_MODELS)
+    FetchContent_MakeAvailable(gltf_sample_models)
+
+    file(COPY
+        ${gltf_sample_models_SOURCE_DIR}/2.0
+        DESTINATION ${CMAKE_SOURCE_DIR}/assets/models/gltf
+    )
 endif()
 
 if(USE_VULKAN)

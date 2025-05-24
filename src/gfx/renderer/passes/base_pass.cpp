@@ -157,6 +157,7 @@ void BasePass::cleanup() {
 void BasePass::setupRenderPass_() {
   rhi::RenderPassDesc renderPassDesc;
 
+  // Color attachment
   rhi::RenderPassAttachmentDesc colorAttachmentDesc;
   colorAttachmentDesc.format        = rhi::TextureFormat::Bgra8;
   colorAttachmentDesc.samples       = rhi::MSAASamples::Count1;
@@ -165,11 +166,12 @@ void BasePass::setupRenderPass_() {
   colorAttachmentDesc.finalLayout   = rhi::ResourceLayout::ColorAttachment;
   renderPassDesc.colorAttachments.push_back(colorAttachmentDesc);
 
+  // Depth attachment
   rhi::RenderPassAttachmentDesc depthAttachmentDesc;
   depthAttachmentDesc.format             = rhi::TextureFormat::D24S8;
   depthAttachmentDesc.samples            = rhi::MSAASamples::Count1;
   depthAttachmentDesc.loadStoreOp        = rhi::AttachmentLoadStoreOp::ClearStore;
-  depthAttachmentDesc.stencilLoadStoreOp = rhi::AttachmentLoadStoreOp::DontcareDontcare;
+  depthAttachmentDesc.stencilLoadStoreOp = rhi::AttachmentLoadStoreOp::ClearStore;
   depthAttachmentDesc.initialLayout      = rhi::ResourceLayout::DepthStencilAttachment;
   depthAttachmentDesc.finalLayout        = rhi::ResourceLayout::DepthStencilAttachment;
   renderPassDesc.depthStencilAttachment  = depthAttachmentDesc;
@@ -361,9 +363,10 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.rasterization.depthBiasEnable = false;
         pipelineDesc.rasterization.lineWidth       = 1.0f;
 
-        pipelineDesc.depthStencil.depthTestEnable   = true;
-        pipelineDesc.depthStencil.depthWriteEnable  = true;
-        pipelineDesc.depthStencil.depthCompareOp    = rhi::CompareOp::Less;
+        pipelineDesc.depthStencil.depthTestEnable  = true;
+        pipelineDesc.depthStencil.depthWriteEnable = true;
+        pipelineDesc.depthStencil.depthCompareOp   = rhi::CompareOp::Less;
+
         pipelineDesc.depthStencil.stencilTestEnable = false;
 
         rhi::ColorBlendAttachmentDesc blendAttachment;

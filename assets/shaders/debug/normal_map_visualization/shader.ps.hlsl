@@ -14,7 +14,7 @@ SamplerState DefaultSampler : register(s0, space3);
 float4 main(PSInput input) : SV_TARGET
 {
     float3 normal = input.Normal * 0.5 + 0.5;  
-    //return float4(normal, 1);
+    return float4(normal, 1);
     
     float3 Nmap = NormalTexture.Sample(DefaultSampler, input.TexCoord).rgb * 2.0 - 1.0;
     float3 T = normalize(input.Tangent);

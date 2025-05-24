@@ -70,6 +70,11 @@ class CommandBufferVk : public CommandBuffer {
   void clearColor(Texture* texture, const float color[4], uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
   void clearDepthStencil(Texture* texture, float depth, uint8_t stencil, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) override;
 
+  // Debug markers
+  void beginDebugMarker(const std::string& name, const float color[4] = nullptr) override;
+  void endDebugMarker() override;
+  void insertDebugMarker(const std::string& name, const float color[4] = nullptr) override;
+
   // Vulkan-specific methods
   const VkCommandBuffer& getCommandBuffer() const { return m_commandBuffer_; }
 

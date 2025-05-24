@@ -51,7 +51,12 @@ void LightSystem::collectDirectionalLights_(Scene* scene) {
   std::unordered_set<entt::entity> currentEntities;
 
   for (auto entity : view) {
-    auto& light    = view.get<Light>(entity);
+    auto& light = view.get<Light>(entity);
+
+    if (!light.enabled) {
+      continue;
+    }
+
     auto& dirLight = view.get<DirectionalLight>(entity);
 
     bool componentChanged = light.isDirty || dirLight.isDirty;
@@ -91,7 +96,12 @@ void LightSystem::collectPointLights_(Scene* scene) {
   std::unordered_set<entt::entity> currentEntities;
 
   for (auto entity : view) {
-    auto& light      = view.get<Light>(entity);
+    auto& light = view.get<Light>(entity);
+
+    if (!light.enabled) {
+      continue;
+    }
+
     auto& pointLight = view.get<PointLight>(entity);
     auto& transform  = view.get<Transform>(entity);
 
@@ -133,7 +143,12 @@ void LightSystem::collectSpotLights_(Scene* scene) {
   std::unordered_set<entt::entity> currentEntities;
 
   for (auto entity : view) {
-    auto& light     = view.get<Light>(entity);
+    auto& light = view.get<Light>(entity);
+
+    if (!light.enabled) {
+      continue;
+    }
+
     auto& spotLight = view.get<SpotLight>(entity);
     auto& transform = view.get<Transform>(entity);
 

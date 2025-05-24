@@ -357,7 +357,7 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
 
   if (!m_viewUniformBuffer) {
     rhi::BufferDesc viewUboDesc;
-    viewUboDesc.size = alignConstantBufferSize(sizeof(math::Matrix4f<>) * 3 + sizeof(math::Vector3Df) + sizeof(float));
+    viewUboDesc.size = alignConstantBufferSize(sizeof(math::Matrix4f<>) * 6 + sizeof(math::Vector3Df) + sizeof(float));
     viewUboDesc.createFlags = rhi::BufferCreateFlag::CpuAccess | rhi::BufferCreateFlag::ConstantBuffer;
     viewUboDesc.type        = rhi::BufferType::Dynamic;
     viewUboDesc.debugName   = "view_buffer";
@@ -375,15 +375,21 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
     math::Matrix4f<> view;
     math::Matrix4f<> projection;
     math::Matrix4f<> viewProjection;
+    math::Matrix4f<> invView;
+    math::Matrix4f<> invProjection;
+    math::Matrix4f<> invViewProjection;
     math::Vector3Df  eyePosition;
     float            padding;
   } viewData;
 
-  viewData.view           = cameraMatrix.view;
-  viewData.projection     = cameraMatrix.projection;
-  viewData.viewProjection = cameraMatrix.view * cameraMatrix.projection;
-  viewData.eyePosition    = transform.translation;
-  viewData.padding        = 0.0f;
+  viewData.view              = cameraMatrix.view;
+  viewData.projection        = cameraMatrix.projection;
+  viewData.viewProjection    = cameraMatrix.view * cameraMatrix.projection;
+  viewData.invView           = cameraMatrix.view.inverse();
+  viewData.invProjection     = cameraMatrix.projection.inverse();
+  viewData.invViewProjection = viewData.viewProjection.inverse();
+  viewData.eyePosition       = transform.translation;
+  viewData.padding           = 0.0f;
 
   m_device->updateBuffer(m_viewUniformBuffer, &viewData, sizeof(viewData));
 }

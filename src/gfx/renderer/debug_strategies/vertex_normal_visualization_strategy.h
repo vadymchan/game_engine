@@ -41,7 +41,7 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
   void render(const RenderContext& context) override;
   void cleanup() override;
 
-  bool isExclusive() const override { return false; }
+  bool isExclusive() const override { return false; } // should be false
 
   private:
   struct ModelBufferCache {

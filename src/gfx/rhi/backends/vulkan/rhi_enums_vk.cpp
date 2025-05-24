@@ -113,10 +113,10 @@ static const std::unordered_map<CompareOp, VkCompareOp> compareOpMapping = {
   { CompareOp::Never,    VK_COMPARE_OP_NEVER            },
   { CompareOp::Less,     VK_COMPARE_OP_LESS             },
   { CompareOp::Equal,    VK_COMPARE_OP_EQUAL            },
-  { CompareOp::Lequal,   VK_COMPARE_OP_LESS_OR_EQUAL    },
+  { CompareOp::LessEqual,   VK_COMPARE_OP_LESS_OR_EQUAL    },
   { CompareOp::Greater,  VK_COMPARE_OP_GREATER          },
-  { CompareOp::Notequal, VK_COMPARE_OP_NOT_EQUAL        },
-  { CompareOp::Gequal,   VK_COMPARE_OP_GREATER_OR_EQUAL },
+  { CompareOp::NotEqual, VK_COMPARE_OP_NOT_EQUAL        },
+  { CompareOp::GreaterEqual,   VK_COMPARE_OP_GREATER_OR_EQUAL },
   { CompareOp::Always,   VK_COMPARE_OP_ALWAYS           }
 };
 

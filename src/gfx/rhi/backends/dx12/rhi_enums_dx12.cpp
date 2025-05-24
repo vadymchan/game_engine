@@ -75,10 +75,10 @@ static const std::unordered_map<CompareOp, D3D12_COMPARISON_FUNC> compareOpMappi
   { CompareOp::Never,    D3D12_COMPARISON_FUNC_NEVER         },
   { CompareOp::Less,     D3D12_COMPARISON_FUNC_LESS          },
   { CompareOp::Equal,    D3D12_COMPARISON_FUNC_EQUAL         },
-  { CompareOp::Lequal,   D3D12_COMPARISON_FUNC_LESS_EQUAL    },
+  { CompareOp::LessEqual,   D3D12_COMPARISON_FUNC_LESS_EQUAL    },
   { CompareOp::Greater,  D3D12_COMPARISON_FUNC_GREATER       },
-  { CompareOp::Notequal, D3D12_COMPARISON_FUNC_NOT_EQUAL     },
-  { CompareOp::Gequal,   D3D12_COMPARISON_FUNC_GREATER_EQUAL },
+  { CompareOp::NotEqual, D3D12_COMPARISON_FUNC_NOT_EQUAL     },
+  { CompareOp::GreaterEqual,   D3D12_COMPARISON_FUNC_GREATER_EQUAL },
   { CompareOp::Always,   D3D12_COMPARISON_FUNC_ALWAYS        }
 };
 

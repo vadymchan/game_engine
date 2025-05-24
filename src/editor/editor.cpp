@@ -5,6 +5,7 @@
 #include "ecs/components/light.h"
 #include "ecs/components/movement.h"
 #include "ecs/components/render_model.h"
+#include "ecs/components/selected.h"
 #include "ecs/components/tags.h"
 #include "input/input_manager.h"
 #include "scene/scene_loader.h"
@@ -338,6 +339,10 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::LightVisualization;
   }
 
+  if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
+  }
+
   ImGui::End();
 }
 
@@ -546,6 +551,26 @@ void Editor::renderInspectorWindow() {
     if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen)) {
       auto& light = registry.get<Light>(m_selectedEntity);
 
+      bool isEnabled = light.enabled;
+      if (ImGui::Checkbox("Enabled", &isEnabled)) {
+        light.enabled = isEnabled;
+        light.isDirty = true;
+
+        // Log the state change
+        std::string lightType = "Light";
+        if (registry.all_of<DirectionalLight>(m_selectedEntity)) {
+          lightType = "Directional Light";
+        } else if (registry.all_of<PointLight>(m_selectedEntity)) {
+          lightType = "Point Light";
+        } else if (registry.all_of<SpotLight>(m_selectedEntity)) {
+          lightType = "Spot Light";
+        }
+
+        GlobalLogger::Log(LogLevel::Info,
+                          lightType + " " + std::to_string(static_cast<uint32_t>(m_selectedEntity))
+                              + (isEnabled ? " enabled" : " disabled"));
+      }
+
       float color[3] = {light.color.x(), light.color.y(), light.color.z()};
       if (ImGui::ColorEdit3("Color", color)) {
         light.color.x() = color[0];
@@ -605,6 +630,7 @@ void Editor::renderInspectorWindow() {
     }
   }
 
+  // Render Model
   if (registry.all_of<RenderModel*>(m_selectedEntity)) {
     if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
       auto* model = registry.get<RenderModel*>(m_selectedEntity);
@@ -656,6 +682,41 @@ void Editor::renderInspectorWindow() {
         }
       } else {
         ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Model is null");
+      }
+    }
+  }
+
+  // Selected
+  if (registry.all_of<Selected>(m_selectedEntity)) {
+    if (ImGui::CollapsingHeader("Highlight", ImGuiTreeNodeFlags_DefaultOpen)) {
+      auto& highlight = registry.get<Selected>(m_selectedEntity);
+
+      float color[4] = {highlight.highlightColor.x(),
+                        highlight.highlightColor.y(),
+                        highlight.highlightColor.z(),
+                        highlight.highlightColor.w()};
+
+      if (ImGui::ColorEdit4("Highlight Color", color)) {
+        highlight.highlightColor.x() = color[0];
+        highlight.highlightColor.y() = color[1];
+        highlight.highlightColor.z() = color[2];
+        highlight.highlightColor.w() = color[3];
+      }
+
+      ImGui::DragFloat("Outline Thickness", &highlight.outlineThickness, 0.001f, 0.001f, 0.1f, "%.3f");
+
+      bool xRayMode = highlight.xRay;
+      if (ImGui::Checkbox("X-Ray Mode (Show through walls)", &xRayMode)) {
+        highlight.xRay = xRayMode;
+
+        std::string mode = xRayMode ? "X-Ray" : "Normal";
+        GlobalLogger::Log(LogLevel::Info,
+                          "Outline mode changed to " + mode
+                              + " for entity: " + std::to_string(static_cast<uint32_t>(m_selectedEntity)));
+      }
+
+      if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("When enabled, outline will be visible through other objects");
       }
     }
   }
@@ -1030,6 +1091,15 @@ void Editor::handleEntitySelection(entt::entity entity) {
 
   auto& registry = scene->getEntityRegistry();
 
+  if (m_selectedEntity != entt::null && registry.valid(m_selectedEntity)) {
+    registry.remove<Selected>(m_selectedEntity);
+
+    if (registry.all_of<RenderModel*>(m_selectedEntity)) {
+      GlobalLogger::Log(LogLevel::Info,
+                        "Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " deselected");
+    }
+  }
+
   if (registry.valid(entity) && registry.all_of<Light, DirectionalLight>(entity)) {
     auto cameraView = registry.view<Camera, CameraMatrices, Transform>();
     if (cameraView.begin() != cameraView.end()) {
@@ -1045,8 +1115,26 @@ void Editor::handleEntitySelection(entt::entity entity) {
   }
 
   m_selectedEntity = entity;
-}
 
+  m_setInspectorFocus = true;
+
+  bool hasSelectedRenderModel = false;
+  if (m_selectedEntity != entt::null && registry.valid(m_selectedEntity)) {
+    if (registry.all_of<RenderModel*>(m_selectedEntity)) {
+      registry.emplace_or_replace<Selected>(m_selectedEntity);
+      hasSelectedRenderModel = true;
+
+      GlobalLogger::Log(LogLevel::Info,
+                        "Entity " + std::to_string(static_cast<uint32_t>(m_selectedEntity)) + " selected");
+    }
+  }
+
+  if (hasSelectedRenderModel) {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::MeshHighlight;
+  } else {
+    m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
+  }
+}
 bool Editor::shouldRenderGizmo_() {
   if (!m_showGizmo || m_selectedEntity == entt::null || !m_frameResources) {
     return false;
@@ -1334,6 +1422,8 @@ void Editor::removeSelectedEntity() {
 
   if (!registry.valid(m_selectedEntity)) {
     m_selectedEntity = entt::null;
+    // TODO: maybe switch to Solid only if it was MeshHighlight
+    m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
     return;
   }
 
@@ -1383,6 +1473,9 @@ void Editor::removeSelectedEntity() {
   GlobalLogger::Log(LogLevel::Info, entityType + " removed");
 
   m_selectedEntity = entt::null;
+
+  // TODO: maybe switch to Solid only if it was RenderMode::MeshHighlight
+  m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
 }
 
 math::Vector3Df Editor::getPositionInFrontOfCamera_() {
@@ -1701,14 +1794,16 @@ void Editor::renderEntityList_(Registry& registry) {
     entt::entity entity;
     std::string  label;
     bool         isLoading;
+    bool         isDisabled;
   };
 
   std::vector<EntityInfo> entityInfos;
 
   for (auto entity : entities) {
     EntityInfo info;
-    info.entity    = entity;
-    info.isLoading = false;
+    info.entity     = entity;
+    info.isLoading  = false;
+    info.isDisabled = false;
 
     std::string label = "Entity " + std::to_string(static_cast<uint32_t>(entity));
 
@@ -1723,12 +1818,17 @@ void Editor::renderEntityList_(Registry& registry) {
       }
     } else if (registry.all_of<Camera>(entity)) {
       label += " (Camera)";
-    } else if (registry.all_of<Light, DirectionalLight>(entity)) {
-      label += " (Directional Light)";
-    } else if (registry.all_of<Light, PointLight>(entity)) {
-      label += " (Point Light)";
-    } else if (registry.all_of<Light, SpotLight>(entity)) {
-      label += " (Spot Light)";
+    } else if (registry.all_of<Light>(entity)) {
+      auto& light     = registry.get<Light>(entity);
+      info.isDisabled = !light.enabled;
+
+      if (registry.all_of<DirectionalLight>(entity)) {
+        label += info.isDisabled ? " (Directional Light - Disabled)" : " (Directional Light)";
+      } else if (registry.all_of<PointLight>(entity)) {
+        label += info.isDisabled ? " (Point Light - Disabled)" : " (Point Light)";
+      } else if (registry.all_of<SpotLight>(entity)) {
+        label += info.isDisabled ? " (Spot Light - Disabled)" : " (Spot Light)";
+      }
     }
 
     info.label = label;
@@ -1763,6 +1863,12 @@ void Editor::renderEntityList_(Registry& registry) {
     if (info.isLoading) {
       ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 0.7f));
       ImGui::Selectable(info.label.c_str(), isSelected, ImGuiSelectableFlags_Disabled);
+      ImGui::PopStyleColor();
+    } else if (info.isDisabled) {
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.8f));
+      if (ImGui::Selectable(info.label.c_str(), isSelected)) {
+        handleEntitySelection(info.entity);
+      }
       ImGui::PopStyleColor();
     } else {
       if (ImGui::Selectable(info.label.c_str(), isSelected)) {

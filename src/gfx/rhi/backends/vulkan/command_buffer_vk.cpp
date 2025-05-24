@@ -736,6 +736,67 @@ void CommandBufferVk::clearDepthStencil(
   resourceBarrier(barrier);
 }
 
+void CommandBufferVk::beginDebugMarker(const std::string& name, const float color[4]) {
+  // TODO: i guess that this function should be in device and we need to retrieve it from device
+  auto func
+      = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(m_device_->getDevice(), "vkCmdBeginDebugUtilsLabelEXT");
+
+  if (!func) {
+    GlobalLogger::Log(LogLevel::Error, "Debug marker function not supported");
+    return;
+  }
+
+  VkDebugUtilsLabelEXT label{};
+  label.sType      = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+  label.pLabelName = name.c_str();
+
+  if (color) {
+    memcpy(label.color, color, sizeof(float) * 4);
+  } else {
+    // default green
+    label.color[0] = 0.0f; 
+    label.color[1] = 1.0f; 
+    label.color[2] = 0.0f; 
+    label.color[3] = 1.0f; 
+  }
+
+  func(m_commandBuffer_, &label);
+}
+
+void CommandBufferVk::endDebugMarker() {
+  auto func = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(m_device_->getDevice(), "vkCmdEndDebugUtilsLabelEXT");
+
+  if (func) {
+    func(m_commandBuffer_);
+  }
+}
+
+void CommandBufferVk::insertDebugMarker(const std::string& name, const float color[4]) {
+  auto func
+      = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetDeviceProcAddr(m_device_->getDevice(), "vkCmdInsertDebugUtilsLabelEXT");
+
+  if (!func) {
+    GlobalLogger::Log(LogLevel::Error, "Debug marker function not supported");
+    return;
+  }
+
+  VkDebugUtilsLabelEXT label{};
+  label.sType      = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+  label.pLabelName = name.c_str();
+
+  if (color) {
+    memcpy(label.color, color, sizeof(float) * 4);
+  } else {
+    // default green
+    label.color[0] = 0.0f;
+    label.color[1] = 1.0f;
+    label.color[2] = 0.0f;
+    label.color[3] = 1.0f;
+  }
+
+  func(m_commandBuffer_, &label);
+}
+
 //-------------------------------------------------------------------------
 // CommandPoolManager implementation
 //-------------------------------------------------------------------------

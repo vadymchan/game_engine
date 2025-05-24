@@ -196,14 +196,15 @@ enum class StencilOp : uint8_t {
   Count
 };
 
+// TODO: add LessEqual, GreaterEqual, etc.
 enum class CompareOp : uint8_t {
   Never,
   Less,
   Equal,
-  Lequal,
+  LessEqual,
   Greater,
-  Notequal,
-  Gequal,
+  NotEqual,
+  GreaterEqual,
   Always,
   Count
 };

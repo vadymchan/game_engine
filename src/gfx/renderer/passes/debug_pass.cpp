@@ -1,10 +1,12 @@
 #include "gfx/renderer/passes/debug_pass.h"
 
 #include "gfx/renderer/debug_strategies/light_visualization_strategy.h"
+#include "gfx/renderer/debug_strategies/mesh_highlight_strategy.h"
 #include "gfx/renderer/debug_strategies/normal_map_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/shader_overdraw_strategy.h"
 #include "gfx/renderer/debug_strategies/vertex_normal_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/wireframe_strategy.h"
+#include "gfx/renderer/debug_strategies/world_grid_strategy.h"
 #include "utils/logger/global_logger.h"
 
 namespace game_engine {
@@ -87,6 +89,12 @@ void DebugPass::createDebugStrategy_() {
       break;
     case RenderMode::LightVisualization:
       m_debugStrategy = std::make_unique<LightVisualizationStrategy>();
+      break;
+    case RenderMode::WorldGrid:
+      m_debugStrategy = std::make_unique<WorldGridStrategy>();
+      break;
+    case RenderMode::MeshHighlight:
+      m_debugStrategy = std::make_unique<MeshHighlightStrategy>();
       break;
     default:
       GlobalLogger::Log(LogLevel::Error,
