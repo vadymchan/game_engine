@@ -10,6 +10,7 @@
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "utils/logger/global_logger.h"
+#include "utils/color/color.h"
 
 namespace game_engine {
 namespace gfx {
@@ -749,15 +750,14 @@ void CommandBufferVk::beginDebugMarker(const std::string& name, const float colo
   VkDebugUtilsLabelEXT label{};
   label.sType      = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
   label.pLabelName = name.c_str();
-
   if (color) {
     memcpy(label.color, color, sizeof(float) * 4);
   } else {
-    // default green
-    label.color[0] = 0.0f; 
-    label.color[1] = 1.0f; 
-    label.color[2] = 0.0f; 
-    label.color[3] = 1.0f; 
+    auto defaultColor = color::g_toFloatArray(color::GREEN);
+    label.color[0] = defaultColor[0]; 
+    label.color[1] = defaultColor[1]; 
+    label.color[2] = defaultColor[2]; 
+    label.color[3] = defaultColor[3]; 
   }
 
   func(m_commandBuffer_, &label);
@@ -787,11 +787,11 @@ void CommandBufferVk::insertDebugMarker(const std::string& name, const float col
   if (color) {
     memcpy(label.color, color, sizeof(float) * 4);
   } else {
-    // default green
-    label.color[0] = 0.0f;
-    label.color[1] = 1.0f;
-    label.color[2] = 0.0f;
-    label.color[3] = 1.0f;
+    auto defaultColor = color::g_toFloatArray(color::GREEN);
+    label.color[0] = defaultColor[0];
+    label.color[1] = defaultColor[1];
+    label.color[2] = defaultColor[2];
+    label.color[3] = defaultColor[3]; 
   }
 
   func(m_commandBuffer_, &label);

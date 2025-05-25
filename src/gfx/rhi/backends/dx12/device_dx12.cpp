@@ -17,7 +17,9 @@
 #include "gfx/rhi/backends/dx12/synchronization_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "platform/common/window.h"
+#include "profiler/backends/gpu_profiler_dx12.h"
 #include "utils/logger/global_logger.h"
+#include "utils/service/service_locator.h"
 
 namespace game_engine {
 namespace gfx {
@@ -94,12 +96,11 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
     }
 
     if (SUCCEEDED(D3D12CreateDevice(currentAdapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
-
       DXGI_ADAPTER_DESC1 desc;
       currentAdapter->GetDesc1(&desc);
 
       if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
-        continue; 
+        continue;
       }
 
 #ifdef _DEBUG
@@ -139,12 +140,10 @@ bool DeviceDx12::findAdapter_(IDXGIAdapter1** adapter) {
     }
   }
 
-  
   return false;
 }
 
 bool DeviceDx12::createDevice_() {
-
   ComPtr<IDXGIAdapter1> adapter;
   if (!findAdapter_(adapter.GetAddressOf())) {
     GlobalLogger::Log(LogLevel::Error, "No suitable DirectX 12 adapter found!");
@@ -396,7 +395,6 @@ void DeviceDx12::updateBuffer(Buffer* buffer, const void* data, size_t size, siz
   auto      fence = createFence(fenceDesc);
   submitCommandBuffer(cmdBuffer.get(), fence.get());
   fence->wait();
-
 }
 
 void DeviceDx12::updateTexture(
@@ -424,6 +422,12 @@ void DeviceDx12::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     std::lock_guard<std::mutex> lock(m_queueSubmitMutex);
     m_commandQueue_->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
   }
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    profiler->collect(nullptr);
+  }
+#endif
 
   if (signalFence) {
     FenceDx12* fenceDx12 = dynamic_cast<FenceDx12*>(signalFence);

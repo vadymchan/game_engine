@@ -11,6 +11,8 @@
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "utils/logger/global_logger.h"
+#include "utils/color/color.h"
+
 
 namespace game_engine {
 namespace gfx {
@@ -733,7 +735,7 @@ void CommandBufferDx12::clearDepthStencil(
 }
 
 void CommandBufferDx12::beginDebugMarker(const std::string& name, const float color[4]) {
-  UINT pixelColor = 0xFF'00'FF'00;                    // Default green
+  UINT pixelColor = color::GREEN;                    // Default green
 
   if (color) {
     pixelColor = ((UINT)(color[3] * 255.0f) << 24) |  // A
@@ -750,7 +752,7 @@ void CommandBufferDx12::endDebugMarker() {
 }
 
 void CommandBufferDx12::insertDebugMarker(const std::string& name, const float color[4]) {
-  UINT pixelColor = 0xFF'00'FF'00;  // Default green
+  UINT pixelColor = color::GREEN;  // Default green
 
   if (color) {
     // clang-format off

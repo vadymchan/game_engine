@@ -22,12 +22,13 @@ option(BUILD_XXHASH       "Build the xxHash library"    ON)
 option(BUILD_RAPIDJSON    "Build the RapidJSON library" ON)
 option(BUILD_WATCHER      "Build the watcher library"   ON)
 option(BUILD_ENTT         "Build the EnTT library"      ON)
-option(BUILD_TRACY        "Build the Tracy profiler"    OFF)
 
 # Choose which rendering API to use
 option(USE_VULKAN  "Use Vulkan as the rendering API"                 ON)
 option(USE_OPENGL  "Use OpenGL as the rendering API (DEPRECATED!)"  OFF)
 option(USE_DIRECTX "Use DirectX as the rendering API"          ${WIN32})
+
+option(USE_PROFILING "Enable profiling support (CPU + GPU)" OFF)
 
 # Choose tools
 option(BUILD_ASSET_TOOLS "Build offline asset conversion tools (gltfpack & toktx)" OFF)
@@ -41,6 +42,10 @@ cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for
 
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
 cmake_dependent_option(BUILD_IMGUIFILEDIALOG  "Build the ImGuiFileDialog library" ON "BUILD_IMGUI" OFF)
+
+cmake_dependent_option(BUILD_TRACY        "Build Tracy profiler"                  ON  "USE_PROFILING"             OFF)
+cmake_dependent_option(USE_CPU_PROFILING  "Enable CPU profiling (requires Tracy)" ON  "USE_PROFILING;BUILD_TRACY" OFF)
+cmake_dependent_option(USE_GPU_PROFILING  "Enable GPU profiling (requires Tracy)" ON  "USE_PROFILING;BUILD_TRACY" OFF)
 
 # separately, since they're cross-platform 
 option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON)
@@ -746,20 +751,6 @@ if(BUILD_ENTT)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_ENTT)
 endif()
 
-if(BUILD_TRACY)
-    FetchContent_MakeAvailable(tracy)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE 
-        TRACY_ON_DEMAND
-        # $<$<CONFIG:Debug,RelWithDebInfo>:TRACY_ENABLE>
-        # TRACY_ON_DEMAND 
-        # TRACY_CALLSTACK 
-        # TRACY_ONLY_LOCALHOST  
-    )
-    target_link_libraries(${PROJECT_NAME} PRIVATE TracyClient)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${tracy_SOURCE_DIR}/public)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_TRACY)
-endif()
-
 if(BUILD_D3D12_MEMORY_ALLOCATOR)
     FetchContent_MakeAvailable(D3D12MemoryAllocator)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${D3D12MemoryAllocator_SOURCE_DIR}/include)
@@ -812,6 +803,32 @@ if(USE_GLTF_SAMPLE_MODELS)
         ${gltf_sample_models_SOURCE_DIR}/2.0
         DESTINATION ${CMAKE_SOURCE_DIR}/assets/models/gltf
     )
+endif()
+
+
+if(BUILD_TRACY)
+    FetchContent_MakeAvailable(tracy)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE 
+        TRACY_ON_DEMAND
+        $<$<CONFIG:Debug,RelWithDebInfo>:TRACY_ENABLE>
+        # TRACY_CALLSTACK 
+        # TRACY_ONLY_LOCALHOST  
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE TracyClient)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${tracy_SOURCE_DIR}/public)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_TRACY)
+endif()
+
+if(USE_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_PROFILING)
+endif()
+
+if(USE_CPU_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_CPU_PROFILING)
+endif()
+
+if(USE_GPU_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_GPU_PROFILING)
 endif()
 
 if(USE_VULKAN)
@@ -1018,7 +1035,7 @@ endif()
 
 if(USE_DIRECTX AND WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE d3d12 dxgi)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DIRECTX)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DX12)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME}

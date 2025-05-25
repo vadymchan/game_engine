@@ -17,6 +17,7 @@
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/shader_manager.h"
 #include "input/input_manager.h"
+#include "profiler/backends/gpu_profiler_factory.h"
 #include "resources/assimp/assimp_material_loader.h"
 #include "resources/assimp/assimp_render_model_loader.h"
 #include "resources/cgltf/cgltf_material_loader.h"
@@ -78,6 +79,7 @@ Engine::~Engine() {
   ServiceLocator::s_remove<ResourceDeletionManager>();
   ServiceLocator::s_remove<TextureManager>();
   ServiceLocator::s_remove<BufferManager>();
+  ServiceLocator::s_remove<gpu::GpuProfiler>();
 
   GlobalLogger::Shutdown();
 }
@@ -209,6 +211,8 @@ auto Engine::initialize() -> bool {
   auto device = m_renderer_->getDevice();
   ServiceLocator::s_provide<TextureManager>(device);
   ServiceLocator::s_provide<BufferManager>(device);
+  std::unique_ptr<gpu::GpuProfiler> gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
+  ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
 
   systemManager->addSystem(std::make_unique<LightSystem>(device, m_renderer_->getResourceManager()));
 

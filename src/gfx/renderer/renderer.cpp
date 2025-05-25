@@ -2,8 +2,12 @@
 
 #include "ecs/components/camera.h"
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
+#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
+#include "gfx/rhi/backends/dx12/device_dx12.h"
+#include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/common/rhi_creators.h"
 #include "platform/common/window.h"
+#include "profiler/profiler.h"
 #include "scene/scene_manager.h"
 #include "utils/resource/resource_deletion_manager.h"
 
@@ -69,6 +73,10 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
   if (deletionManager) {
     deletionManager->setDefaultFrameDelay(MAX_FRAMES_IN_FLIGHT);
   }
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+  initializeGpuProfiler_(api);
+#endif
 
   m_initialized = true;
 
@@ -160,14 +168,14 @@ void Renderer::renderFrame(RenderContext& context) {
     m_finalPass->prepareFrame(context);
   }
 
-  //bool isMeshHighlight = context.renderSettings.renderMode == RenderMode::MeshHighlight;
+  // bool isMeshHighlight = context.renderSettings.renderMode == RenderMode::MeshHighlight;
 
   bool exclusiveMode = m_debugPass && context.renderSettings.renderMode != RenderMode::Solid /*&& !isMeshHighlight*/
                     && m_debugPass->isExclusive();
 
-  //if (isMeshHighlight) {
-  //  m_debugPass->render(context);
-  //}
+  // if (isMeshHighlight) {
+  //   m_debugPass->render(context);
+  // }
 
   if (!exclusiveMode && m_basePass) {
     m_basePass->render(context);
@@ -300,6 +308,39 @@ bool Renderer::onViewportResize(const math::Dimension2Di& newDimension) {
   }
 
   return true;
+}
+
+void Renderer::initializeGpuProfiler_(rhi::RenderingApi api) {
+  auto gpuProfiler = ServiceLocator::s_get<gpu::GpuProfiler>();
+  if (!gpuProfiler) {
+    GlobalLogger::Log(LogLevel::Warning, "GPU profiler not found in ServiceLocator");
+    return;
+  }
+
+  if (api == rhi::RenderingApi::Vulkan) {
+    auto deviceVk = static_cast<rhi::DeviceVk*>(m_device.get());
+
+    auto cmdBuffer   = m_device->createCommandBuffer();
+    auto cmdBufferVk = static_cast<rhi::CommandBufferVk*>(cmdBuffer.get());
+
+    bool success = gpuProfiler->initialize(deviceVk->getPhysicalDevice(),
+                                           deviceVk->getDevice(),
+                                           deviceVk->getGraphicsQueue(),
+                                           cmdBufferVk->getCommandBuffer());
+
+    if (success) {
+      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
+    }
+
+  } else if (api == rhi::RenderingApi::Dx12) {
+    auto deviceDx12 = static_cast<rhi::DeviceDx12*>(m_device.get());
+
+    bool success = gpuProfiler->initialize(nullptr, deviceDx12->getDevice(), deviceDx12->getCommandQueue(), nullptr);
+
+    if (success) {
+      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
+    }
+  }
 }
 
 std::unique_ptr<rhi::CommandBuffer> Renderer::acquireCommandBuffer_() {

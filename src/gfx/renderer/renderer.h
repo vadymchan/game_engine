@@ -48,6 +48,8 @@ class Renderer {
   RenderResourceManager* getResourceManager() const { return m_resourceManager.get(); }
 
   private:
+  void initializeGpuProfiler_(rhi::RenderingApi api);
+
   std::unique_ptr<rhi::CommandBuffer> acquireCommandBuffer_();
 
   void recycleCommandBuffer_(std::unique_ptr<rhi::CommandBuffer> cmdBuffer);

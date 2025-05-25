@@ -1,20 +1,20 @@
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 
-#include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
-
-// Include implementations of resource classes
 #include "gfx/rhi/backends/vulkan/buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/descriptor_vk.h"
 #include "gfx/rhi/backends/vulkan/framebuffer_vk.h"
 #include "gfx/rhi/backends/vulkan/pipeline_vk.h"
 #include "gfx/rhi/backends/vulkan/render_pass_vk.h"
+#include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/sampler_vk.h"
 #include "gfx/rhi/backends/vulkan/shader_vk.h"
 #include "gfx/rhi/backends/vulkan/swap_chain_vk.h"
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "platform/common/window.h"
+#include "profiler/backends/gpu_profiler_vk.h"
+#include "utils/service/service_locator.h"
 #include "utils/logger/global_logger.h"
 
 #include <SDL_vulkan.h>
@@ -524,12 +524,20 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
   }
 
   {
-    // TODO: I have threading issue here - both main thread and worker thread (for loading assets) are using queue even though there's already mutex here
+    // TODO: I have threading issue here - both main thread and worker thread (for loading assets) are using queue even
+    // though there's already mutex here
     std::lock_guard<std::mutex> lock(m_queueSubmitMutex);
     if (vkQueueSubmit(m_graphicsQueue_, 1, &submitInfo, fenceVk) != VK_SUCCESS) {
       GlobalLogger::Log(LogLevel::Error, "Failed to submit command buffer");
     }
   }
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    auto* cmdBufferVk = static_cast<CommandBufferVk*>(cmdBuffer);
+    profiler->collect(cmdBufferVk->getCommandBuffer());
+  }
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
 }
 
 void DeviceVk::waitIdle() {
