@@ -9,6 +9,7 @@
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/shader_manager.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {
@@ -49,6 +50,8 @@ void BasePass::resize(const math::Dimension2Di& newDimension) {
 }
 
 void BasePass::prepareFrame(const RenderContext& context) {
+  CPU_ZONE_NC("BasePass::prepareFrame", color::GREEN);
+
   std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
   std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
 
@@ -79,10 +82,14 @@ void BasePass::prepareFrame(const RenderContext& context) {
 }
 
 void BasePass::render(const RenderContext& context) {
+  CPU_ZONE_NC("BasePass::render", color::GREEN);
+
   auto commandBuffer = context.commandBuffer.get();
   if (!commandBuffer || !m_renderPass || m_framebuffers.empty()) {
     return;
   }
+
+  GPU_ZONE_NC(commandBuffer, "Base Pass", color::GREEN);
 
   std::vector<rhi::ClearValue> clearValues;
 

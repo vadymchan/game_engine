@@ -9,8 +9,9 @@
 #include "gfx/rhi/backends/vulkan/render_pass_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
-#include "utils/logger/global_logger.h"
+#include "profiler/gpu.h"
 #include "utils/color/color.h"
+#include "utils/logger/global_logger.h"
 
 namespace game_engine {
 namespace gfx {
@@ -247,6 +248,7 @@ void CommandBufferVk::drawIndexedInstanced(
     return;
   }
 
+  GPU_MARKER(this, "Vulkan: Draw Indexed Instanced");
   vkCmdDrawIndexed(m_commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
@@ -754,10 +756,10 @@ void CommandBufferVk::beginDebugMarker(const std::string& name, const float colo
     memcpy(label.color, color, sizeof(float) * 4);
   } else {
     auto defaultColor = color::g_toFloatArray(color::GREEN);
-    label.color[0] = defaultColor[0]; 
-    label.color[1] = defaultColor[1]; 
-    label.color[2] = defaultColor[2]; 
-    label.color[3] = defaultColor[3]; 
+    label.color[0]    = defaultColor[0];
+    label.color[1]    = defaultColor[1];
+    label.color[2]    = defaultColor[2];
+    label.color[3]    = defaultColor[3];
   }
 
   func(m_commandBuffer_, &label);
@@ -788,10 +790,10 @@ void CommandBufferVk::insertDebugMarker(const std::string& name, const float col
     memcpy(label.color, color, sizeof(float) * 4);
   } else {
     auto defaultColor = color::g_toFloatArray(color::GREEN);
-    label.color[0] = defaultColor[0];
-    label.color[1] = defaultColor[1];
-    label.color[2] = defaultColor[2];
-    label.color[3] = defaultColor[3]; 
+    label.color[0]    = defaultColor[0];
+    label.color[1]    = defaultColor[1];
+    label.color[2]    = defaultColor[2];
+    label.color[3]    = defaultColor[3];
   }
 
   func(m_commandBuffer_, &label);

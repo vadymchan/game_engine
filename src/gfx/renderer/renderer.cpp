@@ -2,8 +2,8 @@
 
 #include "ecs/components/camera.h"
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
-#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
+#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/common/rhi_creators.h"
 #include "platform/common/window.h"
@@ -85,6 +85,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 }
 
 RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSettings) {
+  CPU_ZONE_NC("Renderer::beginFrame", color::BLUE);
   if (!m_initialized) {
     GlobalLogger::Log(LogLevel::Error, "Renderer not initialized");
     return RenderContext();
@@ -95,6 +96,13 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   fence->wait();
   fence->reset();
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+  auto* gpuProfiler = ServiceLocator::s_get<gpu::GpuProfiler>();
+  if (gpuProfiler) {
+    gpuProfiler->newFrame();
+  }
+#endif
 
   auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
   if (deletionManager) {
@@ -149,6 +157,8 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 }
 
 void Renderer::renderFrame(RenderContext& context) {
+  CPU_ZONE_NC("Renderer::renderFrame", color::CYAN);
+  GPU_ZONE_NC(context.commandBuffer.get(), "Frame Render", color::CYAN);
   if (!context.commandBuffer || !m_frameResources.get()) {
     GlobalLogger::Log(LogLevel::Error, "Invalid render context");
     return;
@@ -168,14 +178,8 @@ void Renderer::renderFrame(RenderContext& context) {
     m_finalPass->prepareFrame(context);
   }
 
-  // bool isMeshHighlight = context.renderSettings.renderMode == RenderMode::MeshHighlight;
-
-  bool exclusiveMode = m_debugPass && context.renderSettings.renderMode != RenderMode::Solid /*&& !isMeshHighlight*/
-                    && m_debugPass->isExclusive();
-
-  // if (isMeshHighlight) {
-  //   m_debugPass->render(context);
-  // }
+  bool exclusiveMode
+      = m_debugPass && context.renderSettings.renderMode != RenderMode::Solid && m_debugPass->isExclusive();
 
   if (!exclusiveMode && m_basePass) {
     m_basePass->render(context);
@@ -211,9 +215,16 @@ void Renderer::renderFrame(RenderContext& context) {
 }
 
 void Renderer::endFrame(RenderContext& context) {
+  CPU_ZONE_NC("Renderer::endFrame", color::BLUE);
   if (!context.commandBuffer) {
     return;
   }
+
+  #ifdef GAME_ENGINE_USE_GPU_PROFILING
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    profiler->collect(context.commandBuffer.get());
+  }
+#endif
 
   context.commandBuffer->end();
 
@@ -317,29 +328,10 @@ void Renderer::initializeGpuProfiler_(rhi::RenderingApi api) {
     return;
   }
 
-  if (api == rhi::RenderingApi::Vulkan) {
-    auto deviceVk = static_cast<rhi::DeviceVk*>(m_device.get());
+  bool success = gpuProfiler->initialize(m_device.get());
 
-    auto cmdBuffer   = m_device->createCommandBuffer();
-    auto cmdBufferVk = static_cast<rhi::CommandBufferVk*>(cmdBuffer.get());
-
-    bool success = gpuProfiler->initialize(deviceVk->getPhysicalDevice(),
-                                           deviceVk->getDevice(),
-                                           deviceVk->getGraphicsQueue(),
-                                           cmdBufferVk->getCommandBuffer());
-
-    if (success) {
-      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
-    }
-
-  } else if (api == rhi::RenderingApi::Dx12) {
-    auto deviceDx12 = static_cast<rhi::DeviceDx12*>(m_device.get());
-
-    bool success = gpuProfiler->initialize(nullptr, deviceDx12->getDevice(), deviceDx12->getCommandQueue(), nullptr);
-
-    if (success) {
-      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
-    }
+  if (success) {
+    GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
   }
 }
 

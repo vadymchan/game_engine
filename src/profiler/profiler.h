@@ -29,8 +29,18 @@
 
 #define PROFILE_FRAME_IMAGE(image, width, height, offset, flip) FrameImage(image, width, height, offset, flip)
 
-#endif  // GAME_ENGINE_USE_TRACY
+#else
+#define PROFILE_FRAME()
+#define PROFILE_ALLOC(ptr, size)
+#define PROFILE_FREE(ptr)
+#define PROFILE_PLOT(name, value)
+#define PROFILE_MESSAGE(text, size)
+#define PROFILE_MESSAGE_L(text)
+#define PROFILE_TEXT(text)
+#define PROFILE_NAME(name)
+#define PROFILE_APP_INFO(name, size)
+#endif
+
+#endif 
 
 #endif  // GAME_ENGINE_PROFILER_H
-
-#endif

@@ -18,6 +18,7 @@
 #include "gfx/rhi/shader_manager.h"
 #include "input/input_manager.h"
 #include "profiler/backends/gpu_profiler_factory.h"
+#include "profiler/profiler.h"
 #include "resources/assimp/assimp_material_loader.h"
 #include "resources/assimp/assimp_render_model_loader.h"
 #include "resources/cgltf/cgltf_material_loader.h"
@@ -186,6 +187,14 @@ auto Engine::initialize() -> bool {
 
   auto applicationModeStr = config->get<std::string>("applicationMode");
 
+  // profiler
+  // ------------------------------------------------------------------------
+  std::unique_ptr<gpu::GpuProfiler> gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
+  ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
+#ifdef TRACY_ENABLE
+  tracy::SetThreadName("Main Thread");
+#endif
+
   // window
   // ------------------------------------------------------------------------
   m_window_ = std::make_unique<Window>(renderingApiString,
@@ -207,12 +216,11 @@ auto Engine::initialize() -> bool {
   m_renderer_ = std::make_unique<gfx::renderer::Renderer>();
   m_renderer_->initialize(m_window_.get(), renderingApi);
 
+
   // These managers are depending on the renderer device
   auto device = m_renderer_->getDevice();
   ServiceLocator::s_provide<TextureManager>(device);
   ServiceLocator::s_provide<BufferManager>(device);
-  std::unique_ptr<gpu::GpuProfiler> gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
-  ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
 
   systemManager->addSystem(std::make_unique<LightSystem>(device, m_renderer_->getResourceManager()));
 
@@ -308,6 +316,7 @@ auto Engine::initialize() -> bool {
 }
 
 void Engine::render() {
+  CPU_ZONE_NC("Engine::render", color::CYAN);
   auto windowSize = m_window_->getSize();
   if (windowSize.width() == 0 || windowSize.height() == 0 || m_window_->isMinimized()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -316,27 +325,63 @@ void Engine::render() {
 
   auto& renderSettings = m_editor_->getRenderParams();
 
-  auto context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), renderSettings);
+  gfx::renderer::RenderContext context;
+  {
+    CPU_ZONE_NC("Renderer Begin Frame", color::BLUE);
+    context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), renderSettings);
+  }
 
-  m_renderer_->renderFrame(context);
+  {
+    CPU_ZONE_NC("Renderer Main Pass", color::GREEN);
+    m_renderer_->renderFrame(context);
+  }
 
   if (renderSettings.appMode == gfx::renderer::ApplicationRenderMode::Editor) {
+    CPU_ZONE_NC("Editor UI Render", color::ORANGE);
     m_editor_->render(context);
   }
 
-  m_renderer_->endFrame(context);
+  {
+    CPU_ZONE_NC("Renderer End Frame", color::BLUE);
+    m_renderer_->endFrame(context);
+  }
 }
 
 void Engine::run() {
   m_isRunning_ = true;
 
   while (m_isRunning_) {
+    CPU_ZONE_NC("Engine Main Loop", color::WHITE);
+    PROFILE_FRAME();
+
     auto timingManager = ServiceLocator::s_get<TimingManager>();
-    timingManager->update();
-    processEvents_();
-    m_application_->processInput();  // TODO: consider remove
-    update_(timingManager->getDeltaTime());
-    render();
+    {
+      CPU_ZONE_N("Timing Update");
+      timingManager->update();
+    }
+
+    {
+      CPU_ZONE_N("Event Processing");
+      processEvents_();
+    }
+
+    {
+      CPU_ZONE_N("Input Processing");
+      m_application_->processInput();
+    }
+
+    {
+      CPU_ZONE_N("Game Update");
+      update_(timingManager->getDeltaTime());
+    }
+
+    {
+      CPU_ZONE_NC("Full Render Pipeline", color::CYAN);
+      render();
+    }
+
+    PROFILE_PLOT("FPS", timingManager->getFPS());
+    PROFILE_PLOT("Frame Time (ms)", timingManager->getFrameTime());
   }
 }
 

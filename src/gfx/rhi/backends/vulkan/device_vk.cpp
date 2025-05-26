@@ -13,7 +13,8 @@
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "platform/common/window.h"
-#include "profiler/backends/gpu_profiler_vk.h"
+//#include "profiler/backends/gpu_profiler_vk.h"
+#include "profiler/backends/gpu_profiler.h"
 #include "utils/service/service_locator.h"
 #include "utils/logger/global_logger.h"
 
@@ -532,12 +533,11 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     }
   }
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
-  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
-    auto* cmdBufferVk = static_cast<CommandBufferVk*>(cmdBuffer);
-    profiler->collect(cmdBufferVk->getCommandBuffer());
-  }
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+//#ifdef GAME_ENGINE_USE_GPU_PROFILING
+//  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+//    profiler->collect(cmdBuffer);
+//  }
+//#endif  // GAME_ENGINE_USE_GPU_PROFILING
 }
 
 void DeviceVk::waitIdle() {

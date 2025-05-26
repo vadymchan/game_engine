@@ -8,6 +8,7 @@
 #include "gfx/renderer/debug_strategies/wireframe_strategy.h"
 #include "gfx/renderer/debug_strategies/world_grid_strategy.h"
 #include "utils/logger/global_logger.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {

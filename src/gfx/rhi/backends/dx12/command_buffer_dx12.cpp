@@ -10,9 +10,9 @@
 #include "gfx/rhi/backends/dx12/render_pass_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
-#include "utils/logger/global_logger.h"
+#include "profiler/gpu.h"
 #include "utils/color/color.h"
-
+#include "utils/logger/global_logger.h"
 
 namespace game_engine {
 namespace gfx {
@@ -297,7 +297,7 @@ void CommandBufferDx12::drawIndexedInstanced(
     GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
     return;
   }
-
+  GPU_MARKER(this, "DX12: Draw Indexed Instanced");
   m_commandList_->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
@@ -749,36 +749,42 @@ void CommandBufferDx12::clearDepthStencil(
 }
 
 void CommandBufferDx12::beginDebugMarker(const std::string& name, const float color[4]) {
-  UINT pixelColor = color::GREEN;                    // Default green
+  // TODO: Implement color support for debug markers in DX12
+  // UINT pixelColor = color::GREEN;                     // Default green
 
-  if (color) {
-    pixelColor = ((UINT)(color[3] * 255.0f) << 24) |  // A
-                 ((UINT)(color[2] * 255.0f) << 16) |  // B
-                 ((UINT)(color[1] * 255.0f) << 8) |   // G
-                 ((UINT)(color[0] * 255.0f) << 0);    // R
-  }
+  // if (color) {
+  //   pixelColor = ((UINT)(color[3] * 255.0f) << 24) |  // A
+  //                ((UINT)(color[2] * 255.0f) << 16) |  // B
+  //                ((UINT)(color[1] * 255.0f) << 8) |   // G
+  //                ((UINT)(color[0] * 255.0f) << 0);    // R
+  // }
 
-  m_commandList_->BeginEvent(pixelColor, name.c_str(), (UINT)name.length());
+  // 1 for the first parameter means the data is an ANSI string. Pass 0 for a wchar string.
+  
+    // we can call it only in renderdoc / PIX
+  //m_commandList_->BeginEvent(1, name.c_str(), (UINT)name.length());
 }
 
 void CommandBufferDx12::endDebugMarker() {
-  m_commandList_->EndEvent();
+  //m_commandList_->EndEvent();
 }
 
 void CommandBufferDx12::insertDebugMarker(const std::string& name, const float color[4]) {
-  UINT pixelColor = color::GREEN;  // Default green
+  // TODO: Implement color support for debug markers in DX12
+  // UINT pixelColor = color::GREEN;  // Default green
 
-  if (color) {
-    // clang-format off
-    pixelColor = 
-            ((UINT)(color[3] * 255.0f) << 24) | // A
-            ((UINT)(color[2] * 255.0f) << 16) | // B
-            ((UINT)(color[1] * 255.0f) << 8)  | // G
-            ((UINT)(color[0] * 255.0f) << 0);   // R
-    // clang-format on
-  }
+  // if (color) {
+  //   // clang-format off
+  //   pixelColor =
+  //           ((UINT)(color[3] * 255.0f) << 24) | // A
+  //           ((UINT)(color[2] * 255.0f) << 16) | // B
+  //           ((UINT)(color[1] * 255.0f) << 8)  | // G
+  //           ((UINT)(color[0] * 255.0f) << 0);   // R
+  //   // clang-format on
+  // }
 
-  m_commandList_->SetMarker(pixelColor, name.c_str(), (UINT)name.length());
+  // 1 for the first parameter means the data is an ANSI string. Pass 0 for a wchar string.
+  //m_commandList_->SetMarker(1, name.c_str(), (UINT)name.length());
 }
 
 void CommandBufferDx12::bindDescriptorHeaps() {

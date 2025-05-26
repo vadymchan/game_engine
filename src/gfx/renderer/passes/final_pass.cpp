@@ -1,6 +1,7 @@
 #include "gfx/renderer/passes/final_pass.h"
 
 #include "gfx/renderer/frame_resources.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {

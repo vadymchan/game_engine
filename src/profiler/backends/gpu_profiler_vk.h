@@ -1,14 +1,14 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_VK_H
 #define GAME_ENGINE_GPU_PROFILER_VK_H
 
+#include "profiler/backends/config.h"
 #include "profiler/backends/gpu_profiler.h"
 
 #ifdef GAME_ENGINE_USE_VULKAN
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 
-// TODO: consider adding more robust check for GPU profiling support
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef PROFILER_GPU_VK_ENABLED
 #include <vulkan/vulkan.h>
 
 #include <tracy/TracyVulkan.hpp>
@@ -16,7 +16,6 @@ using TracyVkContextType = TracyVkCtx;
 #else
 using TracyVkContextType = void*;
 #endif
-
 namespace game_engine {
 namespace gpu {
 
@@ -25,48 +24,28 @@ class GpuProfilerVk final : public GpuProfiler {
   GpuProfilerVk() = default;
   ~GpuProfilerVk() override { destroy(); }
 
-  bool initialize(void* physicalDevice, void* device, void* queue, void* commandBuffer) override;
+  bool initialize(gfx::rhi::Device* device) override;
   void destroy() override;
   void setContextName(const std::string& name) override;
 
   void newFrame() override {}  // Not used in Vulkan
-  void collect(void* commandBuffer) override;
+  void collect(gfx::rhi::CommandBuffer* commandBuffer) override;
 
-  template <uint32_t Color, size_t N>
-  void beginZoneNC(gfx::rhi::CommandBuffer* cb, const char (&name)[N]) {
-#if defined(TRACY_ENABLE)
-    auto* vk = static_cast<gfx::rhi::CommandBufferVk*>(cb);
-    TracyVkNamedZoneC(m_tracyContext, _zone, vk->getCommandBuffer(), name, Color, true);
-#endif
-  }
-
-  template <uint32_t Color>
-  void beginZoneC(gfx::rhi::CommandBuffer* cb) {
-#if defined(TRACY_ENABLE)
-    auto* vk = static_cast<gfx::rhi::CommandBufferVk*>(cb);
-    TracyVkZoneC(m_tracyContext, vk->getCommandBuffer(), Color, true);
-#endif
-  }
-
-  template <size_t N>
-  void beginZoneN(gfx::rhi::CommandBuffer* cb, const char (&name)[N]) {
-#if defined(TRACY_ENABLE)
-    auto* vk = static_cast<gfx::rhi::CommandBufferVk*>(cb);
-    TracyVkNamedZone(m_tracyContext, _zone, vk->getCommandBuffer(), name, true);
-#endif
-  }
-
+  void beginZone(gfx::rhi::CommandBuffer* cmdBuf, const std::string& name, uint32_t color = 0) override;
   void endZone(gfx::rhi::CommandBuffer* cmdBuffer) override;
 
+  void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color = 0) override;
+
+  void* getContext() const override { return m_tracyContext; }
+
   private:
-  TracyVkContextType m_tracyContext = nullptr;
-  bool               m_initialized  = false;
+  TracyVkContextType                       m_tracyContext = nullptr;
+  bool                                     m_initialized  = false;
+  std::unique_ptr<gfx::rhi::CommandBuffer> m_cmdBuffer;
 };
 
 }  // namespace gpu
 }  // namespace game_engine
-
-#include "profiler/backends/gpu_profiler.inl"
 
 #endif  // GAME_ENGINE_USE_VULKAN
 #endif  // GAME_ENGINE_GPU_PROFILER_VK_H

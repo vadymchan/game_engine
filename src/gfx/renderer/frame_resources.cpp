@@ -7,6 +7,8 @@
 #include "gfx/renderer/render_resource_manager.h"
 #include "utils/memory/align.h"
 #include "utils/service/service_locator.h"
+#include "profiler/profiler.h"
+
 
 namespace game_engine {
 namespace gfx {
@@ -54,6 +56,7 @@ void FrameResources::resize(const math::Dimension2Di& newDimension) {
 }
 
 void FrameResources::updatePerFrameResources(const RenderContext& context) {
+  CPU_ZONE_NC("FrameResources::updatePerFrameResources", color::YELLOW);
   if (!m_lightSystem) {
     auto systemManager = ServiceLocator::s_get<SystemManager>();
     m_lightSystem      = systemManager->getSystem<LightSystem>();

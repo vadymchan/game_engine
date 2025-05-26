@@ -17,7 +17,8 @@
 #include "gfx/rhi/backends/dx12/synchronization_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "platform/common/window.h"
-#include "profiler/backends/gpu_profiler_dx12.h"
+//#include "profiler/backends/gpu_profiler_dx12.h"
+#include "profiler/backends/gpu_profiler.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
@@ -423,11 +424,11 @@ void DeviceDx12::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     m_commandQueue_->ExecuteCommandLists(std::size(ppCommandLists), ppCommandLists);
   }
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
-  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
-    profiler->collect(nullptr);
-  }
-#endif
+//#ifdef GAME_ENGINE_USE_GPU_PROFILING
+//  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+//    profiler->collect(nullptr);
+//  }
+//#endif
 
   if (signalFence) {
     FenceDx12* fenceDx12 = dynamic_cast<FenceDx12*>(signalFence);

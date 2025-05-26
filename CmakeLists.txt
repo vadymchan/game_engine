@@ -809,7 +809,7 @@ endif()
 if(BUILD_TRACY)
     FetchContent_MakeAvailable(tracy)
     target_compile_definitions(${PROJECT_NAME} PRIVATE 
-        TRACY_ON_DEMAND
+        # TRACY_ON_DEMAND
         $<$<CONFIG:Debug,RelWithDebInfo>:TRACY_ENABLE>
         # TRACY_CALLSTACK 
         # TRACY_ONLY_LOCALHOST  

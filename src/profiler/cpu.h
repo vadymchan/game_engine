@@ -1,20 +1,18 @@
 #ifndef GAME_ENGINE_PROFILER_CPU_H
 #define GAME_ENGINE_PROFILER_CPU_H
 
-#ifdef GAME_ENGINE_USE_CPU_PROFILING
+#include "profiler/backends/config.h"
 
+#ifdef PROFILER_CPU_ENABLED
 #include "utils/color/color.h"
-
-#ifdef GAME_ENGINE_USE_TRACY
-//#define TRACY_ENABLE
 #include <tracy/Tracy.hpp>
 
 #define CPU_ZONE()                         ZoneScoped
 #define CPU_ZONE_N(name)                   ZoneScopedN(name)
 
 // for color you can use predefined colors or g_toFloatArray function from color namespace
-#define CPU_ZONE_C(color)                  ZoneScopedC(color)
-#define CPU_ZONE_NC(name, color)           ZoneScopedNC(name, color)
+#define CPU_ZONE_C(color)                  ZoneScopedC((color) >> 8)
+#define CPU_ZONE_NC(name, color)           ZoneScopedNC(name, (color) >> 8)
 
 // Lockable objects tracking
 #define CPU_LOCKABLE(type, varname)        TracyLockable(type, varname)
@@ -47,4 +45,3 @@
 
 #endif  // GAME_ENGINE_USE_CPU_PROFILING
 
-#endif

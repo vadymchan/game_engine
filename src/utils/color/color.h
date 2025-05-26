@@ -10,27 +10,26 @@ namespace color {
 // Predefined colors in RGBA format (0xRRGGBBAA)
 
 // Basic colors
-constexpr uint32_t RED   = 0xFF'00'00'FF;  
-constexpr uint32_t GREEN = 0x00'FF'00'FF;  
-constexpr uint32_t BLUE  = 0x00'00'FF'FF;  
-constexpr uint32_t WHITE = 0xFF'FF'FF'FF;  
-constexpr uint32_t BLACK = 0x00'00'00'FF;  
+constexpr uint32_t RED   = 0xFF'00'00'FF;
+constexpr uint32_t GREEN = 0x00'FF'00'FF;
+constexpr uint32_t BLUE  = 0x00'00'FF'FF;
+constexpr uint32_t WHITE = 0xFF'FF'FF'FF;
+constexpr uint32_t BLACK = 0x00'00'00'FF;
 
 // Extended colors
-constexpr uint32_t YELLOW  = 0xFF'FF'00'FF;  
-constexpr uint32_t MAGENTA = 0xFF'00'FF'FF;  
-constexpr uint32_t CYAN    = 0x00'FF'FF'FF;  
-constexpr uint32_t ORANGE  = 0xFF'A6'00'FF;  
-constexpr uint32_t PURPLE  = 0x80'00'80'FF;  
+constexpr uint32_t YELLOW  = 0xFF'FF'00'FF;
+constexpr uint32_t MAGENTA = 0xFF'00'FF'FF;
+constexpr uint32_t CYAN    = 0x00'FF'FF'FF;
+constexpr uint32_t ORANGE  = 0xFF'A6'00'FF;
+constexpr uint32_t PURPLE  = 0x80'00'80'FF;
 
 // Gray variations
-constexpr uint32_t DARK_GRAY  = 0x40'40'40'FF;  
-constexpr uint32_t GRAY       = 0x80'80'80'FF;  
-constexpr uint32_t LIGHT_GRAY = 0xC0'C0'C0'FF;  
+constexpr uint32_t DARK_GRAY  = 0x40'40'40'FF;
+constexpr uint32_t GRAY       = 0x80'80'80'FF;
+constexpr uint32_t LIGHT_GRAY = 0xC0'C0'C0'FF;
 
 // Semi-transparent colors
-constexpr uint32_t CYAN_SEMI = 0x80'80'FF'B3; 
-
+constexpr uint32_t CYAN_SEMI = 0x80'80'FF'B3;
 
 /**
  * @brief Convert color value to normalized float array
@@ -59,6 +58,25 @@ constexpr uint32_t CYAN_SEMI = 0x80'80'FF'B3;
     static_cast<float>((color >> 24) & 0xFF) / 255.0f   // A
   };
   // clang-format on
+}
+
+
+/**
+ * @brief Strip alpha channel from RGBA color
+ * @param rgba Color value in 0xRRGGBBAA format
+ * @return Color value in 0xRRGGBB format (without alpha)
+ *
+ * This function removes the alpha channel from a color value,
+ * effectively converting it to RGB format.
+ *
+ * Example usage:
+ * @code
+ * uint32_t colorWithAlpha = 0xFF'00'00'80; // Red with 50% alpha
+ * uint32_t rgbColor = g_stripAlpha(colorWithAlpha); // Result: 0xFF'00'00
+ * @endcode
+ */
+[[nodiscard]] constexpr uint32_t g_stripAlpha(uint32_t rgba) noexcept {
+  return rgba >> 8;
 }
 
 }  // namespace color

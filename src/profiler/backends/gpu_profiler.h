@@ -1,7 +1,12 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_H
 #define GAME_ENGINE_GPU_PROFILER_H
 
+#include "profiler/backends/config.h"
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #include "gfx/rhi/interface/command_buffer.h"
+#include "gfx/rhi/interface/device.h"
 #include "utils/color/color.h"
 
 #include <string>
@@ -9,51 +14,26 @@
 namespace game_engine {
 namespace gpu {
 
-class GpuProfilerVk;
-class GpuProfilerDx12;
-
 class GpuProfiler {
   public:
   virtual ~GpuProfiler() = default;
 
-  virtual bool initialize(void* physicalDevice, void* device, void* queue, void* commandBuffer) = 0;
-  virtual void destroy()                                                                        = 0;
-  virtual void setContextName(const std::string& name)                                          = 0;
+  virtual bool initialize(gfx::rhi::Device* device)    = 0;
+  virtual void destroy()                               = 0;
+  virtual void setContextName(const std::string& name) = 0;
 
-  virtual void newFrame()                   = 0;
-  virtual void collect(void* commandBuffer) = 0;
+  virtual void newFrame()                                      = 0;
+  virtual void collect(gfx::rhi::CommandBuffer* commandBuffer) = 0;
 
-  template <uint32_t Color, size_t N>
-  void beginZoneNC(gfx::rhi::CommandBuffer* cmdBuf, const char (&name)[N]);
+  virtual void beginZone(gfx::rhi::CommandBuffer* cmdBuf, const std::string& name, uint32_t color = 0) = 0;
+  virtual void endZone(gfx::rhi::CommandBuffer* cmdBuffer)                                             = 0;
 
-  template <uint32_t Color>
-  void beginZoneC(gfx::rhi::CommandBuffer* cmdBuf);
+  virtual void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color = 0) = 0;
 
-  template <size_t N>
-  void beginZoneN(gfx::rhi::CommandBuffer* cmdBuf, const char (&name)[N]);
+  virtual void* getContext() const = 0;
 
-  virtual void endZone(gfx::rhi::CommandBuffer* cmdBuffer) = 0;
-
-  template <uint32_t Color, size_t N>
-  void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const char (&name)[N]) {
-    if (!cmdBuffer) {
-      return;
-    }
-
-    auto colorArray = color::g_toFloatArray(Color);
-    cmdBuffer->insertDebugMarker(name, colorArray.data());
-  }
-
-  template <size_t N>
-  void insertMarkerN(gfx::rhi::CommandBuffer* cmdBuffer, const char (&name)[N]) {
-    if (!cmdBuffer) {
-      return;
-    }
-
-    cmdBuffer->insertDebugMarker(name, nullptr);
-  }
-
-  void setApi(gfx::rhi::RenderingApi api) noexcept { m_api = api; }
+  gfx::rhi::RenderingApi getApi() const noexcept { return m_api; }
+  void                   setApi(gfx::rhi::RenderingApi api) noexcept { m_api = api; }
 
   protected:
   gfx::rhi::RenderingApi m_api = gfx::rhi::RenderingApi::Count;
@@ -61,5 +41,7 @@ class GpuProfiler {
 
 }  // namespace gpu
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
 
 #endif  // GAME_ENGINE_GPU_PROFILER_H
