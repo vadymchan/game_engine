@@ -94,7 +94,7 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
   colorClear.color[0] = 0.0f;
   colorClear.color[1] = 0.0f;
   colorClear.color[2] = 0.0f;
-  colorClear.color[3] = 0.0f;
+  colorClear.color[3] = 1.0f;
   clearValues.push_back(colorClear);
 
   commandBuffer->beginRenderPass(m_renderPass, currentFramebuffer, clearValues);

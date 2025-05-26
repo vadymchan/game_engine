@@ -110,6 +110,20 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
 
     m_commandList_->OMSetBlendFactor(pipelineDx12->getBlendFactors().data());
 
+    const auto& desc = pipelineDx12->getDesc();
+    if (desc.depthStencil.stencilTestEnable) {
+      uint32_t frontRef = desc.depthStencil.front.reference;
+      uint32_t backRef  = desc.depthStencil.back.reference;
+
+      if (frontRef != backRef) {
+        GlobalLogger::Log(
+            LogLevel::Warning,
+            "DX12 limitation: Different front/back stencil references not supported. Using front reference.");
+      }
+
+      m_commandList_->OMSetStencilRef(frontRef);
+    }
+
     D3D_PRIMITIVE_TOPOLOGY topology = g_getPrimitiveTopologyDx12(pipelineDx12->getPrimitiveType());
     m_commandList_->IASetPrimitiveTopology(topology);
 
