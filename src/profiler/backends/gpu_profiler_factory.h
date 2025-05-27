@@ -1,6 +1,8 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_FACTORY_H
 #define GAME_ENGINE_GPU_PROFILER_FACTORY_H
 
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #include "gfx/rhi/common/rhi_enums.h"
 #include "profiler/backends/gpu_profiler.h"
 
@@ -16,5 +18,7 @@ class GpuProfilerFactory {
 
 }  // namespace gpu
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
 
 #endif  // GAME_ENGINE_GPU_PROFILER_FACTORY_H

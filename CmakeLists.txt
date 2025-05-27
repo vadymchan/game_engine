@@ -27,6 +27,7 @@ option(BUILD_ENTT         "Build the EnTT library"      ON)
 option(USE_VULKAN  "Use Vulkan as the rendering API"                 ON)
 option(USE_OPENGL  "Use OpenGL as the rendering API (DEPRECATED!)"  OFF)
 option(USE_DIRECTX "Use DirectX as the rendering API"          ${WIN32})
+option(FORCE_RHI_API "Force specific RHI API at compile time (disables runtime selection)" OFF)
 
 option(USE_PROFILING "Enable profiling support (CPU + GPU)" OFF)
 
@@ -43,9 +44,10 @@ cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
 cmake_dependent_option(BUILD_IMGUIFILEDIALOG  "Build the ImGuiFileDialog library" ON "BUILD_IMGUI" OFF)
 
-cmake_dependent_option(BUILD_TRACY        "Build Tracy profiler"                  ON  "USE_PROFILING"             OFF)
-cmake_dependent_option(USE_CPU_PROFILING  "Enable CPU profiling (requires Tracy)" ON  "USE_PROFILING;BUILD_TRACY" OFF)
-cmake_dependent_option(USE_GPU_PROFILING  "Enable GPU profiling (requires Tracy)" ON  "USE_PROFILING;BUILD_TRACY" OFF)
+cmake_dependent_option(BUILD_TRACY                         "Build Tracy profiler" ON  "USE_PROFILING"                 OFF)
+cmake_dependent_option(USE_CPU_PROFILING  "Enable CPU profiling (requires Tracy)" ON  "USE_PROFILING;BUILD_TRACY"     OFF)
+cmake_dependent_option(USE_GPU_PROFILING                   "Enable GPU profiling" ON  "USE_PROFILING"                 OFF)
+cmake_dependent_option(USE_TRACY_GPU_PROFILING       "Enable Tracy GPU profiling" ON  "USE_GPU_PROFILING;BUILD_TRACY" OFF)
 
 # separately, since they're cross-platform 
 option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON)
@@ -497,6 +499,37 @@ target_include_directories(${PROJECT_NAME} PUBLIC src)
 
 string(TOUPPER "${PROJECT_NAME}" PROJECT_UPPER)
 
+if((USE_VULKAN OR USE_DIRECTX) AND FORCE_RHI_API)
+    set(AVAILABLE_RHI_APIS "")
+    if(USE_VULKAN)
+        list(APPEND AVAILABLE_RHI_APIS "Vulkan")
+    endif()
+    if(USE_DIRECTX)
+        list(APPEND AVAILABLE_RHI_APIS "DirectX")
+    endif()
+
+    list(GET AVAILABLE_RHI_APIS 0 DEFAULT_RHI_API)
+    
+    set(FORCED_RHI_API "${DEFAULT_RHI_API}" CACHE STRING "Select which RHI API to force")
+    set_property(CACHE FORCED_RHI_API PROPERTY STRINGS ${AVAILABLE_RHI_APIS})
+    
+    message(STATUS "Available RHI APIs for forcing: ${AVAILABLE_RHI_APIS}")
+    message(STATUS "Forcing RHI API: ${FORCED_RHI_API}")
+
+    if(NOT FORCED_RHI_API IN_LIST AVAILABLE_RHI_APIS)
+        message(WARNING "Selected RHI API '${FORCED_RHI_API}' is not available. Using default: ${DEFAULT_RHI_API}")
+        set(FORCED_RHI_API "${DEFAULT_RHI_API}" CACHE STRING "Select which RHI API to force" FORCE)
+    endif()
+
+    if(FORCED_RHI_API STREQUAL "Vulkan")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_FORCE_VULKAN)
+        message(STATUS "Added macro: ${PROJECT_UPPER}_FORCE_VULKAN")
+    elseif(FORCED_RHI_API STREQUAL "DirectX") 
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_FORCE_DIRECTX)
+        message(STATUS "Added macro: ${PROJECT_UPPER}_FORCE_DIRECTX")
+    endif()
+endif()
+
 if(BUILD_SDL)
     FetchContent_MakeAvailable(sdl)
     
@@ -829,6 +862,10 @@ endif()
 
 if(USE_GPU_PROFILING)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_GPU_PROFILING)
+endif()
+
+if(USE_TRACY_GPU_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_TRACY_GPU_PROFILING)
 endif()
 
 if(USE_VULKAN)

@@ -1,15 +1,17 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_H
 #define GAME_ENGINE_GPU_PROFILER_H
 
-#include "profiler/backends/config.h"
-
 #ifdef GAME_ENGINE_USE_GPU_PROFILING
 
-#include "gfx/rhi/interface/command_buffer.h"
-#include "gfx/rhi/interface/device.h"
+#include "gfx/rhi/common/rhi_enums.h"
 #include "utils/color/color.h"
 
 #include <string>
+
+namespace game_engine::gfx::rhi {
+class CommandBuffer;
+class Device;
+}  // namespace game_engine::gfx::rhi
 
 namespace game_engine {
 namespace gpu {

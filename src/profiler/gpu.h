@@ -73,108 +73,80 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 #define CONCAT_IMPL(x, y) x##y
 #define CONCAT(x, y)      CONCAT_IMPL(x, y)
 
-// helper
-#define GPU_ZONE_DISPATCH(Func, cmdBuf, name, color)                                                \
-  do {                                                                                              \
-    auto* gpuProfiler = ServiceLocator::s_get<gpu::GpuProfiler>();                                  \
-    if (!gpuProfiler) {                                                                             \
-      GlobalLogger::Log(LogLevel::Warning, "GPU profiler not found");                               \
-      break;                                                                                        \
-    }                                                                                               \
-    using Api = gfx::rhi::RenderingApi;                                                             \
-    switch (gpuProfiler->getApi()) {                                                                \
-      case Api::Vulkan: {                                                                           \
-        Func##_VK(gpuProfiler, cmdBuf, name, color);                                                \
-      } break;                                                                                      \
-      case Api::Dx12: {                                                                             \
-        Func##_DX12(gpuProfiler, cmdBuf, name, color);                                              \
-      } break;                                                                                      \
-      default: {                                                                                    \
-        GlobalLogger::Log(LogLevel::Error, "GPU profiler implementation for this API was removed"); \
-      }                                                                                             \
-    }                                                                                               \
-  } while (false)
-
-// vulkan
-#ifdef PROFILER_GPU_VK_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 
 #include <tracy/TracyVulkan.hpp>
 
-#define GPU_ZONE_DETAIL_FUNC_NC_VK(profiler, cmdBuf, name, color)                        \
-  TracyVkNamedZoneC(static_cast<TracyVkCtx>(profiler->getContext()),                     \
-                    CONCAT(vk##_zone_, __LINE__),                                       \
-                    static_cast<gfx::rhi::CommandBufferVk*>(cmdBuf)->getCommandBuffer(), \
-                    name,                                                                \
-                    ((color) >> 8),                                                      \
-                    true);
+#define GPU_TRACY_ZONE_NC(cmdBuf, name, color)                                                        \
+  TracyVkNamedZoneC(static_cast<TracyVkCtx>(ServiceLocator::s_get<gpu::GpuProfiler>()->getContext()), \
+                    CONCAT(vk_zone_, __LINE__),                                                       \
+                    static_cast<gfx::rhi::CommandBufferVk*>(cmdBuf)->getCommandBuffer(),              \
+                    name,                                                                             \
+                    ((color) >> 8),                                                                   \
+                    true)
 
-#define GPU_ZONE_DETAIL_FUNC_N_VK(profiler, cmdBuf, name, unused1)                      \
-  TracyVkNamedZone(static_cast<TracyVkCtx>(profiler->getContext()),                     \
-                   CONCAT(vk##_zone_, __LINE__),                                        \
-                   static_cast<gfx::rhi::CommandBufferVk*>(cmdBuf)->getCommandBuffer(), \
-                   name,                                                                \
-                   true);
+#define GPU_TRACY_ZONE_N(cmdBuf, name)                                                               \
+  TracyVkNamedZone(static_cast<TracyVkCtx>(ServiceLocator::s_get<gpu::GpuProfiler>()->getContext()), \
+                   CONCAT(vk_zone_, __LINE__),                                                       \
+                   static_cast<gfx::rhi::CommandBufferVk*>(cmdBuf)->getCommandBuffer(),              \
+                   name,                                                                             \
+                   true)
 
-#define GPU_ZONE_DETAIL_FUNC_C_VK(profiler, cmdBuf, unused1, color, unused2)        \
-  TracyVkZoneC(static_cast<TracyVkCtx>(profiler->getContext()),                     \
-               static_cast<gfx::rhi::CommandBufferVk*>(cmdBuf)->getCommandBuffer(), \
-               ((color) >> 8),                                                      \
-               true);
-#else
-#define GPU_ZONE_DETAIL_FUNC_NC_VK(...) nullptr
-#define GPU_ZONE_DETAIL_FUNC_N_VK(...)  nullptr
-#define GPU_ZONE_DETAIL_FUNC_C_VK(...)  nullptr
-#endif
+#define GPU_TRACY_ZONE_C(cmdBuf, color)                                                          \
+  TracyVkZoneC(static_cast<TracyVkCtx>(ServiceLocator::s_get<gpu::GpuProfiler>()->getContext()), \
+               static_cast<gfx::rhi::CommandBufferVk*>(cmdBuf)->getCommandBuffer(),              \
+               ((color) >> 8),                                                                   \
+               true)
 
-// dx12
-#ifdef PROFILER_GPU_DX12_ENABLED
+#elif defined(GAME_ENGINE_TRACY_GPU_PROFILING_DX12)
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 
 #include <tracy/TracyD3D12.hpp>
 
-#define GPU_ZONE_DETAIL_FUNC_NC_DX12(profiler, cmdBuf, name, color)                         \
-  TracyD3D12NamedZoneC(static_cast<TracyD3D12Ctx>(profiler->getContext()),                  \
-                       CONCAT(dx12##_zone_, __LINE__),                                      \
-                       static_cast<gfx::rhi::CommandBufferDx12*>(cmdBuf)->getCommandList(), \
-                       name,                                                                \
-                       ((color) >> 8),                                                      \
-                       true);
+#define GPU_TRACY_ZONE_NC(cmdBuf, name, color)                                                              \
+  TracyD3D12NamedZoneC(static_cast<TracyD3D12Ctx>(ServiceLocator::s_get<gpu::GpuProfiler>()->getContext()), \
+                       CONCAT(dx12_zone_, __LINE__),                                                        \
+                       static_cast<gfx::rhi::CommandBufferDx12*>(cmdBuf)->getCommandList(),                 \
+                       name,                                                                                \
+                       ((color) >> 8),                                                                      \
+                       true)
 
-#define GPU_ZONE_DETAIL_FUNC_N_DX12(profiler, cmdBuf, name, unused1)                       \
-  TracyD3D12NamedZone(static_cast<TracyD3D12Ctx>(profiler->getContext()),                  \
-                      CONCAT(dx12##_zone_, __LINE__),                                      \
-                      static_cast<gfx::rhi::CommandBufferDx12*>(cmdBuf)->getCommandList(), \
-                      name,                                                                \
-                      true);
+#define GPU_TRACY_ZONE_N(cmdBuf, name)                                                                     \
+  TracyD3D12NamedZone(static_cast<TracyD3D12Ctx>(ServiceLocator::s_get<gpu::GpuProfiler>()->getContext()), \
+                      CONCAT(dx12_zone_, __LINE__),                                                        \
+                      static_cast<gfx::rhi::CommandBufferDx12*>(cmdBuf)->getCommandList(),                 \
+                      name,                                                                                \
+                      true)
 
-#define GPU_ZONE_DETAIL_FUNC_C_DX12(profiler, cmdBuf, unused1, color, unused2)         \
-  TracyD3D12ZoneC(static_cast<TracyD3D12Ctx>(profiler->getContext()),                  \
-                  static_cast<gfx::rhi::CommandBufferDx12*>(cmdBuf)->getCommandList(), \
-                  ((color) >> 8),                           \
-                  true);
+#define GPU_TRACY_ZONE_C(cmdBuf, color)                                                                \
+  TracyD3D12ZoneC(static_cast<TracyD3D12Ctx>(ServiceLocator::s_get<gpu::GpuProfiler>()->getContext()), \
+                  static_cast<gfx::rhi::CommandBufferDx12*>(cmdBuf)->getCommandList(),                 \
+                  ((color) >> 8),                                                                      \
+                  true)
+
 #else
-#define GPU_ZONE_DETAIL_FUNC_NC_DX12(...) nullptr
-#define GPU_ZONE_DETAIL_FUNC_N_DX12(...)  nullptr
-#define GPU_ZONE_DETAIL_FUNC_C_DX12(...)  nullptr
+#define GPU_TRACY_ZONE_NC(cmdBuf, name, color)
+#define GPU_TRACY_ZONE_N(cmdBuf, name) 
+#define GPU_TRACY_ZONE_C(cmdBuf, color) 
 #endif
 
 // main macros (client will call these)
 #define GPU_ZONE_NC(cmdBuf, name, color)                                                   \
   auto CONCAT(_gpu_zone_, __LINE__) = ::game_engine::gpu::createZone(cmdBuf, name, color); \
-  GPU_ZONE_DISPATCH(GPU_ZONE_DETAIL_FUNC_NC, cmdBuf, name, color)
+  GPU_TRACY_ZONE_NC(cmdBuf, name, color)
 
 #define GPU_ZONE_N(cmdBuf, name)                                                    \
   auto CONCAT(_gpu_zone_, __LINE__) = ::game_engine::gpu::createZone(cmdBuf, name); \
-  GPU_ZONE_DISPATCH(GPU_ZONE_DETAIL_FUNC_N, cmdBuf, name, 0)
+  GPU_TRACY_ZONE_N(cmdBuf, name)
 
 #define GPU_ZONE_C(cmdBuf, color)                                                        \
   auto CONCAT(_gpu_zone_, __LINE__) = ::game_engine::gpu::createZone(cmdBuf, "", color); \
-  GPU_ZONE_DISPATCH(GPU_ZONE_DETAIL_FUNC_C, cmdBuf, std::string{}, color)
+  GPU_TRACY_ZONE_C(cmdBuf, color)
 
-#define GPU_MARKER(cmdBuf, name)          ::game_engine::gpu::insertMarker(cmdBuf, name);
+#define GPU_MARKER(cmdBuf, name)          ::game_engine::gpu::insertMarker(cmdBuf, name)
 
-#define GPU_MARKER_C(cmdBuf, name, color) ::game_engine::gpu::insertMarker(cmdBuf, name, color);
+#define GPU_MARKER_C(cmdBuf, name, color) ::game_engine::gpu::insertMarker(cmdBuf, name, color)
 
 #endif  // GAME_ENGINE_NO_GPU_MACROS
 

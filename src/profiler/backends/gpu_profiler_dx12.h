@@ -6,9 +6,7 @@
 
 #ifdef GAME_ENGINE_USE_DX12
 
-#include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
-
-#ifdef PROFILER_GPU_DX12_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
 #include <tracy/TracyD3D12.hpp>
 using TracyD3D12ContextType = TracyD3D12Ctx;
 #else
@@ -39,7 +37,7 @@ class GpuProfilerDx12 final : public GpuProfiler {
 
   private:
   TracyD3D12ContextType m_tracyContext = nullptr;
-  bool             m_initialized  = false;
+  bool                  m_initialized  = false;
 };
 
 }  // namespace gpu

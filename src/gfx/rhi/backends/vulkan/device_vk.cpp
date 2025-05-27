@@ -532,12 +532,6 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
       GlobalLogger::Log(LogLevel::Error, "Failed to submit command buffer");
     }
   }
-
-//#ifdef GAME_ENGINE_USE_GPU_PROFILING
-//  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
-//    profiler->collect(cmdBuffer);
-//  }
-//#endif  // GAME_ENGINE_USE_GPU_PROFILING
 }
 
 void DeviceVk::waitIdle() {

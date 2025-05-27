@@ -8,7 +8,7 @@
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 
-#ifdef PROFILER_GPU_VK_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
 #include <vulkan/vulkan.h>
 
 #include <tracy/TracyVulkan.hpp>

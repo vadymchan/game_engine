@@ -2,6 +2,7 @@
 
 #ifdef GAME_ENGINE_USE_DX12
 
+#include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "utils/logger/global_logger.h"
 
@@ -19,7 +20,7 @@ bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
     return false;
   }
 
-#ifdef PROFILER_GPU_DX12_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
   auto* deviceDx12 = static_cast<gfx::rhi::DeviceDx12*>(device);
   m_tracyContext   = TracyD3D12Context(deviceDx12->getDevice(), deviceDx12->getCommandQueue());
 
@@ -29,8 +30,6 @@ bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
   }
 
   GlobalLogger::Log(LogLevel::Info, "Tracy DirectX 12 profiler initialized");
-#else
-  GlobalLogger::Log(LogLevel::Info, "Tracy profiling disabled, using native GPU markers only");
 #endif
 
   setApi(gfx::rhi::RenderingApi::Dx12);
@@ -40,10 +39,11 @@ bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
 
 void GpuProfilerDx12::destroy() {
   if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
-#ifdef PROFILER_GPU_DX12_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12Destroy(m_tracyContext);
     m_tracyContext = nullptr;
@@ -56,10 +56,11 @@ void GpuProfilerDx12::destroy() {
 
 void GpuProfilerDx12::setContextName(const std::string& name) {
   if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
-#ifdef PROFILER_GPU_DX12_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12ContextName(m_tracyContext, name.c_str(), name.size());
   }
@@ -68,10 +69,11 @@ void GpuProfilerDx12::setContextName(const std::string& name) {
 
 void GpuProfilerDx12::newFrame() {
   if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
-#ifdef PROFILER_GPU_DX12_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12NewFrame(m_tracyContext);
   }
@@ -80,24 +82,25 @@ void GpuProfilerDx12::newFrame() {
 
 void GpuProfilerDx12::collect(gfx::rhi::CommandBuffer* commandBuffer) {
   if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
     return;
   }
 
-#ifdef PROFILER_GPU_DX12_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12Collect(m_tracyContext);
   }
 #endif
 }
 
-void GpuProfilerDx12::beginZone(gfx::rhi::CommandBuffer* cmdBuf, const std::string& name, uint32_t color) {
-  if (!cmdBuf) {
+void GpuProfilerDx12::beginZone(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color) {
+  if (!cmdBuffer) {
     return;
   }
 
   auto colorArray = color != 0 ? color::g_toFloatArray(color).data() : nullptr;
 
-  cmdBuf->beginDebugMarker(name, colorArray);
+  cmdBuffer->beginDebugMarker(name, colorArray);
 }
 
 void GpuProfilerDx12::endZone(gfx::rhi::CommandBuffer* cmdBuffer) {

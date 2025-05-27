@@ -3,7 +3,7 @@
 
 #include "profiler/backends/config.h"
 
-#ifdef PROFILER_CPU_ENABLED
+#ifdef GAME_ENGINE_USE_CPU_PROFILING
 #include "utils/color/color.h"
 #include <tracy/Tracy.hpp>
 

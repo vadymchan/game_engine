@@ -74,9 +74,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
     deletionManager->setDefaultFrameDelay(MAX_FRAMES_IN_FLIGHT);
   }
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
-  initializeGpuProfiler_(api);
-#endif
+  initializeGpuProfiler_();
 
   m_initialized = true;
 
@@ -97,12 +95,9 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
   fence->wait();
   fence->reset();
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
-  auto* gpuProfiler = ServiceLocator::s_get<gpu::GpuProfiler>();
-  if (gpuProfiler) {
-    gpuProfiler->newFrame();
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    profiler->newFrame();
   }
-#endif
 
   auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
   if (deletionManager) {
@@ -220,11 +215,9 @@ void Renderer::endFrame(RenderContext& context) {
     return;
   }
 
-  #ifdef GAME_ENGINE_USE_GPU_PROFILING
   if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
     profiler->collect(context.commandBuffer.get());
   }
-#endif
 
   context.commandBuffer->end();
 
@@ -321,17 +314,13 @@ bool Renderer::onViewportResize(const math::Dimension2Di& newDimension) {
   return true;
 }
 
-void Renderer::initializeGpuProfiler_(rhi::RenderingApi api) {
-  auto gpuProfiler = ServiceLocator::s_get<gpu::GpuProfiler>();
-  if (!gpuProfiler) {
-    GlobalLogger::Log(LogLevel::Warning, "GPU profiler not found in ServiceLocator");
-    return;
-  }
-
-  bool success = gpuProfiler->initialize(m_device.get());
-
-  if (success) {
-    GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
+void Renderer::initializeGpuProfiler_() {
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    if (profiler->initialize(m_device.get())) {
+      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
+    } else {
+      GlobalLogger::Log(LogLevel::Warning, "Failed to initialize GPU profiler");
+    }
   }
 }
 

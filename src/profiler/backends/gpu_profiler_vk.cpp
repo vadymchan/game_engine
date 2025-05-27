@@ -2,6 +2,7 @@
 
 #ifdef GAME_ENGINE_USE_VULKAN
 
+#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "utils/logger/global_logger.h"
 
@@ -19,7 +20,7 @@ bool GpuProfilerVk::initialize(gfx::rhi::Device* device) {
     return false;
   }
 
-#ifdef PROFILER_GPU_VK_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
   m_cmdBuffer      = device->createCommandBuffer();
   auto cmdBufferVk = static_cast<gfx::rhi::CommandBufferVk*>(m_cmdBuffer.get());
 
@@ -50,7 +51,7 @@ void GpuProfilerVk::destroy() {
     return;
   }
 
-#ifdef PROFILER_GPU_VK_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
   if (m_tracyContext) {
     TracyVkDestroy(m_tracyContext);
     m_tracyContext = nullptr;
@@ -66,7 +67,7 @@ void GpuProfilerVk::setContextName(const std::string& name) {
     return;
   }
 
-#ifdef PROFILER_GPU_VK_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
   if (m_tracyContext) {
     TracyVkContextName(m_tracyContext, name.c_str(), name.size());
   }
@@ -78,7 +79,7 @@ void GpuProfilerVk::collect(gfx::rhi::CommandBuffer* commandBuffer) {
     return;
   }
 
-#ifdef PROFILER_GPU_VK_ENABLED
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
   if (m_tracyContext && commandBuffer) {
     auto commandBufferVk = static_cast<gfx::rhi::CommandBufferVk*>(commandBuffer);
     TracyVkCollect(m_tracyContext, commandBufferVk->getCommandBuffer());
@@ -86,14 +87,14 @@ void GpuProfilerVk::collect(gfx::rhi::CommandBuffer* commandBuffer) {
 #endif
 }
 
-void GpuProfilerVk::beginZone(gfx::rhi::CommandBuffer* cmdBuf, const std::string& name, uint32_t color) {
-  if (!cmdBuf) {
+void GpuProfilerVk::beginZone(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color) {
+  if (!cmdBuffer) {
     return;
   }
 
   auto colorArray = color != 0 ? color::g_toFloatArray(color).data() : nullptr;
 
-  cmdBuf->beginDebugMarker(name, colorArray);
+  cmdBuffer->beginDebugMarker(name, colorArray);
 }
 
 void GpuProfilerVk::endZone(gfx::rhi::CommandBuffer* cmdBuffer) {

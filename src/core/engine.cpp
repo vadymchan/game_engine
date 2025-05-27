@@ -176,21 +176,52 @@ auto Engine::initialize() -> bool {
   configManager->addConfig(configPath);
   auto config = configManager->getConfig(configPath);
 
-  auto renderingApiString = config->get<std::string>("renderingApi");
+  // rendering API
+  // ------------------------------------------------------------------------
+  gfx::rhi::RenderingApi renderingApi;
+  std::string            renderingApiString;
 
-  gfx::rhi::RenderingApi renderingApi = gfx::rhi::RenderingApi::Vulkan;
+#ifdef GAME_ENGINE_FORCE_VULKAN
+  renderingApi       = gfx::rhi::RenderingApi::Vulkan;
+  renderingApiString = "vulkan";
+  GlobalLogger::Log(LogLevel::Info, "RHI API forced to Vulkan at compile time");
+#elif defined(GAME_ENGINE_FORCE_DIRECTX)
+  renderingApi       = gfx::rhi::RenderingApi::Dx12;
+  renderingApiString = "dx12";
+  GlobalLogger::Log(LogLevel::Info, "RHI API forced to DirectX at compile time");
+#else
+  renderingApiString = config->get<std::string>("renderingApi");
+
   if (renderingApiString == "dx12") {
     renderingApi = gfx::rhi::RenderingApi::Dx12;
   } else if (renderingApiString == "vulkan") {
     renderingApi = gfx::rhi::RenderingApi::Vulkan;
+  } else {
+    renderingApi       = gfx::rhi::RenderingApi::Vulkan;
+    renderingApiString = "vulkan";
   }
 
+  GlobalLogger::Log(LogLevel::Info, "RHI API selected from config: " + renderingApiString);
+#endif
+
+  // application mode
+  // ------------------------------------------------------------------------
   auto applicationModeStr = config->get<std::string>("applicationMode");
 
   // profiler
   // ------------------------------------------------------------------------
-  std::unique_ptr<gpu::GpuProfiler> gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
-  ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+  auto gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
+  if (gpuProfiler) {
+    ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
+    GlobalLogger::Log(LogLevel::Info, "GPU profiler created for " + renderingApiString);
+  } else {
+    GlobalLogger::Log(LogLevel::Warning, "Failed to create GPU profiler for " + renderingApiString);
+  }
+#else
+  GlobalLogger::Log(LogLevel::Info, "GPU profiling disabled at compile time");
+#endif
+
 #ifdef TRACY_ENABLE
   tracy::SetThreadName("Main Thread");
 #endif
@@ -215,7 +246,6 @@ auto Engine::initialize() -> bool {
   // ------------------------------------------------------------------------
   m_renderer_ = std::make_unique<gfx::renderer::Renderer>();
   m_renderer_->initialize(m_window_.get(), renderingApi);
-
 
   // These managers are depending on the renderer device
   auto device = m_renderer_->getDevice();
@@ -351,7 +381,7 @@ void Engine::run() {
   m_isRunning_ = true;
 
   while (m_isRunning_) {
-    CPU_ZONE_NC("Engine Main Loop", color::WHITE);
+    CPU_ZONE_NC("Engine Main Loop", color::BLACK);
     PROFILE_FRAME();
 
     auto timingManager = ServiceLocator::s_get<TimingManager>();
