@@ -82,6 +82,7 @@ Engine::~Engine() {
   ServiceLocator::s_remove<BufferManager>();
   ServiceLocator::s_remove<gpu::GpuProfiler>();
 
+
   GlobalLogger::Shutdown();
 }
 
@@ -355,33 +356,20 @@ void Engine::render() {
 
   auto& renderSettings = m_editor_->getRenderParams();
 
-  gfx::renderer::RenderContext context;
-  {
-    CPU_ZONE_NC("Renderer Begin Frame", color::BLUE);
-    context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), renderSettings);
-  }
+  auto context = m_renderer_->beginFrame(ServiceLocator::s_get<SceneManager>()->getCurrentScene(), renderSettings);
 
-  {
-    CPU_ZONE_NC("Renderer Main Pass", color::GREEN);
-    m_renderer_->renderFrame(context);
-  }
+  m_renderer_->renderFrame(context);
 
-  if (renderSettings.appMode == gfx::renderer::ApplicationRenderMode::Editor) {
-    CPU_ZONE_NC("Editor UI Render", color::ORANGE);
-    m_editor_->render(context);
-  }
+  m_editor_->render(context);
 
-  {
-    CPU_ZONE_NC("Renderer End Frame", color::BLUE);
-    m_renderer_->endFrame(context);
-  }
+  m_renderer_->endFrame(context);
 }
 
 void Engine::run() {
+  CPU_ZONE_NC("Engine Main Loop", color::BLACK);
   m_isRunning_ = true;
 
   while (m_isRunning_) {
-    CPU_ZONE_NC("Engine Main Loop", color::BLACK);
     PROFILE_FRAME();
 
     auto timingManager = ServiceLocator::s_get<TimingManager>();
@@ -405,10 +393,7 @@ void Engine::run() {
       update_(timingManager->getDeltaTime());
     }
 
-    {
-      CPU_ZONE_NC("Full Render Pipeline", color::CYAN);
-      render();
-    }
+    render();
 
     PROFILE_PLOT("FPS", timingManager->getFPS());
     PROFILE_PLOT("Frame Time (ms)", timingManager->getFrameTime());

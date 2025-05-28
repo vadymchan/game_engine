@@ -40,6 +40,7 @@ cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Alloca
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for DX12" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(BUILD_WINPIX_EVENT "Fetch WinPix Event Runtime (PIX3) for PIX markers" ON "USE_DIRECTX" OFF)
 
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
 cmake_dependent_option(BUILD_IMGUIFILEDIALOG  "Build the ImGuiFileDialog library" ON "BUILD_IMGUI" OFF)
@@ -100,6 +101,11 @@ if(USE_VCPKG)
     set(VCPKG_VERSION edge)
     include(cmake/vcpkg.cmake)
     
+    # if(NOT VCPKG_NO_INIT)
+    #     message("Call vcpkg_init() explicitly")
+    #     vcpkg_init()
+    # endif()
+
 endif()
     
 # -------------------------------------------------------------------------------------
@@ -543,15 +549,31 @@ if(BUILD_SDL)
         message(FATAL_ERROR "Wrong directory in ${SDL_BUILD_INCLUDE_DIR}")
     endif()
 
+    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
+    add_dependencies(${PROJECT_NAME} SDL2::SDL2)
+
     # SDL's include directories are in the build directory (not the source directory   
     # like other third parties in this project), due to SDL generating includes during build.
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+    #     ${sdl_SOURCE_DIR}/include
+    #     $<BUILD_INTERFACE:${sdl_BINARY_DIR}/include>
+    #     $<BUILD_INTERFACE:${sdl_BINARY_DIR}/include-config-$<CONFIG>/${SDL_VERSION_DIR}>)
+    
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+        ${sdl_SOURCE_DIR}/include
+        ${SDL_BUILD_INCLUDE_DIR}
+        ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR}
         $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
         $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
     )
-    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
+
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+    #     $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
+    #     $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
+    # )
+    # target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_SDL)
 endif()
@@ -615,9 +637,21 @@ if(BUILD_IMGUI)
         target_link_libraries(imgui_library PRIVATE d3d12 dxgi)
     endif()
 
+    # if(BUILD_SDL)
+    #     target_include_directories(imgui_library PRIVATE ${SDL_INCLUDE_DIRS})
+    #     target_link_libraries(imgui_library PRIVATE SDL2::SDL2)
+    # endif()
+
     if(BUILD_SDL)
-        target_include_directories(imgui_library PRIVATE ${SDL_INCLUDE_DIRS})
-        target_link_libraries(imgui_library PRIVATE SDL2)
+        FetchContent_MakeAvailable(sdl)
+        target_link_libraries(imgui_library PRIVATE SDL2::SDL2)
+        target_include_directories(imgui_library SYSTEM PRIVATE
+            ${sdl_SOURCE_DIR}/include
+            ${sdl_BINARY_DIR}/include
+            ${sdl_BINARY_DIR}/include/${SDL_VERSION_DIR}
+            $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
+            $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
+        )
     endif()
 
     target_include_directories(imgui_library PRIVATE
@@ -1061,6 +1095,30 @@ endif()
 # END: DirectX Tool Kit
 # -------------------------------------------------------------------------------------
 
+# BEGIN: WinPix Event Runtime (PIX3)
+# -------------------------------------------------------------------------------------
+if(BUILD_WINPIX_EVENT)
+    message(STATUS "Fetching WinPix Event Runtime (PIX3)...")
+
+    find_package(winpixevent QUIET)
+    if(NOT winpixevent_FOUND)
+        vcpkg_add_package(winpixevent)
+        find_package(winpixevent CONFIG REQUIRED)
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::WinPixEventRuntime)
+
+    # if(TARGET Microsoft::WinPixEventRuntime)
+    #     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    #         COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #                 $<TARGET_FILE:Microsoft::WinPixEventRuntime>
+    #                 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    # endif()
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_PIX ${PROJECT_UPPER}_USE_WINPIX_EVENT) 
+endif()
+# END: WinPix Event Runtime
+# -------------------------------------------------------------------------------------
 
 if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTX)
     message(FATAL_ERROR "At least one of Vulkan, OpenGL or DirectX must be selected for graphics API")

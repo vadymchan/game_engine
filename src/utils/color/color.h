@@ -22,6 +22,7 @@ constexpr uint32_t MAGENTA = 0xFF'00'FF'FF;
 constexpr uint32_t CYAN    = 0x00'FF'FF'FF;
 constexpr uint32_t ORANGE  = 0xFF'A6'00'FF;
 constexpr uint32_t PURPLE  = 0x80'00'80'FF;
+constexpr uint32_t BROWN   = 0x8B'45'13'FF;
 
 // Gray variations
 constexpr uint32_t DARK_GRAY  = 0x40'40'40'FF;

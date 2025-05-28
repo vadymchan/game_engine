@@ -1,8 +1,6 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_H
 #define GAME_ENGINE_GPU_PROFILER_H
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
-
 #include "gfx/rhi/common/rhi_enums.h"
 #include "utils/color/color.h"
 
@@ -43,7 +41,5 @@ class GpuProfiler {
 
 }  // namespace gpu
 }  // namespace game_engine
-
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
 
 #endif  // GAME_ENGINE_GPU_PROFILER_H

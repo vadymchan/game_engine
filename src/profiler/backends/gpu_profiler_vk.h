@@ -1,6 +1,8 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_VK_H
 #define GAME_ENGINE_GPU_PROFILER_VK_H
 
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #include "profiler/backends/config.h"
 #include "profiler/backends/gpu_profiler.h"
 
@@ -48,4 +50,5 @@ class GpuProfilerVk final : public GpuProfiler {
 }  // namespace game_engine
 
 #endif  // GAME_ENGINE_USE_VULKAN
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
 #endif  // GAME_ENGINE_GPU_PROFILER_VK_H

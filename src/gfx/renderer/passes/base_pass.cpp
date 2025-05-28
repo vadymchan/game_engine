@@ -50,7 +50,7 @@ void BasePass::resize(const math::Dimension2Di& newDimension) {
 }
 
 void BasePass::prepareFrame(const RenderContext& context) {
-  CPU_ZONE_NC("BasePass::prepareFrame", color::GREEN);
+  CPU_ZONE_NC("BasePass::prepareFrame", color::YELLOW);
 
   std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
   std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
@@ -72,6 +72,7 @@ void BasePass::prepareFrame(const RenderContext& context) {
                        modelDirtyFlags[model];              // Model was modified
 
     if (needsUpdate) {
+      CPU_ZONE_NC("Update Instance Buffers", color::YELLOW);
       updateInstanceBuffer_(model, matrices, cache);
     }
   }
@@ -82,14 +83,14 @@ void BasePass::prepareFrame(const RenderContext& context) {
 }
 
 void BasePass::render(const RenderContext& context) {
-  CPU_ZONE_NC("BasePass::render", color::GREEN);
+  CPU_ZONE_NC("BasePass::render", color::ORANGE);
 
   auto commandBuffer = context.commandBuffer.get();
   if (!commandBuffer || !m_renderPass || m_framebuffers.empty()) {
     return;
   }
 
-  GPU_ZONE_NC(commandBuffer, "Base Pass", color::GREEN);
+  GPU_ZONE_NC(commandBuffer, "Base Pass", color::ORANGE);
 
   std::vector<rhi::ClearValue> clearValues;
 
@@ -118,36 +119,38 @@ void BasePass::render(const RenderContext& context) {
   commandBuffer->setViewport(m_viewport);
   commandBuffer->setScissor(m_scissor);
 
-  for (const auto& drawData : m_drawData) {
-    commandBuffer->setPipeline(drawData.pipeline);
+  {
+    CPU_ZONE_NC("Draw Models", color::GREEN);
+    for (const auto& drawData : m_drawData) {
+      commandBuffer->setPipeline(drawData.pipeline);
 
-    if (m_frameResources->getViewDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      if (m_frameResources->getViewDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      }
+
+      if (drawData.modelMatrixDescriptorSet) {
+        commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+      }
+
+      if (m_frameResources->getLightDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(2, m_frameResources->getLightDescriptorSet());
+      }
+
+      if (drawData.materialDescriptorSet) {
+        commandBuffer->bindDescriptorSet(3, drawData.materialDescriptorSet);
+      }
+
+      if (m_frameResources->getDefaultSamplerDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(4, m_frameResources->getDefaultSamplerDescriptorSet());
+      }
+
+      commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
+      commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
+      commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
+
+      commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
     }
-
-    if (drawData.modelMatrixDescriptorSet) {
-      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
-    }
-
-    if (m_frameResources->getLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(2, m_frameResources->getLightDescriptorSet());
-    }
-
-    if (drawData.materialDescriptorSet) {
-      commandBuffer->bindDescriptorSet(3, drawData.materialDescriptorSet);
-    }
-
-    if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(4, m_frameResources->getDefaultSamplerDescriptorSet());
-    }
-
-    commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
-    commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
-    commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
-
-    commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
   }
-
   commandBuffer->endRenderPass();
 }
 

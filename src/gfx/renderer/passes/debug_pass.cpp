@@ -58,6 +58,8 @@ void DebugPass::prepareFrame(const RenderContext& context) {
 }
 
 void DebugPass::render(const RenderContext& context) {
+  CPU_ZONE_NC("DebugPass::render", color::ORANGE);
+
   if (m_debugStrategy) {
     m_debugStrategy->render(context);
   }

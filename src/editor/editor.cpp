@@ -8,6 +8,7 @@
 #include "ecs/components/selected.h"
 #include "ecs/components/tags.h"
 #include "input/input_manager.h"
+#include "profiler/profiler.h"
 #include "scene/scene_loader.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_saver.h"
@@ -60,6 +61,8 @@ bool Editor::initialize(Window*                        window,
 }
 
 void Editor::render(gfx::renderer::RenderContext& context) {
+  CPU_ZONE_NC("Editor::render", color::ORANGE);
+
   if (!m_imguiContext) {
     return;
   }
@@ -102,19 +105,22 @@ void Editor::render(gfx::renderer::RenderContext& context) {
 
   ImGuizmo::BeginFrame();
 
-  renderMainMenu();
+  {
+    CPU_ZONE_NC("UI Windows", color::ORANGE);
+    renderMainMenu();
 
-  ImGui::DockSpaceOverViewport();
+    ImGui::DockSpaceOverViewport();
 
-  renderPerformanceWindow();
-  renderViewportWindow(context);
-  renderModeSelectionWindow();
-  renderSceneHierarchyWindow();
-  renderInspectorWindow();
-  renderGizmoControlsWindow();
-  renderControlsWindow();
+    renderPerformanceWindow();
+    renderViewportWindow(context);
+    renderModeSelectionWindow();
+    renderSceneHierarchyWindow();
+    renderInspectorWindow();
+    renderGizmoControlsWindow();
+    renderControlsWindow();
 
-  renderNotifications();
+    renderNotifications();
+  }
 
   auto backBufferTexture = m_frameResources->getRenderTargets(context.currentImageIndex).backBuffer;
 
@@ -339,9 +345,9 @@ void Editor::renderModeSelectionWindow() {
     m_renderParams.renderMode = gfx::renderer::RenderMode::LightVisualization;
   }
 
-  //if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
-  //  m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
-  //}
+  // if (ImGui::RadioButton("World Grid", m_renderParams.renderMode == gfx::renderer::RenderMode::WorldGrid)) {
+  //   m_renderParams.renderMode = gfx::renderer::RenderMode::WorldGrid;
+  // }
 
   ImGui::End();
 }

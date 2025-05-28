@@ -1,12 +1,11 @@
 #ifndef GAME_ENGINE_PROFILER_H
 #define GAME_ENGINE_PROFILER_H
 
-#ifdef GAME_ENGINE_USE_PROFILING
-
 #include "profiler/cpu.h"
 #include "profiler/gpu.h"
 
-#ifdef GAME_ENGINE_USE_TRACY
+#if defined(GAME_ENGINE_USE_PROFILING) && defined(GAME_ENGINE_USE_TRACY)
+
 #include <tracy/Tracy.hpp>
 
 #define PROFILE_FRAME()                                         FrameMark
@@ -39,7 +38,6 @@
 #define PROFILE_TEXT(text)
 #define PROFILE_NAME(name)
 #define PROFILE_APP_INFO(name, size)
-#endif
 
 #endif 
 

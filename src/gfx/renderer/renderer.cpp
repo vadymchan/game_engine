@@ -83,7 +83,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 }
 
 RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSettings) {
-  CPU_ZONE_NC("Renderer::beginFrame", color::BLUE);
+  CPU_ZONE_NC("Renderer::beginFrame", color::PURPLE);
   if (!m_initialized) {
     GlobalLogger::Log(LogLevel::Error, "Renderer not initialized");
     return RenderContext();
@@ -113,6 +113,8 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   auto commandBuffer = acquireCommandBuffer_();
   commandBuffer->begin();
+
+  GPU_ZONE_NC(commandBuffer.get(), "Begin Frame", color::PURPLE);
 
 #ifdef GAME_ENGINE_RHI_DX12
   if (m_device->getApiType() == rhi::RenderingApi::Dx12) {
@@ -153,11 +155,13 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
 void Renderer::renderFrame(RenderContext& context) {
   CPU_ZONE_NC("Renderer::renderFrame", color::CYAN);
-  GPU_ZONE_NC(context.commandBuffer.get(), "Frame Render", color::CYAN);
+
   if (!context.commandBuffer || !m_frameResources.get()) {
     GlobalLogger::Log(LogLevel::Error, "Invalid render context");
     return;
   }
+
+  GPU_ZONE_NC(context.commandBuffer.get(), "Frame Render", color::CYAN);
 
   // TODO: divide this into separate functions
 
@@ -210,14 +214,18 @@ void Renderer::renderFrame(RenderContext& context) {
 }
 
 void Renderer::endFrame(RenderContext& context) {
-  CPU_ZONE_NC("Renderer::endFrame", color::BLUE);
+  CPU_ZONE_NC("Renderer::endFrame", color::PURPLE);
   if (!context.commandBuffer) {
     return;
   }
 
-  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
-    profiler->collect(context.commandBuffer.get());
-  }
+  {
+    GPU_ZONE_NC(context.commandBuffer.get(), "End Frame", color::PURPLE);
+
+    if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+      profiler->collect(context.commandBuffer.get());
+    }
+  } 
 
   context.commandBuffer->end();
 

@@ -1,10 +1,11 @@
 #ifndef GAME_ENGINE_PROFILER_GPU_H
 #define GAME_ENGINE_PROFILER_GPU_H
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
-
 #include "profiler/backends/gpu_profiler.h"
 #include "profiler/backends/gpu_profiler_factory.h"
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #include "utils/color/color.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
@@ -127,8 +128,8 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 
 #else
 #define GPU_TRACY_ZONE_NC(cmdBuf, name, color)
-#define GPU_TRACY_ZONE_N(cmdBuf, name) 
-#define GPU_TRACY_ZONE_C(cmdBuf, color) 
+#define GPU_TRACY_ZONE_N(cmdBuf, name)
+#define GPU_TRACY_ZONE_C(cmdBuf, color)
 #endif
 
 // main macros (client will call these)
@@ -149,6 +150,16 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 #define GPU_MARKER_C(cmdBuf, name, color) ::game_engine::gpu::insertMarker(cmdBuf, name, color)
 
 #endif  // GAME_ENGINE_NO_GPU_MACROS
+
+#else   // !GAME_ENGINE_USE_GPU_PROFILING
+
+#ifndef GAME_ENGINE_NO_GPU_MACROS
+#define GPU_ZONE_NC(cmdBuf, name, color)
+#define GPU_ZONE_N(cmdBuf, name)
+#define GPU_ZONE_C(cmdBuf, color)
+#define GPU_MARKER(cmdBuf, name)
+#define GPU_MARKER_C(cmdBuf, name, color)
+#endif
 
 #endif  // GAME_ENGINE_USE_GPU_PROFILING
 

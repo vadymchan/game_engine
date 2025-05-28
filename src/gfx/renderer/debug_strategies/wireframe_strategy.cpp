@@ -9,6 +9,7 @@
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {
@@ -75,6 +76,8 @@ void WireframeStrategy::prepareFrame(const RenderContext& context) {
 }
 
 void WireframeStrategy::render(const RenderContext& context) {
+  CPU_ZONE_NC("Wireframe Strategy", color::ORANGE);
+
   auto commandBuffer = context.commandBuffer.get();
   if (!commandBuffer || !m_renderPass || m_framebuffers.empty()) {
     return;
@@ -107,22 +110,25 @@ void WireframeStrategy::render(const RenderContext& context) {
   commandBuffer->setViewport(m_viewport);
   commandBuffer->setScissor(m_scissor);
 
-  for (const auto& drawData : m_drawData) {
-    commandBuffer->setPipeline(drawData.pipeline);
+  {
+    CPU_ZONE_NC("Draw Wireframe", color::GREEN);
+    for (const auto& drawData : m_drawData) {
+      commandBuffer->setPipeline(drawData.pipeline);
 
-    if (m_frameResources->getViewDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      if (m_frameResources->getViewDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      }
+
+      if (drawData.modelMatrixDescriptorSet) {
+        commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+      }
+
+      commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
+      commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
+      commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
+
+      commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
     }
-
-    if (drawData.modelMatrixDescriptorSet) {
-      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
-    }
-
-    commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
-    commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
-    commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
-
-    commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
   }
 
   commandBuffer->endRenderPass();

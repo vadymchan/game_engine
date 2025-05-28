@@ -1,6 +1,7 @@
 #ifndef GAME_ENGINE_ASSET_LOADER_H
 #define GAME_ENGINE_ASSET_LOADER_H
 
+#include "profiler/profiler.h"
 #include "utils/logger/global_logger.h"
 #include "utils/model/render_model_manager.h"
 #include "utils/service/service_locator.h"
@@ -73,6 +74,7 @@ class AssetLoader {
   }
 
   void loadModel(const std::filesystem::path& filepath, LoadCallback callback = nullptr) {
+    CPU_ZONE_NC("Load Model", color::BROWN);
     if (!m_running) {
       GlobalLogger::Log(LogLevel::Warning, "AssetLoader not running, initializing now");
       initialize();

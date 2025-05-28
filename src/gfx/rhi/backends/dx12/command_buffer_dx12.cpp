@@ -14,6 +14,12 @@
 #include "utils/color/color.h"
 #include "utils/logger/global_logger.h"
 
+#include <algorithm>
+
+#if defined(USE_PIX)
+#include <pix3.h>
+#endif
+
 namespace game_engine {
 namespace gfx {
 namespace rhi {
@@ -749,43 +755,50 @@ void CommandBufferDx12::clearDepthStencil(
 }
 
 void CommandBufferDx12::beginDebugMarker(const std::string& name, const float color[4]) {
-  // TODO: Implement color support for debug markers in DX12
-  // UINT pixelColor = color::GREEN;                     // Default green
+  if (name.empty()) {
+    return;
+  }
 
-  // if (color) {
-  //   pixelColor = ((UINT)(color[3] * 255.0f) << 24) |  // A
-  //                ((UINT)(color[2] * 255.0f) << 16) |  // B
-  //                ((UINT)(color[1] * 255.0f) << 8) |   // G
-  //                ((UINT)(color[0] * 255.0f) << 0);    // R
-  // }
-
-  // 1 for the first parameter means the data is an ANSI string. Pass 0 for a wchar string.
-  
-    // we can call it only in renderdoc / PIX
-  //m_commandList_->BeginEvent(1, name.c_str(), (UINT)name.length());
+#if defined(USE_PIX)
+  UINT64 pixColor = PIX_COLOR_DEFAULT;
+  if (color) {
+    pixColor = PIX_COLOR(static_cast<BYTE>(std::clamp(color[0], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[1], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[2], 0.f, 1.f) * 255));
+  }
+  PIXBeginEvent(m_commandList_.Get(), pixColor, "%s", name.c_str());
+#else
+  m_commandList_->BeginEvent(1, name.c_str(), static_cast<UINT>(name.length()));
+#endif
 }
 
 void CommandBufferDx12::endDebugMarker() {
-  //m_commandList_->EndEvent();
+#if defined(USE_PIX)
+  PIXEndEvent(m_commandList_.Get());
+#else
+  m_commandList_->EndEvent();
+#endif
 }
+
 
 void CommandBufferDx12::insertDebugMarker(const std::string& name, const float color[4]) {
-  // TODO: Implement color support for debug markers in DX12
-  // UINT pixelColor = color::GREEN;  // Default green
+  if (name.empty()) {
+    return;
+  }
 
-  // if (color) {
-  //   // clang-format off
-  //   pixelColor =
-  //           ((UINT)(color[3] * 255.0f) << 24) | // A
-  //           ((UINT)(color[2] * 255.0f) << 16) | // B
-  //           ((UINT)(color[1] * 255.0f) << 8)  | // G
-  //           ((UINT)(color[0] * 255.0f) << 0);   // R
-  //   // clang-format on
-  // }
-
-  // 1 for the first parameter means the data is an ANSI string. Pass 0 for a wchar string.
-  //m_commandList_->SetMarker(1, name.c_str(), (UINT)name.length());
+#if defined(USE_PIX)
+  UINT64 pixColor = PIX_COLOR_DEFAULT;
+  if (color) {
+    pixColor = PIX_COLOR(static_cast<BYTE>(std::clamp(color[0], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[1], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[2], 0.f, 1.f) * 255));
+  }
+  PIXSetMarker(m_commandList_.Get(), pixColor, "%s", name.c_str());
+#else
+  m_commandList_->SetMarker(1, name.c_str(), static_cast<UINT>(name.length()));
+#endif
 }
+
 
 void CommandBufferDx12::bindDescriptorHeaps() {
   ID3D12DescriptorHeap* heaps[2];

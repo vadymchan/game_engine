@@ -1,6 +1,8 @@
 #ifndef GAME_ENGINE_GPU_PROFILER_DX12_H
 #define GAME_ENGINE_GPU_PROFILER_DX12_H
 
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #include "profiler/backends/config.h"
 #include "profiler/backends/gpu_profiler.h"
 
@@ -44,4 +46,7 @@ class GpuProfilerDx12 final : public GpuProfiler {
 }  // namespace game_engine
 
 #endif  // GAME_ENGINE_USE_DX12
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
+
 #endif  // GAME_ENGINE_GPU_PROFILER_DX12_H

@@ -346,6 +346,7 @@ void FrameResources::createRenderTargets_(RenderTargets& targets, const math::Di
 }
 
 void FrameResources::updateViewResources_(const RenderContext& context) {
+  CPU_ZONE_NC("Update View Buffer", color::YELLOW);
   auto& registry = context.scene->getEntityRegistry();
   auto  view     = registry.view<Transform, Camera, CameraMatrices>();
 

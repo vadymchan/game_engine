@@ -1,5 +1,7 @@
 #include "profiler/backends/gpu_profiler_dx12.h"
 
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #ifdef GAME_ENGINE_USE_DX12
 
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
@@ -124,3 +126,5 @@ void GpuProfilerDx12::insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std
 }  // namespace game_engine
 
 #endif  // GAME_ENGINE_USE_DX12
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING

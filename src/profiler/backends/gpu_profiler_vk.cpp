@@ -1,5 +1,7 @@
 #include "profiler/backends/gpu_profiler_vk.h"
 
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
 #ifdef GAME_ENGINE_USE_VULKAN
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
@@ -116,5 +118,7 @@ void GpuProfilerVk::insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::
 
 }  // namespace gpu
 }  // namespace game_engine
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
 
 #endif  // GAME_ENGINE_USE_VULKAN
