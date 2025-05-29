@@ -51,33 +51,15 @@ constexpr uint32_t CYAN_SEMI = 0x80'80'FF'B3;
  * @endcode
  */
 [[nodiscard]] constexpr std::array<float, 4> g_toFloatArray(uint32_t color) noexcept {
+  constexpr float inv255 = 1.0f / 255.0f;
   // clang-format off
   return {
-    static_cast<float>((color)       & 0xFF) / 255.0f,  // R
-    static_cast<float>((color >> 8)  & 0xFF) / 255.0f,  // G
-    static_cast<float>((color >> 16) & 0xFF) / 255.0f,  // B
-    static_cast<float>((color >> 24) & 0xFF) / 255.0f   // A
-  };
+    static_cast<float>((color >> 24) & 0xFF) * inv255,  // R
+    static_cast<float>((color >> 16) & 0xFF) * inv255,  // G
+    static_cast<float>((color >>  8) & 0xFF) * inv255,  // B
+    static_cast<float>((color      ) & 0xFF) * inv255   // A
+    };
   // clang-format on
-}
-
-
-/**
- * @brief Strip alpha channel from RGBA color
- * @param rgba Color value in 0xRRGGBBAA format
- * @return Color value in 0xRRGGBB format (without alpha)
- *
- * This function removes the alpha channel from a color value,
- * effectively converting it to RGB format.
- *
- * Example usage:
- * @code
- * uint32_t colorWithAlpha = 0xFF'00'00'80; // Red with 50% alpha
- * uint32_t rgbColor = g_stripAlpha(colorWithAlpha); // Result: 0xFF'00'00
- * @endcode
- */
-[[nodiscard]] constexpr uint32_t g_stripAlpha(uint32_t rgba) noexcept {
-  return rgba >> 8;
 }
 
 }  // namespace color
