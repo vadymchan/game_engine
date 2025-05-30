@@ -248,7 +248,6 @@ void CommandBufferVk::drawIndexedInstanced(
     return;
   }
 
-  GPU_MARKER(this, "Vulkan: Draw Indexed Instanced");
   vkCmdDrawIndexed(m_commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 

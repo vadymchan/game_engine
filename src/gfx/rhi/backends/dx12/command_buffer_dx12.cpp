@@ -303,7 +303,6 @@ void CommandBufferDx12::drawIndexedInstanced(
     GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
     return;
   }
-  GPU_MARKER(this, "DX12: Draw Indexed Instanced");
   m_commandList_->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
