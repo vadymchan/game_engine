@@ -987,25 +987,6 @@ if(USE_DIRECTX_AGILITY)
 
     message(STATUS "Fetching directx12-agility...")
 
-    # TODO: remove (deprecated)
-    # adds DirectX utility headers (e.g. d3dx12.h)
-    # if(USE_DIRECTX_HEADERS)
-    #     message(STATUS "Fetching DirectX-Headers...")
-    #     FetchContent_Declare(
-    #         DirectX-Headers
-    #         GIT_REPOSITORY https://github.com/microsoft/DirectX-Headers.git
-    #         # GIT_TAG v1.606.4
-    #         GIT_TAG v1.614.0 # probably version 1.614.0 DirectX Agility SDK required
-    #     )
-    #     FetchContent_MakeAvailable(DirectX-Headers)
-    #     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${DirectX-Headers_SOURCE_DIR}/include)
-    # endif()
-
-    # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
-    # vcpkg_add_package(directx12-agility)
-    # find_package(directx-headers CONFIG REQUIRED)
-    # find_package(directx12-agility CONFIG REQUIRED)
-
     find_package(directx-headers QUIET)
     find_package(directx12-agility QUIET)
     if(NOT directx12-agility_FOUND AND NOT directx-headers_FOUND)
@@ -1035,10 +1016,6 @@ endif()
 # TODO: this is currently used not only for DirectX 12 but for Vulkan as well
 if(USE_DIRECTX_SHADER_COMPILER)
     message(STATUS "Fetching directx-dxc...")
-
-    # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
-    # vcpkg_add_package(directx-dxc)
-    # find_package(directx-dxc CONFIG REQUIRED)
 
     find_package(directx-dxc QUIET)
     if(NOT directx-dxc_FOUND)
@@ -1107,13 +1084,6 @@ if(BUILD_WINPIX_EVENT)
     endif()
 
     target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::WinPixEventRuntime)
-
-    # if(TARGET Microsoft::WinPixEventRuntime)
-    #     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    #         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    #                 $<TARGET_FILE:Microsoft::WinPixEventRuntime>
-    #                 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-    # endif()
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_PIX ${PROJECT_UPPER}_USE_WINPIX_EVENT) 
 endif()
