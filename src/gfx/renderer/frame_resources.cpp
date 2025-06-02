@@ -10,7 +10,7 @@
 #include "profiler/profiler.h"
 
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -504,4 +504,4 @@ void FrameResources::clearEntityDirtyFlags_(const RenderContext& context) {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

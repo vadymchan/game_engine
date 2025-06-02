@@ -7,7 +7,7 @@
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -107,4 +107,4 @@ void FramebufferDx12::transitionToResourceState(CommandBufferDx12* cmdBuffer, Re
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

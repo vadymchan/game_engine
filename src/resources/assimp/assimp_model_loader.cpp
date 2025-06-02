@@ -1,4 +1,4 @@
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
 
 #include "resources/assimp/assimp_model_loader.h"
 
@@ -7,7 +7,7 @@
 #include "utils/model/mesh_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 std::unique_ptr<Model> AssimpModelLoader::loadModel(const std::filesystem::path& filePath) {
   Assimp::Importer importer;
@@ -196,6 +196,6 @@ void AssimpModelLoader::calculateTangentsAndBitangents(aiMesh* ai_mesh, std::vec
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP

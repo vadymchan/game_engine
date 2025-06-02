@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDER_RESOURCE_MANAGER_H
-#define GAME_ENGINE_RENDER_RESOURCE_MANAGER_H
+#ifndef ARISE_RENDER_RESOURCE_MANAGER_H
+#define ARISE_RENDER_RESOURCE_MANAGER_H
 
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
@@ -16,7 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -285,6 +285,6 @@ class RenderResourceManager {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_RESOURCE_MANAGER_H
+#endif  // ARISE_RENDER_RESOURCE_MANAGER_H

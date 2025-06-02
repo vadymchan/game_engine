@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_MOUSE_H
-#define GAME_ENGINE_MOUSE_H
+#ifndef ARISE_MOUSE_H
+#define ARISE_MOUSE_H
 
 #include <SDL.h>
 
-namespace game_engine {
+namespace arise {
 
 /**
  * @typedef MouseButton
@@ -31,6 +31,6 @@ using MouseButton = Uint8;
  */
 using MouseMotionState = Uint32;
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MOUSE_H
+#endif  // ARISE_MOUSE_H

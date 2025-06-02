@@ -1,10 +1,10 @@
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include <cassert>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -616,6 +616,6 @@ ResourceLayout g_getResourceLayoutDx12(D3D12_RESOURCE_STATES resourceState) {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12

@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_IMAGE_LOADER_MANAGER_H
-#define GAME_ENGINE_IMAGE_LOADER_MANAGER_H
+#ifndef ARISE_IMAGE_LOADER_MANAGER_H
+#define ARISE_IMAGE_LOADER_MANAGER_H
 
 #include "file_loader/image_file_loader.h"
 
@@ -8,7 +8,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class ImageLoaderManager {
   public:
@@ -23,6 +23,6 @@ class ImageLoaderManager {
   std::mutex                                                    mutex_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_IMAGE_LOADER_MANAGER_H
+#endif  // ARISE_IMAGE_LOADER_MANAGER_H

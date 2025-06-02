@@ -1,17 +1,17 @@
-#ifndef GAME_ENGINE_GPU_PROFILER_H
-#define GAME_ENGINE_GPU_PROFILER_H
+#ifndef ARISE_GPU_PROFILER_H
+#define ARISE_GPU_PROFILER_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "utils/color/color.h"
 
 #include <string>
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class CommandBuffer;
 class Device;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 class GpuProfiler {
@@ -40,6 +40,6 @@ class GpuProfiler {
 };
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_GPU_PROFILER_H
+#endif  // ARISE_GPU_PROFILER_H

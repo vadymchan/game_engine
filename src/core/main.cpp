@@ -3,9 +3,9 @@
 #include <core/engine.h>
 #include <core/application.h>
 
-using namespace game_engine;
+using namespace arise;
 
-#if (defined(_WIN32) || defined(_WIN64)) && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
+#if (defined(_WIN32) || defined(_WIN64)) && defined(ARISE_WINDOWS_SUBSYSTEM)
 #include <windows.h>
 int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,
@@ -24,11 +24,11 @@ auto main(int argc, char* argv[]) -> int {
     return EXIT_FAILURE;
   }
 
-  game_engine::Engine engine;
+  arise::Engine engine;
 
   engine.initialize();
 
-  auto game = std::make_unique<game_engine::Application>();
+  auto game = std::make_unique<arise::Application>();
 
   engine.setGame(game.get());
 

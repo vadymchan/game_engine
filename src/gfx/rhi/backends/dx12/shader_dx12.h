@@ -1,14 +1,14 @@
-#ifndef GAME_ENGINE_SHADER_DX12_H
-#define GAME_ENGINE_SHADER_DX12_H
+#ifndef ARISE_SHADER_DX12_H
+#define ARISE_SHADER_DX12_H
 
 #include "gfx/rhi/interface/shader.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include<mutex>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -42,8 +42,8 @@ class ShaderDx12 : public Shader {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12
 
-#endif  // GAME_ENGINE_SHADER_DX12_H
+#endif  // ARISE_SHADER_DX12_H

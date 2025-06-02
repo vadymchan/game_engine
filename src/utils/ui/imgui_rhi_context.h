@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_IMGUI_RHI_CONTEXT_H
-#define GAME_ENGINE_IMGUI_RHI_CONTEXT_H
+#ifndef ARISE_IMGUI_RHI_CONTEXT_H
+#define ARISE_IMGUI_RHI_CONTEXT_H
 
 #include "gfx/rhi/backends/dx12/descriptor_dx12.h"
 #include "gfx/rhi/backends/vulkan/descriptor_vk.h"
@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 
 /**
@@ -76,11 +76,11 @@ class ImGuiRHIContext {
 
   std::unique_ptr<rhi::Sampler> m_sampler;
 
-#ifdef GAME_ENGINE_USE_VULKAN
+#ifdef ARISE_USE_VULKAN
   std::unique_ptr<rhi::DescriptorPoolManager> m_imguiPoolManager;
-#endif  // GAME_ENGINE_USE_VULKAN
+#endif  // ARISE_USE_VULKAN
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
   std::unique_ptr<rhi::DescriptorHeapDx12> m_dx12ImGuiDescriptorHeap;
 #endif
 
@@ -90,6 +90,6 @@ class ImGuiRHIContext {
 };
 
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_IMGUI_RHI_CONTEXT_H
+#endif  // ARISE_IMGUI_RHI_CONTEXT_H

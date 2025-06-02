@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_RENDER_SETTINGS_H
-#define GAME_ENGINE_RENDER_SETTINGS_H
+#ifndef ARISE_RENDER_SETTINGS_H
+#define ARISE_RENDER_SETTINGS_H
 
 #include <math_library/dimension.h>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -38,6 +38,6 @@ struct RenderSettings {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_SETTINGS_H
+#endif  // ARISE_RENDER_SETTINGS_H

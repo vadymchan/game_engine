@@ -4,7 +4,7 @@
 
 namespace math {
 
-Vector3Df g_getVectorfromConfig(const game_engine::ConfigValue& value) {
+Vector3Df g_getVectorfromConfig(const arise::ConfigValue& value) {
   Vector3Df result;
 
   result.x() = value["x"].GetFloat();

@@ -1,7 +1,7 @@
-#ifndef GAME_ENGINE_CGLTF_COMMON_H
-#define GAME_ENGINE_CGLTF_COMMON_H
+#ifndef ARISE_CGLTF_COMMON_H
+#define ARISE_CGLTF_COMMON_H
 
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifdef ARISE_USE_CGLTF
 
 #include <cgltf.h>
 
@@ -9,7 +9,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class CgltfSceneCache {
   public:
@@ -41,8 +41,8 @@ class CgltfSceneCache {
   static inline std::unordered_map<std::string, std::weak_ptr<cgltf_data>> s_cache;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif // GAME_ENGINE_USE_CGLTF
+#endif // ARISE_USE_CGLTF
 
-#endif  // GAME_ENGINE_CGLTF_COMMON_H
+#endif  // ARISE_CGLTF_COMMON_H

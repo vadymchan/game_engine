@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_SERVICE_LOCATOR_H
-#define GAME_ENGINE_SERVICE_LOCATOR_H
+#ifndef ARISE_SERVICE_LOCATOR_H
+#define ARISE_SERVICE_LOCATOR_H
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 class ServiceLocator {
   public:
@@ -37,6 +37,6 @@ class ServiceLocator {
   }
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SERVICE_LOCATOR_H
+#endif  // ARISE_SERVICE_LOCATOR_H

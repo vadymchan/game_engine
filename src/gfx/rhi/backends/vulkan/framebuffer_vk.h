@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_FRAMEBUFFER_VK_H
-#define GAME_ENGINE_FRAMEBUFFER_VK_H
+#ifndef ARISE_FRAMEBUFFER_VK_H
+#define ARISE_FRAMEBUFFER_VK_H
 
 #include "gfx/rhi/interface/framebuffer.h"
 
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -56,6 +56,6 @@ class FramebufferVk : public Framebuffer {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FRAMEBUFFER_VK_H
+#endif  // ARISE_FRAMEBUFFER_VK_H

@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_TRANSFORM_H
-#define GAME_ENGINE_TRANSFORM_H
+#ifndef ARISE_TRANSFORM_H
+#define ARISE_TRANSFORM_H
 
 #include <math_library/graphics.h>
 #include <math_library/quaternion.h>
 
-namespace game_engine {
+namespace arise {
 
 struct Transform {
   // translation is position relative to the some origin (world origin, parent
@@ -51,6 +51,6 @@ inline math::Matrix4f<> calculateTransformMatrix(const Transform& transform) {
   return transformMatrix;
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_TRANSFORM_H
+#endif  // ARISE_TRANSFORM_H

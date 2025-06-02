@@ -6,7 +6,7 @@
 #include "utils/resource/resource_deletion_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 TextureManager::TextureManager(gfx::rhi::Device* device)
     : m_device(device)
@@ -366,4 +366,4 @@ std::unordered_map<std::string, std::unique_ptr<gfx::rhi::Texture>>::iterator Te
   return m_textures.end();
 }
 
-}  // namespace game_engine
+}  // namespace arise

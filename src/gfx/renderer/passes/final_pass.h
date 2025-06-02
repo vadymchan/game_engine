@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_FINAL_PASS_H
-#define GAME_ENGINE_FINAL_PASS_H
+#ifndef ARISE_FINAL_PASS_H
+#define ARISE_FINAL_PASS_H
 
 #include "gfx/renderer/render_pass.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -37,6 +37,6 @@ class FinalPass : public RenderPass {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FINAL_PASS_H
+#endif  // ARISE_FINAL_PASS_H

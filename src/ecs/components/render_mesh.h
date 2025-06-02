@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_RENDER_MESH_H
-#define GAME_ENGINE_RENDER_MESH_H
+#ifndef ARISE_RENDER_MESH_H
+#define ARISE_RENDER_MESH_H
 
 #include "ecs/components/material.h"
 #include "ecs/components/render_geometry_mesh.h"
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 struct RenderMesh {
   RenderGeometryMesh* gpuMesh;
@@ -14,6 +14,6 @@ struct RenderMesh {
   gfx::rhi::Buffer*   transformMatrixBuffer = nullptr;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_MESH_H
+#endif  // ARISE_RENDER_MESH_H

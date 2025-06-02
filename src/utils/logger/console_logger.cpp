@@ -4,7 +4,7 @@
 #include <spdlog/sinks/stdout_sinks.h>
 #include <filesystem>
 
-namespace game_engine {
+namespace arise {
 
 namespace {
 
@@ -160,4 +160,4 @@ void ConsoleLogger::setLogLevel(LogLevel level) {
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

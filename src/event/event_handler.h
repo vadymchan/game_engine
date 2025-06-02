@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_EVENT_EVENT_HANDLER_H
-#define GAME_ENGINE_EVENT_EVENT_HANDLER_H
+#ifndef ARISE_EVENT_EVENT_HANDLER_H
+#define ARISE_EVENT_EVENT_HANDLER_H
 
 #include "event.h"
 
@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 class EventHandler {
   public:
@@ -35,6 +35,6 @@ class EventHandler {
   std::unordered_map<EventType, std::vector<EventCallback>> m_subscribers_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_EVENT_EVENT_HANDLER_H
+#endif  // ARISE_EVENT_EVENT_HANDLER_H

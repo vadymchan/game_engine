@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_COMMAND_BUFFER_VK_H
-#define GAME_ENGINE_COMMAND_BUFFER_VK_H
+#ifndef ARISE_COMMAND_BUFFER_VK_H
+#define ARISE_COMMAND_BUFFER_VK_H
 
 #include "gfx/rhi/interface/command_buffer.h"
 
@@ -7,7 +7,7 @@
 
 #include <mutex>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -124,6 +124,6 @@ class CommandPoolManager {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_COMMAND_BUFFER_VK_H
+#endif  // ARISE_COMMAND_BUFFER_VK_H

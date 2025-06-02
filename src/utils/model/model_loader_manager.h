@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MODEL_LOADER_MANAGER_H
-#define GAME_ENGINE_MODEL_LOADER_MANAGER_H
+#ifndef ARISE_MODEL_LOADER_MANAGER_H
+#define ARISE_MODEL_LOADER_MANAGER_H
 
 #include "resources/i_model_loader.h"
 #include "utils/logger/global_logger.h"
@@ -10,7 +10,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class ModelLoaderManager {
   public:
@@ -25,6 +25,6 @@ class ModelLoaderManager {
   std::mutex                                                    mutex_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MODEL_LOADER_MANAGER_H
+#endif  // ARISE_MODEL_LOADER_MANAGER_H

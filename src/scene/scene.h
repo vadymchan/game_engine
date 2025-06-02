@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_SCENE_H
-#define GAME_ENGINE_SCENE_H
+#ifndef ARISE_SCENE_H
+#define ARISE_SCENE_H
 
 #include <entt/entt.hpp>
 
-namespace game_engine {
+namespace arise {
 
 using Registry = entt::registry;
 
@@ -27,6 +27,6 @@ class Scene {
   Registry entityRegistry_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SCENE_H
+#endif  // ARISE_SCENE_H

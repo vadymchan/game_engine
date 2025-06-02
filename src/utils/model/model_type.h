@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_MODEL_TYPES_H
-#define GAME_ENGINE_MODEL_TYPES_H
+#ifndef ARISE_MODEL_TYPES_H
+#define ARISE_MODEL_TYPES_H
 
 #include <algorithm>
 #include <string>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 enum class ModelType {
   OBJ,
@@ -17,6 +17,6 @@ enum class ModelType {
 
 ModelType getModelTypeFromExtension(const std::string& extension);
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MODEL_TYPES_H
+#endif  // ARISE_MODEL_TYPES_H

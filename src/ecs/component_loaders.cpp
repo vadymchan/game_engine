@@ -13,7 +13,7 @@
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 Transform g_loadTransform(const ConfigValue& value) {
   Transform transform;
@@ -261,4 +261,4 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
     }
   }
 }
-}  // namespace game_engine
+}  // namespace arise

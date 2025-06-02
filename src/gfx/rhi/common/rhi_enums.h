@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_RHI_ENUMS_H
-#define GAME_ENGINE_RHI_ENUMS_H
+#ifndef ARISE_RHI_ENUMS_H
+#define ARISE_RHI_ENUMS_H
 
 #include "utils/enum/enum_util.h"
 
 #include <cstdint>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -396,6 +396,6 @@ DECLARE_ENUM_BIT_OPERATORS(TextureCreateFlag)
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_ENUMS_H
+#endif  // ARISE_RHI_ENUMS_H

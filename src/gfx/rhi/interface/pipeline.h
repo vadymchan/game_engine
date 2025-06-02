@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_PIPELINE_H
-#define GAME_ENGINE_PIPELINE_H
+#ifndef ARISE_PIPELINE_H
+#define ARISE_PIPELINE_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
 
 #include <atomic>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -60,6 +60,6 @@ class GraphicsPipeline : public Pipeline {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_PIPELINE_H
+#endif  // ARISE_PIPELINE_H

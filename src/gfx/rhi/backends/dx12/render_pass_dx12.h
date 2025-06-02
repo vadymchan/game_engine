@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_RENDER_PASS_DX12_H
-#define GAME_ENGINE_RENDER_PASS_DX12_H
+#ifndef ARISE_RENDER_PASS_DX12_H
+#define ARISE_RENDER_PASS_DX12_H
 
 #include "gfx/rhi/interface/render_pass.h"
 #include "platform/windows/windows_platform_setup.h"
 
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -57,6 +57,6 @@ class RenderPassDx12 : public RenderPass {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_PASS_DX12_H
+#endif  // ARISE_RENDER_PASS_DX12_H

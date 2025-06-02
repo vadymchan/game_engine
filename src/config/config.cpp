@@ -3,7 +3,7 @@
 #include "file_loader/file_system_manager.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 void Config::reloadAsync() {
   GlobalLogger::Log(LogLevel::Info,
                     "Reloading config due to file modification...");
@@ -74,4 +74,4 @@ const ConfigValue& Config::getMember_(const std::string& key) const {
   }
   return m_root_[key.c_str()];
 }
-}  // namespace game_engine
+}  // namespace arise

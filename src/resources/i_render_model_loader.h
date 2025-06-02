@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_I_RENDER_MODEL_LOADER_H
-#define GAME_ENGINE_I_RENDER_MODEL_LOADER_H
+#ifndef ARISE_I_RENDER_MODEL_LOADER_H
+#define ARISE_I_RENDER_MODEL_LOADER_H
 
 #include "ecs/components/model.h"
 #include "ecs/components/render_model.h"
 
 #include <optional>
 
-namespace game_engine {
+namespace arise {
 
 // we made RenderModelLoader friend to ModelLoader and MaterialLoader so we can
 // access. As an alternative we can expose private methods to public.
@@ -23,6 +23,6 @@ class IRenderModelLoader {
       = 0;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_I_RENDER_MODEL_LOADER_H
+#endif  // ARISE_I_RENDER_MODEL_LOADER_H

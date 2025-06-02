@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_WORLD_GRID_STRATEGY_H
-#define GAME_ENGINE_WORLD_GRID_STRATEGY_H
+#ifndef ARISE_WORLD_GRID_STRATEGY_H
+#define ARISE_WORLD_GRID_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
 #include "gfx/rhi/interface/render_pass.h"
@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -71,6 +71,6 @@ class WorldGridStrategy : public DebugDrawStrategy {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_WORLD_GRID_STRATEGY_H
+#endif  // ARISE_WORLD_GRID_STRATEGY_H

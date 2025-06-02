@@ -7,7 +7,7 @@
 #include "gfx/rhi/backends/vulkan/shader_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -364,4 +364,4 @@ bool GraphicsPipelineVk::createPipelineLayout_() {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

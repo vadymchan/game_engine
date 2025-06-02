@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_SAMPLER_VK_H
-#define GAME_ENGINE_SAMPLER_VK_H
+#ifndef ARISE_SAMPLER_VK_H
+#define ARISE_SAMPLER_VK_H
 
 #include "gfx/rhi/interface/sampler.h"
 
 #include <vulkan/vulkan.h>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -29,6 +29,6 @@ class SamplerVk : public Sampler {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SAMPLER_VK_H
+#endif  // ARISE_SAMPLER_VK_H

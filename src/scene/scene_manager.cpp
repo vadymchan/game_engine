@@ -2,7 +2,7 @@
 
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 void SceneManager::addScene(const std::string& name, Registry registry) {
   if (scenes_.contains(name)) {
@@ -59,4 +59,4 @@ void SceneManager::clearAllScenes() {
   scenes_.clear();
 }
 
-}  // namespace game_engine
+}  // namespace arise

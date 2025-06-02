@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_LIGHT_VISUALIZATION_STRATEGY_H
-#define GAME_ENGINE_LIGHT_VISUALIZATION_STRATEGY_H
+#ifndef ARISE_LIGHT_VISUALIZATION_STRATEGY_H
+#define ARISE_LIGHT_VISUALIZATION_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
 #include "gfx/rhi/interface/render_pass.h"
@@ -7,18 +7,18 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 struct RenderModel;
 struct Material;
-}  // namespace game_engine
+}  // namespace arise
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -102,6 +102,6 @@ class LightVisualizationStrategy : public DebugDrawStrategy {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_LIGHT_VISUALIZATION_STRATEGY_H
+#endif  // ARISE_LIGHT_VISUALIZATION_STRATEGY_H

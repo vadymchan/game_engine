@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_ENTITY_H
-#define GAME_ENGINE_ENTITY_H
+#ifndef ARISE_ENTITY_H
+#define ARISE_ENTITY_H
 
 #include <entt/entt.hpp>
 
-namespace game_engine {
+namespace arise {
 
 using Entity = entt::entity;
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_ENTITY_H
+#endif  // ARISE_ENTITY_H

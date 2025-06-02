@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_BUFFER_H
-#define GAME_ENGINE_BUFFER_H
+#ifndef ARISE_BUFFER_H
+#define ARISE_BUFFER_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -38,6 +38,6 @@ class Buffer {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_BUFFER_H
+#endif  // ARISE_BUFFER_H

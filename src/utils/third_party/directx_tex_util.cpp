@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-namespace game_engine {
+namespace arise {
 
 using gfx::rhi::TextureType;
 
@@ -95,4 +95,4 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
   return image;
 }
 
-}  // namespace game_engine
+}  // namespace arise

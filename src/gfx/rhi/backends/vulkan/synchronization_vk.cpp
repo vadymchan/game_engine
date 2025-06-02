@@ -3,7 +3,7 @@
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -100,4 +100,4 @@ void SemaphoreVk::signal(VkQueue queue) {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

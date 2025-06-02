@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_SYNCHRONIZATION_VK_H
-#define GAME_ENGINE_SYNCHRONIZATION_VK_H
+#ifndef ARISE_SYNCHRONIZATION_VK_H
+#define ARISE_SYNCHRONIZATION_VK_H
 
 #include "gfx/rhi/interface/synchronization.h"
 
 #include <vulkan/vulkan.h>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -53,6 +53,6 @@ class SemaphoreVk : public Semaphore {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SYNCHRONIZATION_VK_H
+#endif  // ARISE_SYNCHRONIZATION_VK_H

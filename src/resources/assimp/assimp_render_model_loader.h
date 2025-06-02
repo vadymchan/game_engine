@@ -1,14 +1,14 @@
-#ifndef GAME_ENGINE_ASSIMP_RENDER_MODEL_LOADER_H
-#define GAME_ENGINE_ASSIMP_RENDER_MODEL_LOADER_H
+#ifndef ARISE_ASSIMP_RENDER_MODEL_LOADER_H
+#define ARISE_ASSIMP_RENDER_MODEL_LOADER_H
 
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
 
 
 #include "resources/i_render_model_loader.h"
 
 #include "gfx/rhi/interface/device.h"
 
-namespace game_engine {
+namespace arise {
 
 class AssimpRenderModelLoader : public IRenderModelLoader {
   public:
@@ -26,8 +26,8 @@ class AssimpRenderModelLoader : public IRenderModelLoader {
   gfx::rhi::Buffer* createIndexBuffer(const Mesh* mesh);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP
 
-#endif  // GAME_ENGINE_ASSIMP_RENDER_MODEL_LOADER_H
+#endif  // ARISE_ASSIMP_RENDER_MODEL_LOADER_H

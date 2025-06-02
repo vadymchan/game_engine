@@ -6,7 +6,7 @@
 #include "utils/resource/resource_deletion_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 BufferManager::BufferManager(gfx::rhi::Device* device)
     : m_device(device)
@@ -357,4 +357,4 @@ std::unordered_map<std::string, std::unique_ptr<gfx::rhi::Buffer>>::iterator Buf
   return m_buffers.end();
 }
 
-}  // namespace game_engine
+}  // namespace arise

@@ -1,16 +1,16 @@
-#ifndef GAME_ENGINE_DEBUG_DRAW_STRATEGY_H
-#define GAME_ENGINE_DEBUG_DRAW_STRATEGY_H
+#ifndef ARISE_DEBUG_DRAW_STRATEGY_H
+#define ARISE_DEBUG_DRAW_STRATEGY_H
 
 #include "gfx/renderer/render_context.h"
 #include "gfx/rhi/interface/device.h"
 
 #include <math_library/dimension.h>
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class ShaderManager;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -46,6 +46,6 @@ class DebugDrawStrategy {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_DEBUG_DRAW_STRATEGY_H
+#endif  // ARISE_DEBUG_DRAW_STRATEGY_H

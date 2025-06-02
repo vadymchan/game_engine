@@ -1,7 +1,7 @@
 // TODO: rename this file to stb_utils.h
 
-#ifndef GAME_ENGINE_STB_UTIL_H
-#define GAME_ENGINE_STB_UTIL_H
+#ifndef ARISE_STB_UTIL_H
+#define ARISE_STB_UTIL_H
 
 #include "file_loader/image_file_loader.h"
 
@@ -11,7 +11,7 @@
 #include <functional>
 #include <unordered_set>
 
-namespace game_engine {
+namespace arise {
 
 class STBImageLoader : public IImageLoader {
   public:
@@ -51,6 +51,6 @@ class STBImageLoader : public IImageLoader {
   static const std::unordered_set<std::string> supportedExtensions_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_STB_UTIL_H
+#endif  // ARISE_STB_UTIL_H

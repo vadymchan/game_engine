@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RHI_TYPES_H
-#define GAME_ENGINE_RHI_TYPES_H
+#ifndef ARISE_RHI_TYPES_H
+#define ARISE_RHI_TYPES_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 class Window;
 
 namespace gfx {
@@ -289,6 +289,6 @@ union ClearValue {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_TYPES_H
+#endif  // ARISE_RHI_TYPES_H

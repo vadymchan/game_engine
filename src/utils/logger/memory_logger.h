@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MEMORY_LOGGER_H
-#define GAME_ENGINE_MEMORY_LOGGER_H
+#ifndef ARISE_MEMORY_LOGGER_H
+#define ARISE_MEMORY_LOGGER_H
 
 #include "i_logger.h"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 struct LogEntry {
   std::chrono::system_clock::time_point timestamp;
@@ -40,6 +40,6 @@ class MemoryLogger : public ILogger {
   size_t                m_maxEntries_{0};
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MEMORY_LOGGER_H
+#endif  // ARISE_MEMORY_LOGGER_H

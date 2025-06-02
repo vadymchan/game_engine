@@ -1,11 +1,11 @@
-#ifdef GAME_ENGINE_USE_LIBKTX
+#ifdef ARISE_USE_LIBKTX
 
 #include "utils/third_party/ktx_image_loader.h"
 
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 using gfx::rhi::TextureFormat;
 using gfx::rhi::TextureType;
@@ -188,5 +188,5 @@ gfx::rhi::TextureType KtxImageLoader::determineDimension_(ktxTexture* texture) {
   return TextureType::Count;
 }
 
-}  // namespace game_engine
-#endif  // GAME_ENGINE_USE_LIBKTX
+}  // namespace arise
+#endif  // ARISE_USE_LIBKTX

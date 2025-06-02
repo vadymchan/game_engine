@@ -4,7 +4,7 @@
 #include "utils/model/render_model_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 Scene::Scene(Registry registry)
     : entityRegistry_(std::move(registry)) {
@@ -22,4 +22,4 @@ void Scene::setEntityRegistry(Registry registry) {
   entityRegistry_ = std::move(registry);
 }
 
-}  // namespace game_engine
+}  // namespace arise

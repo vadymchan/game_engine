@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_COMPONENT_LOADERS_H
-#define GAME_ENGINE_COMPONENT_LOADERS_H
+#ifndef ARISE_COMPONENT_LOADERS_H
+#define ARISE_COMPONENT_LOADERS_H
 
 #include "config/config.h"
 #include "ecs/entity.h"
 #include "scene/scene.h"
 
-namespace game_engine {
+namespace arise {
 
 struct Transform;
 struct Camera;
@@ -24,6 +24,6 @@ SpotLight        g_loadSpotLight(const ConfigValue& value);
 Entity g_createEntityFromConfig(Registry& registry, const ConfigValue& entityConfig);
 void   g_processEntityComponents(Registry& registry, Entity entity, const ConfigValue& components);
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_COMPONENT_LOADERS_H
+#endif  // ARISE_COMPONENT_LOADERS_H

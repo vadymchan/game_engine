@@ -2,7 +2,7 @@
 
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 void FileWatcherManager::addWatcher(const std::filesystem::path& dirPath,
                                     const Callback&              callback) {
@@ -32,4 +32,4 @@ void FileWatcherManager::removeAllWatchers() {
   m_watchers_.clear();
 }
 
-}  // namespace game_engine
+}  // namespace arise

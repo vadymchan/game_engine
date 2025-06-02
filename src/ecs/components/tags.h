@@ -1,14 +1,14 @@
-#ifndef GAME_ENGINE_TAGS_H
-#define GAME_ENGINE_TAGS_H
+#ifndef ARISE_TAGS_H
+#define ARISE_TAGS_H
 
 #include <filesystem>
 
-namespace game_engine {
+namespace arise {
 
 struct ModelLoadingTag {
   std::filesystem::path modelPath;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_TAGS_H
+#endif  // ARISE_TAGS_H

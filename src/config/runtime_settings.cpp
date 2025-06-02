@@ -3,7 +3,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/math/math_util.h"
 
-namespace game_engine {
+namespace arise {
 
 using gfx::rhi::RenderingApi;
 
@@ -39,4 +39,4 @@ const math::Vector3Df& RuntimeSettings::getWorldUp() const {
   return m_worldUp_;
 }
 
-}  // namespace game_engine
+}  // namespace arise

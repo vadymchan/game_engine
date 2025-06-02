@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_CONSOLE_LOGGER_H
-#define GAME_ENGINE_CONSOLE_LOGGER_H
+#ifndef ARISE_CONSOLE_LOGGER_H
+#define ARISE_CONSOLE_LOGGER_H
 
 #include "utils/logger/i_logger.h"
 
@@ -7,7 +7,7 @@
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 enum class ConsoleStreamType {
   StdOut,
@@ -50,5 +50,5 @@ class ConsoleLogger : public ILogger {
   bool                            m_isMultithreaded_;
   bool                            m_isColored_;
 };
-}  // namespace game_engine
-#endif  // GAME_ENGINE_CONSOLE_LOGGER_H
+}  // namespace arise
+#endif  // ARISE_CONSOLE_LOGGER_H

@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_FILE_SYSTEM_MANAGER_H
-#define GAME_ENGINE_FILE_SYSTEM_MANAGER_H
+#ifndef ARISE_FILE_SYSTEM_MANAGER_H
+#define ARISE_FILE_SYSTEM_MANAGER_H
 
 #include <filesystem>
 #include <optional>
 
-namespace game_engine {
+namespace arise {
 
 class FileSystemManager {
   public:
@@ -24,6 +24,6 @@ class FileSystemManager {
   static bool remove(const std::filesystem::path& filePath);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FILE_SYSTEM_MANAGER_H
+#endif  // ARISE_FILE_SYSTEM_MANAGER_H

@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_PROFILER_H
-#define GAME_ENGINE_PROFILER_H
+#ifndef ARISE_PROFILER_H
+#define ARISE_PROFILER_H
 
 #include "profiler/cpu.h"
 #include "profiler/gpu.h"
 
-#if defined(GAME_ENGINE_USE_PROFILING) && defined(GAME_ENGINE_USE_TRACY)
+#if defined(ARISE_USE_PROFILING) && defined(ARISE_USE_TRACY)
 
 #include <tracy/Tracy.hpp>
 
@@ -41,4 +41,4 @@
 
 #endif 
 
-#endif  // GAME_ENGINE_PROFILER_H
+#endif  // ARISE_PROFILER_H

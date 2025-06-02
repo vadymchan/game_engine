@@ -4,7 +4,7 @@
 
 #include <fstream>
 
-namespace game_engine {
+namespace arise {
 std::optional<std::string> FileSystemManager::readFile(
     const std::filesystem::path& filePath) {
   std::ifstream file(filePath, std::ios::in | std::ios::binary);
@@ -98,4 +98,4 @@ bool FileSystemManager::remove(const std::filesystem::path& filePath) {
     return false;
   }
 }
-}  // namespace game_engine
+}  // namespace arise

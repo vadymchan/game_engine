@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDER_GEOMETRY_MESH_MANAGER_H
-#define GAME_ENGINE_RENDER_GEOMETRY_MESH_MANAGER_H
+#ifndef ARISE_RENDER_GEOMETRY_MESH_MANAGER_H
+#define ARISE_RENDER_GEOMETRY_MESH_MANAGER_H
 
 #include "ecs/components/mesh.h"
 #include "ecs/components/render_geometry_mesh.h"
@@ -8,7 +8,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class RenderGeometryMeshManager {
   public:
@@ -30,6 +30,6 @@ class RenderGeometryMeshManager {
   mutable std::mutex                                             m_mutex;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_GEOMETRY_MESH_MANAGER_H
+#endif  // ARISE_RENDER_GEOMETRY_MESH_MANAGER_H

@@ -26,7 +26,7 @@
 #include <map>
 #include <set>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -542,4 +542,4 @@ void DeviceVk::waitIdle() {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

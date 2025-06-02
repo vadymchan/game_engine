@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_CONFIG_H
-#define GAME_ENGINE_CONFIG_H
+#ifndef ARISE_CONFIG_H
+#define ARISE_CONFIG_H
 
 #include "utils/logger/global_logger.h"
 
@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 using ConfigValue = rapidjson::Value;
 
@@ -227,6 +227,6 @@ class Config {
       m_converters_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_CONFIG_H
+#endif  // ARISE_CONFIG_H

@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_DESCRIPTOR_VK_H
-#define GAME_ENGINE_DESCRIPTOR_VK_H
+#ifndef ARISE_DESCRIPTOR_VK_H
+#define ARISE_DESCRIPTOR_VK_H
 
 #include "gfx/rhi/interface/descriptor.h"
 
 #include <vulkan/vulkan.h>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -89,6 +89,6 @@ class DescriptorPoolManager {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_DESCRIPTOR_VK_H
+#endif  // ARISE_DESCRIPTOR_VK_H

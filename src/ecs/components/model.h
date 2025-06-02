@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_MODEL_H
-#define GAME_ENGINE_MODEL_H
+#ifndef ARISE_MODEL_H
+#define ARISE_MODEL_H
 
 #include "ecs/components/mesh.h"
 
 #include <filesystem>
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 // This is the geometry data on CPU side (imported from assimp / cgltf)
 struct Model {
@@ -15,6 +15,6 @@ struct Model {
   std::vector<Mesh*>    meshes;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MODEL_H
+#endif  // ARISE_MODEL_H

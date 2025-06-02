@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_ENUM_UTIL_H
-#define GAME_ENGINE_ENUM_UTIL_H
+#ifndef ARISE_ENUM_UTIL_H
+#define ARISE_ENUM_UTIL_H
 
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 #define DECLARE_ENUM_BIT_OPERATORS(ENUM_TYPE)                                    \
   inline constexpr ENUM_TYPE operator|(ENUM_TYPE lhs, ENUM_TYPE rhs) {           \
@@ -71,5 +71,5 @@ std::unordered_map<Value, Key> reverseMap(const std::unordered_map<Key, Value>& 
 }
 
 
-}  // namespace game_engine
-#endif  // GAME_ENGINE_ENUM_UTIL_H
+}  // namespace arise
+#endif  // ARISE_ENUM_UTIL_H

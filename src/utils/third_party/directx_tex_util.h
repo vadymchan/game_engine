@@ -1,7 +1,7 @@
 // TODO: rename to directx_tex_utils.h
 
-#ifndef GAME_ENGINE_DIRECTX_TEX_UTILS_H
-#define GAME_ENGINE_DIRECTX_TEX_UTILS_H
+#ifndef ARISE_DIRECTX_TEX_UTILS_H
+#define ARISE_DIRECTX_TEX_UTILS_H
 
 #include "file_loader/image_file_loader.h"
 #include "gfx/rhi/common/rhi_enums.h"
@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 class DirectXTexImageLoader : public IImageLoader {
   public:
@@ -26,6 +26,6 @@ class DirectXTexImageLoader : public IImageLoader {
   static const std::unordered_set<std::string> supportedExtensions_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_DIRECTX_TEX_UTILS_H
+#endif  // ARISE_DIRECTX_TEX_UTILS_H

@@ -1,3 +1,11 @@
+# ARISE
+
+**A**dvanced **R**endering **I**nterface & **S**andbox **E**ngine
+
+![ARISE Logo](assets/logo/arise_logo.png)
+
+A modern, cross-platform graphics engine built with C++20, designed following KISS, YAGNI, SoC, and SOLID principles. ARISE prioritizes simplicity and maintainability while delivering robust rendering capabilities across multiple graphics APIs.
+
 ## Screenshots
 
 ![Demo Main](screenshots/editor_demo_dx12.png)

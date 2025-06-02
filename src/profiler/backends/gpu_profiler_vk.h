@@ -1,16 +1,16 @@
-#ifndef GAME_ENGINE_GPU_PROFILER_VK_H
-#define GAME_ENGINE_GPU_PROFILER_VK_H
+#ifndef ARISE_GPU_PROFILER_VK_H
+#define ARISE_GPU_PROFILER_VK_H
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
 #include "profiler/backends/config.h"
 #include "profiler/backends/gpu_profiler.h"
 
-#ifdef GAME_ENGINE_USE_VULKAN
+#ifdef ARISE_USE_VULKAN
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+#ifdef ARISE_TRACY_GPU_PROFILING_VK
 #include <vulkan/vulkan.h>
 
 #include <tracy/TracyVulkan.hpp>
@@ -18,7 +18,7 @@ using TracyVkContextType = TracyVkCtx;
 #else
 using TracyVkContextType = void*;
 #endif
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 class GpuProfilerVk final : public GpuProfiler {
@@ -47,8 +47,8 @@ class GpuProfilerVk final : public GpuProfiler {
 };
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_VULKAN
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
-#endif  // GAME_ENGINE_GPU_PROFILER_VK_H
+#endif  // ARISE_USE_VULKAN
+#endif  // ARISE_USE_GPU_PROFILING
+#endif  // ARISE_GPU_PROFILER_VK_H

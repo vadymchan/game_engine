@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_INPUT_MANAGER
-#define GAME_ENGINE_INPUT_MANAGER
+#ifndef ARISE_INPUT_MANAGER
+#define ARISE_INPUT_MANAGER
 
 #include "event/event.h"
 #include "event/keyboard_event_handler.h"
@@ -9,7 +9,7 @@
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 class InputManager {
   public:
@@ -68,6 +68,6 @@ class InputManager {
   std::unique_ptr<MouseEventHandler>    m_mouseHandler_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
 #endif

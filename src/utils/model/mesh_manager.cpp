@@ -2,7 +2,7 @@
 
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 Mesh* MeshManager::addMesh(std::unique_ptr<Mesh> mesh, const std::filesystem::path& sourcePath) {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -45,4 +45,4 @@ std::string MeshManager::createKey(const std::filesystem::path& path, const std:
   return path.string() + "#" + name;
 }
 
-}  // namespace game_engine
+}  // namespace arise

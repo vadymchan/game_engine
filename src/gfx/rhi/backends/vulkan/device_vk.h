@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_DEVICE_VK_H
-#define GAME_ENGINE_DEVICE_VK_H
+#ifndef ARISE_DEVICE_VK_H
+#define ARISE_DEVICE_VK_H
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/descriptor_vk.h"
@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -111,6 +111,6 @@ class DeviceVk : public Device {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_DEVICE_VK_H
+#endif  // ARISE_DEVICE_VK_H

@@ -2,7 +2,7 @@
 
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include "gfx/rhi/backends/dx12/buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
@@ -22,7 +22,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -464,6 +464,6 @@ void DeviceDx12::waitIdle() {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12

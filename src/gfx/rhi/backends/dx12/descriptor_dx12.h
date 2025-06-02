@@ -1,15 +1,15 @@
-#ifndef GAME_ENGINE_DESCRIPTOR_DX12_H
-#define GAME_ENGINE_DESCRIPTOR_DX12_H
+#ifndef ARISE_DESCRIPTOR_DX12_H
+#define ARISE_DESCRIPTOR_DX12_H
 
 #include "gfx/rhi/interface/descriptor.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include <mutex>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -178,8 +178,8 @@ class FrameResourcesManager {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12
 
-#endif  // GAME_ENGINE_DESCRIPTOR_DX12_H
+#endif  // ARISE_DESCRIPTOR_DX12_H

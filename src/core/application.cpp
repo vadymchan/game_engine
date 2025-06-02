@@ -16,7 +16,7 @@
 
 #include <random>
 
-namespace game_engine {
+namespace arise {
 
 void Application::setup() {
   GlobalLogger::Log(LogLevel::Info, "Application::setup() started");
@@ -221,4 +221,4 @@ void Application::setupInputHandlers() {
   });
 }
 
-}  // namespace game_engine
+}  // namespace arise

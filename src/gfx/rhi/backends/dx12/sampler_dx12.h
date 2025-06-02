@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_SAMPLER_DX12_H
-#define GAME_ENGINE_SAMPLER_DX12_H
+#ifndef ARISE_SAMPLER_DX12_H
+#define ARISE_SAMPLER_DX12_H
 
 #include "gfx/rhi/interface/sampler.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -38,7 +38,7 @@ class SamplerDx12 : public Sampler {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
-#endif  // GAME_ENGINE_SAMPLER_DX12_H
+#endif  // ARISE_RHI_DX12
+#endif  // ARISE_SAMPLER_DX12_H

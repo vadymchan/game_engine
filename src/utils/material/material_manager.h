@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MATERIAL_MANAGER_H
-#define GAME_ENGINE_MATERIAL_MANAGER_H
+#ifndef ARISE_MATERIAL_MANAGER_H
+#define ARISE_MATERIAL_MANAGER_H
 
 #include "utils/material/material_loader_manager.h"
 #include "utils/service/service_locator.h"
@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 class MaterialManager {
   public:
@@ -104,6 +104,6 @@ class MaterialManager {
   std::mutex                                                                        mutex_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MATERIAL_MANAGER_H
+#endif  // ARISE_MATERIAL_MANAGER_H

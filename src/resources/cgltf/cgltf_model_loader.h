@@ -1,6 +1,6 @@
-#ifndef GAME_ENGINE_CGLTF_MODEL_LOADER_H
-#define GAME_ENGINE_CGLTF_MODEL_LOADER_H
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifndef ARISE_CGLTF_MODEL_LOADER_H
+#define ARISE_CGLTF_MODEL_LOADER_H
+#ifdef ARISE_USE_CGLTF
 
 #include <math_library/matrix.h>
 
@@ -11,7 +11,7 @@ struct cgltf_data;
 struct cgltf_node;
 struct cgltf_primitive;
 
-namespace game_engine {
+namespace arise {
 struct Mesh;
 struct Model;
 
@@ -31,11 +31,11 @@ class CgltfModelLoader {
   void                  processIndices(const cgltf_primitive* primitive, Mesh* mesh);
   void                  calculateTangents(Mesh* mesh);
 
-#ifdef GAME_ENGINE_USE_MIKKTS
+#ifdef ARISE_USE_MIKKTS
   void generateMikkTSpaceTangents(Mesh* mesh);
 #endif
 };
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_CGLTF
-#endif  // GAME_ENGINE_CGLTF_MODEL_LOADER_H
+#endif  // ARISE_USE_CGLTF
+#endif  // ARISE_CGLTF_MODEL_LOADER_H

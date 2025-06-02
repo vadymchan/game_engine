@@ -6,7 +6,7 @@
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -133,4 +133,4 @@ bool FramebufferVk::initialize(const FramebufferDesc& desc) {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

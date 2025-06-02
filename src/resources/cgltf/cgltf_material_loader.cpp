@@ -1,4 +1,4 @@
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifdef ARISE_USE_CGLTF
 
 #include "resources/cgltf/cgltf_material_loader.h"
 
@@ -11,7 +11,7 @@
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 
-namespace game_engine {
+namespace arise {
 
 std::vector<std::unique_ptr<Material>> CgltfMaterialLoader::loadMaterials(const std::filesystem::path& filePath) {
   GlobalLogger::Log(LogLevel::Info, "Loading materials from " + filePath.string());
@@ -182,6 +182,6 @@ gfx::rhi::Texture* CgltfMaterialLoader::loadTexture(const cgltf_image*          
   return texturePtr;
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_CGLTF
+#endif  // ARISE_USE_CGLTF

@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_SHADER_MANAGER_H
-#define GAME_ENGINE_SHADER_MANAGER_H
+#ifndef ARISE_SHADER_MANAGER_H
+#define ARISE_SHADER_MANAGER_H
 
 #include "gfx/rhi/backends/dx12/dxc_util.h"
 #include "gfx/rhi/common/rhi_enums.h"
@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -243,6 +243,6 @@ class ShaderManager {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SHADER_MANAGER_H
+#endif  // ARISE_SHADER_MANAGER_H

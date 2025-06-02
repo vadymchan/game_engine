@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_TEXTURE_MANAGER_H
-#define GAME_ENGINE_TEXTURE_MANAGER_H
+#ifndef ARISE_TEXTURE_MANAGER_H
+#define ARISE_TEXTURE_MANAGER_H
 
 #include "gfx/rhi/interface/device.h"
 #include "gfx/rhi/interface/texture.h"
@@ -12,7 +12,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class TextureManager {
   public:
@@ -60,6 +60,6 @@ class TextureManager {
   uint32_t m_textureCounter;  // Counter for generating unique names
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_TEXTURE_MANAGER_H
+#endif  // ARISE_TEXTURE_MANAGER_H

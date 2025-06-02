@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_SCENE_LOADER_H
-#define GAME_ENGINE_SCENE_LOADER_H
+#ifndef ARISE_SCENE_LOADER_H
+#define ARISE_SCENE_LOADER_H
 
 #include "config/config.h"
 #include "ecs/entity.h"
@@ -8,7 +8,7 @@
 
 #include <filesystem>
 
-namespace game_engine {
+namespace arise {
 
 class SceneLoader {
   public:
@@ -19,6 +19,6 @@ class SceneLoader {
                                   const std::string&           customSceneName = "");
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SCENE_LOADER_H
+#endif  // ARISE_SCENE_LOADER_H

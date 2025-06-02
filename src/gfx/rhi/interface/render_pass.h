@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_RHI_RENDER_PASS_H
-#define GAME_ENGINE_RHI_RENDER_PASS_H
+#ifndef ARISE_RHI_RENDER_PASS_H
+#define ARISE_RHI_RENDER_PASS_H
 
 #include "gfx/rhi/common/rhi_types.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -34,6 +34,6 @@ class RenderPass {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_RENDER_PASS_HS
+#endif  // ARISE_RHI_RENDER_PASS_HS

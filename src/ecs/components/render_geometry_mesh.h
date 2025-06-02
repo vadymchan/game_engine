@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_RENDER_GEOMETRY_MESH_H
-#define GAME_ENGINE_RENDER_GEOMETRY_MESH_H
+#ifndef ARISE_RENDER_GEOMETRY_MESH_H
+#define ARISE_RENDER_GEOMETRY_MESH_H
 
 #include "gfx/rhi/interface/buffer.h"
 
 #include <cstdint>
 
-namespace game_engine {
+namespace arise {
 
 // GPU-Side Mesh Geometry data
 // TODO: can we somehow manage vertex and index buffers? so we can have 1 big
@@ -22,6 +22,6 @@ struct RenderGeometryMesh {
   // uint32_t vertexStride = 0;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_GEOMETRY_MESH_H
+#endif  // ARISE_RENDER_GEOMETRY_MESH_H

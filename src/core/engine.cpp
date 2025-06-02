@@ -53,7 +53,7 @@
 
 #include <imgui_impl_sdl2.h>
 
-namespace game_engine {
+namespace arise {
 
 Engine::~Engine() {
   m_application_->release();
@@ -182,11 +182,11 @@ auto Engine::initialize() -> bool {
   gfx::rhi::RenderingApi renderingApi;
   std::string            renderingApiString;
 
-#ifdef GAME_ENGINE_FORCE_VULKAN
+#ifdef ARISE_FORCE_VULKAN
   renderingApi       = gfx::rhi::RenderingApi::Vulkan;
   renderingApiString = "vulkan";
   GlobalLogger::Log(LogLevel::Info, "RHI API forced to Vulkan at compile time");
-#elif defined(GAME_ENGINE_FORCE_DIRECTX)
+#elif defined(ARISE_FORCE_DIRECTX)
   renderingApi       = gfx::rhi::RenderingApi::Dx12;
   renderingApiString = "dx12";
   GlobalLogger::Log(LogLevel::Info, "RHI API forced to DirectX at compile time");
@@ -211,7 +211,7 @@ auto Engine::initialize() -> bool {
 
   // profiler
   // ------------------------------------------------------------------------
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
   auto gpuProfiler = gpu::GpuProfilerFactory::create(renderingApi);
   if (gpuProfiler) {
     ServiceLocator::s_provide<gpu::GpuProfiler>(std::move(gpuProfiler));
@@ -233,8 +233,8 @@ auto Engine::initialize() -> bool {
                                        // Desired size (for maximized window will be 0)
                                        math::Dimension2Di{0, 0},
                                        math::Point2Di{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
-                                       game_engine::Window::Flags::Resizable | game_engine::Window::Flags::Vulkan
-                                           | game_engine::Window::Flags::Maximized);
+                                       arise::Window::Flags::Resizable | arise::Window::Flags::Vulkan
+                                           | arise::Window::Flags::Maximized);
 
   // ecs
   // ------------------------------------------------------------------------
@@ -286,11 +286,11 @@ auto Engine::initialize() -> bool {
   ServiceLocator::s_provide<RenderGeometryMeshManager>();
 
   auto renderModelLoaderManager = std::make_unique<RenderModelLoaderManager>();
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
   auto assimpModelLoader = std::make_shared<AssimpRenderModelLoader>();
   renderModelLoaderManager->registerLoader(ModelType::OBJ, assimpModelLoader);
   renderModelLoaderManager->registerLoader(ModelType::FBX, assimpModelLoader);
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP
   auto cgltfModelLoader = std::make_shared<CgltfRenderModelLoader>();
   renderModelLoaderManager->registerLoader(ModelType::GLTF, cgltfModelLoader);
   renderModelLoaderManager->registerLoader(ModelType::GLB, cgltfModelLoader);
@@ -301,11 +301,11 @@ auto Engine::initialize() -> bool {
 
   ServiceLocator::s_provide<MaterialManager>();
   auto materialLoaderManager = std::make_unique<MaterialLoaderManager>();
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
   auto assimpMaterialLoader = std::make_shared<AssimpMaterialLoader>();
   materialLoaderManager->registerLoader(MaterialType::MTL, assimpMaterialLoader);
   materialLoaderManager->registerLoader(MaterialType::FBX, assimpMaterialLoader);
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP
   auto cgltfMaterialLoader = std::make_shared<CgltfMaterialLoader>();
   materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
   ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));
@@ -427,4 +427,4 @@ void Engine::setGame(Application* game) {
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

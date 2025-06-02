@@ -1,14 +1,14 @@
 #include "profiler/backends/gpu_profiler_vk.h"
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
-#ifdef GAME_ENGINE_USE_VULKAN
+#ifdef ARISE_USE_VULKAN
 
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 bool GpuProfilerVk::initialize(gfx::rhi::Device* device) {
@@ -22,7 +22,7 @@ bool GpuProfilerVk::initialize(gfx::rhi::Device* device) {
     return false;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+#ifdef ARISE_TRACY_GPU_PROFILING_VK
   m_cmdBuffer      = device->createCommandBuffer();
   auto cmdBufferVk = static_cast<gfx::rhi::CommandBufferVk*>(m_cmdBuffer.get());
 
@@ -53,7 +53,7 @@ void GpuProfilerVk::destroy() {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+#ifdef ARISE_TRACY_GPU_PROFILING_VK
   if (m_tracyContext) {
     TracyVkDestroy(m_tracyContext);
     m_tracyContext = nullptr;
@@ -69,7 +69,7 @@ void GpuProfilerVk::setContextName(const std::string& name) {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+#ifdef ARISE_TRACY_GPU_PROFILING_VK
   if (m_tracyContext) {
     TracyVkContextName(m_tracyContext, name.c_str(), name.size());
   }
@@ -81,7 +81,7 @@ void GpuProfilerVk::collect(gfx::rhi::CommandBuffer* commandBuffer) {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+#ifdef ARISE_TRACY_GPU_PROFILING_VK
   if (m_tracyContext && commandBuffer) {
     auto commandBufferVk = static_cast<gfx::rhi::CommandBufferVk*>(commandBuffer);
     TracyVkCollect(m_tracyContext, commandBufferVk->getCommandBuffer());
@@ -117,8 +117,8 @@ void GpuProfilerVk::insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::
 }
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+#endif  // ARISE_USE_GPU_PROFILING
 
-#endif  // GAME_ENGINE_USE_VULKAN
+#endif  // ARISE_USE_VULKAN

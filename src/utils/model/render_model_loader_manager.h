@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDER_MODEL_LOADER_MANAGER_H
-#define GAME_ENGINE_RENDER_MODEL_LOADER_MANAGER_H
+#ifndef ARISE_RENDER_MODEL_LOADER_MANAGER_H
+#define ARISE_RENDER_MODEL_LOADER_MANAGER_H
 
 #include "resources/i_render_model_loader.h"
 #include "utils/model/model_type.h"
@@ -11,7 +11,7 @@
 #include <optional>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class RenderModelLoaderManager {
   public:
@@ -27,6 +27,6 @@ class RenderModelLoaderManager {
   std::mutex                                                          mutex_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_MODEL_LOADER_MANAGER_H
+#endif  // ARISE_RENDER_MODEL_LOADER_MANAGER_H

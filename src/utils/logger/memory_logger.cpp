@@ -3,7 +3,7 @@
 #include <chrono>
 #include <filesystem>
 
-namespace game_engine {
+namespace arise {
 
 void MemoryLogger::log(LogLevel logLevel, const std::string& message, const std::source_location& loc) {
   auto file = std::filesystem::path(loc.file_name()).filename().string();
@@ -38,4 +38,4 @@ size_t MemoryLogger::getMaxEntries() const {
   return m_maxEntries_;
 }
 
-}  // namespace game_engine
+}  // namespace arise

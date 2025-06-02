@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_LOG_HELPERS_H
-#define GAME_ENGINE_LOG_HELPERS_H
+#ifndef ARISE_LOG_HELPERS_H
+#define ARISE_LOG_HELPERS_H
 
 #include "utils/logger/global_logger.h"
 
 #include <source_location>
 
-namespace game_engine {
+namespace arise {
 
 // -----------------------------------------------------------------------------
 // Level: Trace
@@ -97,6 +97,6 @@ inline void LogFatal(fmt::format_string<Args...> fmtStr,
   GlobalLogger::Log(LogLevel::Fatal, fmt::format(fmtStr, std::forward<Args>(args)...), loc);
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_LOG_HELPERS_H
+#endif  // ARISE_LOG_HELPERS_H

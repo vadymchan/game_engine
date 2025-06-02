@@ -1,4 +1,4 @@
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifdef ARISE_USE_CGLTF
 
 #include "resources/cgltf/cgltf_model_loader.h"
 
@@ -12,11 +12,11 @@
 #include <math_library/graphics.h>
 #include <math_library/quaternion.h>
 
-#ifdef GAME_ENGINE_USE_MIKKTS
+#ifdef ARISE_USE_MIKKTS
 #include <mikktspace.h>
 #endif
 
-namespace game_engine {
+namespace arise {
 
 std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& filePath) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
@@ -172,7 +172,7 @@ std::unique_ptr<Mesh> CgltfModelLoader::processPrimitive(const cgltf_primitive* 
   }
 
   if (!hasTangents && !mesh->vertices.empty() && !mesh->indices.empty()) {
-#ifdef GAME_ENGINE_USE_MIKKTS
+#ifdef ARISE_USE_MIKKTS
     generateMikkTSpaceTangents(mesh.get());
 #else
     calculateTangents(mesh.get());
@@ -329,7 +329,7 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
   GlobalLogger::Log(LogLevel::Debug, "Basic tangent calculation completed");
 }
 
-#ifdef GAME_ENGINE_USE_MIKKTS
+#ifdef ARISE_USE_MIKKTS
 
 struct MikkTSpaceContext {
   Mesh* mesh;
@@ -406,8 +406,8 @@ void CgltfModelLoader::generateMikkTSpaceTangents(Mesh* mesh) {
     GlobalLogger::Log(LogLevel::Debug, "MikkTSpace tangent generation completed");
   }
 }
-#endif  // GAME_ENGINE_USE_MIKKTS
+#endif  // ARISE_USE_MIKKTS
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_CGLTF
+#endif  // ARISE_USE_CGLTF

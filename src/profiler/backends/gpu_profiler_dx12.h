@@ -1,21 +1,21 @@
-#ifndef GAME_ENGINE_GPU_PROFILER_DX12_H
-#define GAME_ENGINE_GPU_PROFILER_DX12_H
+#ifndef ARISE_GPU_PROFILER_DX12_H
+#define ARISE_GPU_PROFILER_DX12_H
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
 #include "profiler/backends/config.h"
 #include "profiler/backends/gpu_profiler.h"
 
-#ifdef GAME_ENGINE_USE_DX12
+#ifdef ARISE_USE_DX12
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+#ifdef ARISE_TRACY_GPU_PROFILING_DX12
 #include <tracy/TracyD3D12.hpp>
 using TracyD3D12ContextType = TracyD3D12Ctx;
 #else
 using TracyD3D12ContextType = void*;
 #endif
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 class GpuProfilerDx12 final : public GpuProfiler {
@@ -43,10 +43,10 @@ class GpuProfilerDx12 final : public GpuProfiler {
 };
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_DX12
+#endif  // ARISE_USE_DX12
 
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+#endif  // ARISE_USE_GPU_PROFILING
 
-#endif  // GAME_ENGINE_GPU_PROFILER_DX12_H
+#endif  // ARISE_GPU_PROFILER_DX12_H

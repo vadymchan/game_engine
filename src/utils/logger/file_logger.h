@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_FILE_LOGGER_H
-#define GAME_ENGINE_FILE_LOGGER_H
+#ifndef ARISE_FILE_LOGGER_H
+#define ARISE_FILE_LOGGER_H
 
 #include "utils/logger/i_logger.h"
 
@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-namespace game_engine {
+namespace arise {
 
 class FileLogger : public ILogger {
   public:
@@ -49,6 +49,6 @@ class FileLogger : public ILogger {
   bool                            m_truncateOnOpen_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FILE_LOGGER_H
+#endif  // ARISE_FILE_LOGGER_H

@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_I_UPDATABLE_SYSTEM_H
-#define GAME_ENGINE_I_UPDATABLE_SYSTEM_H
+#ifndef ARISE_I_UPDATABLE_SYSTEM_H
+#define ARISE_I_UPDATABLE_SYSTEM_H
 
 #include "scene/scene.h"
 
-namespace game_engine {
+namespace arise {
 
 /**
  * TODO: Future system types can be added here:
@@ -19,6 +19,6 @@ class IUpdatableSystem {
   virtual void update(Scene* scene, float deltaTime) = 0;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_I_UPDATABLE_SYSTEM_H
+#endif  // ARISE_I_UPDATABLE_SYSTEM_H

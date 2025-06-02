@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_FILE_WATCHER_MANAGER_H
-#define GAME_ENGINE_FILE_WATCHER_MANAGER_H
+#ifndef ARISE_FILE_WATCHER_MANAGER_H
+#define ARISE_FILE_WATCHER_MANAGER_H
 
 #define NOMINMAX
 
 #include <wtr/watcher.hpp>
 
-namespace game_engine {
+namespace arise {
 
 class FileWatcherManager {
   public:
@@ -24,6 +24,6 @@ class FileWatcherManager {
       m_watchers_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FILE_WATCHER_MANAGER_H
+#endif  // ARISE_FILE_WATCHER_MANAGER_H

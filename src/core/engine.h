@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_ENGINE_H
-#define GAME_ENGINE_ENGINE_H
+#ifndef ARISE_ENGINE_H
+#define ARISE_ENGINE_H
 
 #include "editor/editor.h"
 #include "platform/common/window.h"
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 class Application;
 
@@ -45,6 +45,6 @@ class Engine {
   Application* m_application_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_ENGINE_H
+#endif  // ARISE_ENGINE_H

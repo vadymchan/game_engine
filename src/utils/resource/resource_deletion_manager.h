@@ -1,6 +1,6 @@
 // resource_deletion_manager.h
-#ifndef GAME_ENGINE_RESOURCE_DELETION_MANAGER_H
-#define GAME_ENGINE_RESOURCE_DELETION_MANAGER_H
+#ifndef ARISE_RESOURCE_DELETION_MANAGER_H
+#define ARISE_RESOURCE_DELETION_MANAGER_H
 
 #include "utils/logger/global_logger.h"
 
@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 /**
  * @brief Manages deferred deletion of GPU resources to ensure they are not deleted while in use
@@ -118,6 +118,6 @@ class ResourceDeletionManager {
   uint32_t                     m_defaultFrameDelay = 2; 
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RESOURCE_DELETION_MANAGER_H
+#endif  // ARISE_RESOURCE_DELETION_MANAGER_H

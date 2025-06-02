@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MATERIAL_H
-#define GAME_ENGINE_MATERIAL_H
+#ifndef ARISE_MATERIAL_H
+#define ARISE_MATERIAL_H
 
 #include "gfx/rhi/interface/texture.h"
 
@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 struct Material {
   std::string materialName;
@@ -32,6 +32,6 @@ struct Material {
   std::unordered_map<std::string, gfx::rhi::Texture*> textures;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MATERIAL_H
+#endif  // ARISE_MATERIAL_H

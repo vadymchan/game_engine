@@ -4,7 +4,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 RenderGeometryMesh* RenderGeometryMeshManager::addRenderGeometryMesh(
     std::unique_ptr<RenderGeometryMesh> renderGeometryMesh, Mesh* sourceMesh) {
@@ -77,4 +77,4 @@ bool RenderGeometryMeshManager::removeRenderGeometryMesh(RenderGeometryMesh* gpu
   return false;
 }
 
-}  // namespace game_engine
+}  // namespace arise

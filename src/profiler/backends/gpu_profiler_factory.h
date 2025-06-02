@@ -1,14 +1,14 @@
-#ifndef GAME_ENGINE_GPU_PROFILER_FACTORY_H
-#define GAME_ENGINE_GPU_PROFILER_FACTORY_H
+#ifndef ARISE_GPU_PROFILER_FACTORY_H
+#define ARISE_GPU_PROFILER_FACTORY_H
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "profiler/backends/gpu_profiler.h"
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 class GpuProfilerFactory {
@@ -17,8 +17,8 @@ class GpuProfilerFactory {
 };
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+#endif  // ARISE_USE_GPU_PROFILING
 
-#endif  // GAME_ENGINE_GPU_PROFILER_FACTORY_H
+#endif  // ARISE_GPU_PROFILER_FACTORY_H

@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_LIGHT_H
-#define GAME_ENGINE_LIGHT_H
+#ifndef ARISE_LIGHT_H
+#define ARISE_LIGHT_H
 
 #include <math_library/vector.h>
 
-namespace game_engine {
+namespace arise {
 
 // TODO: consider adding a base class inside all light types(Directional, Point, Spot) for better cache locality
 struct Light {
@@ -32,6 +32,6 @@ struct SpotLight {
   bool  isDirty = true;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_LIGHT_H
+#endif  // ARISE_LIGHT_H

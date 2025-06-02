@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDER_CONTEXT_H
-#define GAME_ENGINE_RENDER_CONTEXT_H
+#ifndef ARISE_RENDER_CONTEXT_H
+#define ARISE_RENDER_CONTEXT_H
 
 #include "gfx/renderer/render_settings.h"
 #include "gfx/rhi/interface/command_buffer.h"
@@ -8,7 +8,7 @@
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -25,6 +25,6 @@ struct RenderContext {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_CONTEXT_H
+#endif  // ARISE_RENDER_CONTEXT_H

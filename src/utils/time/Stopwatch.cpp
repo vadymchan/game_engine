@@ -1,6 +1,6 @@
 #include "utils/time/stopwatch.h"
 
-namespace game_engine {
+namespace arise {
 
 void Stopwatch::start() {
   m_isRunning_ = true;
@@ -37,4 +37,4 @@ auto Stopwatch::isRunning() const -> bool {
   return m_isRunning_;
 }
 
-}  // namespace game_engine
+}  // namespace arise

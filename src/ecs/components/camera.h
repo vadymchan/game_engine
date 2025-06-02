@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_CAMERA_H
-#define GAME_ENGINE_CAMERA_H
+#ifndef ARISE_CAMERA_H
+#define ARISE_CAMERA_H
 
 #include <math_library/matrix.h>
 
-namespace game_engine {
+namespace arise {
 
 enum class CameraType {
   Perspective  = 0,
@@ -24,6 +24,6 @@ struct CameraMatrices {
   math::Matrix4f<> projection;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_CAMERA_H
+#endif  // ARISE_CAMERA_H

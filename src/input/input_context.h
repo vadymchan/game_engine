@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_INPUT_CONTEXT_H
-#define GAME_ENGINE_INPUT_CONTEXT_H
+#ifndef ARISE_INPUT_CONTEXT_H
+#define ARISE_INPUT_CONTEXT_H
 
 #include <stack>
 
-namespace game_engine {
+namespace arise {
 
 enum class InputContext {
   Game,
@@ -23,6 +23,6 @@ class InputContextManager {
   std::stack<InputContext> m_contextStack;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_INPUT_CONTEXT_H
+#endif  // ARISE_INPUT_CONTEXT_H

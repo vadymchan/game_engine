@@ -1,6 +1,6 @@
 #include "gfx/rhi/backends/dx12/pipeline_dx12.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include "gfx/rhi/backends/dx12/descriptor_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
@@ -11,7 +11,7 @@
 
 #include <d3dcompiler.h>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -392,6 +392,6 @@ D3D12_SHADER_VISIBILITY GraphicsPipelineDx12::determineShaderVisibility_(
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12

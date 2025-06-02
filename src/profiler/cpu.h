@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_PROFILER_CPU_H
-#define GAME_ENGINE_PROFILER_CPU_H
+#ifndef ARISE_PROFILER_CPU_H
+#define ARISE_PROFILER_CPU_H
 
 #include "profiler/backends/config.h"
 
-#ifdef GAME_ENGINE_USE_CPU_PROFILING
+#ifdef ARISE_USE_CPU_PROFILING
 #include "utils/color/color.h"
 #include <tracy/Tracy.hpp>
 
@@ -43,5 +43,5 @@
 
 #endif
 
-#endif  // GAME_ENGINE_USE_CPU_PROFILING
+#endif  // ARISE_USE_CPU_PROFILING
 

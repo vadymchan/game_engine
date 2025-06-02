@@ -4,7 +4,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 std::filesystem::path PathManager::s_getAssetPath() {
   return s_getPath(s_assetPath);
@@ -66,4 +66,4 @@ std::filesystem::path PathManager::s_getPath(std::string_view pathKey) {
   return {};
 }
 
-}  // namespace game_engine
+}  // namespace arise

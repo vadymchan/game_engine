@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -544,4 +544,4 @@ ResourceLayout g_getImageLayoutVk(VkImageLayout resourceLayout) {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

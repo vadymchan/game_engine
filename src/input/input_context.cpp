@@ -2,7 +2,7 @@
 
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 InputContextManager::InputContextManager() {
   m_contextStack.push(InputContext::Game);
@@ -47,4 +47,4 @@ bool InputContextManager::isContextActive(InputContext context) const {
   return getCurrentContext() == context;
 }
 
-}  // namespace game_engine
+}  // namespace arise

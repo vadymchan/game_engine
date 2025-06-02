@@ -2,7 +2,7 @@
 
 #include <set>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -190,4 +190,4 @@ bool g_isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, const std
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

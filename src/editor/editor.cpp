@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <cctype>
 
-namespace game_engine {
+namespace arise {
 
 bool Editor::initialize(Window*                        window,
                         gfx::rhi::RenderingApi         renderingApi,
@@ -2103,4 +2103,4 @@ void Editor::checkPendingSceneSwitch_() {
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

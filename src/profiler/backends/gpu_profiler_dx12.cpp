@@ -1,14 +1,14 @@
 #include "profiler/backends/gpu_profiler_dx12.h"
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
-#ifdef GAME_ENGINE_USE_DX12
+#ifdef ARISE_USE_DX12
 
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
@@ -22,7 +22,7 @@ bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
     return false;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+#ifdef ARISE_TRACY_GPU_PROFILING_DX12
   auto* deviceDx12 = static_cast<gfx::rhi::DeviceDx12*>(device);
   m_tracyContext   = TracyD3D12Context(deviceDx12->getDevice(), deviceDx12->getCommandQueue());
 
@@ -45,7 +45,7 @@ void GpuProfilerDx12::destroy() {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+#ifdef ARISE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12Destroy(m_tracyContext);
     m_tracyContext = nullptr;
@@ -62,7 +62,7 @@ void GpuProfilerDx12::setContextName(const std::string& name) {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+#ifdef ARISE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12ContextName(m_tracyContext, name.c_str(), name.size());
   }
@@ -75,7 +75,7 @@ void GpuProfilerDx12::newFrame() {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+#ifdef ARISE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12NewFrame(m_tracyContext);
   }
@@ -88,7 +88,7 @@ void GpuProfilerDx12::collect(gfx::rhi::CommandBuffer* commandBuffer) {
     return;
   }
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+#ifdef ARISE_TRACY_GPU_PROFILING_DX12
   if (m_tracyContext) {
     TracyD3D12Collect(m_tracyContext);
   }
@@ -123,8 +123,8 @@ void GpuProfilerDx12::insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std
 }
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_DX12
+#endif  // ARISE_USE_DX12
 
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+#endif  // ARISE_USE_GPU_PROFILING

@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MEMORY_ALLOCATOR_H
-#define GAME_ENGINE_MEMORY_ALLOCATOR_H
+#ifndef ARISE_MEMORY_ALLOCATOR_H
+#define ARISE_MEMORY_ALLOCATOR_H
 
 #include <cstddef>
 #include <new>
@@ -34,4 +34,4 @@ inline void* operator new[](std::size_t size,
   // handling. Example for Windows: return _aligned_malloc(size, alignment);
 }
 
-#endif  // GAME_ENGINE_MEMORY_ALLOCATOR_H
+#endif  // ARISE_MEMORY_ALLOCATOR_H

@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-namespace game_engine {
+namespace arise {
 
 Scene* SceneLoader::loadScene(const std::string& sceneName, SceneManager* sceneManager) {
   auto configPath = PathManager::s_getScenesPath() / (sceneName + ".json");
@@ -74,4 +74,4 @@ Scene* SceneLoader::loadSceneFromFile(const std::filesystem::path& configPath,
   return scene;
 }
 
-}  // namespace game_engine
+}  // namespace arise

@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_TEXTURE_H
-#define GAME_ENGINE_TEXTURE_H
+#ifndef ARISE_TEXTURE_H
+#define ARISE_TEXTURE_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -59,6 +59,6 @@ class Texture {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_TEXTURE_H
+#endif  // ARISE_TEXTURE_H

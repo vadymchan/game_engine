@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_IMAGE_H
-#define GAME_ENGINE_IMAGE_H
+#ifndef ARISE_IMAGE_H
+#define ARISE_IMAGE_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 
@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 struct SubImage {
   size_t                                 width;
@@ -86,6 +86,6 @@ inline ImageType getImageTypeFromExtension(const std::string& extension) {
   return ImageType::UNKNOWN;
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_IMAGE_H
+#endif  // ARISE_IMAGE_H

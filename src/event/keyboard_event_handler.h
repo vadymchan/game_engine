@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_EVENT_KEYBOARD_EVENT_HANDLER_H
-#define GAME_ENGINE_EVENT_KEYBOARD_EVENT_HANDLER_H
+#ifndef ARISE_EVENT_KEYBOARD_EVENT_HANDLER_H
+#define ARISE_EVENT_KEYBOARD_EVENT_HANDLER_H
 
 #include "event.h"
 #include "input/key.h"
@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 class KeyboardEventHandler {
   public:
@@ -32,6 +32,6 @@ class KeyboardEventHandler {
   std::unordered_map<PhysicalKey, std::vector<EventCallback>> m_keyDownSubscribers_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_EVENT_KEYBOARD_EVENT_HANDLER_H
+#endif  // ARISE_EVENT_KEYBOARD_EVENT_HANDLER_H

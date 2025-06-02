@@ -1,14 +1,14 @@
-#ifndef GAME_ENGINE_BUFFER_DX12_H
-#define GAME_ENGINE_BUFFER_DX12_H
+#ifndef ARISE_BUFFER_DX12_H
+#define ARISE_BUFFER_DX12_H
 
 #include "gfx/rhi/interface/buffer.h"
 #include "platform/windows/windows_platform_setup.h"
 
 #include <D3D12MemAlloc.h>
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -126,7 +126,7 @@ class DescriptorBufferDx12 : public BufferDx12 {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
-#endif  // GAME_ENGINE_BUFFER_DX12_H
+#endif  // ARISE_RHI_DX12
+#endif  // ARISE_BUFFER_DX12_H

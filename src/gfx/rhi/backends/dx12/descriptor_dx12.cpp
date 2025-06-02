@@ -1,6 +1,6 @@
 #include "gfx/rhi/backends/dx12/descriptor_dx12.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include "gfx/rhi/backends/dx12/buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/device_dx12.h"
@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -625,5 +625,5 @@ void FrameResourcesManager::nextFrame() {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
-#endif  // GAME_ENGINE_RHI_DX12
+}  // namespace arise
+#endif  // ARISE_RHI_DX12

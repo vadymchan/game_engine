@@ -1,6 +1,6 @@
 // In editor.h
-#ifndef GAME_ENGINE_EDITOR_H
-#define GAME_ENGINE_EDITOR_H
+#ifndef ARISE_EDITOR_H
+#define ARISE_EDITOR_H
 
 #include "gfx/renderer/renderer.h"
 #include "gfx/rhi/common/rhi_enums.h"
@@ -10,7 +10,7 @@
 #include <ImGuiFileDialog.h>
 #include <ImGuizmo.h>
 
-namespace game_engine {
+namespace arise {
 
 class Window;
 
@@ -139,6 +139,6 @@ class Editor {
   std::string              m_pendingSceneSwitch      = "";
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_EDITOR_H
+#endif  // ARISE_EDITOR_H

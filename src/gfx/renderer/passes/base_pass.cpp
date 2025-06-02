@@ -11,7 +11,7 @@
 #include "gfx/rhi/shader_manager.h"
 #include "profiler/profiler.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 void BasePass::initialize(rhi::Device*           device,
@@ -539,4 +539,4 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
 }
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

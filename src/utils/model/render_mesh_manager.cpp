@@ -6,7 +6,7 @@
 #include "utils/model/render_geometry_mesh_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 RenderMesh* RenderMeshManager::addRenderMesh(RenderGeometryMesh* gpuMesh, Material* material, Mesh* sourceMesh) {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -87,4 +87,4 @@ bool RenderMeshManager::removeRenderMesh(RenderMesh* renderMesh) {
   return false;
 }
 
-}  // namespace game_engine
+}  // namespace arise

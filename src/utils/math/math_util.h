@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MATH_UTIL_H
-#define GAME_ENGINE_MATH_UTIL_H
+#ifndef ARISE_MATH_UTIL_H
+#define ARISE_MATH_UTIL_H
 
 #include "config/config_manager.h"
 
@@ -36,8 +36,8 @@ inline math::Vector3Df normalizeRotation(const math::Vector3Df& rotation) {
   return math::Vector3Df(normalizeAngle(rotation.x()), normalizeAngle(rotation.y()), normalizeAngle(rotation.z()));
 }
 
-Vector3Df g_getVectorfromConfig(const game_engine::ConfigValue& value);
+Vector3Df g_getVectorfromConfig(const arise::ConfigValue& value);
 
 }  // namespace math
 
-#endif  // GAME_ENGINE_MATH_UTIL_H
+#endif  // ARISE_MATH_UTIL_H

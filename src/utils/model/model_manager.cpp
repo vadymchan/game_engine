@@ -1,6 +1,6 @@
 #include "utils/model/model_manager.h"
 
-namespace game_engine {
+namespace arise {
 Model* ModelManager::getModel(const std::filesystem::path& filepath) {
   std::lock_guard<std::mutex> lock(mutex_);
   auto                        it = modelCache_.find(filepath);
@@ -24,4 +24,4 @@ Model* ModelManager::getModel(const std::filesystem::path& filepath) {
   GlobalLogger::Log(LogLevel::Warning, "Failed to load model: " + filepath.string());
   return nullptr;
 }
-}  // namespace game_engine
+}  // namespace arise

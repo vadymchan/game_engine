@@ -11,7 +11,7 @@
 #include "gfx/rhi/shader_manager.h"
 #include "utils/memory/align.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -373,4 +373,4 @@ void VertexNormalVisualizationStrategy::cleanupUnusedBuffers_(
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

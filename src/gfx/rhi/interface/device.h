@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RHI_DEVICE_H
-#define GAME_ENGINE_RHI_DEVICE_H
+#ifndef ARISE_RHI_DEVICE_H
+#define ARISE_RHI_DEVICE_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 class Window;
 
 namespace gfx {
@@ -80,6 +80,6 @@ class Device {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DEVICE_H
+#endif  // ARISE_RHI_DEVICE_H

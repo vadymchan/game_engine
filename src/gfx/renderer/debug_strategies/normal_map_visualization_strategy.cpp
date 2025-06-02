@@ -11,7 +11,7 @@
 #include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -468,4 +468,4 @@ rhi::DescriptorSet* NormalMapVisualizationStrategy::getOrCreateMaterialDescripto
 }
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

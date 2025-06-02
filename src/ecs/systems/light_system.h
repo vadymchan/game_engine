@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_LIGHT_SYSTEM_H
-#define GAME_ENGINE_LIGHT_SYSTEM_H
+#ifndef ARISE_LIGHT_SYSTEM_H
+#define ARISE_LIGHT_SYSTEM_H
 
 #include "ecs/components/light.h"
 #include "ecs/components/transform.h"
@@ -11,16 +11,16 @@
 #include <unordered_set>
 #include <vector>
 
-namespace game_engine::gfx {
+namespace arise::gfx {
 namespace rhi {
 class Device;
 }  // namespace rhi
 namespace renderer {
 class RenderResourceManager;
 }  // namespace renderer
-}  // namespace game_engine::gfx
+}  // namespace arise::gfx
 
-namespace game_engine {
+namespace arise {
 
 class LightSystem : public IUpdatableSystem {
   public:
@@ -117,6 +117,6 @@ class LightSystem : public IUpdatableSystem {
   bool m_initialized        = false;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_LIGHT_SYSTEM_H
+#endif  // ARISE_LIGHT_SYSTEM_H

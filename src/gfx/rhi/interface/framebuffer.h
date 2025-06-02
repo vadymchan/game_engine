@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_FRAMEBUFFER_H
-#define GAME_ENGINE_FRAMEBUFFER_H
+#ifndef ARISE_FRAMEBUFFER_H
+#define ARISE_FRAMEBUFFER_H
 
 #include "gfx/rhi/common/rhi_types.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -29,6 +29,6 @@ class Framebuffer {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FRAMEBUFFER_H
+#endif  // ARISE_FRAMEBUFFER_H

@@ -7,7 +7,7 @@
 #include <math_library/graphics.h>
 #include <math_library/quaternion.h>
 
-namespace game_engine {
+namespace arise {
 
 void CameraSystem::update(Scene* scene, float deltaTime) {
   Registry&              registry        = scene->getEntityRegistry();
@@ -47,4 +47,4 @@ void CameraSystem::update(Scene* scene, float deltaTime) {
     }
   }
 }
-}  // namespace game_engine
+}  // namespace arise

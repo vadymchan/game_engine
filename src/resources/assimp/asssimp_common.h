@@ -1,7 +1,7 @@
 #ifndef ASSIMP_COMMON_H
 #define ASSIMP_COMMON_H
 
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
 
 #include "utils/logger/global_logger.h"
 
@@ -15,7 +15,7 @@
 
 #include <assimp/Importer.hpp>
 
-namespace game_engine {
+namespace arise {
 
 class AssimpSceneCache {
   public:
@@ -50,8 +50,8 @@ class AssimpSceneCache {
   static inline std::unordered_map<std::string, std::weak_ptr<const aiScene>> s_cache;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif // GAME_ENGINE_USE_ASSIMP
+#endif // ARISE_USE_ASSIMP
 
 #endif  // ASSIMP_COMMON_H

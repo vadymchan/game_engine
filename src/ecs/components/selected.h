@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_SELECTED_H
-#define GAME_ENGINE_SELECTED_H
+#ifndef ARISE_SELECTED_H
+#define ARISE_SELECTED_H
 
 #include <math_library/vector.h>
 
-namespace game_engine {
+namespace arise {
 
 struct Selected {
   math::Vector4Df highlightColor   = math::Vector4Df(1.0f, 0.5f, 0.0f, 1.0f);  // Orange
@@ -11,6 +11,6 @@ struct Selected {
   bool            xRay             = false;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SELECTED_H
+#endif  // ARISE_SELECTED_H

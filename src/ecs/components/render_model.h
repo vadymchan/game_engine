@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDER_MODEL_H
-#define GAME_ENGINE_RENDER_MODEL_H
+#ifndef ARISE_RENDER_MODEL_H
+#define ARISE_RENDER_MODEL_H
 
 #include "render_mesh.h"
 
@@ -9,13 +9,13 @@
 #include <memory>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 struct RenderModel {
   std::filesystem::path    filePath;
   std::vector<RenderMesh*> renderMeshes;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_MODEL_H
+#endif  // ARISE_RENDER_MODEL_H

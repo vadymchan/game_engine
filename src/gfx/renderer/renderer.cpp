@@ -11,7 +11,7 @@
 #include "scene/scene_manager.h"
 #include "utils/resource/resource_deletion_manager.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
@@ -116,12 +116,12 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 
   GPU_ZONE_NC(commandBuffer.get(), "Begin Frame", color::PURPLE);
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
   if (m_device->getApiType() == rhi::RenderingApi::Dx12) {
     auto dx12CmdBuffer = static_cast<rhi::CommandBufferDx12*>(commandBuffer.get());
     dx12CmdBuffer->bindDescriptorHeaps();
   }
-#endif  //  GAME_ENGINE_RHI_DX12
+#endif  //  ARISE_RHI_DX12
 
   math::Dimension2Di viewportDimension;
   switch (renderSettings.appMode) {
@@ -376,4 +376,4 @@ void Renderer::setupRenderPasses_() {
 }
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

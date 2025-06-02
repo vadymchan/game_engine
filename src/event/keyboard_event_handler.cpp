@@ -3,7 +3,7 @@
 #include "input/input_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 void KeyboardEventHandler::subscribe(EventInfo eventType, const EventCallback& callback) {
   auto& subscribers = (eventType.m_type == SDL_KEYDOWN) ? m_keyDownSubscribers_ : m_keyUpSubscribers_;
@@ -28,4 +28,4 @@ void KeyboardEventHandler::handleEvent_(const KeyboardEvent& event, const EventC
   callback(event);
 }
 
-}  // namespace game_engine
+}  // namespace arise

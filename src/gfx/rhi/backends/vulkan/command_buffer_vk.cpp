@@ -13,7 +13,7 @@
 #include "utils/color/color.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -910,4 +910,4 @@ void CommandPoolManager::cleanupThreadPools() {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

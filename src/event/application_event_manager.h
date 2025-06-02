@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_EVENT_APPLICATION_EVENT_MANAGER_H
-#define GAME_ENGINE_EVENT_APPLICATION_EVENT_MANAGER_H
+#ifndef ARISE_EVENT_APPLICATION_EVENT_MANAGER_H
+#define ARISE_EVENT_APPLICATION_EVENT_MANAGER_H
 
 #include "application_event_handler.h"
 #include "event.h"
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 class ApplicationEventManager {
   public:
@@ -31,6 +31,6 @@ class ApplicationEventManager {
   std::unique_ptr<ApplicationEventHandler> m_applicationHandler_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_EVENT_APPLICATION_EVENT_MANAGER_H
+#endif  // ARISE_EVENT_APPLICATION_EVENT_MANAGER_H

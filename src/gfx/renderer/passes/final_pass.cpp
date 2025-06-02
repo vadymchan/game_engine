@@ -3,7 +3,7 @@
 #include "gfx/renderer/frame_resources.h"
 #include "profiler/profiler.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -41,4 +41,4 @@ void FinalPass::cleanup() {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

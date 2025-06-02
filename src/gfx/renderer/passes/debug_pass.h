@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_DEBUG_PASS_H
-#define GAME_ENGINE_DEBUG_PASS_H
+#ifndef ARISE_DEBUG_PASS_H
+#define ARISE_DEBUG_PASS_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
 #include "gfx/renderer/render_pass.h"
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -46,6 +46,6 @@ class DebugPass : public RenderPass {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_DEBUG_PASS_H
+#endif  // ARISE_DEBUG_PASS_H

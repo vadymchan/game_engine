@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_SYNCHRONIZATION_H
-#define GAME_ENGINE_SYNCHRONIZATION_H
+#ifndef ARISE_SYNCHRONIZATION_H
+#define ARISE_SYNCHRONIZATION_H
 
 #include "gfx/rhi/common/rhi_types.h"
 
 #include <cstdint>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -43,6 +43,6 @@ class Semaphore {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SYNCHRONIZATION_H
+#endif  // ARISE_SYNCHRONIZATION_H

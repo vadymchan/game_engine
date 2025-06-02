@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_HOT_RELOAD_MANAGER_H
-#define GAME_ENGINE_HOT_RELOAD_MANAGER_H
+#ifndef ARISE_HOT_RELOAD_MANAGER_H
+#define ARISE_HOT_RELOAD_MANAGER_H
 
 #include "utils/file_watcher/file_watcher_manager.h"
 
-namespace game_engine {
+namespace arise {
 
 class HotReloadManager {
   public:
@@ -14,6 +14,6 @@ class HotReloadManager {
                               const Callback&              onChange);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_HOT_RELOAD_MANAGER_H
+#endif  // ARISE_HOT_RELOAD_MANAGER_H

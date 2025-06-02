@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_DXC_UTIL_DX_H
-#define GAME_ENGINE_DXC_UTIL_DX_H
+#ifndef ARISE_DXC_UTIL_DX_H
+#define ARISE_DXC_UTIL_DX_H
 
 // TODO: consider moving this file to another directory
 
@@ -37,7 +37,7 @@ using DxcLibHandle = void*;
 
 #include <dxc/dxcapi.h>
 
-namespace game_engine {
+namespace arise {
 
 enum class ShaderBackend {
   DXIL,
@@ -300,6 +300,6 @@ class DxcUtil {
   DxcCreateInstanceProc m_dxcCreateFn = nullptr;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_DXC_UTIL_DX_H
+#endif  // ARISE_DXC_UTIL_DX_H

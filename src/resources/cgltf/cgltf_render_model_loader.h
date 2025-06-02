@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_GLTF_RENDER_MODEL_LOADER_H
-#define GAME_ENGINE_GLTF_RENDER_MODEL_LOADER_H
+#ifndef ARISE_GLTF_RENDER_MODEL_LOADER_H
+#define ARISE_GLTF_RENDER_MODEL_LOADER_H
 
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifdef ARISE_USE_CGLTF
 
 #include "gfx/rhi/interface/device.h"
 #include "resources/i_render_model_loader.h"
 
-namespace game_engine {
+namespace arise {
 
 class CgltfRenderModelLoader : public IRenderModelLoader {
   public:
@@ -24,8 +24,8 @@ class CgltfRenderModelLoader : public IRenderModelLoader {
   gfx::rhi::Buffer* createIndexBuffer(const Mesh* mesh);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_CGLTF
+#endif  // ARISE_USE_CGLTF
 
-#endif  // GAME_ENGINE_GLTF_RENDER_MODEL_LOADER_H
+#endif  // ARISE_GLTF_RENDER_MODEL_LOADER_H

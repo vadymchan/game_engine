@@ -1,9 +1,9 @@
 // TODO: rename to ktx_utils.h
 
-#ifndef GAME_ENGINE_KTX_UTILS
-#define GAME_ENGINE_KTX_UTILS
+#ifndef ARISE_KTX_UTILS
+#define ARISE_KTX_UTILS
 
-#ifdef GAME_ENGINE_USE_LIBKTX
+#ifdef ARISE_USE_LIBKTX
 
 #include "file_loader/image_file_loader.h"
 #include "gfx/rhi/common/rhi_enums.h"
@@ -13,7 +13,7 @@
 #include <filesystem>
 #include <unordered_set>
 
-namespace game_engine {
+namespace arise {
 
 class KtxImageLoader final : public IImageLoader {
   public:
@@ -49,7 +49,7 @@ class KtxImageLoader final : public IImageLoader {
   static const std::unordered_set<std::string> supportedExtensions_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 #endif  // USE_LIBKTX
 
-#endif  // GAME_ENGINE_KTX_UTILS
+#endif  // ARISE_KTX_UTILS

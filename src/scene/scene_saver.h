@@ -1,6 +1,6 @@
 // scene/scene_saver.h
-#ifndef GAME_ENGINE_SCENE_SAVER_H
-#define GAME_ENGINE_SCENE_SAVER_H
+#ifndef ARISE_SCENE_SAVER_H
+#define ARISE_SCENE_SAVER_H
 
 #include "config/config.h"
 #include "scene/scene.h"
@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <string>
 
-namespace game_engine {
+namespace arise {
 
 struct Transform;
 struct Camera;
@@ -53,6 +53,6 @@ class SceneSaver {
                              rapidjson::MemoryPoolAllocator<>& allocator);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SCENE_SAVER_H
+#endif  // ARISE_SCENE_SAVER_H

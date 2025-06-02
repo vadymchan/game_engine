@@ -1,6 +1,6 @@
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include "gfx/rhi/backends/dx12/buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/descriptor_dx12.h"
@@ -20,7 +20,7 @@
 #include <pix3.h>
 #endif
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -912,6 +912,6 @@ void CommandAllocatorManager::returnCommandAllocator(ID3D12CommandAllocator* all
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12

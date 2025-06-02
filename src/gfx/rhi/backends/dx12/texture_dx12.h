@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_TEXTURE_DX12_H
-#define GAME_ENGINE_TEXTURE_DX12_H
+#ifndef ARISE_TEXTURE_DX12_H
+#define ARISE_TEXTURE_DX12_H
 
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/interface/texture.h"
@@ -7,9 +7,9 @@
 
 #include <D3D12MemAlloc.h>
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -92,7 +92,7 @@ class TextureDx12 : public Texture {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
-#endif  // GAME_ENGINE_TEXTURE_DX12_H
+#endif  // ARISE_RHI_DX12
+#endif  // ARISE_TEXTURE_DX12_H

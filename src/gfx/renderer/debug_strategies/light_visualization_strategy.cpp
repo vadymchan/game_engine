@@ -10,7 +10,7 @@
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/shader_manager.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -471,4 +471,4 @@ void LightVisualizationStrategy::cleanupUnusedBuffers_(
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

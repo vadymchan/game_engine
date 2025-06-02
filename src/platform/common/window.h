@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_WINDOW_H
-#define GAME_ENGINE_WINDOW_H
+#ifndef ARISE_WINDOW_H
+#define ARISE_WINDOW_H
 
 #include "event/event.h"
 #include "utils/enum/enum_util.h"
@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-namespace game_engine {
+namespace arise {
 
 class Window {
   public:
@@ -95,6 +95,6 @@ class Window {
 
 DECLARE_ENUM_BIT_OPERATORS(Window::Flags)
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_WINDOW
+#endif  // ARISE_WINDOW

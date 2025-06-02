@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_BASE_PASS_H
-#define GAME_ENGINE_BASE_PASS_H
+#ifndef ARISE_BASE_PASS_H
+#define ARISE_BASE_PASS_H
 
 #include "gfx/renderer/render_pass.h"
 #include "gfx/rhi/interface/render_pass.h"
@@ -7,18 +7,18 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 struct RenderModel;
 struct Material;
-}  // namespace game_engine
+}  // namespace arise
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -108,6 +108,6 @@ class BasePass : public RenderPass {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_BASE_PASS_H
+#endif  // ARISE_BASE_PASS_H

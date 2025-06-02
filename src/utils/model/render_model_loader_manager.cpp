@@ -1,6 +1,6 @@
 #include "utils/model/render_model_loader_manager.h"
 
-namespace game_engine {
+namespace arise {
 void RenderModelLoaderManager::registerLoader(ModelType modelType, std::shared_ptr<IRenderModelLoader> loader) {
   std::lock_guard<std::mutex> lock(mutex_);
   loaderMap_[modelType] = std::move(loader);
@@ -33,4 +33,4 @@ std::unique_ptr<RenderModel> RenderModelLoaderManager::loadRenderModel(const std
   GlobalLogger::Log(LogLevel::Error, "No loader found for model type with extension: " + extension);
   return nullptr;
 }
-}  // namespace game_engine
+}  // namespace arise

@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_CONFIG_MANAGER_H
-#define GAME_ENGINE_CONFIG_MANAGER_H
+#ifndef ARISE_CONFIG_MANAGER_H
+#define ARISE_CONFIG_MANAGER_H
 
 #include "config/config.h"
 
-namespace game_engine {
+namespace arise {
 
 class ConfigManager {
   public:
@@ -25,6 +25,6 @@ class ConfigManager {
   std::unordered_map<std::filesystem::path, std::unique_ptr<Config>> configs_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_CONFIG_MANAGER_H
+#endif  // ARISE_CONFIG_MANAGER_H

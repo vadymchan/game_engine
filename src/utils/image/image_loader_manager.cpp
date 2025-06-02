@@ -2,7 +2,7 @@
 
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 void ImageLoaderManager::registerLoader(ImageType imageType, std::shared_ptr<IImageLoader> loader) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -36,4 +36,4 @@ std::unique_ptr<Image> ImageLoaderManager::loadImage(const std::filesystem::path
   return nullptr;
 }
 
-}  // namespace game_engine
+}  // namespace arise

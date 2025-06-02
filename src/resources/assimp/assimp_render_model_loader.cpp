@@ -1,4 +1,4 @@
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
 
 #include "resources/assimp/assimp_render_model_loader.h"
 
@@ -12,7 +12,7 @@
 #include "utils/model/render_mesh_manager.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 std::unique_ptr<RenderModel> AssimpRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
                                                                       std::optional<Model*>        outModel) {
@@ -114,6 +114,6 @@ gfx::rhi::Buffer* AssimpRenderModelLoader::createIndexBuffer(const Mesh* mesh) {
   return bufferManager->createIndexBuffer(mesh->indices.data(), mesh->indices.size(), sizeof(uint32_t), bufferName);
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP

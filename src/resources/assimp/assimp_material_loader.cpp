@@ -1,4 +1,4 @@
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
 
 #include "resources/assimp/assimp_material_loader.h"
 
@@ -13,7 +13,7 @@
 
 #include <assimp/Importer.hpp>
 
-namespace game_engine {
+namespace arise {
 
 std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::loadMaterials(const std::filesystem::path& filePath) {
   GlobalLogger::Log(LogLevel::Info, "Loading materials from " + filePath.string());
@@ -146,6 +146,6 @@ std::string AssimpMaterialLoader::aiTextureTypeToString(aiTextureType type) {
       return "unknown";
   }
 }
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP

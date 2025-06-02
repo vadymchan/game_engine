@@ -1,4 +1,4 @@
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifdef ARISE_USE_CGLTF
 
 #include "resources/cgltf/cgltf_render_model_loader.h"
 
@@ -16,7 +16,7 @@
 #include <cgltf.h>
 #include <math_library/matrix.h>
 
-namespace game_engine {
+namespace arise {
 
 std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
                                                                      std::optional<Model*>        outModel) {
@@ -144,6 +144,6 @@ gfx::rhi::Buffer* CgltfRenderModelLoader::createIndexBuffer(const Mesh* mesh) {
   return bufferManager->createIndexBuffer(mesh->indices.data(), mesh->indices.size(), sizeof(uint32_t), bufferName);
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_CGLTF
+#endif  // ARISE_USE_CGLTF

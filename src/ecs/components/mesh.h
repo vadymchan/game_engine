@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_MESH_H
-#define GAME_ENGINE_MESH_H
+#ifndef ARISE_MESH_H
+#define ARISE_MESH_H
 
 #include "ecs/components/vertex.h"
 
 #include <string>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 // This is the geometry data on CPU side (imported from assimp / cgltf)
 struct Mesh {
@@ -16,6 +16,6 @@ struct Mesh {
   math::Matrix4f<>      transformMatrix = math::Matrix4f<>::Identity();
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MESH_H
+#endif  // ARISE_MESH_H

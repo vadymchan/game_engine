@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_I_MATERIAL_LOADER_H
-#define GAME_ENGINE_I_MATERIAL_LOADER_H
+#ifndef ARISE_I_MATERIAL_LOADER_H
+#define ARISE_I_MATERIAL_LOADER_H
 
 #include "ecs/components/material.h"
 
-namespace game_engine {
+namespace arise {
 
 class IMaterialLoader {
   public:
@@ -11,6 +11,6 @@ class IMaterialLoader {
   virtual std::vector<std::unique_ptr<Material>> loadMaterials(const std::filesystem::path& filepath) = 0;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_I_MATERIAL_LOADER_H
+#endif  // ARISE_I_MATERIAL_LOADER_H

@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDER_PASS_VK_H
-#define GAME_ENGINE_RENDER_PASS_VK_H
+#ifndef ARISE_RENDER_PASS_VK_H
+#define ARISE_RENDER_PASS_VK_H
 
 #include "gfx/rhi/interface/render_pass.h"
 
@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -56,6 +56,6 @@ class RenderPassVk : public RenderPass {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDER_PASS_VK_H
+#endif  // ARISE_RENDER_PASS_VK_H

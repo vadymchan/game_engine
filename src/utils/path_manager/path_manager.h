@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_PATH_MANAGER_H
-#define GAME_ENGINE_PATH_MANAGER_H
+#ifndef ARISE_PATH_MANAGER_H
+#define ARISE_PATH_MANAGER_H
 
 #include "config/config.h"
 
 #include <filesystem>
 
-namespace game_engine {
+namespace arise {
 
 class PathManager {
   public:
@@ -32,6 +32,6 @@ class PathManager {
   static std::filesystem::path s_getPath(std::string_view pathKey);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_PATH_MANAGER_H
+#endif  // ARISE_PATH_MANAGER_H

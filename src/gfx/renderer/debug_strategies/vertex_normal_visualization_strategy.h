@@ -1,24 +1,24 @@
-#ifndef GAME_ENGINE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
-#define GAME_ENGINE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
+#ifndef ARISE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
+#define ARISE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
 
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 struct RenderModel;
 struct Material;
-}  // namespace game_engine
+}  // namespace arise
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
 class RenderPass;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -98,6 +98,6 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
+#endif  // ARISE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H

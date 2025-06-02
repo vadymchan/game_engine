@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_IMAGE_MANAGER_H
-#define GAME_ENGINE_IMAGE_MANAGER_H
+#ifndef ARISE_IMAGE_MANAGER_H
+#define ARISE_IMAGE_MANAGER_H
 
 #include "file_loader/image_file_loader.h"
 
@@ -7,7 +7,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 class ImageManager {
   public:
@@ -19,6 +19,6 @@ class ImageManager {
   std::unordered_map<std::filesystem::path, std::unique_ptr<Image>> m_imageCache_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_IMAGE_MANAGER_H
+#endif  // ARISE_IMAGE_MANAGER_H

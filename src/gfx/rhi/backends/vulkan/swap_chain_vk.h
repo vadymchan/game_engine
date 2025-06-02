@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_SWAP_CHAIN_VK_H
-#define GAME_ENGINE_SWAP_CHAIN_VK_H
+#ifndef ARISE_SWAP_CHAIN_VK_H
+#define ARISE_SWAP_CHAIN_VK_H
 
 #include "gfx/rhi/backends/vulkan/device_utils_vk.h"
 #include "gfx/rhi/interface/swap_chain.h"
@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -57,6 +57,6 @@ class SwapChainVk : public SwapChain {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SWAP_CHAIN_VK_H
+#endif  // ARISE_SWAP_CHAIN_VK_H

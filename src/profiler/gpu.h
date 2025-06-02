@@ -1,16 +1,16 @@
-#ifndef GAME_ENGINE_PROFILER_GPU_H
-#define GAME_ENGINE_PROFILER_GPU_H
+#ifndef ARISE_PROFILER_GPU_H
+#define ARISE_PROFILER_GPU_H
 
 #include "profiler/backends/gpu_profiler.h"
 #include "profiler/backends/gpu_profiler_factory.h"
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
 #include "utils/color/color.h"
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 class ProfileZone {
@@ -67,14 +67,14 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 }
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
-#ifndef GAME_ENGINE_NO_GPU_MACROS
+#ifndef ARISE_NO_GPU_MACROS
 
 #define CONCAT_IMPL(x, y) x##y
 #define CONCAT(x, y)      CONCAT_IMPL(x, y)
 
-#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+#ifdef ARISE_TRACY_GPU_PROFILING_VK
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 
 #include <tracy/TracyVulkan.hpp>
@@ -100,7 +100,7 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
                ((color) >> 8),                                                                   \
                true)
 
-#elif defined(GAME_ENGINE_TRACY_GPU_PROFILING_DX12)
+#elif defined(ARISE_TRACY_GPU_PROFILING_DX12)
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 
 #include <tracy/TracyD3D12.hpp>
@@ -134,26 +134,26 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 
 // main macros (client will call these)
 #define GPU_ZONE_NC(cmdBuf, name, color)                                                   \
-  auto CONCAT(_gpu_zone_, __LINE__) = ::game_engine::gpu::createZone(cmdBuf, name, color); \
+  auto CONCAT(_gpu_zone_, __LINE__) = ::arise::gpu::createZone(cmdBuf, name, color); \
   GPU_TRACY_ZONE_NC(cmdBuf, name, color)
 
 #define GPU_ZONE_N(cmdBuf, name)                                                    \
-  auto CONCAT(_gpu_zone_, __LINE__) = ::game_engine::gpu::createZone(cmdBuf, name); \
+  auto CONCAT(_gpu_zone_, __LINE__) = ::arise::gpu::createZone(cmdBuf, name); \
   GPU_TRACY_ZONE_N(cmdBuf, name)
 
 #define GPU_ZONE_C(cmdBuf, color)                                                        \
-  auto CONCAT(_gpu_zone_, __LINE__) = ::game_engine::gpu::createZone(cmdBuf, "", color); \
+  auto CONCAT(_gpu_zone_, __LINE__) = ::arise::gpu::createZone(cmdBuf, "", color); \
   GPU_TRACY_ZONE_C(cmdBuf, color)
 
-#define GPU_MARKER(cmdBuf, name)          ::game_engine::gpu::insertMarker(cmdBuf, name)
+#define GPU_MARKER(cmdBuf, name)          ::arise::gpu::insertMarker(cmdBuf, name)
 
-#define GPU_MARKER_C(cmdBuf, name, color) ::game_engine::gpu::insertMarker(cmdBuf, name, color)
+#define GPU_MARKER_C(cmdBuf, name, color) ::arise::gpu::insertMarker(cmdBuf, name, color)
 
-#endif  // GAME_ENGINE_NO_GPU_MACROS
+#endif  // ARISE_NO_GPU_MACROS
 
-#else   // !GAME_ENGINE_USE_GPU_PROFILING
+#else   // !ARISE_USE_GPU_PROFILING
 
-#ifndef GAME_ENGINE_NO_GPU_MACROS
+#ifndef ARISE_NO_GPU_MACROS
 #define GPU_ZONE_NC(cmdBuf, name, color)
 #define GPU_ZONE_N(cmdBuf, name)
 #define GPU_ZONE_C(cmdBuf, color)
@@ -161,6 +161,6 @@ inline void insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& 
 #define GPU_MARKER_C(cmdBuf, name, color)
 #endif
 
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+#endif  // ARISE_USE_GPU_PROFILING
 
-#endif  // GAME_ENGINE_PROFILER_GPU_H
+#endif  // ARISE_PROFILER_GPU_H

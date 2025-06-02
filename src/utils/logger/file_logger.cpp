@@ -4,7 +4,7 @@
 
 #include <filesystem>
 
-namespace game_engine {
+namespace arise {
 
 namespace {
 
@@ -175,4 +175,4 @@ void FileLogger::setFilePath(const std::string& filePath) {
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

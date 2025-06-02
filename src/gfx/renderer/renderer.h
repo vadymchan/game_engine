@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RENDERER_H
-#define GAME_ENGINE_RENDERER_H
+#ifndef ARISE_RENDERER_H
+#define ARISE_RENDERER_H
 
 #include "gfx/renderer/frame_resources.h"
 #include "gfx/renderer/passes/base_pass.h"
@@ -15,11 +15,11 @@
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 class Scene;
-}  // namespace game_engine
+}  // namespace arise
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -87,6 +87,6 @@ class Renderer {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDERER_H
+#endif  // ARISE_RENDERER_H

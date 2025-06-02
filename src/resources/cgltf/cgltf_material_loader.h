@@ -1,7 +1,7 @@
-#ifndef GAME_ENGINE_GLTF_MATERIAL_LOADER_H
-#define GAME_ENGINE_GLTF_MATERIAL_LOADER_H
+#ifndef ARISE_GLTF_MATERIAL_LOADER_H
+#define ARISE_GLTF_MATERIAL_LOADER_H
 
-#ifdef GAME_ENGINE_USE_CGLTF
+#ifdef ARISE_USE_CGLTF
 
 #include "gfx/rhi/interface/device.h"
 #include "resources/i_material_loader.h"
@@ -12,7 +12,7 @@ struct cgltf_data;
 struct cgltf_material;
 struct cgltf_image;
 
-namespace game_engine {
+namespace arise {
 
 class CgltfMaterialLoader : public IMaterialLoader {
   public:
@@ -36,8 +36,8 @@ class CgltfMaterialLoader : public IMaterialLoader {
                                  const std::string&           textureName);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_CGLTF
+#endif  // ARISE_USE_CGLTF
 
-#endif  // GAME_ENGINE_GLTF_MATERIAL_LOADER_H
+#endif  // ARISE_GLTF_MATERIAL_LOADER_H

@@ -1,28 +1,28 @@
 #include "profiler/backends/gpu_profiler_factory.h"
 
-#ifdef GAME_ENGINE_USE_GPU_PROFILING
+#ifdef ARISE_USE_GPU_PROFILING
 
 #include "profiler/backends/gpu_profiler_dx12.h"
 #include "profiler/backends/gpu_profiler_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gpu {
 
 std::unique_ptr<GpuProfiler> GpuProfilerFactory::create(gfx::rhi::RenderingApi api) {
-#ifndef GAME_ENGINE_USE_GPU_PROFILING
+#ifndef ARISE_USE_GPU_PROFILING
   return nullptr;
 #endif
 
   std::unique_ptr<GpuProfiler> profiler;
   switch (api) {
-#ifdef GAME_ENGINE_USE_VULKAN
+#ifdef ARISE_USE_VULKAN
     case gfx::rhi::RenderingApi::Vulkan:
       profiler = std::make_unique<GpuProfilerVk>();
       break;
 #endif
 
-#ifdef GAME_ENGINE_USE_DX12
+#ifdef ARISE_USE_DX12
     case gfx::rhi::RenderingApi::Dx12:
       profiler = std::make_unique<GpuProfilerDx12>();
       break;
@@ -38,7 +38,7 @@ std::unique_ptr<GpuProfiler> GpuProfilerFactory::create(gfx::rhi::RenderingApi a
 
 
 }  // namespace gpu
-}  // namespace game_engine
+}  // namespace arise
 
 
-#endif  // GAME_ENGINE_USE_GPU_PROFILING
+#endif  // ARISE_USE_GPU_PROFILING

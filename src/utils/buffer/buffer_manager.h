@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_BUFFER_MANAGER_H
-#define GAME_ENGINE_BUFFER_MANAGER_H
+#ifndef ARISE_BUFFER_MANAGER_H
+#define ARISE_BUFFER_MANAGER_H
 
 #include "gfx/rhi/interface/buffer.h"
 
@@ -8,11 +8,11 @@
 #include <string>
 #include <unordered_map>
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class Device;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 
 class BufferManager {
   public:
@@ -84,6 +84,6 @@ class BufferManager {
   uint32_t m_bufferCounter;  // Counter for generating unique names
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_BUFFER_MANAGER_H
+#endif  // ARISE_BUFFER_MANAGER_H

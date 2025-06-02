@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_PIPELINE_VK_H
-#define GAME_ENGINE_PIPELINE_VK_H
+#ifndef ARISE_PIPELINE_VK_H
+#define ARISE_PIPELINE_VK_H
 
 #include "gfx/rhi/interface/pipeline.h"
 
@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -53,6 +53,6 @@ class GraphicsPipelineVk : public GraphicsPipeline {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_PIPELINE_VK_H
+#endif  // ARISE_PIPELINE_VK_H

@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_MATERIAL_LOADER_MANAGER_H
-#define GAME_ENGINE_MATERIAL_LOADER_MANAGER_H
+#ifndef ARISE_MATERIAL_LOADER_MANAGER_H
+#define ARISE_MATERIAL_LOADER_MANAGER_H
 
 #include "resources/i_material_loader.h"
 #include "utils/logger/global_logger.h"
@@ -9,7 +9,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 
 enum class MaterialType {
   MTL,   // Wavefront (OBJ) .mtl files
@@ -78,6 +78,6 @@ class MaterialLoaderManager {
   std::mutex                                                         mutex_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MATERIAL_LOADER_MANAGER_H
+#endif  // ARISE_MATERIAL_LOADER_MANAGER_H

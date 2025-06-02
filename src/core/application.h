@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_GAME_H
-#define GAME_ENGINE_GAME_H
+#ifndef ARISE_GAME_H
+#define ARISE_GAME_H
 
 #include "gfx/renderer/renderer.h"
 
@@ -11,7 +11,7 @@
 #include <iterator>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 class Engine;
 
@@ -64,6 +64,6 @@ class Application {
   Scene* m_scene_ = nullptr;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_GAME_H
+#endif  // ARISE_GAME_H

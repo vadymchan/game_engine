@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_DEVICE_DX12_H
-#define GAME_ENGINE_DEVICE_DX12_H
+#ifndef ARISE_DEVICE_DX12_H
+#define ARISE_DEVICE_DX12_H
 
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
 #include "gfx/rhi/backends/dx12/descriptor_dx12.h"
@@ -9,9 +9,9 @@
 #include <D3D12MemAlloc.h>
 #include <mutex>
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -105,8 +105,8 @@ class DeviceDx12 : public Device {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
+#endif  // ARISE_RHI_DX12
 
-#endif  // GAME_ENGINE_DEVICE_DX12_H
+#endif  // ARISE_DEVICE_DX12_H

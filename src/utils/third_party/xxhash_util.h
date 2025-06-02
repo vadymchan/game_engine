@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_THIRD_PARTY_UTIL_H
-#define GAME_ENGINE_THIRD_PARTY_UTIL_H
+#ifndef ARISE_THIRD_PARTY_UTIL_H
+#define ARISE_THIRD_PARTY_UTIL_H
 
 #include <xxhash.h>
 
 #include <type_traits>
 
-namespace game_engine {
+namespace arise {
 
 // TODO: consider renaming according to naming conventions
 template <typename T>
@@ -15,6 +15,6 @@ uint64_t XXH64(const T& data, uint64_t seed = 0) {
   return ::XXH64(&data, sizeof(T), seed);
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_THIRD_PARTY_UTIL_H
+#endif  // ARISE_THIRD_PARTY_UTIL_H

@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_ASSET_LOADER_H
-#define GAME_ENGINE_ASSET_LOADER_H
+#ifndef ARISE_ASSET_LOADER_H
+#define ARISE_ASSET_LOADER_H
 
 #include "profiler/profiler.h"
 #include "utils/logger/global_logger.h"
@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <variant>
 
-namespace game_engine {
+namespace arise {
 
 /**
  * Enum representing different types of loadable assets
@@ -331,6 +331,6 @@ class AssetLoader {
   std::unordered_map<std::string, std::vector<LoadCallback>> m_pendingCallbacks;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_ASSET_LOADER_H
+#endif  // ARISE_ASSET_LOADER_H

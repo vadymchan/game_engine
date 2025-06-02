@@ -5,7 +5,7 @@
 
 #include <ranges>
 
-namespace game_engine {
+namespace arise {
 
 void ConfigManager::loadAllConfigsFromDirectory(const std::filesystem::path& dirPath) {
   if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
@@ -67,4 +67,4 @@ void ConfigManager::unloadAllConfigs() {
                     "All configs have been unloaded from memory.");
 }
 
-}  // namespace game_engine
+}  // namespace arise

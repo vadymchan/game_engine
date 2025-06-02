@@ -1,16 +1,16 @@
-#ifndef GAME_ENGINE_RENDERER_RENDER_PASS_H
-#define GAME_ENGINE_RENDERER_RENDER_PASS_H
+#ifndef ARISE_RENDERER_RENDER_PASS_H
+#define ARISE_RENDERER_RENDER_PASS_H
 
 #include "gfx/renderer/render_context.h"
 
 #include <math_library/dimension.h>
 
-namespace game_engine::gfx::rhi {
+namespace arise::gfx::rhi {
 class Device;
 class ShaderManager;
-}  // namespace game_engine::gfx::rhi
+}  // namespace arise::gfx::rhi
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -93,6 +93,6 @@ class RenderPass {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RENDERER_RENDER_PASS_H
+#endif  // ARISE_RENDERER_RENDER_PASS_H

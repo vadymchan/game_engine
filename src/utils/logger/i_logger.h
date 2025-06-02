@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_I_LOGGER_H
-#define GAME_ENGINE_I_LOGGER_H
+#ifndef ARISE_I_LOGGER_H
+#define ARISE_I_LOGGER_H
 
 #include <source_location>
 #include <string>
 
-namespace game_engine {
+namespace arise {
 
 enum class LogLevel {
   Trace,
@@ -40,6 +40,6 @@ class ILogger {
   std::string loggerName;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_I_LOGGER_H
+#endif  // ARISE_I_LOGGER_H

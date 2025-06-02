@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RUNTIME_SETTINGS_H
-#define GAME_ENGINE_RUNTIME_SETTINGS_H
+#ifndef ARISE_RUNTIME_SETTINGS_H
+#define ARISE_RUNTIME_SETTINGS_H
 
 #include "config/config_manager.h"
 #include "gfx/rhi/common/rhi_enums.h"
@@ -8,7 +8,7 @@
 
 #include <math_library/vector.h>
 
-namespace game_engine {
+namespace arise {
 
 class RuntimeSettings {
   public:
@@ -26,6 +26,6 @@ class RuntimeSettings {
   math::Vector3Df        m_worldUp_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RUNTIME_SETTINGS_H
+#endif  // ARISE_RUNTIME_SETTINGS_H

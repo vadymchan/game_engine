@@ -1,6 +1,6 @@
 #include "utils/model/model_type.h"
 
-namespace game_engine {
+namespace arise {
 ModelType getModelTypeFromExtension(const std::string& extension) {
   static const std::unordered_map<std::string, ModelType> extensionToType = {
     { ".obj",  ModelType::OBJ},
@@ -19,4 +19,4 @@ ModelType getModelTypeFromExtension(const std::string& extension) {
 
   return ModelType::UNKNOWN;
 }
-}  // namespace game_engine
+}  // namespace arise

@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_TIMING_MANAGER_H
-#define GAME_ENGINE_TIMING_MANAGER_H
+#ifndef ARISE_TIMING_MANAGER_H
+#define ARISE_TIMING_MANAGER_H
 
 #include "utils/time/stopwatch.h"
 
 #include <chrono>
 
-namespace game_engine {
+namespace arise {
 
 class TimingManager {
   public:
@@ -53,6 +53,6 @@ class TimingManager {
   float m_cachedFrameTime_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_TIMING_MANAGER_H
+#endif  // ARISE_TIMING_MANAGER_H

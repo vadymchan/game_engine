@@ -1,7 +1,7 @@
-#ifndef GAME_ENGINE_ASSIMP_MODEL_LOADER_H
-#define GAME_ENGINE_ASSIMP_MODEL_LOADER_H
+#ifndef ARISE_ASSIMP_MODEL_LOADER_H
+#define ARISE_ASSIMP_MODEL_LOADER_H
 
-#ifdef GAME_ENGINE_USE_ASSIMP
+#ifdef ARISE_USE_ASSIMP
 
 #include "resources/i_model_loader.h"
 
@@ -11,7 +11,7 @@
 
 #include <assimp/Importer.hpp>
 
-namespace game_engine {
+namespace arise {
 
 class AssimpModelLoader : public IModelLoader {
   public:
@@ -33,8 +33,8 @@ class AssimpModelLoader : public IModelLoader {
   void calculateTangentsAndBitangents(aiMesh* ai_mesh, std::vector<Vertex>& vertices);
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_USE_ASSIMP
+#endif  // ARISE_USE_ASSIMP
 
-#endif  // GAME_ENGINE_ASSIMP_MODEL_LOADER_H
+#endif  // ARISE_ASSIMP_MODEL_LOADER_H

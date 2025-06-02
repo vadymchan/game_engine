@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_UTILS_COLOR_H
-#define GAME_ENGINE_UTILS_COLOR_H
+#ifndef ARISE_UTILS_COLOR_H
+#define ARISE_UTILS_COLOR_H
 
 #include <array>
 #include <cstdint>
 
-namespace game_engine {
+namespace arise {
 namespace color {
 
 // Predefined colors in RGBA format (0xRRGGBBAA)
@@ -63,6 +63,6 @@ constexpr uint32_t CYAN_SEMI = 0x80'80'FF'B3;
 }
 
 }  // namespace color
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_UTILS_COLOR_H
+#endif  // ARISE_UTILS_COLOR_H

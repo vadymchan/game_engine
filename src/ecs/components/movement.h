@@ -1,15 +1,15 @@
-#ifndef GAME_ENGINE_MOVEMENT_H
-#define GAME_ENGINE_MOVEMENT_H
+#ifndef ARISE_MOVEMENT_H
+#define ARISE_MOVEMENT_H
 
 #include <math_library/vector.h>
 
-namespace game_engine {
+namespace arise {
 
 struct Movement {
   math::Vector3Df direction;
   float           strength;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MOVEMENT_H
+#endif  // ARISE_MOVEMENT_H

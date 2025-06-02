@@ -1,11 +1,11 @@
-#ifndef GAME_ENGINE_ALIGN_H
-#define GAME_ENGINE_ALIGN_H
+#ifndef ARISE_ALIGN_H
+#define ARISE_ALIGN_H
 
 #include <cassert>
 #include <cstddef>
 #include <type_traits>
 
-namespace game_engine {
+namespace arise {
 
 /**
  * Graphics APIs like DirectX 12 and Vulkan require constant buffers to be aligned
@@ -18,6 +18,6 @@ inline uint64_t alignConstantBufferSize(uint64_t size) {
   return (size + 255) & ~255;
 }
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_ALIGN_H
+#endif  // ARISE_ALIGN_H

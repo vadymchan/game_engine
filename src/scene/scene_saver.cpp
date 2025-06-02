@@ -13,7 +13,7 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
-namespace game_engine {
+namespace arise {
 
 bool SceneSaver::saveScene(Scene* scene, const std::string& sceneName, const std::filesystem::path& filePath) {
   if (!scene) {
@@ -248,4 +248,4 @@ void SceneSaver::serializeModel(const RenderModel*                model,
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

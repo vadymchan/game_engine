@@ -1,6 +1,6 @@
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 
 void GlobalLogger::AddLogger(std::unique_ptr<ILogger> logger) {
   s_loggers.push_back(std::move(logger));
@@ -25,4 +25,4 @@ void GlobalLogger::Shutdown() {
   s_loggers.clear();
 }
 
-}  // namespace game_engine
+}  // namespace arise

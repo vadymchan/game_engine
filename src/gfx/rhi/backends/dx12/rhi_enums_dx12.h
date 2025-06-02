@@ -1,14 +1,14 @@
-#ifndef GAME_ENGINE_RHI_DX12_UTIL_H
-#define GAME_ENGINE_RHI_DX12_UTIL_H
+#ifndef ARISE_RHI_DX12_UTIL_H
+#define ARISE_RHI_DX12_UTIL_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "platform/windows/windows_platform_setup.h"
 
-#ifdef GAME_ENGINE_RHI_DX12
+#ifdef ARISE_RHI_DX12
 
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -60,7 +60,7 @@ ResourceLayout        g_getResourceLayoutDx12(D3D12_RESOURCE_STATES resourceStat
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_DX12
-#endif  // GAME_ENGINE_RHI_DX12_UTIL_H
+#endif  // ARISE_RHI_DX12
+#endif  // ARISE_RHI_DX12_UTIL_H

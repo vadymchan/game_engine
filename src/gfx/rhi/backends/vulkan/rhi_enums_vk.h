@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_RHI_ENUMS_VK_H
-#define GAME_ENGINE_RHI_ENUMS_VK_H
+#ifndef ARISE_RHI_ENUMS_VK_H
+#define ARISE_RHI_ENUMS_VK_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 
@@ -7,7 +7,7 @@
 
 #include <unordered_map>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -60,6 +60,6 @@ VkDescriptorType g_getShaderBindingTypeVk(ShaderBindingType type);
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_ENUMS_VK_H
+#endif  // ARISE_RHI_ENUMS_VK_H

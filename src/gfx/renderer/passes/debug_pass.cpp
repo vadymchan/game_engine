@@ -10,7 +10,7 @@
 #include "utils/logger/global_logger.h"
 #include "profiler/profiler.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -108,4 +108,4 @@ void DebugPass::createDebugStrategy_() {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

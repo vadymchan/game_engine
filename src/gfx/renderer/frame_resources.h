@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_FRAME_RESOURCES_H
-#define GAME_ENGINE_FRAME_RESOURCES_H
+#ifndef ARISE_FRAME_RESOURCES_H
+#define ARISE_FRAME_RESOURCES_H
 
 #include "ecs/components/render_model.h"
 #include "ecs/components/transform.h"
@@ -15,11 +15,11 @@
 #include <unordered_map>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 class LightSystem;
-}  // namespace game_engine
+}  // namespace arise
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace renderer {
 
@@ -166,6 +166,6 @@ class FrameResources {
 
 }  // namespace renderer
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_FRAME_RESOURCES_H
+#endif  // ARISE_FRAME_RESOURCES_H

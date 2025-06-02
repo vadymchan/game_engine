@@ -1,10 +1,10 @@
-#ifndef GAME_ENGINE_RHI_SWAP_CHAIN_H
-#define GAME_ENGINE_RHI_SWAP_CHAIN_H
+#ifndef ARISE_RHI_SWAP_CHAIN_H
+#define ARISE_RHI_SWAP_CHAIN_H
 
 #include "gfx/rhi/common/rhi_enums.h"
 #include "gfx/rhi/common/rhi_types.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -45,6 +45,6 @@ class SwapChain {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_RHI_SWAP_CHAIN_H
+#endif  // ARISE_RHI_SWAP_CHAIN_H

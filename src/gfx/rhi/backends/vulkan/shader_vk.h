@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_SHADER_VK_H
-#define GAME_ENGINE_SHADER_VK_H
+#ifndef ARISE_SHADER_VK_H
+#define ARISE_SHADER_VK_H
 
 #include "gfx/rhi/interface/shader.h"
 
@@ -7,7 +7,7 @@
 
 #include <mutex>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -41,6 +41,6 @@ class ShaderVk : public Shader {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SHADER_VK_H
+#endif  // ARISE_SHADER_VK_H

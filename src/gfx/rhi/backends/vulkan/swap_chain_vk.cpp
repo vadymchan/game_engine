@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -334,4 +334,4 @@ uint32_t SwapChainVk::getBufferCount() const {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

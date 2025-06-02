@@ -3,7 +3,7 @@
 #include "ecs/components/movement.h"
 #include "ecs/components/transform.h"
 
-namespace game_engine {
+namespace arise {
 
 void MovementSystem::update(Scene* scene, float deltaTime) {
   Registry& registry = scene->getEntityRegistry();
@@ -19,4 +19,4 @@ void MovementSystem::update(Scene* scene, float deltaTime) {
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

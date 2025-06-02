@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_VERTEX_H
-#define GAME_ENGINE_VERTEX_H
+#ifndef ARISE_VERTEX_H
+#define ARISE_VERTEX_H
 
 #include <math_library/vector.h>
 
-namespace game_engine {
+namespace arise {
 
 struct Vertex {
   math::Vector3Df position;
@@ -14,6 +14,6 @@ struct Vertex {
   math::Vector4Df color;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_VERTEX_H
+#endif  // ARISE_VERTEX_H

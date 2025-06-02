@@ -2,7 +2,7 @@
 
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 void HotReloadManager::watchFileModifications(
     const std::filesystem::path& dirPath, const Callback& onChange) {
@@ -14,4 +14,4 @@ void HotReloadManager::watchFileModifications(
   });
 }
 
-}  // namespace game_engine
+}  // namespace arise

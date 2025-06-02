@@ -4,7 +4,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/service/service_locator.h"
 
-namespace game_engine {
+namespace arise {
 
 Image* ImageManager::getImage(const std::filesystem::path& filepath) {
   auto it = m_imageCache_.find(filepath);
@@ -29,4 +29,4 @@ Image* ImageManager::getImage(const std::filesystem::path& filepath) {
   return nullptr;
 }
 
-}  // namespace game_engine
+}  // namespace arise

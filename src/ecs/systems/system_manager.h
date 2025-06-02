@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_SYSTEM_MANAGER_H
-#define GAME_ENGINE_SYSTEM_MANAGER_H
+#ifndef ARISE_SYSTEM_MANAGER_H
+#define ARISE_SYSTEM_MANAGER_H
 
 #include "ecs/systems/i_updatable_system.h"
 
-namespace game_engine {
+namespace arise {
 
 // TODO: In future, when other than UpdatableSystems will be introduced,
 // consider to separate SystemManager to SubSystems like UpdatableSystemManager,
@@ -40,6 +40,6 @@ class SystemManager {
   std::vector<std::unique_ptr<IUpdatableSystem>> m_systems_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SYSTEM_MANAGER_H
+#endif  // ARISE_SYSTEM_MANAGER_H

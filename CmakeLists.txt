@@ -70,7 +70,7 @@ option(USE_GLTF_SAMPLE_MODELS "Enable importing glTF Sample Models" OFF)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
 # set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
 
-# set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/game_engine.dir)
+# set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/arise.dir)
 
 if(BUILD_TRACY OR BUILD_PROFILING_TOOLS)
     set(TRACY_VERSION "v0.11.1" CACHE STRING "Tracy profiler version")
@@ -115,7 +115,7 @@ endif()
     
 # -------------------------------------------------------------------------------------
        
-project(game_engine)
+project(arise)
      
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)  
@@ -439,6 +439,7 @@ if(USE_GLTF_SAMPLE_MODELS)
     )
 endif()
 
+string(TOUPPER "${PROJECT_NAME}" PROJECT_UPPER)
 
 # old hierarchy
 # file(GLOB_RECURSE SOURCES "src/*.cpp")
@@ -462,12 +463,12 @@ list(APPEND HLSL_SHADERS ${HLSL_INCLUDES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "src" FILES ${HEADERS} ${SOURCES} ${INLINES})
 source_group(TREE "${CMAKE_SOURCE_DIR}/assets/shaders" PREFIX "Shaders" FILES ${HLSL_SHADERS})
 
-option(GAME_ENGINE_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
+option(${PROJECT_UPPER}_USE_WINDOWS_SUBSYSTEM "Build as a Windows GUI application (if platform is Windows)" OFF)
 
 # TODO: currently Win32 is not used in this project for Windows
-if(WIN32 AND GAME_ENGINE_USE_WINDOWS_SUBSYSTEM)
+if(WIN32 AND ${PROJECT_UPPER}_USE_WINDOWS_SUBSYSTEM)
     add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS} ${INLINES} ${HLSL_SHADERS})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC GAME_ENGINE_WINDOWS_SUBSYSTEM)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ${PROJECT_UPPER}_WINDOWS_SUBSYSTEM)
 else()
     add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${INLINES} ${HLSL_SHADERS})
 endif()
@@ -507,8 +508,6 @@ endif()
 # target_include_directories(${PROJECT_NAME} PRIVATE src/internal_include)
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
-
-string(TOUPPER "${PROJECT_NAME}" PROJECT_UPPER)
 
 if((USE_VULKAN OR USE_DIRECTX) AND FORCE_RHI_API)
     set(AVAILABLE_RHI_APIS "")

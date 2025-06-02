@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_EVENT_WINDOW_EVENT_MANAGER_H
-#define GAME_ENGINE_EVENT_WINDOW_EVENT_MANAGER_H
+#ifndef ARISE_EVENT_WINDOW_EVENT_MANAGER_H
+#define ARISE_EVENT_WINDOW_EVENT_MANAGER_H
 
 #include "event.h"
 #include "window_event_handler.h"
 
 #include <memory>
 
-namespace game_engine {
+namespace arise {
 
 class WindowEventManager {
   public:
@@ -29,6 +29,6 @@ class WindowEventManager {
   std::unique_ptr<WindowEventHandler> m_windowHandler_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_EVENT_WINDOW_EVENT_MANAGER_H
+#endif  // ARISE_EVENT_WINDOW_EVENT_MANAGER_H

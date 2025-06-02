@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_IMAGE_FILE_LOADER_H
-#define GAME_ENGINE_IMAGE_FILE_LOADER_H
+#ifndef ARISE_IMAGE_FILE_LOADER_H
+#define ARISE_IMAGE_FILE_LOADER_H
 
 #include "resources/image.h"
 
@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-namespace game_engine {
+namespace arise {
 
 class IImageLoader {
   public:
@@ -16,6 +16,6 @@ class IImageLoader {
   virtual bool                   supportsFormat(const std::string& extension) const = 0;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_IMAGE_FILE_LOADER_H
+#endif  // ARISE_IMAGE_FILE_LOADER_H

@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_SCENE_MANAGER_H
-#define GAME_ENGINE_SCENE_MANAGER_H
+#ifndef ARISE_SCENE_MANAGER_H
+#define ARISE_SCENE_MANAGER_H
 
 #include "scene/scene.h"
 
-namespace game_engine {
+namespace arise {
 
 class SceneManager {
   public:
@@ -32,6 +32,6 @@ class SceneManager {
   std::string                                             currentSceneName_;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_SCENE_MANAGER_H
+#endif  // ARISE_SCENE_MANAGER_H

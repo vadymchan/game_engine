@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_STOPWATCH_H
-#define GAME_ENGINE_STOPWATCH_H
+#ifndef ARISE_STOPWATCH_H
+#define ARISE_STOPWATCH_H
 
 #include <chrono>
 
-namespace game_engine {
+namespace arise {
 
 class Stopwatch {
   public:
@@ -69,5 +69,5 @@ using FrameTime = Stopwatch;
 /// code execution durations.
 using ElapsedTime = Stopwatch;
 
-}  // namespace game_engine
-#endif  // GAME_ENGINE_STOPWATCH_H
+}  // namespace arise
+#endif  // ARISE_STOPWATCH_H

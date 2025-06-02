@@ -5,7 +5,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/memory/align.h"
 
-namespace game_engine {
+namespace arise {
 
 LightSystem::LightSystem(gfx::rhi::Device* device, gfx::renderer::RenderResourceManager* resourceManager)
     : m_device(device)
@@ -352,4 +352,4 @@ void LightSystem::createOrResizeBuffer_(size_t             requiredSize,
   }
 }
 
-}  // namespace game_engine
+}  // namespace arise

@@ -1,6 +1,6 @@
 #include "utils/model/model_loader_manager.h"
 
-namespace game_engine {
+namespace arise {
 
 void ModelLoaderManager::registerLoader(ModelType modelType, std::unique_ptr<IModelLoader> loader) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -34,4 +34,4 @@ std::unique_ptr<Model> ModelLoaderManager::loadModel(const std::filesystem::path
   return nullptr;
 }
 
-}  // namespace game_engine
+}  // namespace arise

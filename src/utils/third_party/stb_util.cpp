@@ -8,7 +8,7 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include <stb_image_resize2.h>
 
-namespace game_engine {
+namespace arise {
 
 const std::unordered_set<std::string> STBImageLoader::supportedExtensions_
     = {".jpeg", ".jpg", ".png", ".bmp", ".tga", ".gif", ".hdr", ".pic", ".ppm", ".pgm"};
@@ -199,4 +199,4 @@ void STBImageLoader::generateMipmaps_(std::unique_ptr<Image>& image, int32_t cha
                     "Generated " + std::to_string(image->mipLevels) + " mip levels via stb_image_resize2");
 }
 
-}  // namespace game_engine
+}  // namespace arise

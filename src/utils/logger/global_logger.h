@@ -1,5 +1,5 @@
-#ifndef GAME_ENGINE_GLOBAL_LOGGER_H
-#define GAME_ENGINE_GLOBAL_LOGGER_H
+#ifndef ARISE_GLOBAL_LOGGER_H
+#define ARISE_GLOBAL_LOGGER_H
 
 #include "utils/logger/i_logger.h"
 
@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace game_engine {
+namespace arise {
 
 class GlobalLogger {
   public:
@@ -34,6 +34,6 @@ class GlobalLogger {
   static inline std::vector<std::unique_ptr<ILogger>> s_loggers;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_GLOBAL_LOGGER_H
+#endif  // ARISE_GLOBAL_LOGGER_H

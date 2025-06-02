@@ -1,9 +1,9 @@
-#ifndef GAME_ENGINE_MOVEMENT_SYSTEM_H
-#define GAME_ENGINE_MOVEMENT_SYSTEM_H
+#ifndef ARISE_MOVEMENT_SYSTEM_H
+#define ARISE_MOVEMENT_SYSTEM_H
 
 #include "ecs/systems/i_updatable_system.h"
 
-namespace game_engine {
+namespace arise {
 
 // MovementSystem: Updates the Transform component based on the Movement
 // component
@@ -12,6 +12,6 @@ class MovementSystem : public IUpdatableSystem {
   void update(Scene* scene, float deltaTime) override;
 };
 
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_MOVEMENT_SYSTEM_H
+#endif  // ARISE_MOVEMENT_SYSTEM_H

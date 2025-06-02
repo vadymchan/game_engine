@@ -4,7 +4,7 @@
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "utils/logger/global_logger.h"
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -251,4 +251,4 @@ uint32_t BufferVk::findMemoryType_(uint32_t typeFilter, VkMemoryPropertyFlags pr
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise

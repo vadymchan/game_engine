@@ -1,12 +1,12 @@
-#ifndef GAME_ENGINE_BUFFER_VK_H
-#define GAME_ENGINE_BUFFER_VK_H
+#ifndef ARISE_BUFFER_VK_H
+#define ARISE_BUFFER_VK_H
 
 #include "gfx/rhi/interface/buffer.h"
 
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
-namespace game_engine {
+namespace arise {
 namespace gfx {
 namespace rhi {
 
@@ -54,6 +54,6 @@ class BufferVk : public Buffer {
 
 }  // namespace rhi
 }  // namespace gfx
-}  // namespace game_engine
+}  // namespace arise
 
-#endif  // GAME_ENGINE_BUFFER_VK_H
+#endif  // ARISE_BUFFER_VK_H

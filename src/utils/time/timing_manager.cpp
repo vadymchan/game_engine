@@ -1,6 +1,6 @@
 #include "utils/time/timing_manager.h"
 
-namespace game_engine {
+namespace arise {
 void TimingManager::initialize() {
   m_totalElapsedTime_.start();
   m_deltaTime_.start();
@@ -18,4 +18,4 @@ void TimingManager::update() {
   m_deltaTime_.reset();
   m_deltaTime_.start();
 }
-}  // namespace game_engine
+}  // namespace arise

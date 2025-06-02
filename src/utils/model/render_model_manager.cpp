@@ -4,7 +4,7 @@
 
 #include <shared_mutex>
 
-namespace game_engine {
+namespace arise {
 RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, std::optional<Model*> outModel) {
   {
     std::shared_lock<std::shared_mutex> readLock(mutex_);
@@ -78,4 +78,4 @@ bool RenderModelManager::removeRenderModel(RenderModel* renderModel) {
   return false;
 }
 
-}  // namespace game_engine
+}  // namespace arise
