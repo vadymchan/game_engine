@@ -1,10 +1,10 @@
 #include "gfx/rhi/backends/vulkan/descriptor_vk.h"
 
-#include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/buffer_vk.h"
-#include "gfx/rhi/backends/vulkan/texture_vk.h"
-#include "gfx/rhi/backends/vulkan/sampler_vk.h"
+#include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
+#include "gfx/rhi/backends/vulkan/sampler_vk.h"
+#include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "utils/logger/global_logger.h"
 
 namespace game_engine {
@@ -18,7 +18,6 @@ namespace rhi {
 DescriptorSetLayoutVk::DescriptorSetLayoutVk(const DescriptorSetLayoutDesc& desc, DeviceVk* device)
     : DescriptorSetLayout(desc)
     , m_device_(device) {
-  // Create Vulkan descriptor set layout from generic description
   std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
   layoutBindings.reserve(desc.bindings.size());
 
@@ -57,7 +56,6 @@ DescriptorSetLayoutVk::~DescriptorSetLayoutVk() {
 DescriptorSetVk::DescriptorSetVk(DeviceVk* device, const DescriptorSetLayoutVk* layout)
     : m_device_(device)
     , m_layout_(layout) {
-  // Allocate a descriptor set from the descriptor pool
   m_descriptorSet_ = device->getDescriptorPoolManager().allocateDescriptorSet(layout->getLayout());
 
   if (m_descriptorSet_ == VK_NULL_HANDLE) {
@@ -66,8 +64,6 @@ DescriptorSetVk::DescriptorSetVk(DeviceVk* device, const DescriptorSetLayoutVk* 
 }
 
 DescriptorSetVk::~DescriptorSetVk() {
-  // No need to explicitly free descriptor sets when using POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
-  // They will be automatically freed when the pool is reset or destroyed
   m_descriptorSet_ = VK_NULL_HANDLE;
 }
 
@@ -83,13 +79,11 @@ void DescriptorSetVk::setUniformBuffer(uint32_t binding, Buffer* buffer, uint64_
     return;
   }
 
-  // Prepare descriptor buffer info
   VkDescriptorBufferInfo bufferInfo = {};
   bufferInfo.buffer                 = bufferVk->getBuffer();
   bufferInfo.offset                 = offset;
   bufferInfo.range                  = (range == 0) ? bufferVk->getSize() - offset : range;
 
-  // Update the descriptor set
   VkWriteDescriptorSet descriptorWrite = {};
   descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   descriptorWrite.dstSet               = m_descriptorSet_;
@@ -116,13 +110,11 @@ void DescriptorSetVk::setTextureSampler(uint32_t binding, Texture* texture, Samp
     return;
   }
 
-  // Prepare descriptor image info
   VkDescriptorImageInfo imageInfo = {};
   imageInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   imageInfo.imageView             = textureVk->getImageView();
   imageInfo.sampler               = samplerVk->getSampler();
 
-  // Update the descriptor set
   VkWriteDescriptorSet descriptorWrite = {};
   descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   descriptorWrite.dstSet               = m_descriptorSet_;
@@ -147,13 +139,11 @@ void DescriptorSetVk::setTexture(uint32_t binding, Texture* texture, ResourceLay
     return;
   }
 
-  // Prepare descriptor image info
   VkDescriptorImageInfo imageInfo = {};
   imageInfo.imageLayout           = g_getImageLayoutVk(layout);
   imageInfo.imageView             = textureVk->getImageView();
   imageInfo.sampler               = VK_NULL_HANDLE;
 
-  // Update the descriptor set
   VkWriteDescriptorSet descriptorWrite = {};
   descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   descriptorWrite.dstSet               = m_descriptorSet_;
@@ -178,13 +168,11 @@ void DescriptorSetVk::setSampler(uint32_t binding, Sampler* sampler) {
     return;
   }
 
-  // Prepare descriptor image info
   VkDescriptorImageInfo imageInfo = {};
   imageInfo.imageLayout           = VK_IMAGE_LAYOUT_UNDEFINED;
   imageInfo.imageView             = VK_NULL_HANDLE;
   imageInfo.sampler               = samplerVk->getSampler();
 
-  // Update the descriptor set
   VkWriteDescriptorSet descriptorWrite = {};
   descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   descriptorWrite.dstSet               = m_descriptorSet_;
@@ -209,13 +197,11 @@ void DescriptorSetVk::setStorageBuffer(uint32_t binding, Buffer* buffer, uint64_
     return;
   }
 
-  // Prepare descriptor buffer info
   VkDescriptorBufferInfo bufferInfo = {};
   bufferInfo.buffer                 = bufferVk->getBuffer();
   bufferInfo.offset                 = offset;
   bufferInfo.range                  = (range == 0) ? bufferVk->getSize() - offset : range;
 
-  // Update the descriptor set
   VkWriteDescriptorSet descriptorWrite = {};
   descriptorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   descriptorWrite.dstSet               = m_descriptorSet_;
@@ -266,7 +252,7 @@ void DescriptorPoolManager::release() {
 
 bool DescriptorPoolManager::createPool() {
   // Create a descriptor pool with common descriptor types
-  // Adjust sizes based on expected usage
+  // TODO: Adjust sizes based on expected usage
   std::vector<VkDescriptorPoolSize> poolSizes = {
     {               VK_DESCRIPTOR_TYPE_SAMPLER, m_maxSets_},
     {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, m_maxSets_},
@@ -315,19 +301,18 @@ VkDescriptorSet DescriptorPoolManager::allocateDescriptorSet(VkDescriptorSetLayo
     m_allocatedSets_++;
     return descriptorSet;
   } else if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL) {
-    // If we're out of space, create a new pool
+    GlobalLogger::Log(LogLevel::Warning, "Descriptor pool out of memory, creating a new pool");
     reset();
 
-    // Try again with the new pool
     if (vkAllocateDescriptorSets(m_device_, &allocInfo, &descriptorSet) == VK_SUCCESS) {
       m_allocatedSets_++;
       return descriptorSet;
     }
   }
 
+  GlobalLogger::Log(LogLevel::Error, "Failed to allocate descriptor set");
   return VK_NULL_HANDLE;
 }
-
 
 }  // namespace rhi
 }  // namespace gfx

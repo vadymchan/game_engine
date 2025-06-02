@@ -2,8 +2,6 @@
 #define GAME_ENGINE_VERTEX_NORMAL_VISUALIZATION_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
-#include "gfx/rhi/interface/render_pass.h"
-
 
 #include <unordered_map>
 #include <vector>
@@ -17,6 +15,7 @@ namespace game_engine::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
+class RenderPass;
 }  // namespace game_engine::gfx::rhi
 
 namespace game_engine {
@@ -42,7 +41,7 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
   void render(const RenderContext& context) override;
   void cleanup() override;
 
-  bool isExclusive() const override { return false; }
+  bool isExclusive() const override { return false; } // should be false
 
   private:
   struct ModelBufferCache {
@@ -52,12 +51,13 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
   };
 
   struct DrawData {
-    rhi::GraphicsPipeline* pipeline       = nullptr;
-    rhi::Buffer*           vertexBuffer   = nullptr;
-    rhi::Buffer*           indexBuffer    = nullptr;
-    rhi::Buffer*           instanceBuffer = nullptr;
-    uint32_t               indexCount     = 0;
-    uint32_t               instanceCount  = 0;
+    rhi::GraphicsPipeline* pipeline                 = nullptr;
+    rhi::DescriptorSet*    modelMatrixDescriptorSet = nullptr;
+    rhi::Buffer*           vertexBuffer             = nullptr;
+    rhi::Buffer*           indexBuffer              = nullptr;
+    rhi::Buffer*           instanceBuffer           = nullptr;
+    uint32_t               indexCount               = 0;
+    uint32_t               instanceCount            = 0;
   };
 
   void setupRenderPass_();
@@ -68,6 +68,14 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
       const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+
+  // clang-format off
+
+  const std::string m_vertexShaderPath_   = "assets/shaders/debug/geometry_normal_visualization/shader_instancing.vs.hlsl";
+  const std::string m_geometryShaderPath_ = "assets/shaders/debug/geometry_normal_visualization/shader.gs.hlsl";
+  const std::string m_pixelShaderPath_    = "assets/shaders/debug/geometry_normal_visualization/shader.ps.hlsl";
+
+  // clang-format on
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;

@@ -62,10 +62,20 @@ DescriptorSetLayoutDx12::DescriptorSetLayoutDx12(const DescriptorSetLayoutDesc& 
     }
   }
 
-  for (const auto& [type, bindings] : m_bindingsByType) {
-    if (bindings.empty()) {
+  std::vector<D3D12_DESCRIPTOR_RANGE_TYPE> rangeOrder;
+  if (m_isSamplerLayout) {
+    rangeOrder = {D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER};
+  } else {
+    rangeOrder = {D3D12_DESCRIPTOR_RANGE_TYPE_SRV, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, D3D12_DESCRIPTOR_RANGE_TYPE_CBV};
+  }
+
+  for (auto type : rangeOrder) {
+    auto it = m_bindingsByType.find(type);
+    if (it == m_bindingsByType.end() || it->second.empty()) {
       continue;
     }
+
+    const auto& bindings = it->second;
 
     uint32_t minBinding = UINT32_MAX;
     uint32_t maxBinding = 0;
@@ -158,7 +168,7 @@ void DescriptorSetDx12::setUniformBuffer(uint32_t binding, Buffer* buffer, uint6
 }
 
 void DescriptorSetDx12::setTextureSampler(uint32_t binding, Texture* texture, Sampler* sampler) {
-  // For DX12, we handle this by setting texture and sampler separately
+  // For DX12, we need to handle this by setting texture and sampler separately
   // This is because DX12 handles samplers and SRVs through different tables
   // and we have an invariant that 1 descriptor set is 1 descriptor table (hence, either sampler or cbv/srv/uav)
   GlobalLogger::Log(LogLevel::Info, "Setting texture and sampler separately for DX12");
@@ -250,18 +260,10 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
     GlobalLogger::Log(LogLevel::Error, "Null buffer");
     return;
   }
-  if (m_layout_->isSamplerLayout()) {
-    GlobalLogger::Log(LogLevel::Error, "Cannot set storage buffer on a sampler descriptor set");
-    return;
-  }
 
   DescriptorBufferDx12* bufferDx12 = dynamic_cast<DescriptorBufferDx12*>(buffer);
   if (!bufferDx12) {
     GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
-    return;
-  }
-  if (!bufferDx12->hasUavHandle()) {
-    GlobalLogger::Log(LogLevel::Error, "Buffer does not have a UAV");
     return;
   }
 
@@ -279,15 +281,27 @@ void DescriptorSetDx12::setStorageBuffer(uint32_t binding, Buffer* buffer, uint6
     return;
   }
 
-  uint32_t srcIndex
-      = uint32_t((bufferDx12->getUavCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
+  uint32_t                    srcIndex;
+  D3D12_DESCRIPTOR_RANGE_TYPE rangeType;
 
-  uint32_t bindingOffset = findBindingOffset_(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, binding);
+  if (bufferDx12->isUnorderedAccessBuffer() && bufferDx12->hasUavHandle()) {
+    srcIndex
+        = uint32_t((bufferDx12->getUavCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
+    rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+  } else if (bufferDx12->isShaderResourceBuffer() && bufferDx12->hasSrvHandle()) {
+    srcIndex
+        = uint32_t((bufferDx12->getSrvCpuHandle().ptr - cpuHeap->getCpuHandle(0).ptr) / cpuHeap->getDescriptorSize());
+    rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+  } else {
+    GlobalLogger::Log(LogLevel::Error, "Buffer must have either UAV or SRV capability for storage buffer usage");
+    return;
+  }
+
+  uint32_t bindingOffset = findBindingOffset_(rangeType, binding);
   uint32_t dstIndex      = m_srvUavCbvIndices_[currentFrame] + bindingOffset;
 
   gpuHeap->copyDescriptors(cpuHeap, srcIndex, dstIndex, 1);
 }
-
 [[nodiscard]] D3D12_GPU_DESCRIPTOR_HANDLE DescriptorSetDx12::getGpuSrvUavCbvHandle(uint32_t frame) const {
   auto* frameResMgr = m_device_->getFrameResourcesManager();
   auto* heap        = frameResMgr->getCbvSrvUavHeap(frame);
@@ -382,6 +396,8 @@ bool DescriptorHeapDx12::initialize(ID3D12Device*              device,
 
   release();
 
+  std::lock_guard<std::mutex> lock(m_heapMutex);
+
   m_device        = device;
   m_type          = type;
   m_capacity      = count;
@@ -405,6 +421,7 @@ bool DescriptorHeapDx12::initialize(ID3D12Device*              device,
 }
 
 void DescriptorHeapDx12::release() {
+  std::lock_guard<std::mutex> lock(m_heapMutex);
   m_heap.Reset();
   m_freeList.clear();
   m_device         = nullptr;
@@ -435,11 +452,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeapDx12::getGpuHandle(uint32_t index) con
   return handle;
 }
 
-void DescriptorHeapDx12::free(uint32_t index) {
-  freeBlock(index, 1);
-}
-
 uint32_t DescriptorHeapDx12::allocate(uint32_t count) {
+  std::lock_guard<std::mutex> lock(m_heapMutex);
   if (!m_heap || count == 0 || count > m_capacity) {
     GlobalLogger::Log(LogLevel::Warning, "Invalid allocation request for descriptor heap");
     return UINT32_MAX;
@@ -470,7 +484,12 @@ uint32_t DescriptorHeapDx12::allocate(uint32_t count) {
   return UINT32_MAX;
 }
 
+void DescriptorHeapDx12::free(uint32_t index) {
+  freeBlock(index, 1);
+}
+
 void DescriptorHeapDx12::freeBlock(uint32_t baseIndex, uint32_t count) {
+  std::lock_guard<std::mutex> lock(m_heapMutex);
   if (!m_heap || baseIndex + count > m_capacity) {
     return;
   }
@@ -487,6 +506,7 @@ void DescriptorHeapDx12::copyDescriptors(const DescriptorHeapDx12* srcHeap,
                                          uint32_t                  srcIndex,
                                          uint32_t                  dstIndex,
                                          uint32_t                  count) {
+  std::lock_guard<std::mutex> lock(m_heapMutex);
   if (!m_heap || !srcHeap || !srcHeap->getHeap() || srcIndex + count > srcHeap->getCapacity()
       || dstIndex + count > m_capacity) {
     GlobalLogger::Log(LogLevel::Error, "Invalid parameters for descriptor heap copy");
@@ -557,20 +577,25 @@ void FrameResourcesManager::release() {
 }
 
 DescriptorHeapDx12* FrameResourcesManager::getCurrentCbvSrvUavHeap() {
+  std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (m_currentFrame < m_cbvSrvUavHeaps.size()) {
     return m_cbvSrvUavHeaps[m_currentFrame].get();
   }
+  GlobalLogger::Log(LogLevel::Error, "Current frame index exceeds frame count");
   return nullptr;
 }
 
 DescriptorHeapDx12* FrameResourcesManager::getCurrentSamplerHeap() {
+  std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (m_currentFrame < m_samplerHeaps.size()) {
     return m_samplerHeaps[m_currentFrame].get();
   }
+  GlobalLogger::Log(LogLevel::Error, "Current frame index exceeds frame count");
   return nullptr;
 }
 
 inline DescriptorHeapDx12* FrameResourcesManager::getCbvSrvUavHeap(uint32_t frameIndex) {
+  std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (frameIndex >= m_frameCount) {
     GlobalLogger::Log(
         LogLevel::Error,
@@ -581,6 +606,7 @@ inline DescriptorHeapDx12* FrameResourcesManager::getCbvSrvUavHeap(uint32_t fram
 }
 
 inline DescriptorHeapDx12* FrameResourcesManager::getSamplerHeap(uint32_t frameIndex) {
+  std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (frameIndex >= m_frameCount) {
     GlobalLogger::Log(
         LogLevel::Error,
@@ -591,6 +617,7 @@ inline DescriptorHeapDx12* FrameResourcesManager::getSamplerHeap(uint32_t frameI
 }
 
 void FrameResourcesManager::nextFrame() {
+  std::lock_guard<std::mutex> lock(m_frameResourcesMutex);
   if (m_frameCount > 0) {
     m_currentFrame = (m_currentFrame + 1) % m_frameCount;
   }

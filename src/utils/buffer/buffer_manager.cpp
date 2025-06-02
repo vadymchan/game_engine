@@ -2,6 +2,9 @@
 
 #include "gfx/rhi/interface/device.h"
 #include "utils/logger/global_logger.h"
+#include "utils/memory/align.h"
+#include "utils/resource/resource_deletion_manager.h"
+#include "utils/service/service_locator.h"
 
 namespace game_engine {
 
@@ -31,10 +34,8 @@ gfx::rhi::Buffer* BufferManager::createVertexBuffer(const void*        data,
     return nullptr;
   }
 
-  // Calculate buffer size
   const size_t bufferSize = vertexCount * vertexStride;
 
-  // Create buffer description
   gfx::rhi::BufferDesc bufferDesc;
   bufferDesc.size        = bufferSize;
   bufferDesc.type        = gfx::rhi::BufferType::Static;
@@ -42,29 +43,23 @@ gfx::rhi::Buffer* BufferManager::createVertexBuffer(const void*        data,
   bufferDesc.stride      = vertexStride;
   bufferDesc.debugName   = name.empty() ? "unnamed_vertex_buffer" : name;
 
-  // Generate a name if not provided
   std::string bufferName = name.empty() ? generateUniqueName_("VertexBuffer") : name;
 
-  // Create the buffer
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
 
-  // Create the buffer
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create vertex buffer '" + bufferName + "'");
     return nullptr;
   }
 
-  // Update buffer with vertex data
   m_device->updateBuffer(buffer.get(), data, bufferSize);
 
-  // Store buffer and return raw pointer
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
@@ -88,39 +83,31 @@ gfx::rhi::Buffer* BufferManager::createIndexBuffer(const void*        data,
     return nullptr;
   }
 
-  // Calculate buffer size
   const size_t bufferSize = indexCount * indexSize;
 
-  // Create buffer description
   gfx::rhi::BufferDesc bufferDesc;
   bufferDesc.size        = bufferSize;
   bufferDesc.type        = gfx::rhi::BufferType::Static;
   bufferDesc.createFlags = gfx::rhi::BufferCreateFlag::IndexBuffer;
   bufferDesc.debugName   = name.empty() ? "unnamed_index_buffer" : name;
 
-  // Generate a name if not provided
   std::string bufferName = name.empty() ? generateUniqueName_("IndexBuffer") : name;
 
-  // Create the buffer
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
 
-  // Create the buffer
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create index buffer '" + bufferName + "'");
     return nullptr;
   }
 
-  // Update buffer with index data
   m_device->updateBuffer(buffer.get(), data, bufferSize);
 
-  // Store buffer and return raw pointer
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
@@ -141,38 +128,31 @@ gfx::rhi::Buffer* BufferManager::createUniformBuffer(size_t size, const void* da
     return nullptr;
   }
 
-  // Create buffer description
   gfx::rhi::BufferDesc bufferDesc;
-  bufferDesc.size        = size;
-  bufferDesc.type        = gfx::rhi::BufferType::Dynamic;          // Uniform buffers are typically updated frequently
-  bufferDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess;  // For easy updates
+  bufferDesc.size        = alignConstantBufferSize(size);
+  bufferDesc.type        = gfx::rhi::BufferType::Dynamic;  // Uniform buffers are typically updated frequently
+  bufferDesc.createFlags = gfx::rhi::BufferCreateFlag::CpuAccess | gfx::rhi::BufferCreateFlag::ConstantBuffer;
   bufferDesc.debugName   = name.empty() ? "unnamed_uniform_buffer" : name;
 
-  // Generate a name if not provided
   std::string bufferName = name.empty() ? generateUniqueName_("UniformBuffer") : name;
 
-  // Create the buffer
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
 
-  // Create the buffer
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create uniform buffer '" + bufferName + "'");
     return nullptr;
   }
 
-  // Update buffer with initial data if provided
   if (data) {
     m_device->updateBuffer(buffer.get(), data, size);
   }
 
-  // Store buffer and return raw pointer
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
@@ -193,41 +173,34 @@ gfx::rhi::Buffer* BufferManager::createStorageBuffer(size_t size, const void* da
     return nullptr;
   }
 
-  // Create buffer description
   gfx::rhi::BufferDesc bufferDesc;
   bufferDesc.size = size;
   bufferDesc.type = gfx::rhi::BufferType::Dynamic;
-  // Storage buffers need UAV access
+
   bufferDesc.createFlags
       = static_cast<gfx::rhi::BufferCreateFlag>(static_cast<uint32_t>(gfx::rhi::BufferCreateFlag::CpuAccess)
                                                 | static_cast<uint32_t>(gfx::rhi::BufferCreateFlag::Uav));
   bufferDesc.debugName = name.empty() ? "unnamed_storage_buffer" : name;
 
-  // Generate a name if not provided
   std::string bufferName = name.empty() ? generateUniqueName_("StorageBuffer") : name;
 
-  // Create the buffer
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
 
-  // Create the buffer
   auto buffer = m_device->createBuffer(bufferDesc);
   if (!buffer) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create storage buffer '" + bufferName + "'");
     return nullptr;
   }
 
-  // Update buffer with initial data if provided
   if (data) {
     m_device->updateBuffer(buffer.get(), data, size);
   }
 
-  // Store buffer and return raw pointer
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
@@ -247,13 +220,11 @@ gfx::rhi::Buffer* BufferManager::addBuffer(std::unique_ptr<gfx::rhi::Buffer> buf
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a buffer with this name already exists
-  if (m_buffers.find(bufferName) != m_buffers.end()) {
+  if (m_buffers.contains(bufferName)) {
     GlobalLogger::Log(LogLevel::Warning, "Buffer with name '" + bufferName + "' already exists, will be replaced");
     m_buffers.erase(bufferName);
   }
 
-  // Store buffer and return raw pointer
   gfx::rhi::Buffer* bufferPtr = buffer.get();
   m_buffers[bufferName]       = std::move(buffer);
 
@@ -287,6 +258,43 @@ bool BufferManager::removeBuffer(const std::string& name) {
   return false;
 }
 
+bool BufferManager::removeBuffer(gfx::rhi::Buffer* buffer) {
+  if (!buffer) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot remove null buffer");
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
+    if (it->second.get() == buffer) {
+      auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+      if (deletionManager) {
+        std::string bufferName = it->first;
+
+        deletionManager->enqueueForDeletion<gfx::rhi::Buffer>(
+            buffer,
+            [this, bufferName](gfx::rhi::Buffer*) {
+              std::lock_guard<std::mutex> lock(m_mutex);
+              GlobalLogger::Log(LogLevel::Info, "Buffer '" + bufferName + "' deleted");
+              m_buffers.erase(bufferName);
+            },
+            bufferName,
+            "Buffer");
+
+        return true;
+      } else {
+        GlobalLogger::Log(LogLevel::Info, "Removing buffer: " + it->first);
+        m_buffers.erase(it);
+        return true;
+      }
+    }
+  }
+
+  GlobalLogger::Log(LogLevel::Warning, "Buffer not found in manager");
+  return false;
+}
+
 bool BufferManager::updateBuffer(const std::string& name, const void* data, size_t size, size_t offset) {
   if (!m_device || !data || size == 0) {
     GlobalLogger::Log(LogLevel::Error, "Invalid update buffer parameters");
@@ -311,7 +319,6 @@ bool BufferManager::updateBuffer(gfx::rhi::Buffer* buffer, const void* data, siz
     return false;
   }
 
-  // Find the buffer in our map to ensure we own it
   std::lock_guard<std::mutex> lock(m_mutex);
 
   auto it = findBuffer_(buffer);

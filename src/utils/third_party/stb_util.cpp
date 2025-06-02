@@ -5,6 +5,8 @@
 #include <unordered_set>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include <stb_image_resize2.h>
 
 namespace game_engine {
 
@@ -12,7 +14,7 @@ const std::unordered_set<std::string> STBImageLoader::supportedExtensions_
     = {".jpeg", ".jpg", ".png", ".bmp", ".tga", ".gif", ".hdr", ".pic", ".ppm", ".pgm"};
 
 bool STBImageLoader::supportsFormat(const std::string& extension) const {
-  return supportedExtensions_.find(extension) != supportedExtensions_.end();
+  return supportedExtensions_.contains(extension);
 }
 
 std::unique_ptr<Image> STBImageLoader::loadImage(const std::filesystem::path& filepath) {
@@ -83,21 +85,22 @@ gfx::rhi::TextureFormat STBImageLoader::determineFormat_(int32_t channels, int32
 
 std::unique_ptr<Image> STBImageLoader::loadImageData_(
     const std::filesystem::path& filepath, LoaderFunc loader, FreeFunc freeFunc, int32_t bitsPerChannel, bool isHdr) {
-  int32_t width, height, channels;
-  int32_t desiredChannels = 0;  // Load with the original number of channels
+  int32_t           width           = 0;
+  int32_t           height          = 0;
+  int32_t           channelsInFile  = 0;
+  constexpr int32_t desiredChannels = 4;  // always decode as RGBA
 
-  auto* data = loader(filepath, &width, &height, &channels, desiredChannels);
+  void* data = loader(filepath, &width, &height, &channelsInFile, desiredChannels);
   if (!data) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load image: " + filepath.string());
     return nullptr;
   }
 
-  size_t bytesPerChannel = bitsPerChannel / 8;
-  size_t bytesPerPixel   = bytesPerChannel * channels;
-  size_t imageSize       = static_cast<size_t>(width) * height * bytesPerPixel;
+  const size_t bytesPerChannel = static_cast<size_t>(bitsPerChannel) / 8;
+  const size_t bytesPerPixel   = bytesPerChannel * desiredChannels;
+  const size_t imageSize       = static_cast<size_t>(width) * height * bytesPerPixel;
 
   std::vector<std::byte> pixels(reinterpret_cast<std::byte*>(data), reinterpret_cast<std::byte*>(data) + imageSize);
-
   freeFunc(data);
 
   auto image       = std::make_unique<Image>();
@@ -107,24 +110,93 @@ std::unique_ptr<Image> STBImageLoader::loadImageData_(
   image->mipLevels = 1;
   image->arraySize = 1;
   image->dimension = gfx::rhi::TextureType::Texture2D;
-  image->format    = determineFormat_(channels, bitsPerChannel, isHdr);
+  image->format    = (bitsPerChannel == 8)  ? gfx::rhi::TextureFormat::Rgba8
+                   : (bitsPerChannel == 16) ? gfx::rhi::TextureFormat::Rgba16f
+                                            : gfx::rhi::TextureFormat::Rgba32f;
   image->pixels    = std::move(pixels);
 
-  SubImage subImage;
-  subImage.width      = image->width;
-  subImage.height     = image->height;
-  subImage.rowPitch   = image->width * bytesPerPixel;
-  subImage.slicePitch = subImage.rowPitch * image->height;
-  subImage.pixelBegin = image->pixels.begin();
-
-  image->subImages.push_back(subImage);
+  SubImage baseSub;
+  baseSub.width       = image->width;
+  baseSub.height      = image->height;
+  baseSub.rowPitch    = image->width * bytesPerPixel;
+  baseSub.slicePitch  = baseSub.rowPitch * image->height;
+  baseSub.pixelOffset = 0;
+  image->subImages.push_back(baseSub);
 
   GlobalLogger::Log(LogLevel::Debug,
-                    "Loaded image from " + filepath.string() + " (" + std::to_string(width) + "x"
-                        + std::to_string(height) + ", channels = " + std::to_string(channels) + ", bitsPerChannel = "
-                        + std::to_string(bitsPerChannel) + ", HDR = " + (isHdr ? "true" : "false") + ")");
+                    "Loaded " + filepath.string() + " (" + std::to_string(width) + "x" + std::to_string(height)
+                        + ", RGBA, " + std::to_string(bitsPerChannel) + " bpc)");
 
+  generateMipmaps_(image, desiredChannels, bitsPerChannel);
   return image;
+}
+
+void STBImageLoader::generateMipmaps_(std::unique_ptr<Image>& image, int32_t channels, int32_t bitsPerChannel) {
+  const size_t channelsCount   = static_cast<size_t>(channels);
+  const size_t bytesPerChannel = bitsPerChannel / 8;
+  const size_t bytesPerPixel   = channelsCount * bytesPerChannel;
+
+  size_t                 prevWidth  = image->width;
+  size_t                 prevHeight = image->height;
+  std::vector<std::byte> prevPixels = std::move(image->pixels);
+
+  std::vector<std::byte> allPixels;
+  std::vector<SubImage>  newSubImages;
+  size_t                 offset = 0;
+
+  stbir_datatype dataType;
+  if (bitsPerChannel == 8) {
+    dataType = STBIR_TYPE_UINT8;
+  } else if (bitsPerChannel == 16) {
+    dataType = STBIR_TYPE_UINT16;
+  } else {
+    dataType = STBIR_TYPE_FLOAT;
+  }
+
+  while (true) {
+    allPixels.insert(allPixels.end(), prevPixels.begin(), prevPixels.end());
+
+    SubImage subImage;
+    subImage.width       = prevWidth;
+    subImage.height      = prevHeight;
+    subImage.rowPitch    = prevWidth * bytesPerPixel;
+    subImage.slicePitch  = subImage.rowPitch * prevHeight;
+    subImage.pixelOffset = offset;
+    newSubImages.push_back(subImage);
+
+    offset += prevPixels.size();
+    if (prevWidth == 1 && prevHeight == 1) {
+      break;
+    }
+
+    size_t                 nextW = prevWidth > 1 ? prevWidth / 2 : 1;
+    size_t                 nextH = prevHeight > 1 ? prevHeight / 2 : 1;
+    std::vector<std::byte> nextPixels(nextW * nextH * bytesPerPixel);
+
+    stbir_resize(prevPixels.data(),
+                 int(prevWidth),
+                 int(prevHeight),
+                 0,
+                 nextPixels.data(),
+                 int(nextW),
+                 int(nextH),
+                 0,
+                 stbir_pixel_layout(channels),
+                 dataType,
+                 STBIR_EDGE_CLAMP,
+                 STBIR_FILTER_DEFAULT);
+
+    prevPixels = std::move(nextPixels);
+    prevWidth  = nextW;
+    prevHeight = nextH;
+  }
+
+  image->pixels    = std::move(allPixels);
+  image->subImages = std::move(newSubImages);
+  image->mipLevels = image->subImages.size();
+
+  GlobalLogger::Log(LogLevel::Debug,
+                    "Generated " + std::to_string(image->mipLevels) + " mip levels via stb_image_resize2");
 }
 
 }  // namespace game_engine

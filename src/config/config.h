@@ -17,11 +17,9 @@ namespace game_engine {
 
 using ConfigValue = rapidjson::Value;
 
-// TODO: remove this concept
 template <typename T>
 concept IsArray = std::is_same_v<T, std::vector<typename T::value_type>>;
 
-// TODO: remove this concept
 template <typename T>
 concept IsNotArray = !IsArray<T>;
 
@@ -55,7 +53,7 @@ class Config {
 
   bool loadFromFile(const std::filesystem::path& filePath);
 
-  std::string toString() const;
+  [[nodiscard]] std::string toString() const;
 
   [[nodiscard]] const std::filesystem::path& getFilename() const;
 

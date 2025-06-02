@@ -1,10 +1,10 @@
 #include "utils/texture/texture_manager.h"
 
-#include "utils/image/image_manager.h"
-#include "utils/service/service_locator.h"
-
 #include "gfx/rhi/interface/command_buffer.h"
 #include "gfx/rhi/interface/synchronization.h"
+#include "utils/image/image_manager.h"
+#include "utils/resource/resource_deletion_manager.h"
+#include "utils/service/service_locator.h"
 
 namespace game_engine {
 
@@ -31,7 +31,6 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
     return nullptr;
   }
 
-  // Create texture descriptor
   gfx::rhi::TextureDesc desc;
   desc.width       = static_cast<uint32_t>(image->width);
   desc.height      = static_cast<uint32_t>(image->height);
@@ -43,40 +42,31 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
   desc.createFlags = gfx::rhi::TextureCreateFlag::TransferDst;
   desc.debugName   = name.empty() ? "unnamed_loaded_texture" : name.c_str();
 
-  // Generate a name if not provided
   std::string textureName = name.empty() ? generateUniqueName_("Texture") : name;
 
-  // Create the texture
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
-  if (m_textures.find(textureName) != m_textures.end()) {
+  if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Create the texture
   auto texture = m_device->createTexture(desc);
   if (!texture) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create texture '" + textureName + "'");
     return nullptr;
   }
 
-  // Update the texture with image data for all mip levels and array slices
   if (!image->pixels.empty() && !image->subImages.empty()) {
     if (desc.mipLevels > 1 || desc.arraySize > 1) {
-      // Handle multiple mip levels or array slices
       for (uint32_t arraySlice = 0; arraySlice < desc.arraySize; ++arraySlice) {
         for (uint32_t mipLevel = 0; mipLevel < desc.mipLevels; ++mipLevel) {
-          // Calculate index in the subImages array
           size_t subImageIndex = mipLevel + arraySlice * desc.mipLevels;
 
           if (subImageIndex < image->subImages.size()) {
             const auto& subImage = image->subImages[subImageIndex];
 
-            // Calculate data offset and size for this subimage
-            size_t      offset    = std::distance(image->pixels.cbegin(), subImage.pixelBegin);
-            const void* pixelData = image->pixels.data() + offset;
+            const void* pixelData = image->pixels.data() + subImage.pixelOffset;
             size_t      pixelSize = subImage.slicePitch;
 
             m_device->updateTexture(texture.get(), pixelData, pixelSize, mipLevel, arraySlice);
@@ -90,10 +80,9 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
   }
 
   if (texture) {
-    // Transition to ShaderReadOnly layout
     gfx::rhi::ResourceBarrierDesc barrier;
     barrier.texture   = texture.get();
-    barrier.oldLayout = texture->getCurrentLayoutType(); 
+    barrier.oldLayout = texture->getCurrentLayoutType();
     barrier.newLayout = gfx::rhi::ResourceLayout::ShaderReadOnly;
 
     auto cmdBuffer = m_device->createCommandBuffer();
@@ -107,7 +96,6 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
     fence->wait();
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -120,24 +108,20 @@ gfx::rhi::Texture* TextureManager::createTexture(Image* image, const std::string
 
 gfx::rhi::Texture* TextureManager::createTextureFromFile(const std::filesystem::path& filepath,
                                                          const std::string&           name) {
-  // Try to get ImageManager from ServiceLocator
   auto imageManager = ServiceLocator::s_get<ImageManager>();
   if (!imageManager) {
     GlobalLogger::Log(LogLevel::Error, "Cannot create texture from file, ImageManager not available");
     return nullptr;
   }
 
-  // Load the image
   Image* image = imageManager->getImage(filepath);
   if (!image) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load image from file: " + filepath.string());
     return nullptr;
   }
 
-  // Use filename as texture name if not provided
   std::string textureName = name.empty() ? filepath.filename().string() : name;
 
-  // Create texture from image
   return createTexture(image, textureName);
 }
 
@@ -155,7 +139,6 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
     return nullptr;
   }
 
-  // Create texture descriptor
   gfx::rhi::TextureDesc desc;
   desc.width       = width;
   desc.height      = height;
@@ -167,26 +150,21 @@ gfx::rhi::Texture* TextureManager::createRenderTarget(uint32_t                wi
   desc.createFlags = gfx::rhi::TextureCreateFlag::Rtv;
   desc.debugName   = name.empty() ? "unnamed_render_target" : name.c_str();
 
-  // Generate a name if not provided
   std::string textureName = name.empty() ? generateUniqueName_("RenderTarget") : name;
 
-  // Create the texture
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
-  if (m_textures.find(textureName) != m_textures.end()) {
+  if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Create the texture
   auto texture = m_device->createTexture(desc);
   if (!texture) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create render target '" + textureName + "'");
     return nullptr;
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -211,13 +189,11 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
     return nullptr;
   }
 
-  // Validate that the format is a depth format
   if (!gfx::rhi::g_isDepthFormat(format)) {
     GlobalLogger::Log(LogLevel::Error, "Invalid format for depth stencil, must be a depth format");
     return nullptr;
   }
 
-  // Create texture descriptor
   gfx::rhi::TextureDesc desc;
   desc.width       = width;
   desc.height      = height;
@@ -229,26 +205,21 @@ gfx::rhi::Texture* TextureManager::createDepthStencil(uint32_t                wi
   desc.createFlags = gfx::rhi::TextureCreateFlag::Dsv;
   desc.debugName   = name.empty() ? "unnamed_depth_stencil" : name.c_str();
 
-  // Generate a name if not provided
   std::string textureName = name.empty() ? generateUniqueName_("DepthStencil") : name;
 
-  // Create the texture
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
-  if (m_textures.find(textureName) != m_textures.end()) {
+  if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Create the texture
   auto texture = m_device->createTexture(desc);
   if (!texture) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create depth stencil '" + textureName + "'");
     return nullptr;
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -269,13 +240,11 @@ gfx::rhi::Texture* TextureManager::addTexture(std::unique_ptr<gfx::rhi::Texture>
 
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  // Check if a texture with this name already exists
-  if (m_textures.find(textureName) != m_textures.end()) {
+  if (m_textures.contains(textureName)) {
     GlobalLogger::Log(LogLevel::Warning, "Texture with name '" + textureName + "' already exists, will be replaced");
     m_textures.erase(textureName);
   }
 
-  // Store texture and return raw pointer
   gfx::rhi::Texture* texturePtr = texture.get();
   m_textures[textureName]       = std::move(texture);
 
@@ -300,18 +269,69 @@ bool TextureManager::removeTexture(const std::string& name) {
 
   auto it = m_textures.find(name);
   if (it != m_textures.end()) {
-    GlobalLogger::Log(LogLevel::Info, "Removing texture '" + name + "'");
-    m_textures.erase(it);
-    return true;
+    auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+    if (deletionManager) {
+      gfx::rhi::Texture* texturePtr = it->second.get();
+
+      deletionManager->enqueueForDeletion<gfx::rhi::Texture>(
+          texturePtr,
+          [this, name](gfx::rhi::Texture*) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            GlobalLogger::Log(LogLevel::Info, "Texture '" + name + "' deleted");
+            m_textures.erase(name);
+          },
+          name,
+          "Texture");
+
+      return true;
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Removing texture '" + name + "'");
+      m_textures.erase(it);
+      return true;
+    }
   }
 
   GlobalLogger::Log(LogLevel::Warning, "Attempted to remove non-existent texture '" + name + "'");
   return false;
 }
 
+bool TextureManager::removeTexture(gfx::rhi::Texture* texture) {
+  if (!texture) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot remove null texture");
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(m_mutex);
+  auto                        it = findTexture_(texture);
+  if (it != m_textures.end()) {
+    std::string textureName = it->first;
+
+    auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+    if (deletionManager) {
+      deletionManager->enqueueForDeletion<gfx::rhi::Texture>(
+          texture,
+          [this, textureName](gfx::rhi::Texture*) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            GlobalLogger::Log(LogLevel::Info, "Texture '" + textureName + "' deleted");
+            m_textures.erase(textureName);
+          },
+          textureName,
+          "Texture");
+      return true;
+    } else {
+      GlobalLogger::Log(LogLevel::Info, "Removing texture '" + textureName + "'");
+      m_textures.erase(it);
+      return true;
+    }
+  }
+
+  GlobalLogger::Log(LogLevel::Warning, "Texture not found in manager");
+  return false;
+}
+
 bool TextureManager::hasTexture(const std::string& name) const {
   std::lock_guard<std::mutex> lock(m_mutex);
-  return m_textures.find(name) != m_textures.end();
+  return m_textures.contains(name);
 }
 
 size_t TextureManager::getTextureCount() const {

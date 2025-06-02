@@ -7,8 +7,8 @@ namespace game_engine {
 
 struct Vertex {
   math::Vector3Df position;
-  math::Vector3Df normal;
   math::Vector2Df texCoords;
+  math::Vector3Df normal;
   math::Vector3Df tangent;
   math::Vector3Df bitangent;
   math::Vector4Df color;

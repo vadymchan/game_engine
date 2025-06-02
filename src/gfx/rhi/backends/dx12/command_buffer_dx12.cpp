@@ -10,7 +10,15 @@
 #include "gfx/rhi/backends/dx12/render_pass_dx12.h"
 #include "gfx/rhi/backends/dx12/rhi_enums_dx12.h"
 #include "gfx/rhi/backends/dx12/texture_dx12.h"
+#include "profiler/gpu.h"
+#include "utils/color/color.h"
 #include "utils/logger/global_logger.h"
+
+#include <algorithm>
+
+#if defined(USE_PIX)
+#include <pix3.h>
+#endif
 
 namespace game_engine {
 namespace gfx {
@@ -42,27 +50,6 @@ void CommandBufferDx12::begin() {
   }
 
   m_isRecording_ = true;
-
-  // TODO: temp, dirty fix (consider set descriptor heaps in another way)
-  DeviceDx12* deviceDx12 = dynamic_cast<DeviceDx12*>(m_device_);
-  if (deviceDx12) {
-    ID3D12DescriptorHeap* heaps[2];
-    uint32_t              heapCount = 0;
-
-    auto cbvSrvUavHeap = deviceDx12->getFrameResourcesManager()->getCurrentCbvSrvUavHeap()->getHeap();
-    if (cbvSrvUavHeap) {
-      heaps[heapCount++] = cbvSrvUavHeap;
-    }
-
-    auto samplerHeap = deviceDx12->getFrameResourcesManager()->getCurrentSamplerHeap()->getHeap();
-    if (samplerHeap) {
-      heaps[heapCount++] = samplerHeap;
-    }
-
-    if (heapCount > 0) {
-      m_commandList_->SetDescriptorHeaps(heapCount, heaps);
-    }
-  }
 }
 
 void CommandBufferDx12::end() {
@@ -120,8 +107,7 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
     return;
   }
 
-  // Set PSO
-  m_commandList_->SetPipelineState(pipelineDx12->getPipelineState());
+  m_commandList_->SetPipelineState(pipelineDx12->getPipelineState());  // PSO
 
   // root signature (graphics / compute)
   auto pipelineType = pipelineDx12->getType();
@@ -129,6 +115,20 @@ void CommandBufferDx12::setPipeline(Pipeline* pipeline) {
     m_commandList_->SetGraphicsRootSignature(pipelineDx12->getRootSignature());
 
     m_commandList_->OMSetBlendFactor(pipelineDx12->getBlendFactors().data());
+
+    const auto& desc = pipelineDx12->getDesc();
+    if (desc.depthStencil.stencilTestEnable) {
+      uint32_t frontRef = desc.depthStencil.front.reference;
+      uint32_t backRef  = desc.depthStencil.back.reference;
+
+      if (frontRef != backRef) {
+        GlobalLogger::Log(
+            LogLevel::Warning,
+            "DX12 limitation: Different front/back stencil references not supported. Using front reference.");
+      }
+
+      m_commandList_->OMSetStencilRef(frontRef);
+    }
 
     D3D_PRIMITIVE_TOPOLOGY topology = g_getPrimitiveTopologyDx12(pipelineDx12->getPrimitiveType());
     m_commandList_->IASetPrimitiveTopology(topology);
@@ -303,7 +303,6 @@ void CommandBufferDx12::drawIndexedInstanced(
     GlobalLogger::Log(LogLevel::Error, "Command buffer is not recording or render pass is not active");
     return;
   }
-
   m_commandList_->DrawIndexedInstanced(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
@@ -472,7 +471,7 @@ void CommandBufferDx12::copyBufferToTexture(Buffer*  srcBuffer,
     return;
   }
 
-  // First, transition texture to copy destination state
+  // transition to copy state
   D3D12_RESOURCE_BARRIER barrier = {};
   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
   barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -486,13 +485,11 @@ void CommandBufferDx12::copyBufferToTexture(Buffer*  srcBuffer,
   UINT subresourceIndex
       = D3D12CalcSubresource(mipLevel, arrayLayer, 0, dstTextureDx12->getMipLevels(), dstTextureDx12->getArraySize());
 
-  // Setup destination subresource
   D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
   dstLocation.pResource                   = dstTextureDx12->getResource();
   dstLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
   dstLocation.SubresourceIndex            = subresourceIndex;
 
-  // Setup source buffer
   D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
   srcLocation.pResource                   = srcBufferDx12->getResource();
   srcLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
@@ -504,7 +501,7 @@ void CommandBufferDx12::copyBufferToTexture(Buffer*  srcBuffer,
 
   m_device_->getDevice()->GetCopyableFootprints(&textureFootprintInfo,
                                                 subresourceIndex,
-                                                1,
+                                                1,  // Number of subresources to copy
                                                 0,  // Buffer offset
                                                 &srcLocation.PlacedFootprint,
                                                 &numRows,
@@ -513,7 +510,6 @@ void CommandBufferDx12::copyBufferToTexture(Buffer*  srcBuffer,
 
   m_commandList_->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
 
-  // Transition texture back to its original state
   barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
   barrier.Transition.StateAfter  = dstTextureDx12->getResourceState();
   m_commandList_->ResourceBarrier(1, &barrier);
@@ -536,7 +532,7 @@ void CommandBufferDx12::copyTextureToBuffer(Texture* srcTexture,
     return;
   }
 
-  // First, transition texture to copy source state
+  // transition to copy state
   D3D12_RESOURCE_BARRIER barrier = {};
   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
   barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -547,17 +543,14 @@ void CommandBufferDx12::copyTextureToBuffer(Texture* srcTexture,
 
   m_commandList_->ResourceBarrier(1, &barrier);
 
-  // Calculate subresource index
   UINT subresourceIndex
       = D3D12CalcSubresource(mipLevel, arrayLayer, 0, srcTextureDx12->getMipLevels(), srcTextureDx12->getArraySize());
 
-  // Setup source texture
   D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
   srcLocation.pResource                   = srcTextureDx12->getResource();
   srcLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
   srcLocation.SubresourceIndex            = subresourceIndex;
 
-  // Setup destination buffer
   D3D12_TEXTURE_COPY_LOCATION dstLocation = {};
   dstLocation.pResource                   = dstBufferDx12->getResource();
   dstLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
@@ -569,7 +562,7 @@ void CommandBufferDx12::copyTextureToBuffer(Texture* srcTexture,
 
   m_device_->getDevice()->GetCopyableFootprints(&textureFootprintInfo,
                                                 subresourceIndex,
-                                                1,
+                                                1,  // Number of subresources to copy
                                                 0,  // Buffer offset
                                                 &dstLocation.PlacedFootprint,
                                                 &numRows,
@@ -578,7 +571,6 @@ void CommandBufferDx12::copyTextureToBuffer(Texture* srcTexture,
 
   m_commandList_->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
 
-  // Transition texture back to its original state
   barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
   barrier.Transition.StateAfter  = srcTextureDx12->getResourceState();
   m_commandList_->ResourceBarrier(1, &barrier);
@@ -699,7 +691,7 @@ void CommandBufferDx12::clearColor(Texture* texture, const float color[4], uint3
     return;
   }
 
-  // Transition texture to render target state
+  // Transition to render target state
   D3D12_RESOURCE_BARRIER barrier = {};
   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
   barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -712,7 +704,6 @@ void CommandBufferDx12::clearColor(Texture* texture, const float color[4], uint3
 
   m_commandList_->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
 
-  // Transition texture back to its original state
   barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
   barrier.Transition.StateAfter  = textureDx12->getResourceState();
   m_commandList_->ResourceBarrier(1, &barrier);
@@ -731,17 +722,14 @@ void CommandBufferDx12::clearDepthStencil(
     return;
   }
 
-  // Get DSV handle for this mip/array slice
   D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = textureDx12->getDsvHandle(mipLevel, arrayLayer);
   if (dsvHandle.ptr == 0) {
     GlobalLogger::Log(LogLevel::Error, "No valid DSV handle for texture");
     return;
   }
 
-  // Determine if this is a depth-only or depth-stencil format
   bool hasStencil = g_isDepthFormat(textureDx12->getFormat()) && !g_isDepthOnlyFormat(textureDx12->getFormat());
 
-  // Set clear flags based on format
   D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH;
   if (hasStencil) {
     clearFlags |= D3D12_CLEAR_FLAG_STENCIL;
@@ -758,17 +746,60 @@ void CommandBufferDx12::clearDepthStencil(
 
   m_commandList_->ResourceBarrier(1, &barrier);
 
-  // Clear the depth/stencil texture
   m_commandList_->ClearDepthStencilView(dsvHandle, clearFlags, depth, stencil, 0, nullptr);
 
-  // Transition texture back to its original state
   barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
   barrier.Transition.StateAfter  = textureDx12->getResourceState();
   m_commandList_->ResourceBarrier(1, &barrier);
 }
 
-void CommandBufferDx12::bindDescriptorHeaps() {
+void CommandBufferDx12::beginDebugMarker(const std::string& name, const float color[4]) {
+  if (name.empty()) {
+    return;
+  }
 
+#if defined(USE_PIX)
+  UINT64 pixColor = PIX_COLOR_DEFAULT;
+  if (color) {
+    pixColor = PIX_COLOR(static_cast<BYTE>(std::clamp(color[0], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[1], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[2], 0.f, 1.f) * 255));
+  }
+  PIXBeginEvent(m_commandList_.Get(), pixColor, "%s", name.c_str());
+#else
+  m_commandList_->BeginEvent(1, name.c_str(), static_cast<UINT>(name.length()));
+#endif
+}
+
+void CommandBufferDx12::endDebugMarker() {
+#if defined(USE_PIX)
+  PIXEndEvent(m_commandList_.Get());
+#else
+  m_commandList_->EndEvent();
+#endif
+}
+
+
+void CommandBufferDx12::insertDebugMarker(const std::string& name, const float color[4]) {
+  if (name.empty()) {
+    return;
+  }
+
+#if defined(USE_PIX)
+  UINT64 pixColor = PIX_COLOR_DEFAULT;
+  if (color) {
+    pixColor = PIX_COLOR(static_cast<BYTE>(std::clamp(color[0], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[1], 0.f, 1.f) * 255),
+                         static_cast<BYTE>(std::clamp(color[2], 0.f, 1.f) * 255));
+  }
+  PIXSetMarker(m_commandList_.Get(), pixColor, "%s", name.c_str());
+#else
+  m_commandList_->SetMarker(1, name.c_str(), static_cast<UINT>(name.length()));
+#endif
+}
+
+
+void CommandBufferDx12::bindDescriptorHeaps() {
   ID3D12DescriptorHeap* heaps[2];
   uint32_t              heapCount = 0;
 
@@ -843,16 +874,13 @@ ID3D12CommandAllocator* CommandAllocatorManager::getCommandAllocator() {
     ComPtr<ID3D12CommandAllocator> allocator = m_availableAllocators.back();
     m_availableAllocators.pop_back();
 
-    // Reset the allocator so it's ready for use
     allocator->Reset();
 
-    // Move to used list
     m_usedAllocators.push_back(allocator);
 
     return allocator.Get();
   }
 
-  // If no allocators are available, create a new one
   ComPtr<ID3D12CommandAllocator> allocator;
   HRESULT hr = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator));
 
@@ -861,7 +889,6 @@ ID3D12CommandAllocator* CommandAllocatorManager::getCommandAllocator() {
     return nullptr;
   }
 
-  // Add to used list
   m_usedAllocators.push_back(allocator);
 
   return allocator.Get();
@@ -872,10 +899,8 @@ void CommandAllocatorManager::returnCommandAllocator(ID3D12CommandAllocator* all
     return;
   }
 
-  // Find in used list
   for (auto it = m_usedAllocators.begin(); it != m_usedAllocators.end(); ++it) {
     if (it->Get() == allocator) {
-      // Move to available list
       m_availableAllocators.push_back(*it);
       m_usedAllocators.erase(it);
       return;

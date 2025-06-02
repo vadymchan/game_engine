@@ -7,6 +7,7 @@
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
+#include "gfx/rhi/interface/render_pass.h"
 #include "gfx/rhi/shader_manager.h"
 
 namespace game_engine {
@@ -22,8 +23,8 @@ void ShaderOverdrawStrategy::initialize(rhi::Device*           device,
   m_frameResources  = frameResources;
   m_shaderManager   = shaderManager;
 
-  m_vertexShader = m_shaderManager->getShader("assets/shaders/debug/overdraw/shader_instancing.vs.hlsl");
-  m_pixelShader  = m_shaderManager->getShader("assets/shaders/debug/overdraw/shader.ps.hlsl");
+  m_vertexShader = m_shaderManager->getShader(m_vertexShaderPath_);
+  m_pixelShader  = m_shaderManager->getShader(m_pixelShaderPath_);
 
   setupRenderPass_();
 }
@@ -93,7 +94,7 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
   colorClear.color[0] = 0.0f;
   colorClear.color[1] = 0.0f;
   colorClear.color[2] = 0.0f;
-  colorClear.color[3] = 0.0f;
+  colorClear.color[3] = 1.0f;
   clearValues.push_back(colorClear);
 
   commandBuffer->beginRenderPass(m_renderPass, currentFramebuffer, clearValues);
@@ -106,6 +107,10 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
 
     if (m_frameResources->getViewDescriptorSet()) {
       commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+    }
+
+    if (drawData.modelMatrixDescriptorSet) {
+      commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
     }
 
     commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
@@ -208,6 +213,7 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
   auto viewDescriptorSetLayout = m_frameResources->getViewDescriptorSetLayout();
+  auto modelMatrixLayout       = m_frameResources->getModelMatrixDescriptorSetLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -283,20 +289,25 @@ void ShaderOverdrawStrategy::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
         pipelineDesc.setLayouts.push_back(viewDescriptorSetLayout);
+        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
 
         pipelineDesc.renderPass = m_renderPass;
 
         auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
+
+        m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 
       DrawData drawData;
-      drawData.pipeline       = pipeline;
-      drawData.vertexBuffer   = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer    = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer = cache.instanceBuffer;
-      drawData.indexCount     = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount  = cache.count;
+      drawData.pipeline                 = pipeline;
+      drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }
@@ -308,7 +319,7 @@ void ShaderOverdrawStrategy::cleanupUnusedBuffers_(
   std::vector<RenderModel*> modelsToRemove;
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
-    if (currentFrameInstances.find(model) == currentFrameInstances.end()) {
+    if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
     }
   }

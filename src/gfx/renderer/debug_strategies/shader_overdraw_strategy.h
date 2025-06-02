@@ -2,7 +2,6 @@
 #define GAME_ENGINE_SHADER_OVERDRAW_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
-#include "gfx/rhi/interface/render_pass.h"
 
 #include <unordered_map>
 #include <vector>
@@ -15,6 +14,7 @@ namespace game_engine::gfx::rhi {
 class Buffer;
 class DescriptorSet;
 class GraphicsPipeline;
+class RenderPass;
 }  // namespace game_engine::gfx::rhi
 
 namespace game_engine {
@@ -51,12 +51,13 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
   };
 
   struct DrawData {
-    rhi::GraphicsPipeline* pipeline       = nullptr;
-    rhi::Buffer*           vertexBuffer   = nullptr;
-    rhi::Buffer*           indexBuffer    = nullptr;
-    rhi::Buffer*           instanceBuffer = nullptr;
-    uint32_t               indexCount     = 0;
-    uint32_t               instanceCount  = 0;
+    rhi::GraphicsPipeline* pipeline                 = nullptr;
+    rhi::DescriptorSet*    modelMatrixDescriptorSet = nullptr;
+    rhi::Buffer*           vertexBuffer             = nullptr;
+    rhi::Buffer*           indexBuffer              = nullptr;
+    rhi::Buffer*           instanceBuffer           = nullptr;
+    uint32_t               indexCount               = 0;
+    uint32_t               instanceCount            = 0;
   };
 
   void setupRenderPass_();
@@ -67,6 +68,9 @@ class ShaderOverdrawStrategy : public DebugDrawStrategy {
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
       const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
+
+  const std::string m_vertexShaderPath_ = "assets/shaders/debug/overdraw/shader_instancing.vs.hlsl";
+  const std::string m_pixelShaderPath_  = "assets/shaders/debug/overdraw/shader.ps.hlsl";
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;

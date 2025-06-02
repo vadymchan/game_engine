@@ -22,7 +22,6 @@ void MemoryLogger::log(LogLevel logLevel, const std::string& message, const std:
 
   m_entries_.push_back(std::move(entry));
   if (m_maxEntries_ > 0 && m_entries_.size() > m_maxEntries_) {
-    // If we exceed the max, remove the oldest entry
     m_entries_.erase(m_entries_.begin());
   }
 }

@@ -1,11 +1,11 @@
 #define SDL_MAIN_HANDLED
 
-#include "engine.h"
+#include <core/engine.h>
+#include <core/application.h>
 
 using namespace game_engine;
 
-#if (defined(_WIN32) || defined(_WIN64)) \
-    && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
+#if (defined(_WIN32) || defined(_WIN64)) && defined(GAME_ENGINE_WINDOWS_SUBSYSTEM)
 #include <windows.h>
 int WINAPI wWinMain(_In_ HINSTANCE     hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,
@@ -28,7 +28,7 @@ auto main(int argc, char* argv[]) -> int {
 
   engine.initialize();
 
-  auto game = std::make_unique<game_engine::Game>();
+  auto game = std::make_unique<game_engine::Application>();
 
   engine.setGame(game.get());
 

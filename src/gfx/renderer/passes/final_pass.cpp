@@ -1,6 +1,7 @@
 #include "gfx/renderer/passes/final_pass.h"
 
 #include "gfx/renderer/frame_resources.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {
@@ -16,6 +17,8 @@ void FinalPass::initialize(rhi::Device*           device,
 }
 
 void FinalPass::render(const RenderContext& context) {
+  CPU_ZONE_NC("FinalPass::render", color::ORANGE);
+
   auto commandBuffer = context.commandBuffer.get();
 
   if (!commandBuffer || !m_frameResources) {
@@ -25,6 +28,8 @@ void FinalPass::render(const RenderContext& context) {
   auto& renderTargets = m_frameResources->getRenderTargets(context.currentImageIndex);
 
   if (renderTargets.colorBuffer && renderTargets.backBuffer) {
+    CPU_ZONE_NC("Copy Texture", color::YELLOW);
+    GPU_ZONE_NC(commandBuffer, "Texture Copy", color::YELLOW);
     commandBuffer->copyTexture(renderTargets.colorBuffer.get(), renderTargets.backBuffer);
   }
 }

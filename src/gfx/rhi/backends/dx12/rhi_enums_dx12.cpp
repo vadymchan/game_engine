@@ -75,10 +75,10 @@ static const std::unordered_map<CompareOp, D3D12_COMPARISON_FUNC> compareOpMappi
   { CompareOp::Never,    D3D12_COMPARISON_FUNC_NEVER         },
   { CompareOp::Less,     D3D12_COMPARISON_FUNC_LESS          },
   { CompareOp::Equal,    D3D12_COMPARISON_FUNC_EQUAL         },
-  { CompareOp::Lequal,   D3D12_COMPARISON_FUNC_LESS_EQUAL    },
+  { CompareOp::LessEqual,   D3D12_COMPARISON_FUNC_LESS_EQUAL    },
   { CompareOp::Greater,  D3D12_COMPARISON_FUNC_GREATER       },
-  { CompareOp::Notequal, D3D12_COMPARISON_FUNC_NOT_EQUAL     },
-  { CompareOp::Gequal,   D3D12_COMPARISON_FUNC_GREATER_EQUAL },
+  { CompareOp::NotEqual, D3D12_COMPARISON_FUNC_NOT_EQUAL     },
+  { CompareOp::GreaterEqual,   D3D12_COMPARISON_FUNC_GREATER_EQUAL },
   { CompareOp::Always,   D3D12_COMPARISON_FUNC_ALWAYS        }
 };
 
@@ -155,6 +155,25 @@ static const std::unordered_map<BlendOp, D3D12_BLEND_OP> blendOpMapping = {
   { BlendOp::ReverseSubtract, D3D12_BLEND_OP_REV_SUBTRACT },
   { BlendOp::MinValue,        D3D12_BLEND_OP_MIN          },
   { BlendOp::MaxValue,        D3D12_BLEND_OP_MAX          }
+};
+
+static const std::unordered_map<LogicOp, D3D12_LOGIC_OP> logicOpMapping = {
+  { LogicOp::Clear,        D3D12_LOGIC_OP_CLEAR         },
+  { LogicOp::And,          D3D12_LOGIC_OP_AND           },
+  { LogicOp::AndReverse,   D3D12_LOGIC_OP_AND_REVERSE   },
+  { LogicOp::Copy,         D3D12_LOGIC_OP_COPY          },
+  { LogicOp::AndInverted,  D3D12_LOGIC_OP_AND_INVERTED  },
+  { LogicOp::NoOp,         D3D12_LOGIC_OP_NOOP          },
+  { LogicOp::Xor,          D3D12_LOGIC_OP_XOR           },
+  { LogicOp::Or,           D3D12_LOGIC_OP_OR            },
+  { LogicOp::Nor,          D3D12_LOGIC_OP_NOR           },
+  { LogicOp::Equivalent,   D3D12_LOGIC_OP_EQUIV         },
+  { LogicOp::Invert,       D3D12_LOGIC_OP_INVERT        },
+  { LogicOp::OrReverse,    D3D12_LOGIC_OP_OR_REVERSE    },
+  { LogicOp::CopyInverted, D3D12_LOGIC_OP_COPY_INVERTED },
+  { LogicOp::OrInverted,   D3D12_LOGIC_OP_OR_INVERTED   },
+  { LogicOp::Nand,         D3D12_LOGIC_OP_NAND          },
+  { LogicOp::Set,          D3D12_LOGIC_OP_SET           }
 };
 
 static const std::unordered_map<ResourceLayout, D3D12_RESOURCE_STATES> resourceLayoutMapping = {
@@ -264,7 +283,7 @@ int g_getTexturePixelSizeDx12(TextureFormat type) {
 TextureType g_getTextureDimensionDx12(D3D12_RESOURCE_DIMENSION type, bool isArray) {
   switch (type) {
     case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
-      return TextureType::Texture1D;
+      return isArray ? TextureType::Texture1DArray : TextureType::Texture1D;
     case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
       return isArray ? TextureType::Texture2DArray : TextureType::Texture2D;
     case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
@@ -279,6 +298,7 @@ TextureType g_getTextureDimensionDx12(D3D12_RESOURCE_DIMENSION type, bool isArra
 D3D12_RESOURCE_DIMENSION g_getTextureDimensionDx12(TextureType type) {
   switch (type) {
     case TextureType::Texture1D:
+    case TextureType::Texture1DArray:
       return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
     case TextureType::Texture2D:
     case TextureType::Texture2DArray:
@@ -344,7 +364,6 @@ void g_getDepthFormatForSRV(DXGI_FORMAT& texFormat, DXGI_FORMAT& srvFormat, DXGI
 }
 
 D3D12_FILTER g_getTextureFilterDx12(TextureFilter minification, TextureFilter magnification, bool isComparison) {
-  // Comparison is used for ShadowMap
   if (isComparison) {
     D3D12_FILTER filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
     switch (minification) {
@@ -581,6 +600,10 @@ D3D12_BLEND g_getBlendFactorDx12(BlendFactor type) {
 
 D3D12_BLEND_OP g_getBlendOpDx12(BlendOp blendOp) {
   return getEnumMapping(blendOpMapping, blendOp, D3D12_BLEND_OP_ADD);
+}
+
+D3D12_LOGIC_OP g_getLogicOpDx12(LogicOp logicOp) {
+  return getEnumMapping(logicOpMapping, logicOp, D3D12_LOGIC_OP_NOOP);
 }
 
 D3D12_RESOURCE_STATES g_getResourceLayoutDx12(ResourceLayout resourceLayout) {

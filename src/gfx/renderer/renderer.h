@@ -35,24 +35,21 @@ class Renderer {
   bool initialize(Window* window, rhi::RenderingApi api);
 
   RenderContext beginFrame(Scene* scene, const RenderSettings& renderSettings);
-
-  void renderFrame(RenderContext& context);
-
-  void endFrame(RenderContext& context);
+  void          renderFrame(RenderContext& context);
+  void          endFrame(RenderContext& context);
 
   bool onWindowResize(uint32_t width, uint32_t height);
-
   bool onViewportResize(const math::Dimension2Di& newDimension);
 
-  rhi::Device* getDevice() const { return m_device.get(); }
-
-  uint32_t getFrameIndex() const { return m_frameIndex; }
-
-  rhi::ShaderManager* getShaderManager() const { return m_shaderManager.get(); }
-
-  FrameResources* getFrameResources() const { return m_frameResources.get(); }
+  rhi::Device*           getDevice() const { return m_device.get(); }
+  uint32_t               getFrameIndex() const { return m_frameIndex; }
+  rhi::ShaderManager*    getShaderManager() const { return m_shaderManager.get(); }
+  FrameResources*        getFrameResources() const { return m_frameResources.get(); }
+  RenderResourceManager* getResourceManager() const { return m_resourceManager.get(); }
 
   private:
+  void initializeGpuProfiler_();
+
   std::unique_ptr<rhi::CommandBuffer> acquireCommandBuffer_();
 
   void recycleCommandBuffer_(std::unique_ptr<rhi::CommandBuffer> cmdBuffer);

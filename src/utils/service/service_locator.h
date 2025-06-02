@@ -24,7 +24,6 @@ class ServiceLocator {
     return s_getServiceContainer<T>().get();
   }
 
-  // TODO: test
   template <typename T>
   static void s_remove() {
     s_getServiceContainer<T>().reset();

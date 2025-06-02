@@ -1,6 +1,10 @@
 #include "utils/model/render_mesh_manager.h"
 
+#include "utils/buffer/buffer_manager.h"
 #include "utils/logger/global_logger.h"
+#include "utils/material/material_manager.h"
+#include "utils/model/render_geometry_mesh_manager.h"
+#include "utils/service/service_locator.h"
 
 namespace game_engine {
 
@@ -12,7 +16,6 @@ RenderMesh* RenderMeshManager::addRenderMesh(RenderGeometryMesh* gpuMesh, Materi
     return nullptr;
   }
 
-  // Check if render mesh already exists for this mesh
   auto it = m_renderMeshes.find(sourceMesh);
   if (it != m_renderMeshes.end()) {
     GlobalLogger::Log(LogLevel::Warning, "Render mesh already exists for this mesh. Overwriting.");
@@ -39,6 +42,49 @@ RenderMesh* RenderMeshManager::getRenderMesh(Mesh* sourceMesh) {
 
   GlobalLogger::Log(LogLevel::Warning, "No render mesh found for the specified mesh");
   return nullptr;
+}
+
+bool RenderMeshManager::removeRenderMesh(RenderMesh* renderMesh) {
+  if (!renderMesh) {
+    GlobalLogger::Log(LogLevel::Error, "Cannot remove null render mesh");
+    return false;
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Removing render mesh");
+
+  auto renderGeometryMeshManager = ServiceLocator::s_get<RenderGeometryMeshManager>();
+  auto bufferManager             = ServiceLocator::s_get<BufferManager>();
+  auto materialManager           = ServiceLocator::s_get<MaterialManager>();
+
+  if (renderGeometryMeshManager && renderMesh->gpuMesh) {
+    renderGeometryMeshManager->removeRenderGeometryMesh(renderMesh->gpuMesh);
+  }
+
+  if (materialManager && renderMesh->material) {
+    materialManager->removeMaterial(renderMesh->material);
+  }
+
+  if (bufferManager && renderMesh->transformMatrixBuffer) {
+    bufferManager->removeBuffer(renderMesh->transformMatrixBuffer);
+  }
+
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  Mesh* sourceMesh = nullptr;
+  for (auto it = m_renderMeshes.begin(); it != m_renderMeshes.end(); ++it) {
+    if (it->second.get() == renderMesh) {
+      sourceMesh = it->first;
+      break;
+    }
+  }
+
+  if (sourceMesh) {
+    m_renderMeshes.erase(sourceMesh);
+    return true;
+  }
+
+  GlobalLogger::Log(LogLevel::Warning, "Render mesh not found in manager");
+  return false;
 }
 
 }  // namespace game_engine

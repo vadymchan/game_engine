@@ -10,8 +10,6 @@
 
 namespace game_engine {
 
-// TODO: move this to a separate file
-
 class RuntimeSettings {
   public:
   static RuntimeSettings& s_get();

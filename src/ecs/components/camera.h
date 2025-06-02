@@ -19,8 +19,6 @@ struct Camera {
   float      height;
 };
 
-// TODO: consider moving this to a separate file (don't expose it to the user -
-// who will use engine for game)
 struct CameraMatrices {
   math::Matrix4f<> view;
   math::Matrix4f<> projection;

@@ -2,7 +2,6 @@
 #define GAME_ENGINE_NORMAL_MAP_VISUALIZATION_STRATEGY_H
 
 #include "gfx/renderer/debug_strategies/debug_draw_strategy.h"
-#include "gfx/rhi/interface/render_pass.h"
 
 #include <unordered_map>
 #include <vector>
@@ -17,6 +16,7 @@ class Buffer;
 class DescriptorSet;
 class DescriptorSetLayout;
 class GraphicsPipeline;
+class RenderPass;
 }  // namespace game_engine::gfx::rhi
 
 namespace game_engine {
@@ -48,18 +48,15 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
     uint32_t     count          = 0;
   };
 
-  struct MaterialCache {
-    rhi::DescriptorSet* descriptorSet = nullptr;
-  };
-
   struct DrawData {
-    rhi::GraphicsPipeline* pipeline              = nullptr;
-    rhi::DescriptorSet*    materialDescriptorSet = nullptr;
-    rhi::Buffer*           vertexBuffer          = nullptr;
-    rhi::Buffer*           indexBuffer           = nullptr;
-    rhi::Buffer*           instanceBuffer        = nullptr;
-    uint32_t               indexCount            = 0;
-    uint32_t               instanceCount         = 0;
+    rhi::GraphicsPipeline* pipeline                 = nullptr;
+    rhi::DescriptorSet*    modelMatrixDescriptorSet = nullptr;
+    rhi::DescriptorSet*    materialDescriptorSet    = nullptr;
+    rhi::Buffer*           vertexBuffer             = nullptr;
+    rhi::Buffer*           indexBuffer              = nullptr;
+    rhi::Buffer*           instanceBuffer           = nullptr;
+    uint32_t               indexCount               = 0;
+    uint32_t               instanceCount            = 0;
   };
 
   void setupRenderPass_();
@@ -71,6 +68,9 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
   void cleanupUnusedBuffers_(
       const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
   rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
+
+  const std::string m_vertexShaderPath_ = "assets/shaders/debug/normal_map_visualization/shader_instancing.vs.hlsl";
+  const std::string m_pixelShaderPath_  = "assets/shaders/debug/normal_map_visualization/shader.ps.hlsl";
 
   rhi::Device*           m_device          = nullptr;
   RenderResourceManager* m_resourceManager = nullptr;
@@ -87,8 +87,13 @@ class NormalMapVisualizationStrategy : public DebugDrawStrategy {
   std::vector<rhi::Framebuffer*> m_framebuffers;
   rhi::DescriptorSetLayout*      m_materialDescriptorSetLayout = nullptr;
 
+  struct MaterialCache {
+    rhi::DescriptorSet* descriptorSet = nullptr;
+  };
+
+  std::unordered_map<Material*, MaterialCache> m_materialCache;
+
   std::unordered_map<RenderModel*, ModelBufferCache> m_instanceBufferCache;
-  std::unordered_map<Material*, MaterialCache>       m_materialCache;
   std::vector<DrawData>                              m_drawData;
 };
 }  // namespace renderer

@@ -1,9 +1,14 @@
 #include "gfx/renderer/passes/debug_pass.h"
 
+#include "gfx/renderer/debug_strategies/light_visualization_strategy.h"
+#include "gfx/renderer/debug_strategies/mesh_highlight_strategy.h"
 #include "gfx/renderer/debug_strategies/normal_map_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/shader_overdraw_strategy.h"
 #include "gfx/renderer/debug_strategies/vertex_normal_visualization_strategy.h"
 #include "gfx/renderer/debug_strategies/wireframe_strategy.h"
+#include "gfx/renderer/debug_strategies/world_grid_strategy.h"
+#include "utils/logger/global_logger.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {
@@ -23,7 +28,6 @@ void DebugPass::initialize(rhi::Device*           device,
   m_resourceManager = resourceManager;
   m_frameResources  = frameResources;
   m_shaderManager   = shaderManager;
-
 }
 
 void DebugPass::resize(const math::Dimension2Di& newDimension) {
@@ -54,6 +58,8 @@ void DebugPass::prepareFrame(const RenderContext& context) {
 }
 
 void DebugPass::render(const RenderContext& context) {
+  CPU_ZONE_NC("DebugPass::render", color::ORANGE);
+
   if (m_debugStrategy) {
     m_debugStrategy->render(context);
   }
@@ -84,8 +90,18 @@ void DebugPass::createDebugStrategy_() {
     case RenderMode::ShaderOverdraw:
       m_debugStrategy = std::make_unique<ShaderOverdrawStrategy>();
       break;
+    case RenderMode::LightVisualization:
+      m_debugStrategy = std::make_unique<LightVisualizationStrategy>();
+      break;
+    case RenderMode::WorldGrid:
+      m_debugStrategy = std::make_unique<WorldGridStrategy>();
+      break;
+    case RenderMode::MeshHighlight:
+      m_debugStrategy = std::make_unique<MeshHighlightStrategy>();
+      break;
     default:
-      // No debug visualization for other render modes
+      GlobalLogger::Log(LogLevel::Error,
+                        "DebugPass: Unsupported render mode: " + std::to_string(static_cast<int>(m_currentRenderMode)));
       break;
   }
 }

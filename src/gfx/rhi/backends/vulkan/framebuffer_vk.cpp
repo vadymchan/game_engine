@@ -28,14 +28,12 @@ FramebufferVk::~FramebufferVk() {
 }
 
 void FramebufferVk::transitionToInitialLayouts(CommandBufferVk* cmdBuffer, RenderPassVk* renderPass) {
-  // Transition color attachments to their initial layouts
   for (uint32_t i = 0; i < m_colorAttachments.size(); i++) {
     if (m_colorAttachments[i]) {
       TextureVk*     textureVk     = static_cast<TextureVk*>(m_colorAttachments[i]);
       ResourceLayout currentLayout = textureVk->getCurrentLayoutType();
       ResourceLayout initialLayout = renderPass->getColorAttachmentInitialLayout(i);
 
-      // Only transition if layouts don't match
       if (currentLayout != initialLayout) {
         ResourceBarrierDesc barrier;
         barrier.texture   = m_colorAttachments[i];
@@ -46,7 +44,6 @@ void FramebufferVk::transitionToInitialLayouts(CommandBufferVk* cmdBuffer, Rende
     }
   }
 
-  // Transition depth/stencil attachment if present
   if (m_depthStencilAttachment) {
     TextureVk*     textureVk     = static_cast<TextureVk*>(m_depthStencilAttachment);
     ResourceLayout currentLayout = textureVk->getCurrentLayoutType();
@@ -65,7 +62,6 @@ void FramebufferVk::transitionToInitialLayouts(CommandBufferVk* cmdBuffer, Rende
 void FramebufferVk::updateAttachmentLayouts(RenderPass* renderPass) {
   RenderPassVk* renderPassVk = static_cast<RenderPassVk*>(renderPass);
 
-  // Update color attachments
   for (uint32_t i = 0; i < m_colorAttachments.size(); i++) {
     if (m_colorAttachments[i]) {
       TextureVk*     textureVk   = static_cast<TextureVk*>(m_colorAttachments[i]);
@@ -74,7 +70,6 @@ void FramebufferVk::updateAttachmentLayouts(RenderPass* renderPass) {
     }
   }
 
-  // Update depth attachment if present
   if (m_depthStencilAttachment) {
     TextureVk*     textureVk   = static_cast<TextureVk*>(m_depthStencilAttachment);
     ResourceLayout finalLayout = renderPassVk->getDepthStencilAttachmentFinalLayout();
@@ -83,7 +78,6 @@ void FramebufferVk::updateAttachmentLayouts(RenderPass* renderPass) {
 }
 
 bool FramebufferVk::initialize(const FramebufferDesc& desc) {
-  // Store the provided attachments
   m_colorAttachments.clear();
   for (auto* texture : desc.colorAttachments) {
     TextureVk* textureVk = dynamic_cast<TextureVk*>(texture);
@@ -102,28 +96,23 @@ bool FramebufferVk::initialize(const FramebufferDesc& desc) {
     }
   }
 
-  // Get render pass
   RenderPassVk* renderPassVk = dynamic_cast<RenderPassVk*>(desc.renderPass);
   if (!renderPassVk) {
     GlobalLogger::Log(LogLevel::Error, "Invalid render pass type");
     return false;
   }
 
-  // Collect all attachments
   std::vector<VkImageView> attachmentViews;
   attachmentViews.reserve(m_colorAttachments.size() + (m_hasDepthStencil ? 1 : 0));
 
-  // Add color attachments
   for (auto* texture : m_colorAttachments) {
     attachmentViews.push_back(texture->getImageView());
   }
 
-  // Add depth/stencil attachment (if any)
   if (m_hasDepthStencil && m_depthStencilAttachment) {
     attachmentViews.push_back(m_depthStencilAttachment->getImageView());
   }
 
-  // Create framebuffer
   VkFramebufferCreateInfo framebufferInfo = {};
   framebufferInfo.sType                   = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
   framebufferInfo.renderPass              = renderPassVk->getRenderPass();

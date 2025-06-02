@@ -53,15 +53,17 @@ bool FenceVk::isSignaled() {
 }
 
 void FenceVk::signal(VkQueue queue) {
-  // In Vulkan, we create an empty submission to signal the fence
   VkSubmitInfo submitInfo       = {};
   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 0;
 
-  if (vkQueueSubmit(queue, 1, &submitInfo, m_fence_) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to signal Vulkan fence");
-  } else {
-    m_signaled_ = true;
+  {
+    std::lock_guard<std::mutex> lock(m_device_->getQueueMutex());
+    if (vkQueueSubmit(queue, 1, &submitInfo, m_fence_) != VK_SUCCESS) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to signal Vulkan fence");
+    } else {
+      m_signaled_ = true;
+    }
   }
 }
 
@@ -88,8 +90,11 @@ void SemaphoreVk::signal(VkQueue queue) {
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores    = &m_semaphore_;
 
-  if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to signal Vulkan semaphore");
+  {
+    std::lock_guard<std::mutex> lock(m_device_->getQueueMutex());
+    if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to signal Vulkan semaphore");
+    }
   }
 }
 

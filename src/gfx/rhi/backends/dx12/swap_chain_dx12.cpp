@@ -17,19 +17,16 @@ namespace rhi {
 SwapChainDx12::SwapChainDx12(const SwapchainDesc& desc, DeviceDx12* device)
     : SwapChain(desc)
     , m_device_(device) {
-  // low-level swap chain creation
   if (!createSwapChain_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain (IDXGISwapChain)");
     return;
   }
 
-  // Create render target views for the swap chain buffers
   if (!createRenderTargetViews_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create render target views for swap chain");
     return;
   }
 
-  // Create texture objects for the back buffers
   if (!createBackBufferTextures_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create texture objects for swap chain back buffers");
     return;
@@ -39,7 +36,6 @@ SwapChainDx12::SwapChainDx12(const SwapchainDesc& desc, DeviceDx12* device)
 SwapChainDx12::~SwapChainDx12() {
   cleanup_();
 
-  // Close the waitable object handle
   if (m_frameLatencyWaitableObject_) {
     CloseHandle(m_frameLatencyWaitableObject_);
     m_frameLatencyWaitableObject_ = nullptr;
@@ -68,18 +64,16 @@ void SwapChainDx12::cleanup_() {
 }
 
 bool SwapChainDx12::createSwapChain_() {
-  // Get the window handle
   auto          window = m_device_->getWindow();
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
   if (!SDL_GetWindowWMInfo(static_cast<SDL_Window*>(window->getNativeWindowHandle()), &wmInfo)) {
-    // Handle SDL error
+    GlobalLogger::Log(LogLevel::Error, "Failed to get window handle" + std::string(SDL_GetError()));
     return false;
   }
 
   HWND hwnd = wmInfo.info.win.window;
 
-  // Create swap chain
   DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
   swapChainDesc.Width                 = m_desc_.width;
   swapChainDesc.Height                = m_desc_.height;
@@ -91,20 +85,18 @@ bool SwapChainDx12::createSwapChain_() {
   swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
   swapChainDesc.Flags                 = 0;  // No special flags for now (like vsync or frame latency waitable object)
 
-  // Create IDXGISwapChain1 for Hwnd
   ComPtr<IDXGISwapChain1> swapChain1;
   HRESULT                 hr = m_device_->getFactory()->CreateSwapChainForHwnd(
       m_device_->getCommandQueue(), hwnd, &swapChainDesc, nullptr, nullptr, &swapChain1);
 
   if (FAILED(hr)) {
-    // Handle error
+    GlobalLogger::Log(LogLevel::Error, "Failed to create swap chain");
     return false;
   }
 
-  // Convert to IDXGISwapChain3
   hr = swapChain1.As(&m_swapChain_);
   if (FAILED(hr)) {
-    // Handle error
+    GlobalLogger::Log(LogLevel::Error, "Failed to convert swap chain to IDXGISwapChain3");
     return false;
   }
 
@@ -112,40 +104,33 @@ bool SwapChainDx12::createSwapChain_() {
 }
 
 bool SwapChainDx12::createRenderTargetViews_() {
-  // Get the number of buffers in the swap chain
   DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
   m_swapChain_->GetDesc1(&swapChainDesc);
   uint32_t bufferCount = swapChainDesc.BufferCount;
 
-  // Resize the back buffer array
   m_backBuffers_.resize(bufferCount);
 
-  // Resize and initialize RTV descriptor indices array
   m_backBuferRtvDescriptorIndices.resize(bufferCount, UINT32_MAX);
 
-  // Get a pointer to the RTV heap
   auto* rtvHeap = m_device_->getCpuRtvHeap();
   if (!rtvHeap) {
+    GlobalLogger::Log(LogLevel::Error, "RTV heap not available");
     return false;
   }
 
-  // Create an RTV for each back buffer
   for (uint32_t i = 0; i < bufferCount; i++) {
-    // Get the back buffer
     HRESULT hr = m_swapChain_->GetBuffer(i, IID_PPV_ARGS(&m_backBuffers_[i]));
     if (FAILED(hr)) {
       GlobalLogger::Log(LogLevel::Error, "Failed to get swap chain buffer");
       return false;
     }
 
-    // Allocate a descriptor in the RTV heap and store its index
     m_backBuferRtvDescriptorIndices[i] = rtvHeap->allocate();
     if (m_backBuferRtvDescriptorIndices[i] == UINT32_MAX) {
       GlobalLogger::Log(LogLevel::Error, "Failed to allocate RTV descriptor");
       return false;
     }
 
-    // Create the RTV
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->getCpuHandle(m_backBuferRtvDescriptorIndices[i]);
     m_device_->getDevice()->CreateRenderTargetView(m_backBuffers_[i].Get(), nullptr, rtvHandle);
   }
@@ -190,16 +175,10 @@ Texture* SwapChainDx12::getCurrentImage() {
 }
 
 bool SwapChainDx12::acquireNextImage(Semaphore* signalSemaphore) {
-  // In DX12, the SwapChain::Present call advances to the next back buffer,
-  // so we just update our index. The GetCurrentBackBufferIndex() function
-  // returns the index of the buffer that should be rendered to next.
   m_currentFrameIndex = m_swapChain_->GetCurrentBackBufferIndex();
-
-  // Wait for the next frame to be signaled if we're using a waitable object
   if (m_frameLatencyWaitableObject_) {
-    // This waits until the GPU has released the next frame
-    constexpr DWORD waitTime   = 1000;  // 1 second timeout
-    DWORD           waitResult = WaitForSingleObjectEx(m_frameLatencyWaitableObject_, waitTime, TRUE);
+    constexpr DWORD waitTimeOneSecond = 1000;
+    DWORD           waitResult        = WaitForSingleObjectEx(m_frameLatencyWaitableObject_, waitTimeOneSecond, TRUE);
     if (waitResult != WAIT_OBJECT_0) {
       GlobalLogger::Log(LogLevel::Warning, "Failed to wait for frame latency waitable object");
     }
@@ -223,7 +202,6 @@ bool SwapChainDx12::present(Semaphore* waitSemaphore) {
 
   if (FAILED(hr)) {
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
-      // Handle device lost scenario (would need to recreate the device)
       GlobalLogger::Log(LogLevel::Error, "GPU device removed or reset");
     } else {
       GlobalLogger::Log(LogLevel::Error, "Failed to present swap chain");
@@ -235,22 +213,17 @@ bool SwapChainDx12::present(Semaphore* waitSemaphore) {
 }
 
 bool SwapChainDx12::resize(uint32_t width, uint32_t height) {
-  // If dimensions haven't changed, do nothing
   if (width == m_desc_.width && height == m_desc_.height) {
     return true;
   }
 
-  // Wait for the GPU to finish using the resources
   m_device_->waitIdle();
 
-  // Update the dimensions
   m_desc_.width  = width;
   m_desc_.height = height;
 
-  // Release existing resources
   cleanup_();
 
-  // Resize the swap chain
   DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
   m_swapChain_->GetDesc1(&swapChainDesc);
 
@@ -262,10 +235,8 @@ bool SwapChainDx12::resize(uint32_t width, uint32_t height) {
     return false;
   }
 
-  // Get the new back buffer index
   m_currentFrameIndex = m_swapChain_->GetCurrentBackBufferIndex();
 
-  // Recreate render target views and texture objects
   if (!createRenderTargetViews_() || !createBackBufferTextures_()) {
     GlobalLogger::Log(LogLevel::Error, "Failed to recreate render targets after resize");
     return false;

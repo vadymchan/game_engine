@@ -59,7 +59,6 @@ bool GraphicsPipelineDx12::createRootSignature_() {
   std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> allRanges;
   allRanges.reserve(m_desc_.setLayouts.size());
 
-  // Process each descriptor set layout
   for (size_t i = 0; i < m_desc_.setLayouts.size(); ++i) {
     const auto* layoutBase = m_desc_.setLayouts[i];
     if (!layoutBase) {
@@ -97,7 +96,6 @@ bool GraphicsPipelineDx12::createRootSignature_() {
     rootParam.DescriptorTable.NumDescriptorRanges = static_cast<UINT>(allRanges.back().size());
     rootParam.DescriptorTable.pDescriptorRanges   = allRanges.back().data();
 
-    // Store the root parameter
     rootParameters.push_back(rootParam);
   }
 
@@ -211,18 +209,18 @@ bool GraphicsPipelineDx12::createPipelineState_() {
     psoDesc.GS.BytecodeLength  = geometryShader->GetBufferSize();
   }
 
-  // Setup stream output (not used in this example)
+  // stream output (not used) - for capturing vertex/geometry shader output into a GPU buffer
   psoDesc.StreamOutput.pSODeclaration   = nullptr;
   psoDesc.StreamOutput.NumEntries       = 0;
   psoDesc.StreamOutput.pBufferStrides   = nullptr;
   psoDesc.StreamOutput.NumStrides       = 0;
   psoDesc.StreamOutput.RasterizedStream = 0;
 
-  // Setup the blend state
+  // blend state
   psoDesc.BlendState.AlphaToCoverageEnable  = m_desc_.multisample.alphaToCoverageEnable;
   psoDesc.BlendState.IndependentBlendEnable = TRUE;  // Allow different blend states for each render target
 
-  // Setup blend state for each render target
+  // blend state for each render target
   for (uint32_t i = 0; i < 8; i++) {
     if (i < m_desc_.colorBlend.attachments.size()) {
       const auto& attachment = m_desc_.colorBlend.attachments[i];
@@ -230,7 +228,7 @@ bool GraphicsPipelineDx12::createPipelineState_() {
       psoDesc.BlendState.RenderTarget[i].BlendEnable   = attachment.blendEnable;
       psoDesc.BlendState.RenderTarget[i].LogicOpEnable = m_desc_.colorBlend.logicOpEnable;
 
-      // Set blend operations
+      // blend operations
       psoDesc.BlendState.RenderTarget[i].SrcBlend  = g_getBlendFactorDx12(attachment.srcColorBlendFactor);
       psoDesc.BlendState.RenderTarget[i].DestBlend = g_getBlendFactorDx12(attachment.dstColorBlendFactor);
       psoDesc.BlendState.RenderTarget[i].BlendOp   = g_getBlendOpDx12(attachment.colorBlendOp);
@@ -239,13 +237,12 @@ bool GraphicsPipelineDx12::createPipelineState_() {
       psoDesc.BlendState.RenderTarget[i].DestBlendAlpha = g_getBlendFactorDx12(attachment.dstAlphaBlendFactor);
       psoDesc.BlendState.RenderTarget[i].BlendOpAlpha   = g_getBlendOpDx12(attachment.alphaBlendOp);
 
-      // Set logic operation
-      psoDesc.BlendState.RenderTarget[i].LogicOp = static_cast<D3D12_LOGIC_OP>(m_desc_.colorBlend.logicOp);
+      // logic operation
+      psoDesc.BlendState.RenderTarget[i].LogicOp = g_getLogicOpDx12(m_desc_.colorBlend.logicOp);
 
-      // Set write mask
+      // write mask
       psoDesc.BlendState.RenderTarget[i].RenderTargetWriteMask = g_getColorMaskDx12(attachment.colorWriteMask);
     } else {
-      // Set default blend state for unused render targets
       psoDesc.BlendState.RenderTarget[i].BlendEnable           = FALSE;
       psoDesc.BlendState.RenderTarget[i].LogicOpEnable         = FALSE;
       psoDesc.BlendState.RenderTarget[i].SrcBlend              = D3D12_BLEND_ONE;
@@ -259,15 +256,12 @@ bool GraphicsPipelineDx12::createPipelineState_() {
     }
   }
 
-  // Copy blend constants
   for (int i = 0; i < 4; i++) {
     m_blendFactors_[i] = m_desc_.colorBlend.blendConstants[i];
   }
 
-  // Setup the sample mask
   psoDesc.SampleMask = m_desc_.multisample.sampleMask;
 
-  // Setup the rasterizer state
   psoDesc.RasterizerState.FillMode              = g_getPolygonModeDx12(m_desc_.rasterization.polygonMode);
   psoDesc.RasterizerState.CullMode              = g_getCullModeDx12(m_desc_.rasterization.cullMode);
   psoDesc.RasterizerState.FrontCounterClockwise = (m_desc_.rasterization.frontFace == FrontFace::Ccw) ? TRUE : FALSE;
@@ -281,7 +275,6 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   psoDesc.RasterizerState.ForcedSampleCount     = 0;      // Use the sample count from the render target
   psoDesc.RasterizerState.ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-  // Setup the depth-stencil state
   psoDesc.DepthStencilState.DepthEnable = m_desc_.depthStencil.depthTestEnable;
   psoDesc.DepthStencilState.DepthWriteMask
       = m_desc_.depthStencil.depthWriteEnable ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
@@ -290,26 +283,21 @@ bool GraphicsPipelineDx12::createPipelineState_() {
   psoDesc.DepthStencilState.StencilReadMask  = static_cast<UINT8>(m_desc_.depthStencil.front.compareMask);
   psoDesc.DepthStencilState.StencilWriteMask = static_cast<UINT8>(m_desc_.depthStencil.front.writeMask);
 
-  // Setup front face stencil operations
   psoDesc.DepthStencilState.FrontFace.StencilFailOp      = g_getStencilOpDx12(m_desc_.depthStencil.front.failOp);
   psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = g_getStencilOpDx12(m_desc_.depthStencil.front.depthFailOp);
   psoDesc.DepthStencilState.FrontFace.StencilPassOp      = g_getStencilOpDx12(m_desc_.depthStencil.front.passOp);
   psoDesc.DepthStencilState.FrontFace.StencilFunc        = g_getCompareOpDx12(m_desc_.depthStencil.front.compareOp);
 
-  // Setup back face stencil operations
   psoDesc.DepthStencilState.BackFace.StencilFailOp      = g_getStencilOpDx12(m_desc_.depthStencil.back.failOp);
   psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = g_getStencilOpDx12(m_desc_.depthStencil.back.depthFailOp);
   psoDesc.DepthStencilState.BackFace.StencilPassOp      = g_getStencilOpDx12(m_desc_.depthStencil.back.passOp);
   psoDesc.DepthStencilState.BackFace.StencilFunc        = g_getCompareOpDx12(m_desc_.depthStencil.back.compareOp);
 
-  // Setup input layout
   psoDesc.InputLayout.pInputElementDescs = inputLayout.data();
   psoDesc.InputLayout.NumElements        = static_cast<UINT>(inputLayout.size());
 
-  // Setup primitive topology
   psoDesc.PrimitiveTopologyType = g_getPrimitiveTopologyTypeOnlyDx12(m_desc_.inputAssembly.topology);
 
-  // Setup render target formats
   RenderPassDx12* renderPassDx12 = dynamic_cast<RenderPassDx12*>(m_desc_.renderPass);
   if (!renderPassDx12) {
     GlobalLogger::Log(LogLevel::Error, "Invalid render pass for DX12 pipeline");
@@ -323,41 +311,17 @@ bool GraphicsPipelineDx12::createPipelineState_() {
     psoDesc.RTVFormats[i] = renderTargetFormats[i];
   }
 
-  // Setup depth-stencil format
   psoDesc.DSVFormat = renderPassDx12->getDepthStencilFormat();
 
-  // Setup sample description
-  switch (m_desc_.multisample.rasterizationSamples) {
-    case MSAASamples::Count1:
-      psoDesc.SampleDesc.Count = 1;
-      break;
-    case MSAASamples::Count2:
-      psoDesc.SampleDesc.Count = 2;
-      break;
-    case MSAASamples::Count4:
-      psoDesc.SampleDesc.Count = 4;
-      break;
-    case MSAASamples::Count8:
-      psoDesc.SampleDesc.Count = 8;
-      break;
-    case MSAASamples::Count16:
-      psoDesc.SampleDesc.Count = 16;
-      break;
-    default:
-      psoDesc.SampleDesc.Count = 1;
-      break;
-  }
+  psoDesc.SampleDesc.Count   = g_getMSAASampleCount(m_desc_.multisample.rasterizationSamples);
   psoDesc.SampleDesc.Quality = 0;
 
-  // Setup node mask and caching
   psoDesc.NodeMask                        = 0;
   psoDesc.CachedPSO.pCachedBlob           = nullptr;
   psoDesc.CachedPSO.CachedBlobSizeInBytes = 0;
 
-  // Set the pipeline flag (graphics pipeline)
   psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-  // Create the pipeline state object
   HRESULT hr = m_device_->getDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState_));
 
   if (FAILED(hr)) {

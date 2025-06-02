@@ -40,12 +40,10 @@ VKAPI_ATTR VkBool32 VKAPI_CALL g_debugCallback(VkDebugUtilsMessageSeverityFlagBi
 
   std::string message = "Vulkan [" + typeStr + "] ";
 
-  // Add message ID if available
   if (pCallbackData->pMessageIdName) {
     message += "[" + std::string(pCallbackData->pMessageIdName) + "] ";
   }
 
-  // Actual message
   message += pCallbackData->pMessage;
 
   GlobalLogger::Log(logLevel, message);
@@ -59,7 +57,6 @@ void g_populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& crea
   createInfo.messageSeverity
       = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 #ifdef _DEBUG
-  // Include verbose and info messages in debug builds
   createInfo.messageSeverity
       |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
 #endif
@@ -78,14 +75,13 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
   std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-  // Find queue families that support graphics, compute, and present
   for (uint32_t i = 0; i < queueFamilyCount; i++) {
-    // Graphics queue
+    // graphics queue
     if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
       indices.graphicsFamily = i;
     }
 
-    // Compute queue (preferably separate from graphics)
+    // compute queue (preferably separate from graphics)
     if (queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
       if (!indices.computeFamily.has_value()
           || (indices.graphicsFamily.has_value() && i != indices.graphicsFamily.value())) {
@@ -93,7 +89,7 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
       }
     }
 
-    // Transfer queue (preferably separate from graphics and compute)
+    // transfer queue (preferably separate from graphics and compute)
     if (queueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT) {
       if (!indices.transferFamily.has_value()
           || (indices.graphicsFamily.has_value() && i != indices.graphicsFamily.value()
@@ -110,22 +106,22 @@ QueueFamilyIndices g_findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR sur
       indices.presentFamily = i;
     }
 
-    // Exit early if we found all queue families
     if (indices.isComplete()) {
       break;
     }
   }
 
-  // If we didn't find a dedicated compute queue, use the graphics queue
   if (!indices.computeFamily.has_value() && indices.graphicsFamily.has_value()) {
+    GlobalLogger::Log(LogLevel::Warning, "No dedicated compute queue found, using graphics queue instead.");
     indices.computeFamily = indices.graphicsFamily;
   }
 
-  // If we didn't find a dedicated transfer queue, use the compute or graphics queue
   if (!indices.transferFamily.has_value()) {
     if (indices.computeFamily.has_value()) {
+      GlobalLogger::Log(LogLevel::Warning, "No dedicated transfer queue found, using compute queue instead.");
       indices.transferFamily = indices.computeFamily;
     } else if (indices.graphicsFamily.has_value()) {
+      GlobalLogger::Log(LogLevel::Warning, "No dedicated transfer queue found, using graphics queue instead.");
       indices.transferFamily = indices.graphicsFamily;
     }
   }
@@ -152,10 +148,8 @@ bool g_isDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const
 SwapChainSupportDetails g_querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
   SwapChainSupportDetails details;
 
-  // Get surface capabilities
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
-  // Get surface formats
   uint32_t formatCount;
   vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
 
@@ -164,7 +158,6 @@ SwapChainSupportDetails g_querySwapChainSupport(VkPhysicalDevice device, VkSurfa
     vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
   }
 
-  // Get presentation modes
   uint32_t presentModeCount;
   vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
 
@@ -177,24 +170,19 @@ SwapChainSupportDetails g_querySwapChainSupport(VkPhysicalDevice device, VkSurfa
 }
 
 bool g_isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, const std::vector<const char*>& deviceExtensions) {
-  // Check if device supports required queue families
   QueueFamilyIndices indices = g_findQueueFamilies(device, surface);
 
-  // Check if device supports required extensions
   bool extensionsSupported = g_isDeviceExtensionSupport(device, deviceExtensions);
 
-  // Check if swap chain is adequate
   bool swapChainAdequate = false;
   if (extensionsSupported) {
     SwapChainSupportDetails swapChainSupport = g_querySwapChainSupport(device, surface);
     swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
   }
 
-  // Get device features
   VkPhysicalDeviceFeatures supportedFeatures;
   vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-  // Check for required features (e.g., sampler anisotropy)
   bool featuresSupported = supportedFeatures.samplerAnisotropy;
 
   return indices.isComplete() && extensionsSupported && swapChainAdequate && featuresSupported;

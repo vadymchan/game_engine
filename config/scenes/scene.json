@@ -1,0 +1,194 @@
+{
+    "schemaVersion": "1.0",
+    "name": "scene",
+    "entities": [
+        {
+            "name": "PointLight",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -2.141892671585083,
+                        5.856735706329346,
+                        -2.946958541870117
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "light",
+                    "color": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "intensity": 20.0
+                },
+                {
+                    "type": "pointLight",
+                    "range": 12.0
+                }
+            ]
+        },
+        {
+            "name": "Model_Avocado.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -5.077829837799072,
+                        3.693049907684326,
+                        -6.345746994018555
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        6.713087558746338
+                    ],
+                    "scale": [
+                        10.54183578491211,
+                        8.129995346069336,
+                        8.129999160766602
+                    ]
+                },
+                {
+                    "type": "model",
+                    "path": "assets/models/gltf/2.0/Avocado\\glTF\\Avocado.gltf"
+                }
+            ]
+        },
+        {
+            "name": "MainCamera",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -2.1896889209747316,
+                        4.658919334411621,
+                        -8.62165355682373
+                    ],
+                    "rotation": [
+                        16.400005340576173,
+                        -11.806991577148438,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "camera",
+                    "cameraType": "perspective",
+                    "fov": 1.57254159450531,
+                    "near": 0.0010000000474974514,
+                    "far": 1000.0,
+                    "width": 1426.0,
+                    "height": 1027.0
+                },
+                {
+                    "type": "movement"
+                }
+            ]
+        },
+        {
+            "name": "DirectionalLight",
+            "components": [
+                {
+                    "type": "light",
+                    "color": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "directionalLight",
+                    "direction": [
+                        0.0,
+                        -1.0,
+                        0.0
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Model_TwoSidedPlane.gltf",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        -1.859574556350708,
+                        3.818899154663086,
+                        -5.955410957336426
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "movement"
+                },
+                {
+                    "type": "model",
+                    "path": "assets/models/gltf/2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf"
+                }
+            ]
+        },
+        {
+            "name": "SpotLight",
+            "components": [
+                {
+                    "type": "transform",
+                    "position": [
+                        0.0,
+                        1.5,
+                        -5.0
+                    ],
+                    "rotation": [
+                        90.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                },
+                {
+                    "type": "light",
+                    "color": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "intensity": 1.0
+                },
+                {
+                    "type": "spotLight",
+                    "range": 20.0,
+                    "innerConeAngle": 20.0,
+                    "outerConeAngle": 30.0
+                }
+            ]
+        }
+    ]
+}

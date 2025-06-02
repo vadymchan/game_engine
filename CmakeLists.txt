@@ -12,7 +12,7 @@ option(BUILD_GLFW         "Build the GLFW library"      OFF)
 option(BUILD_SPDLOG       "Build the SPDLOG library"    ON)
 option(BUILD_BULLET       "Build the Bullet library"    OFF)
 option(BUILD_IMGUI        "Build the ImGui library"     ON)
-option(BUILD_ASSIMP       "Build the Assimp library"    ON)
+option(BUILD_ASSIMP       "Build the Assimp library"    OFF)
 option(BUILD_STB          "Build the STB library"       ON)
 option(BUILD_BOOST        "Build the Boost library"     OFF)
 option(BUILD_EIGEN        "Build the Eigen library"     OFF)
@@ -23,12 +23,17 @@ option(BUILD_RAPIDJSON    "Build the RapidJSON library" ON)
 option(BUILD_WATCHER      "Build the watcher library"   ON)
 option(BUILD_ENTT         "Build the EnTT library"      ON)
 
-
-
 # Choose which rendering API to use
 option(USE_VULKAN  "Use Vulkan as the rendering API"                 ON)
 option(USE_OPENGL  "Use OpenGL as the rendering API (DEPRECATED!)"  OFF)
 option(USE_DIRECTX "Use DirectX as the rendering API"          ${WIN32})
+option(FORCE_RHI_API "Force specific RHI API at compile time (disables runtime selection)" OFF)
+
+option(USE_PROFILING "Enable profiling support (CPU + GPU)" OFF)
+
+# Choose tools
+option(BUILD_ASSET_TOOLS "Build offline asset conversion tools (gltfpack & toktx)" OFF)
+option(BUILD_PROFILING_TOOLS "Download Tracy profiling tools" OFF)
 
 include(CMakeDependentOption)
 
@@ -36,10 +41,27 @@ cmake_dependent_option(BUILD_VULKAN_MEMORY_ALLOCATOR "Build Vulkan Memory Alloca
 cmake_dependent_option(BUILD_D3D12_MEMORY_ALLOCATOR  "Build D3D12 Memory Allocator"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_AGILITY           "Fetch DirectX 12 Agility SDK (and DirectX-Headers as dependent library)"  ON "USE_DIRECTX" OFF)
 cmake_dependent_option(USE_DIRECTX_TOOL_KIT          "Fetch DirectX Tool Kit for DX12" ON "USE_DIRECTX" OFF)
+cmake_dependent_option(BUILD_WINPIX_EVENT "Fetch WinPix Event Runtime (PIX3) for PIX markers" ON "USE_DIRECTX" OFF)
+
 cmake_dependent_option(BUILD_IMGUIZMO                "Build the ImGuizmo library" ON "BUILD_IMGUI" OFF)
+cmake_dependent_option(BUILD_IMGUIFILEDIALOG  "Build the ImGuiFileDialog library" ON "BUILD_IMGUI" OFF)
+
+cmake_dependent_option(BUILD_TRACY                         "Build Tracy profiler" ON  "USE_PROFILING"                 OFF)
+cmake_dependent_option(USE_CPU_PROFILING  "Enable CPU profiling (requires Tracy)" ON  "USE_PROFILING;BUILD_TRACY"     OFF)
+cmake_dependent_option(USE_GPU_PROFILING                   "Enable GPU profiling" ON  "USE_PROFILING"                 OFF)
+cmake_dependent_option(USE_TRACY_GPU_PROFILING       "Enable Tracy GPU profiling" ON  "USE_GPU_PROFILING;BUILD_TRACY" OFF)
+
 # separately, since they're cross-platform 
 option(USE_DIRECTX_SHADER_COMPILER "Fetch DirectX Shader Compiler" ON)
 option(USE_DIRECTX_TEX             "Fetch DirectX Tex Library"     ON)
+
+option(USE_GLTF "Enable glTF/KTX support" ON)
+cmake_dependent_option(BUILD_CGLTF         "  – cgltf (glTF parser)"                         ON  "USE_GLTF" OFF)
+cmake_dependent_option(BUILD_LIBKTX        "  – libktx (KTX2/BasisU loader)"                 ON  "USE_GLTF" OFF)
+cmake_dependent_option(BUILD_MESHOPTIMIZER "  – meshoptimizer runtime (EXT_meshopt decoder)" ON  "USE_GLTF" OFF)
+cmake_dependent_option(BUILD_MIKK_T_SPACE  "  – MikkTSpace tangent generator"                ON  "USE_GLTF" OFF)
+
+option(USE_GLTF_SAMPLE_MODELS "Enable importing glTF Sample Models" OFF)
 
 
 # WIP - change build directory
@@ -49,6 +71,10 @@ option(USE_DIRECTX_TEX             "Fetch DirectX Tex Library"     ON)
 # set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
 
 # set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/game_engine.dir)
+
+if(BUILD_TRACY OR BUILD_PROFILING_TOOLS)
+    set(TRACY_VERSION "v0.11.1" CACHE STRING "Tracy profiler version")
+endif()
 
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
@@ -80,6 +106,11 @@ if(USE_VCPKG)
     set(VCPKG_VERSION edge)
     include(cmake/vcpkg.cmake)
     
+    # if(NOT VCPKG_NO_INIT)
+    #     message("Call vcpkg_init() explicitly")
+    #     vcpkg_init()
+    # endif()
+
 endif()
     
 # -------------------------------------------------------------------------------------
@@ -158,7 +189,9 @@ if(BUILD_SPDLOG)
     FetchContent_Declare(
         spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG v1.9.2
+        GIT_TAG v1.15.3
+        GIT_SHALLOW    TRUE
+        GIT_PROGRESS   TRUE
     )
 endif()
 
@@ -188,6 +221,15 @@ if(BUILD_IMGUIZMO)
         GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
         # GIT_TAG 664cf2d73864a36b2a8b5091d33fc4578c885eca
         GIT_TAG b10e91756d32395f5c1fefd417899b657ed7cb88
+    )
+endif()
+
+if(BUILD_IMGUIFILEDIALOG)
+    message(STATUS "Fetching ImGuiFileDialog...")
+    FetchContent_Declare(
+        imguifiledialog
+        GIT_REPOSITORY https://github.com/aiekick/ImGuiFileDialog.git
+        GIT_TAG v0.6.7   
     )
 endif()
 
@@ -310,6 +352,16 @@ if(BUILD_ENTT)
     )
 endif()
 
+if(BUILD_TRACY)
+    message(STATUS "Fetching Tracy...")
+    FetchContent_Declare(
+        tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG ${TRACY_VERSION}
+        GIT_SHALLOW TRUE
+    )
+endif()
+
 if(BUILD_D3D12_MEMORY_ALLOCATOR)
     message(STATUS "Fetching D3D12MemoryAllocator...")
     FetchContent_Declare(
@@ -327,6 +379,66 @@ if(BUILD_VULKAN_MEMORY_ALLOCATOR)
         GIT_TAG v3.1.0
     )
 endif()
+
+if(BUILD_CGLTF)
+    message(STATUS "Fetching cgltf...")
+    FetchContent_Declare(
+        cgltf
+        GIT_REPOSITORY https://github.com/jkuhlmann/cgltf.git
+        GIT_TAG        v1.15
+    )
+endif()
+
+if(BUILD_LIBKTX)
+    message(STATUS "Fetching libktx...")
+    FetchContent_Declare(
+        libktx
+        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
+        GIT_TAG        v4.4.0
+    )
+    set(KTX_FEATURE_TOOLS     OFF CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_LIBRARIES ON  CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_TESTS     OFF CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_DOC       OFF CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_PY        OFF CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_JNI       OFF CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_GL_UPLOAD OFF CACHE BOOL "" FORCE)
+    set(KTX_FEATURE_VK_UPLOAD ON  CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS     OFF CACHE BOOL "" FORCE)
+endif()
+
+if(BUILD_MESHOPTIMIZER)
+    message(STATUS "Fetching meshoptimizer (runtime)...")
+    FetchContent_Declare(
+        meshoptimizer
+        GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
+        GIT_TAG        v0.23
+    )
+    set(MESHOPT_BUILD_GLTFPACK    OFF CACHE BOOL "" FORCE)
+    set(MESHOPT_BUILD_DEMO        OFF CACHE BOOL "" FORCE)
+    set(MESHOPT_INSTALL           OFF CACHE BOOL "" FORCE)
+    set(MESHOPT_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+endif()
+
+if(BUILD_MIKK_T_SPACE)
+    message(STATUS "Fetching MikkTSpace...")
+    FetchContent_Declare(
+        mikktspace
+        GIT_REPOSITORY https://github.com/mmikk/MikkTSpace.git
+        GIT_TAG        3e895b49d05ea07e4c2133156cfa94369e19e409
+    )
+endif()
+
+if(USE_GLTF_SAMPLE_MODELS)
+    message(STATUS "Fetching glTF-Sample-Models...")
+    FetchContent_Declare(
+        gltf_sample_models
+        GIT_REPOSITORY https://github.com/KhronosGroup/glTF-Sample-Models.git
+        GIT_TAG        d7a3cc8e51d7c573771ae77a57f16b0662a905c6
+        GIT_SHALLOW    TRUE
+    )
+endif()
+
 
 # old hierarchy
 # file(GLOB_RECURSE SOURCES "src/*.cpp")
@@ -396,6 +508,39 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 
+string(TOUPPER "${PROJECT_NAME}" PROJECT_UPPER)
+
+if((USE_VULKAN OR USE_DIRECTX) AND FORCE_RHI_API)
+    set(AVAILABLE_RHI_APIS "")
+    if(USE_VULKAN)
+        list(APPEND AVAILABLE_RHI_APIS "Vulkan")
+    endif()
+    if(USE_DIRECTX)
+        list(APPEND AVAILABLE_RHI_APIS "DirectX")
+    endif()
+
+    list(GET AVAILABLE_RHI_APIS 0 DEFAULT_RHI_API)
+    
+    set(FORCED_RHI_API "${DEFAULT_RHI_API}" CACHE STRING "Select which RHI API to force")
+    set_property(CACHE FORCED_RHI_API PROPERTY STRINGS ${AVAILABLE_RHI_APIS})
+    
+    message(STATUS "Available RHI APIs for forcing: ${AVAILABLE_RHI_APIS}")
+    message(STATUS "Forcing RHI API: ${FORCED_RHI_API}")
+
+    if(NOT FORCED_RHI_API IN_LIST AVAILABLE_RHI_APIS)
+        message(WARNING "Selected RHI API '${FORCED_RHI_API}' is not available. Using default: ${DEFAULT_RHI_API}")
+        set(FORCED_RHI_API "${DEFAULT_RHI_API}" CACHE STRING "Select which RHI API to force" FORCE)
+    endif()
+
+    if(FORCED_RHI_API STREQUAL "Vulkan")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_FORCE_VULKAN)
+        message(STATUS "Added macro: ${PROJECT_UPPER}_FORCE_VULKAN")
+    elseif(FORCED_RHI_API STREQUAL "DirectX") 
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_FORCE_DIRECTX)
+        message(STATUS "Added macro: ${PROJECT_UPPER}_FORCE_DIRECTX")
+    endif()
+endif()
+
 if(BUILD_SDL)
     FetchContent_MakeAvailable(sdl)
     
@@ -409,32 +554,53 @@ if(BUILD_SDL)
         message(FATAL_ERROR "Wrong directory in ${SDL_BUILD_INCLUDE_DIR}")
     endif()
 
+    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
+    add_dependencies(${PROJECT_NAME} SDL2::SDL2)
+
     # SDL's include directories are in the build directory (not the source directory   
     # like other third parties in this project), due to SDL generating includes during build.
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+    #     ${sdl_SOURCE_DIR}/include
+    #     $<BUILD_INTERFACE:${sdl_BINARY_DIR}/include>
+    #     $<BUILD_INTERFACE:${sdl_BINARY_DIR}/include-config-$<CONFIG>/${SDL_VERSION_DIR}>)
+    
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+        ${sdl_SOURCE_DIR}/include
+        ${SDL_BUILD_INCLUDE_DIR}
+        ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR}
         $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
         $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
     )
-    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
+
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR})
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL_BUILD_INCLUDE_DIR}/${SDL_VERSION_DIR})
+    # target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+    #     $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
+    #     $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
+    # )
+    # target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_SDL)
 endif()
 
 if(BUILD_GLFW)
     FetchContent_MakeAvailable(glfw)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${glfw_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_GLTF)
 endif()
 
 if(BUILD_SPDLOG)
     FetchContent_MakeAvailable(spdlog)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${spdlog_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE spdlog)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_SPDLOG)
 endif()
 
 if(BUILD_BULLET)
     FetchContent_MakeAvailable(bullet)
     target_link_libraries(${PROJECT_NAME} PRIVATE BulletDynamics BulletCollision LinearMath)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_BULLET)
 endif()
 
 if(BUILD_IMGUI)
@@ -476,9 +642,21 @@ if(BUILD_IMGUI)
         target_link_libraries(imgui_library PRIVATE d3d12 dxgi)
     endif()
 
+    # if(BUILD_SDL)
+    #     target_include_directories(imgui_library PRIVATE ${SDL_INCLUDE_DIRS})
+    #     target_link_libraries(imgui_library PRIVATE SDL2::SDL2)
+    # endif()
+
     if(BUILD_SDL)
-        target_include_directories(imgui_library PRIVATE ${SDL_INCLUDE_DIRS})
-        target_link_libraries(imgui_library PRIVATE SDL2)
+        FetchContent_MakeAvailable(sdl)
+        target_link_libraries(imgui_library PRIVATE SDL2::SDL2)
+        target_include_directories(imgui_library SYSTEM PRIVATE
+            ${sdl_SOURCE_DIR}/include
+            ${sdl_BINARY_DIR}/include
+            ${sdl_BINARY_DIR}/include/${SDL_VERSION_DIR}
+            $<$<CONFIG:Debug>:${sdl_BINARY_DIR}/include-config-debug/${SDL_VERSION_DIR}>
+            $<$<CONFIG:Release>:${sdl_BINARY_DIR}/include-config-release/${SDL_VERSION_DIR}>
+        )
     endif()
 
     target_include_directories(imgui_library PRIVATE
@@ -493,6 +671,8 @@ if(BUILD_IMGUI)
             ${imgui_SOURCE_DIR}
             ${imgui_SOURCE_DIR}/backends
     )
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_IMGUI)
 
 endif()
 
@@ -517,6 +697,35 @@ if(BUILD_IMGUIZMO)
         SYSTEM PRIVATE
         ${imguizmo_SOURCE_DIR}
     )
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_IMGUIZMO)
+endif()
+
+if(BUILD_IMGUIFILEDIALOG)
+    FetchContent_MakeAvailable(imguifiledialog)
+
+    add_library(imguifiledialog_library STATIC
+        ${imguifiledialog_SOURCE_DIR}/ImGuiFileDialog.cpp
+    )
+
+    target_link_libraries(imguifiledialog_library PRIVATE imgui_library)
+
+    target_include_directories(imguifiledialog_library PRIVATE
+        ${imguifiledialog_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+    )
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE imguifiledialog_library)
+    
+    target_include_directories(${PROJECT_NAME} 
+        SYSTEM PRIVATE
+        ${imguifiledialog_SOURCE_DIR}
+    )
+
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE ${PROJECT_UPPER}_USE_IMGUIFILEDIALOG
+    )
 endif()
 
 if(BUILD_ASSIMP)
@@ -532,16 +741,20 @@ if(BUILD_ASSIMP)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:assimp>
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_ASSIMP)
 endif()
 
 if(BUILD_STB)
     FetchContent_MakeAvailable(stb)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${stb_SOURCE_DIR})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_STB)
 endif()
 
 if(BUILD_EIGEN)
     FetchContent_MakeAvailable(eigen)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${eigen_SOURCE_DIR})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_EIGEN)
 endif()
 
 if(BUILD_MATH_LIBRARY)
@@ -552,6 +765,7 @@ if(BUILD_MATH_LIBRARY)
     # add_dependencies(${PROJECT_NAME} math_library)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${math_library_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE math_library)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_MATH_LIBRARY)
 endif()
 
 if(BUILD_EASTL)
@@ -563,6 +777,7 @@ if(BUILD_EASTL)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${EABase_SOURCE_DIR}/include/Common)
     target_link_libraries(${PROJECT_NAME} PRIVATE EASTL)
     set(BUILD_SHARED_LIBS ${SAVED_BUILD_SHARED_LIBS})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_EASTL)
 endif()
 
 if(BUILD_XXHASH)
@@ -581,6 +796,7 @@ if(BUILD_XXHASH)
     # set(BUILD_SHARED_LIBS "${SAVED_BUILD_SHARED_LIBS}" CACHE BOOL "" FORCE)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${xxhash_SOURCE_DIR}/cmake_unofficial/..")
     target_link_libraries(${PROJECT_NAME} PRIVATE xxhash)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_XXHASH)
 endif()
 
 if(BUILD_RAPIDJSON)
@@ -588,6 +804,7 @@ if(BUILD_RAPIDJSON)
     set(RAPIDJSON_BUILD_TESTS OFF CACHE INTERNAL "")
     FetchContent_MakeAvailable(rapidjson)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_RAPIDJSON)
 endif()
 
 if(BUILD_WATCHER)
@@ -596,26 +813,98 @@ if(BUILD_WATCHER)
     target_include_directories(wtr.hdr_watcher INTERFACE ${watcher_SOURCE_DIR}/include)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${watcher_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE wtr.hdr_watcher)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_WATCHER)
 endif()
 
 if(BUILD_ENTT)
     FetchContent_MakeAvailable(entt)
     target_link_libraries(${PROJECT_NAME} PRIVATE EnTT)
-    message(${entt_SOURCE_DIR})
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${entt_SOURCE_DIR}/src)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_ENTT)
 endif()
-
 
 if(BUILD_D3D12_MEMORY_ALLOCATOR)
     FetchContent_MakeAvailable(D3D12MemoryAllocator)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${D3D12MemoryAllocator_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE D3D12MemoryAllocator)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_SD3D12_MEMORY_ALLOCATOR)
 endif()
 
 if(BUILD_VULKAN_MEMORY_ALLOCATOR)
     FetchContent_MakeAvailable(VulkanMemoryAllocator)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${VulkanMemoryAllocator_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${vulkanmemoryallocator_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME} PRIVATE VulkanMemoryAllocator)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_VULKAN_MEMORY_ALLOCATOR)
+endif()
+
+if(BUILD_CGLTF)
+    FetchContent_MakeAvailable(cgltf)
+    add_library(cgltf_lib INTERFACE)
+    target_include_directories(cgltf_lib INTERFACE ${cgltf_SOURCE_DIR})
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${cgltf_SOURCE_DIR})
+    target_link_libraries(${PROJECT_NAME} PRIVATE cgltf_lib)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_CGLTF)
+endif()
+
+if(BUILD_LIBKTX)
+    FetchContent_MakeAvailable(libktx)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${libktx_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ktx)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_LIBKTX)
+endif()
+
+if(BUILD_MESHOPTIMIZER)
+    FetchContent_MakeAvailable(meshoptimizer)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
+    target_link_libraries(${PROJECT_NAME} PRIVATE meshoptimizer)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_MESHOPTIMIZER)
+endif()
+
+if(BUILD_MIKK_T_SPACE)
+    FetchContent_MakeAvailable(mikktspace)
+    add_library(mikktspace_lib STATIC ${mikktspace_SOURCE_DIR}/mikktspace.c)
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${mikktspace_SOURCE_DIR})
+    target_link_libraries(${PROJECT_NAME} PRIVATE mikktspace_lib)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_MIKKTS)
+endif()
+
+if(USE_GLTF_SAMPLE_MODELS)
+    FetchContent_MakeAvailable(gltf_sample_models)
+
+    file(COPY
+        ${gltf_sample_models_SOURCE_DIR}/2.0
+        DESTINATION ${CMAKE_SOURCE_DIR}/assets/models/gltf
+    )
+endif()
+
+
+if(BUILD_TRACY)
+    FetchContent_MakeAvailable(tracy)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE 
+        # TRACY_ON_DEMAND
+        $<$<CONFIG:Debug,RelWithDebInfo>:TRACY_ENABLE>
+        # TRACY_CALLSTACK 
+        # TRACY_ONLY_LOCALHOST  
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE TracyClient)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${tracy_SOURCE_DIR}/public)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_TRACY)
+endif()
+
+if(USE_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_PROFILING)
+endif()
+
+if(USE_CPU_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_CPU_PROFILING)
+endif()
+
+if(USE_GPU_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_GPU_PROFILING)
+endif()
+
+if(USE_TRACY_GPU_PROFILING)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_TRACY_GPU_PROFILING)
 endif()
 
 if(USE_VULKAN)
@@ -641,6 +930,7 @@ if(USE_VULKAN)
     target_compile_definitions(${PROJECT_NAME} PRIVATE VULKAN)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_VULKAN)
 endif()
 
 if(USE_OPENGL)
@@ -702,25 +992,6 @@ if(USE_DIRECTX_AGILITY)
 
     message(STATUS "Fetching directx12-agility...")
 
-    # TODO: remove (deprecated)
-    # adds DirectX utility headers (e.g. d3dx12.h)
-    # if(USE_DIRECTX_HEADERS)
-    #     message(STATUS "Fetching DirectX-Headers...")
-    #     FetchContent_Declare(
-    #         DirectX-Headers
-    #         GIT_REPOSITORY https://github.com/microsoft/DirectX-Headers.git
-    #         # GIT_TAG v1.606.4
-    #         GIT_TAG v1.614.0 # probably version 1.614.0 DirectX Agility SDK required
-    #     )
-    #     FetchContent_MakeAvailable(DirectX-Headers)
-    #     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${DirectX-Headers_SOURCE_DIR}/include)
-    # endif()
-
-    # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
-    # vcpkg_add_package(directx12-agility)
-    # find_package(directx-headers CONFIG REQUIRED)
-    # find_package(directx12-agility CONFIG REQUIRED)
-
     find_package(directx-headers QUIET)
     find_package(directx12-agility QUIET)
     if(NOT directx12-agility_FOUND AND NOT directx-headers_FOUND)
@@ -739,6 +1010,8 @@ if(USE_DIRECTX_AGILITY)
             COMMAND_EXPAND_LISTS
         )
     endif()
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DIRECTX_AGILITY)
 endif()
 # END: DirectX 12 Agility SDK
 # -------------------------------------------------------------------------------------
@@ -748,10 +1021,6 @@ endif()
 # TODO: this is currently used not only for DirectX 12 but for Vulkan as well
 if(USE_DIRECTX_SHADER_COMPILER)
     message(STATUS "Fetching directx-dxc...")
-
-    # Old script (there's an error related to vcpkg.json and vcpkg_add_package during the second try to build)
-    # vcpkg_add_package(directx-dxc)
-    # find_package(directx-dxc CONFIG REQUIRED)
 
     find_package(directx-dxc QUIET)
     if(NOT directx-dxc_FOUND)
@@ -770,6 +1039,7 @@ if(USE_DIRECTX_SHADER_COMPILER)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DXIL_IMPORTED_LOCATION} $<TARGET_FILE_DIR:${PROJECT_NAME}>
         )
     endif()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DIRECTX_SHADER_COMPILER)
 endif()
 # END: DirectXShaderCompiler
 # -------------------------------------------------------------------------------------
@@ -786,6 +1056,7 @@ if(USE_DIRECTX_TEX)
     endif()
     
     target_link_libraries(${PROJECT_NAME} PRIVATE  Microsoft::DirectXTex)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DIRECTX_TEX)
 endif()
 # END: DirectXTex
 # -------------------------------------------------------------------------------------
@@ -801,10 +1072,28 @@ if(USE_DIRECTX_TOOL_KIT)
         find_package(directxtk12 CONFIG REQUIRED)
     endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTK12)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DIRECTX_TOOL_KIT)
 endif()
 # END: DirectX Tool Kit
 # -------------------------------------------------------------------------------------
 
+# BEGIN: WinPix Event Runtime (PIX3)
+# -------------------------------------------------------------------------------------
+if(BUILD_WINPIX_EVENT)
+    message(STATUS "Fetching WinPix Event Runtime (PIX3)...")
+
+    find_package(winpixevent QUIET)
+    if(NOT winpixevent_FOUND)
+        vcpkg_add_package(winpixevent)
+        find_package(winpixevent CONFIG REQUIRED)
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::WinPixEventRuntime)
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_PIX ${PROJECT_UPPER}_USE_WINPIX_EVENT) 
+endif()
+# END: WinPix Event Runtime
+# -------------------------------------------------------------------------------------
 
 if(NOT USE_VULKAN AND NOT USE_OPENG AND NOT USE_DIRECTX)
     message(FATAL_ERROR "At least one of Vulkan, OpenGL or DirectX must be selected for graphics API")
@@ -816,6 +1105,7 @@ endif()
 
 if(USE_DIRECTX AND WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE d3d12 dxgi)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_UPPER}_USE_DX12)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME}
@@ -825,3 +1115,5 @@ add_custom_command(TARGET ${PROJECT_NAME}
                            "${CMAKE_SOURCE_DIR}/test_fs_support_CASE_sensitivity"
                    COMMENT "Removing case sensitivity test files from " ${CMAKE_SOURCE_DIR}
 )
+
+add_subdirectory(tools EXCLUDE_FROM_ALL)

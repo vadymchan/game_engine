@@ -67,6 +67,11 @@ class CommandBuffer {
   // TODO: seems that currently not used (consider remove)
   virtual void clearColor(Texture* texture, const float color[4], uint32_t mipLevel = 0, uint32_t arrayLayer = 0)                = 0;
   virtual void clearDepthStencil(Texture* texture, float depth, uint8_t stencil, uint32_t mipLevel = 0, uint32_t arrayLayer = 0) = 0;
+
+  // Debug markers
+  virtual void beginDebugMarker(const std::string& name, const float color[4] = nullptr)  = 0;
+  virtual void endDebugMarker()                                                           = 0;
+  virtual void insertDebugMarker(const std::string& name, const float color[4] = nullptr) = 0;
 };
 
 // clang-format on

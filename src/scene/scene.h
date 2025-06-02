@@ -14,7 +14,6 @@ using Registry = entt::registry;
 class Scene {
   public:
   Scene() = default;
-
   Scene(Registry registry);
 
   Registry& getEntityRegistry();

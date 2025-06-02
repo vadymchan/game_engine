@@ -4,6 +4,7 @@
 #include "event/event.h"
 #include "event/keyboard_event_handler.h"
 #include "event/mouse_event_handler.h"
+#include "input/input_context.h"
 #include "utils/logger/global_logger.h"
 
 #include <memory>
@@ -55,7 +56,14 @@ class InputManager {
 
   MouseEventHandler* getMouseHandler() const { return m_mouseHandler_.get(); }
 
+  void setContextManager(InputContextManager* contextManager) { m_contextManager = contextManager; }
+
+  bool shouldProcessGameInput() const {
+    return !m_contextManager || m_contextManager->isContextActive(InputContext::Game);
+  }
+
   private:
+  InputContextManager*                  m_contextManager = nullptr;
   std::unique_ptr<KeyboardEventHandler> m_keyboardHandler_;
   std::unique_ptr<MouseEventHandler>    m_mouseHandler_;
 };

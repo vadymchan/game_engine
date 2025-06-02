@@ -14,7 +14,6 @@ Mesh* MeshManager::addMesh(std::unique_ptr<Mesh> mesh, const std::filesystem::pa
 
   std::string key = createKey(sourcePath, mesh->meshName);
 
-  // Check if a mesh with this key already exists
   auto it = m_meshes.find(key);
   if (it != m_meshes.end()) {
     GlobalLogger::Log(LogLevel::Warning,

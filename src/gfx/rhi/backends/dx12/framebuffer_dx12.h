@@ -44,7 +44,6 @@ class FramebufferDx12 : public Framebuffer {
   // Helper methods for DX12 command buffer
   void transitionToRenderTargetState(CommandBufferDx12* cmdBuffer);
   void transitionToResourceState(CommandBufferDx12* cmdBuffer, RenderPassDx12* renderPass);
-    
 
   private:
   bool initialize_(const FramebufferDesc& desc);
@@ -54,7 +53,6 @@ class FramebufferDx12 : public Framebuffer {
   std::vector<TextureDx12*> m_colorAttachments_;
   TextureDx12*              m_depthStencilAttachment_ = nullptr;
 
-  // DX12-specific - store descriptor handles
   std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_rtvHandles_;
   D3D12_CPU_DESCRIPTOR_HANDLE              m_dsvHandle_ = {};
 

@@ -24,7 +24,6 @@ class ConsoleLogger : public ILogger {
                 bool               multiThreaded = true,
                 bool               colored       = true);
 
-  // Destructor that ensures clean resource release
   ~ConsoleLogger() override;
 
   void log(LogLevel                    level,

@@ -1,11 +1,14 @@
+#define PI 3.14159265
+
 struct PSInput
 {
-    float4 Position : SV_POSITION;  
-    float3 Normal : NORMAL1;        
-    float2 TexCoord : TEXCOORD2;    
-    float3 Tangent : TANGENT3;      
-    float3 Bitangent : BITANGENT4;  
-    float4 Color : COLOR5;          
+    float4 Position : SV_POSITION;
+    float2 TexCoord : TEXCOORD1;
+    float3 Normal : NORMAL2;
+    float3 Tangent : TANGENT3;
+    float3 Bitangent : BITANGENT4;
+    float4 Color : COLOR5;
+    float3 WorldPos : TEXCOORD0;
 };
 
 struct ViewUniformBuffer
@@ -13,6 +16,9 @@ struct ViewUniformBuffer
     float4x4 V;
     float4x4 P;
     float4x4 VP;
+    float4x4 InvV;
+    float4x4 InvP;
+    float4x4 InvVP;
     float3 EyeWorld;
     float padding0;
 };
@@ -22,113 +28,218 @@ cbuffer ViewParam : register(b0, space0)
     ViewUniformBuffer ViewParam;
 }
 
-#if !TODO 
 struct DirectionalLightData
 {
-    // From Light
     float3 color;
     float intensity;
-
-    // From DirectionalLight
     float3 direction;
-    
     float padding;
 };
-
 struct PointLightData
 {
-    // From Light
     float3 color;
     float intensity;
-
-    // From PointLight
     float range;
-
-    // From Transform
     float3 position;
 };
-
 struct SpotLightData
 {
-    // From Light
     float3 color;
     float intensity;
-
-    // From PointLight
     float range;
     float innerConeAngle;
     float outerConeAngle;
     float padding1;
-
-    // From Transform
     float3 position;
     float padding2;
     float3 direction;
     float padding3;
 };
 
-
-// TODO: Currently only one type of light (consider in future to be able to dynamically add lights)
-cbuffer DirectionalLightBuffer : register(b0, space1)
+cbuffer LightCounts : register(b0, space2)
 {
-    DirectionalLightData directionalLight;
-};
+    uint directionalLightCount;
+    uint pointLightCount;
+    uint spotLightCount;
+    uint padding;
+}
+StructuredBuffer<DirectionalLightData> directionalLights : register(t1, space2);
+StructuredBuffer<PointLightData> pointLights : register(t2, space2);
+StructuredBuffer<SpotLightData> spotLights : register(t3, space2);
 
-cbuffer PointLightBuffer : register(b0, space2)
+struct MaterialParams
 {
-    PointLightData pointLight;
+    float4 baseColor;
+    float metallic;
+    float roughness;
+    float opacity;
+    float padding;
 };
-
-cbuffer SpotLightBuffer : register(b0, space3)
+cbuffer MaterialBuffer : register(b0, space3)
 {
-    SpotLightData spotLight;
-};
-#endif
+    MaterialParams material;
+}
 
-#if !TODO
-Texture2D<float4> DiffuseTexture : register(t0, space4);
-Texture2D<float4> NormalTexture : register(t1, space4);
-Texture2D<float4> RoughnessTexture : register(t2, space4);
-Texture2D<float4> MetalicTexture : register(t3, space4);
+Texture2D<float4> DiffuseTexture : register(t1, space3);
+Texture2D<float4> NormalTexture : register(t2, space3);
+Texture2D<float4> MetallicRoughnessTexture : register(t3, space3);
+SamplerState DefaultSampler : register(s0, space4);
 
-#endif
+float D_GGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = saturate(dot(N, H));
+    float denom = NdotH * NdotH * (a2 - 1.0) + 1.0;
+    return a2 / (PI * denom * denom);
+}
 
-SamplerState DefaultSampler : register(s0, space5);
+float GeometrySchlickGGX(float NdotV, float k)
+{
+    return NdotV / (NdotV * (1.0 - k) + k);
+}
+
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0; 
+    float ggx1 = GeometrySchlickGGX(saturate(dot(N, V)), k);
+    float ggx2 = GeometrySchlickGGX(saturate(dot(N, L)), k);
+    return ggx1 * ggx2;
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+float3 CalcDirectional(DirectionalLightData light, float3 N, float3 V,
+                       float3 albedo, float metallic, float roughness)
+{
+    float3 L = normalize(-light.direction);
+    float3 H = normalize(V + L);
+
+    float NdotL = saturate(dot(N, L));
+    if (NdotL <= 0.0)
+        return 0;
+
+    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+    float3 F = FresnelSchlick(saturate(dot(H, V)), F0);
+    float D = D_GGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    float3 spec = D * G * F / max(4.0 * saturate(dot(N, V)) * NdotL, 1e-4);
+
+    float3 kd = (1.0 - F) * (1.0 - metallic);
+    float3 diff = kd * albedo / PI;
+
+    float3 radiance = light.color * light.intensity;
+    return (diff + spec) * radiance * NdotL;
+}
+
+float3 CalcPoint(PointLightData light, float3 N, float3 V, float3 worldPos,
+                 float3 albedo, float metallic, float roughness)
+{
+    float3 Lvec = light.position - worldPos;
+    float dist = length(Lvec);
+    if (dist >= light.range)
+        return 0;
+
+    float attenuation = pow(1.0 - saturate(dist / light.range), 2.0);
+    float3 L = Lvec / dist;
+    float3 H = normalize(V + L);
+
+    float NdotL = saturate(dot(N, L));
+    if (NdotL <= 0.0)
+        return 0;
+
+    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+    float3 F = FresnelSchlick(saturate(dot(H, V)), F0);
+    float D = D_GGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    float3 spec = D * G * F / max(4.0 * saturate(dot(N, V)) * NdotL, 1e-4);
+
+    float3 kd = (1.0 - F) * (1.0 - metallic);
+    float3 diff = kd * albedo / PI;
+
+    float3 radiance = light.color * light.intensity * attenuation;
+    return (diff + spec) * radiance * NdotL;
+}
+
+float3 CalcSpot(SpotLightData light, float3 N, float3 V, float3 worldPos,
+                float3 albedo, float metallic, float roughness)
+{
+    float3 Lvec = light.position - worldPos;
+    float dist = length(Lvec);
+    if (dist >= light.range)
+        return 0;
+
+    float3 L = Lvec / dist;
+    float cosOuter = cos(radians(light.outerConeAngle));
+    float cosInner = cos(radians(light.innerConeAngle));
+    float cosDir = dot(-L, normalize(light.direction));
+    if (cosDir < cosOuter)
+        return 0;
+
+    float spot = smoothstep(cosOuter, cosInner, cosDir);
+    float attenuation = pow(1.0 - saturate(dist / light.range), 2.0) * spot;
+
+    float3 H = normalize(V + L);
+    float NdotL = saturate(dot(N, L));
+    if (NdotL <= 0.0)
+        return 0;
+
+    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+    float3 F = FresnelSchlick(saturate(dot(H, V)), F0);
+    float D = D_GGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    float3 spec = D * G * F / max(4.0 * saturate(dot(N, V)) * NdotL, 1e-4);
+
+    float3 kd = (1.0 - F) * (1.0 - metallic);
+    float3 diff = kd * albedo / PI;
+
+    float3 radiance = light.color * light.intensity * attenuation;
+    return (diff + spec) * radiance * NdotL;
+}
 
 
-
+// PBR
 float4 main(PSInput input) : SV_TARGET
 {
+    float4 diffuseSample = DiffuseTexture.Sample(DefaultSampler, input.TexCoord);
+    float3 albedo = diffuseSample.rgb * material.baseColor.rgb;
+    float alpha = diffuseSample.a * material.opacity;
     
-    //return float4(1.0, 0.0, 0.0, 1.0);
-    float4 color = float4(0.0, 0.0, 0.0, 1.0);
+    clip(alpha - 0.1);
     
-    color += float4(directionalLight.color, 0);
-    color += float4(pointLight.color, 0);
-    color += float4(spotLight.color, 0);
+    float2 mr = MetallicRoughnessTexture.Sample(DefaultSampler, input.TexCoord).gb;
+    float roughness = saturate(mr.x * material.roughness);
+    float metallic = saturate(mr.y * material.metallic);
 
-    float4 diffuseColor = DiffuseTexture.Sample(DefaultSampler, input.TexCoord);
-    return diffuseColor;
+    float3 Nmap = NormalTexture.Sample(DefaultSampler, input.TexCoord).rgb * 2.0 - 1.0;
+    float3 T = normalize(input.Tangent);
+    float3 B = normalize(input.Bitangent);
+    float3 N = normalize(input.Normal);
+    float3x3 TBN = float3x3(T, B, N);
+    N = normalize(mul(Nmap, TBN));
 
-    color += diffuseColor;
-    
-    float3 normalColor = NormalTexture.Sample(DefaultSampler, input.TexCoord).rgb;
+    float3 V = normalize(ViewParam.EyeWorld - input.WorldPos);
 
-    color += float4(normalColor, 0);
-    
-    float roughnessValue = RoughnessTexture.Sample(DefaultSampler, input.TexCoord).r;
+    float3 color = float3(0, 0, 0);
 
-    color += float4(roughnessValue, 0, 0, 0);
-    
-    float metalicValue = MetalicTexture.Sample(DefaultSampler, input.TexCoord).r;
+    // Directional
+    for (uint i = 0; i < directionalLightCount; ++i)
+        color += CalcDirectional(directionalLights[i], N, V, albedo, metallic, roughness);
 
-    color += float4(metalicValue, 0, 0, 0);
-    
-    return color;
-    
-    return input.Color;
-    return float4(normalColor, 1.0);
-    return diffuseColor;
-    return float4(roughnessValue, 0, 0, 0);
-    return float4(metalicValue, 0, 0, 0);
+    // Point
+    for (uint k = 0; k < pointLightCount; ++k)
+        color += CalcPoint(pointLights[k], N, V, input.WorldPos, albedo, metallic, roughness);
+
+    // Spot
+    for (uint j = 0; j < spotLightCount; ++j)
+        color += CalcSpot(spotLights[j], N, V, input.WorldPos, albedo, metallic, roughness);
+
+    color += albedo * 0.03;
+
+    return float4(color, material.opacity);
 }
+

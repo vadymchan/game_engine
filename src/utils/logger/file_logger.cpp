@@ -133,14 +133,11 @@ auto FileLogger::getFilePath() const -> const std::string& {
   return m_filePath_;
 }
 
-// Setters
 void FileLogger::setLoggerName(const std::string& name) {
-  // Drop the old logger if it exists
   if (m_logger_) {
     spdlog::drop(m_logger_->name());
   }
 
-  // Recreate the logger with the new name
   m_logger_ = createFileLogger(name, m_filePath_, m_isMultithreaded_, m_truncateOnOpen_);
 
   if (m_logger_) {
@@ -166,7 +163,6 @@ void FileLogger::setLogLevel(LogLevel level) {
 void FileLogger::setFilePath(const std::string& filePath) {
   m_filePath_ = filePath;
 
-  // For file path changes, we need to recreate the logger with a new sink
   if (m_logger_) {
     spdlog::drop(m_logger_->name());
 

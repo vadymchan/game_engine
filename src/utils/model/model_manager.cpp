@@ -8,7 +8,6 @@ Model* ModelManager::getModel(const std::filesystem::path& filepath) {
     return it->second.get();
   }
 
-  // Retrieve the ModelLoaderManager from ServiceLocator
   auto modelLoaderManager = ServiceLocator::s_get<ModelLoaderManager>();
   if (!modelLoaderManager) {
     GlobalLogger::Log(LogLevel::Error, "ModelLoaderManager not available in ServiceLocator.");
@@ -17,7 +16,6 @@ Model* ModelManager::getModel(const std::filesystem::path& filepath) {
 
   auto model = modelLoaderManager->loadModel(filepath);
   if (model) {
-    // Save pointer to return before we transfer ownership to the cache
     Model* modelPtr       = model.get();
     modelCache_[filepath] = std::move(model);
     return modelPtr;

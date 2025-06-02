@@ -12,7 +12,7 @@ struct Transform {
   math::Vector3Df translation;
   // rotation is Euler angles in degrees
   math::Vector3Df rotation;
-  math::Vector3Df scale;
+  math::Vector3Df scale = math::Vector3Df(1.0f, 1.0f, 1.0f);
 
   bool isDirty = false;
 };

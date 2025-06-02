@@ -1,0 +1,130 @@
+#include "profiler/backends/gpu_profiler_dx12.h"
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
+#ifdef GAME_ENGINE_USE_DX12
+
+#include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
+#include "gfx/rhi/backends/dx12/device_dx12.h"
+#include "utils/logger/global_logger.h"
+
+namespace game_engine {
+namespace gpu {
+
+bool GpuProfilerDx12::initialize(gfx::rhi::Device* device) {
+  if (m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfilerDx12 already initialized");
+    return true;
+  }
+
+  if (!device) {
+    GlobalLogger::Log(LogLevel::Error, "Invalid DirectX 12 parameters for profiler");
+    return false;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+  auto* deviceDx12 = static_cast<gfx::rhi::DeviceDx12*>(device);
+  m_tracyContext   = TracyD3D12Context(deviceDx12->getDevice(), deviceDx12->getCommandQueue());
+
+  if (!m_tracyContext) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create Tracy DirectX 12 context");
+    return false;
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Tracy DirectX 12 profiler initialized");
+#endif
+
+  setApi(gfx::rhi::RenderingApi::Dx12);
+  m_initialized = true;
+  return true;
+}
+
+void GpuProfilerDx12::destroy() {
+  if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+  if (m_tracyContext) {
+    TracyD3D12Destroy(m_tracyContext);
+    m_tracyContext = nullptr;
+    GlobalLogger::Log(LogLevel::Info, "Tracy DirectX 12 profiler destroyed");
+  }
+#endif
+
+  m_initialized = false;
+}
+
+void GpuProfilerDx12::setContextName(const std::string& name) {
+  if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+  if (m_tracyContext) {
+    TracyD3D12ContextName(m_tracyContext, name.c_str(), name.size());
+  }
+#endif
+}
+
+void GpuProfilerDx12::newFrame() {
+  if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+  if (m_tracyContext) {
+    TracyD3D12NewFrame(m_tracyContext);
+  }
+#endif
+}
+
+void GpuProfilerDx12::collect(gfx::rhi::CommandBuffer* commandBuffer) {
+  if (!m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfierDx12 already destroyed or not initialized");
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_DX12
+  if (m_tracyContext) {
+    TracyD3D12Collect(m_tracyContext);
+  }
+#endif
+}
+
+void GpuProfilerDx12::beginZone(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color) {
+  if (!cmdBuffer) {
+    return;
+  }
+
+  auto colorArray = color != 0 ? color::g_toFloatArray(color).data() : nullptr;
+
+  cmdBuffer->beginDebugMarker(name, colorArray);
+}
+
+void GpuProfilerDx12::endZone(gfx::rhi::CommandBuffer* cmdBuffer) {
+  if (!cmdBuffer) {
+    return;
+  }
+  cmdBuffer->endDebugMarker();
+}
+
+void GpuProfilerDx12::insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color) {
+  if (!cmdBuffer) {
+    return;
+  }
+
+  auto colorArray = color != 0 ? color::g_toFloatArray(color).data() : nullptr;
+
+  cmdBuffer->insertDebugMarker(name, colorArray);
+}
+
+}  // namespace gpu
+}  // namespace game_engine
+
+#endif  // GAME_ENGINE_USE_DX12
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING

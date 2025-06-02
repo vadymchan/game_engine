@@ -9,6 +9,7 @@
 #include "gfx/rhi/interface/descriptor.h"
 #include "gfx/rhi/interface/pipeline.h"
 #include "gfx/rhi/shader_manager.h"
+#include "profiler/profiler.h"
 
 namespace game_engine {
 namespace gfx {
@@ -23,8 +24,8 @@ void BasePass::initialize(rhi::Device*           device,
   m_shaderManager   = shaderManager;
 
   if (shaderManager) {
-    m_vertexShader = shaderManager->getShader("assets/shaders/base_pass/shader_instancing.vs.hlsl");
-    m_pixelShader  = shaderManager->getShader("assets/shaders/base_pass/shader.ps.hlsl");
+    m_vertexShader = shaderManager->getShader(m_vertexShaderPath_);
+    m_pixelShader  = shaderManager->getShader(m_pixelShaderPath_);
   } else {
     GlobalLogger::Log(LogLevel::Error, "ShaderManager not found");
   }
@@ -49,6 +50,8 @@ void BasePass::resize(const math::Dimension2Di& newDimension) {
 }
 
 void BasePass::prepareFrame(const RenderContext& context) {
+  CPU_ZONE_NC("BasePass::prepareFrame", color::YELLOW);
+
   std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>> currentFrameInstances;
   std::unordered_map<RenderModel*, bool>                          modelDirtyFlags;
 
@@ -61,7 +64,7 @@ void BasePass::prepareFrame(const RenderContext& context) {
   }
 
   for (auto& [model, matrices] : currentFrameInstances) {
-    auto& cache = m_instanceBufferCache[model];  
+    auto& cache = m_instanceBufferCache[model];
 
     bool needsUpdate = cache.instanceBuffer == nullptr ||   // Buffer not created yet
                        matrices.size() > cache.capacity ||  // Need more space
@@ -69,6 +72,7 @@ void BasePass::prepareFrame(const RenderContext& context) {
                        modelDirtyFlags[model];              // Model was modified
 
     if (needsUpdate) {
+      CPU_ZONE_NC("Update Instance Buffers", color::YELLOW);
       updateInstanceBuffer_(model, matrices, cache);
     }
   }
@@ -79,10 +83,14 @@ void BasePass::prepareFrame(const RenderContext& context) {
 }
 
 void BasePass::render(const RenderContext& context) {
+  CPU_ZONE_NC("BasePass::render", color::ORANGE);
+
   auto commandBuffer = context.commandBuffer.get();
   if (!commandBuffer || !m_renderPass || m_framebuffers.empty()) {
     return;
   }
+
+  GPU_ZONE_NC(commandBuffer, "Base Pass", color::ORANGE);
 
   std::vector<rhi::ClearValue> clearValues;
 
@@ -111,40 +119,38 @@ void BasePass::render(const RenderContext& context) {
   commandBuffer->setViewport(m_viewport);
   commandBuffer->setScissor(m_scissor);
 
-  for (const auto& drawData : m_drawData) {
-    commandBuffer->setPipeline(drawData.pipeline);
+  {
+    CPU_ZONE_NC("Draw Models", color::GREEN);
+    for (const auto& drawData : m_drawData) {
+      commandBuffer->setPipeline(drawData.pipeline);
 
-    if (m_frameResources->getViewDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      if (m_frameResources->getViewDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(0, m_frameResources->getViewDescriptorSet());
+      }
+
+      if (drawData.modelMatrixDescriptorSet) {
+        commandBuffer->bindDescriptorSet(1, drawData.modelMatrixDescriptorSet);
+      }
+
+      if (m_frameResources->getLightDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(2, m_frameResources->getLightDescriptorSet());
+      }
+
+      if (drawData.materialDescriptorSet) {
+        commandBuffer->bindDescriptorSet(3, drawData.materialDescriptorSet);
+      }
+
+      if (m_frameResources->getDefaultSamplerDescriptorSet()) {
+        commandBuffer->bindDescriptorSet(4, m_frameResources->getDefaultSamplerDescriptorSet());
+      }
+
+      commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
+      commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
+      commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
+
+      commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
     }
-
-    if (m_frameResources->getDirectionalLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(1, m_frameResources->getDirectionalLightDescriptorSet());
-    }
-
-    if (m_frameResources->getPointLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(2, m_frameResources->getPointLightDescriptorSet());
-    }
-
-    if (m_frameResources->getSpotLightDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(3, m_frameResources->getSpotLightDescriptorSet());
-    }
-
-    if (drawData.materialDescriptorSet) {
-      commandBuffer->bindDescriptorSet(4, drawData.materialDescriptorSet);
-    }
-
-    if (m_frameResources->getDefaultSamplerDescriptorSet()) {
-      commandBuffer->bindDescriptorSet(5, m_frameResources->getDefaultSamplerDescriptorSet());
-    }
-
-    commandBuffer->bindVertexBuffer(0, drawData.vertexBuffer);
-    commandBuffer->bindVertexBuffer(1, drawData.instanceBuffer);
-    commandBuffer->bindIndexBuffer(drawData.indexBuffer, 0, true);
-
-    commandBuffer->drawIndexedInstanced(drawData.indexCount, drawData.instanceCount, 0, 0, 0);
   }
-
   commandBuffer->endRenderPass();
 }
 
@@ -161,6 +167,7 @@ void BasePass::cleanup() {
 void BasePass::setupRenderPass_() {
   rhi::RenderPassDesc renderPassDesc;
 
+  // Color attachment
   rhi::RenderPassAttachmentDesc colorAttachmentDesc;
   colorAttachmentDesc.format        = rhi::TextureFormat::Bgra8;
   colorAttachmentDesc.samples       = rhi::MSAASamples::Count1;
@@ -169,11 +176,12 @@ void BasePass::setupRenderPass_() {
   colorAttachmentDesc.finalLayout   = rhi::ResourceLayout::ColorAttachment;
   renderPassDesc.colorAttachments.push_back(colorAttachmentDesc);
 
+  // Depth attachment
   rhi::RenderPassAttachmentDesc depthAttachmentDesc;
   depthAttachmentDesc.format             = rhi::TextureFormat::D24S8;
   depthAttachmentDesc.samples            = rhi::MSAASamples::Count1;
   depthAttachmentDesc.loadStoreOp        = rhi::AttachmentLoadStoreOp::ClearStore;
-  depthAttachmentDesc.stencilLoadStoreOp = rhi::AttachmentLoadStoreOp::DontcareDontcare;
+  depthAttachmentDesc.stencilLoadStoreOp = rhi::AttachmentLoadStoreOp::ClearStore;
   depthAttachmentDesc.initialLayout      = rhi::ResourceLayout::DepthStencilAttachment;
   depthAttachmentDesc.finalLayout        = rhi::ResourceLayout::DepthStencilAttachment;
   renderPassDesc.depthStencilAttachment  = depthAttachmentDesc;
@@ -251,10 +259,11 @@ void BasePass::updateInstanceBuffer_(RenderModel*                         model,
 void BasePass::prepareDrawCalls_(const RenderContext& context) {
   m_drawData.clear();
 
-  auto viewLayout     = m_frameResources->getViewDescriptorSetLayout();
-  auto lightLayout    = m_frameResources->getLightDescriptorSetLayout();
-  auto materialLayout = m_frameResources->getMaterialDescriptorSetLayout();
-  auto samplerLayout  = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
+  auto viewLayout        = m_frameResources->getViewDescriptorSetLayout();
+  auto lightLayout       = m_frameResources->getLightDescriptorSetLayout();
+  auto modelMatrixLayout = m_frameResources->getModelMatrixDescriptorSetLayout();
+  auto materialLayout    = m_frameResources->getMaterialDescriptorSetLayout();
+  auto samplerLayout     = m_frameResources->getDefaultSamplerDescriptorSet()->getLayout();
 
   for (const auto& [model, cache] : m_instanceBufferCache) {
     if (cache.count == 0) {
@@ -262,9 +271,16 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
     }
 
     for (const auto& renderMesh : model->renderMeshes) {
-      rhi::DescriptorSet* materialDescriptorSet = nullptr;
-      if (renderMesh->material) {
-        materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
+      if (!renderMesh->material) {
+        GlobalLogger::Log(LogLevel::Debug, "RenderMesh has null material, skipping");
+        continue;
+      }
+
+      rhi::DescriptorSet* materialDescriptorSet = getOrCreateMaterialDescriptorSet_(renderMesh->material);
+
+      if (!materialDescriptorSet) {
+        GlobalLogger::Log(LogLevel::Debug, "Could not create valid material descriptor set, skipping");
+        continue;
       }
 
       std::string pipelineKey
@@ -298,21 +314,21 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         positionAttr.semanticName = "POSITION";
         pipelineDesc.vertexAttributes.push_back(positionAttr);
 
-        rhi::VertexInputAttributeDesc normalAttr;
-        normalAttr.location     = 1;
-        normalAttr.binding      = 0;
-        normalAttr.format       = rhi::TextureFormat::Rgb32f;
-        normalAttr.offset       = offsetof(Vertex, normal);
-        normalAttr.semanticName = "NORMAL";
-        pipelineDesc.vertexAttributes.push_back(normalAttr);
-
         rhi::VertexInputAttributeDesc uvAttr;
-        uvAttr.location     = 2;
+        uvAttr.location     = 1;
         uvAttr.binding      = 0;
         uvAttr.format       = rhi::TextureFormat::Rg32f;
         uvAttr.offset       = offsetof(Vertex, texCoords);
         uvAttr.semanticName = "TEXCOORD";
         pipelineDesc.vertexAttributes.push_back(uvAttr);
+
+        rhi::VertexInputAttributeDesc normalAttr;
+        normalAttr.location     = 2;
+        normalAttr.binding      = 0;
+        normalAttr.format       = rhi::TextureFormat::Rgb32f;
+        normalAttr.offset       = offsetof(Vertex, normal);
+        normalAttr.semanticName = "NORMAL";
+        pipelineDesc.vertexAttributes.push_back(normalAttr);
 
         rhi::VertexInputAttributeDesc tangentAttr;
         tangentAttr.location     = 3;
@@ -357,21 +373,27 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         pipelineDesc.rasterization.depthBiasEnable = false;
         pipelineDesc.rasterization.lineWidth       = 1.0f;
 
-        pipelineDesc.depthStencil.depthTestEnable   = true;
-        pipelineDesc.depthStencil.depthWriteEnable  = true;
-        pipelineDesc.depthStencil.depthCompareOp    = rhi::CompareOp::Less;
+        pipelineDesc.depthStencil.depthTestEnable  = true;
+        pipelineDesc.depthStencil.depthWriteEnable = true;
+        pipelineDesc.depthStencil.depthCompareOp   = rhi::CompareOp::Less;
+
         pipelineDesc.depthStencil.stencilTestEnable = false;
 
         rhi::ColorBlendAttachmentDesc blendAttachment;
-        blendAttachment.blendEnable    = false;
-        blendAttachment.colorWriteMask = rhi::ColorMask::All;
+        blendAttachment.blendEnable         = true;
+        blendAttachment.srcColorBlendFactor = rhi::BlendFactor::SrcAlpha;
+        blendAttachment.dstColorBlendFactor = rhi::BlendFactor::OneMinusSrcAlpha;
+        blendAttachment.colorBlendOp        = rhi::BlendOp::Add;
+        blendAttachment.srcAlphaBlendFactor = rhi::BlendFactor::One;
+        blendAttachment.dstAlphaBlendFactor = rhi::BlendFactor::OneMinusSrcAlpha;
+        blendAttachment.alphaBlendOp        = rhi::BlendOp::Add;
+        blendAttachment.colorWriteMask      = rhi::ColorMask::All;
         pipelineDesc.colorBlend.attachments.push_back(blendAttachment);
 
         pipelineDesc.multisample.rasterizationSamples = rhi::MSAASamples::Count1;
 
         pipelineDesc.setLayouts.push_back(viewLayout);
-        pipelineDesc.setLayouts.push_back(lightLayout);
-        pipelineDesc.setLayouts.push_back(lightLayout);
+        pipelineDesc.setLayouts.push_back(modelMatrixLayout);
         pipelineDesc.setLayouts.push_back(lightLayout);
         pipelineDesc.setLayouts.push_back(materialLayout);
         pipelineDesc.setLayouts.push_back(samplerLayout);
@@ -381,18 +403,19 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
         auto pipelineObj = m_device->createGraphicsPipeline(pipelineDesc);
         pipeline         = m_resourceManager->addPipeline(std::move(pipelineObj), pipelineKey);
 
-        m_shaderManager->registerPipelineForShader(pipeline, "assets/shaders/base_pass/shader_instancing.vs.hlsl");
-        m_shaderManager->registerPipelineForShader(pipeline, "assets/shaders/base_pass/shader.ps.hlsl");
+        m_shaderManager->registerPipelineForShader(pipeline, m_vertexShaderPath_);
+        m_shaderManager->registerPipelineForShader(pipeline, m_pixelShaderPath_);
       }
 
       DrawData drawData;
-      drawData.pipeline              = pipeline;
-      drawData.materialDescriptorSet = materialDescriptorSet;
-      drawData.vertexBuffer          = renderMesh->gpuMesh->vertexBuffer;
-      drawData.indexBuffer           = renderMesh->gpuMesh->indexBuffer;
-      drawData.instanceBuffer        = cache.instanceBuffer;
-      drawData.indexCount            = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
-      drawData.instanceCount         = cache.count;
+      drawData.pipeline                 = pipeline;
+      drawData.modelMatrixDescriptorSet = m_frameResources->getOrCreateModelMatrixDescriptorSet(renderMesh);
+      drawData.materialDescriptorSet    = materialDescriptorSet;
+      drawData.vertexBuffer             = renderMesh->gpuMesh->vertexBuffer;
+      drawData.indexBuffer              = renderMesh->gpuMesh->indexBuffer;
+      drawData.instanceBuffer           = cache.instanceBuffer;
+      drawData.indexCount               = renderMesh->gpuMesh->indexBuffer->getDesc().size / sizeof(uint32_t);
+      drawData.instanceCount            = cache.count;
 
       m_drawData.push_back(drawData);
     }
@@ -402,9 +425,8 @@ void BasePass::prepareDrawCalls_(const RenderContext& context) {
 void BasePass::cleanupUnusedBuffers_(
     const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances) {
   std::vector<RenderModel*> modelsToRemove;
-
   for (const auto& [model, cache] : m_instanceBufferCache) {
-    if (currentFrameInstances.find(model) == currentFrameInstances.end()) {
+    if (!currentFrameInstances.contains(model)) {
       modelsToRemove.push_back(model);
     }
   }
@@ -412,9 +434,38 @@ void BasePass::cleanupUnusedBuffers_(
   for (auto model : modelsToRemove) {
     m_instanceBufferCache.erase(model);
   }
+
+  std::unordered_set<Material*> activeMaterials;
+
+  for (const auto& [model, matrices] : currentFrameInstances) {
+    for (const auto& renderMesh : model->renderMeshes) {
+      if (renderMesh->material) {
+        activeMaterials.insert(renderMesh->material);
+      }
+    }
+  }
+
+  std::vector<Material*> materialsToRemove;
+  for (const auto& [material, cache] : m_materialCache) {
+    if (!activeMaterials.contains(material)) {
+      materialsToRemove.push_back(material);
+    }
+  }
+
+  for (auto material : materialsToRemove) {
+    GlobalLogger::Log(LogLevel::Debug,
+                      "Removing cached material parameters for deleted material at address: "
+                          + std::to_string(reinterpret_cast<uintptr_t>(material)));
+    m_materialCache.erase(material);
+  }
 }
 
 rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* material) {
+  if (!material) {
+    GlobalLogger::Log(LogLevel::Error, "Material is null");
+    return nullptr;
+  }
+
   auto it = m_materialCache.find(material);
   if (it != m_materialCache.end() && it->second.descriptorSet) {
     return it->second.descriptorSet;
@@ -426,31 +477,65 @@ rhi::DescriptorSet* BasePass::getOrCreateMaterialDescriptorSet_(Material* materi
     return nullptr;
   }
 
-  auto descriptorSet = m_device->createDescriptorSet(materialLayout);
+  std::string materialKey = "material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
 
-  std::vector<std::string> textureNames = {"albedo", "normal_map", "roughness", "metalness"};
-  uint32_t                 binding      = 0;
+  auto descriptorSetPtr = m_resourceManager->getDescriptorSet(materialKey);
+  if (!descriptorSetPtr) {
+    auto descriptorSet = m_device->createDescriptorSet(materialLayout);
+    descriptorSetPtr   = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
+  }
+
+  rhi::Buffer* paramBuffer = m_frameResources->getOrCreateMaterialParamBuffer(material);
+  if (paramBuffer) {
+    descriptorSetPtr->setUniformBuffer(0, paramBuffer);
+  }
+
+  std::vector<std::string> textureNames = {"albedo", "normal_map", "metallic_roughness"};
+  uint32_t                 binding      = 1;
+
+  bool allTexturesValid = true;
 
   for (const auto& textureName : textureNames) {
-    auto it = material->textures.find(textureName);
+    rhi::Texture* texture = nullptr;
 
-    if (it != material->textures.end() && it->second) {
-      auto texture = it->second;
-      descriptorSet->setTexture(binding, texture);
-    } else {
-      GlobalLogger::Log(LogLevel::Warning,
-                        "Material texture not found: " + textureName + " for material: " + material->materialName);
+    auto textureIt = material->textures.find(textureName);
+    if (textureIt != material->textures.end() && textureIt->second) {
+      texture = textureIt->second;
     }
 
+    if (!texture) {
+      if (textureName == "albedo") {
+        texture = m_frameResources->getDefaultWhiteTexture();
+      } else if (textureName == "normal_map") {
+        texture = m_frameResources->getDefaultNormalTexture();
+      } else if (textureName == "metallic_roughness") {
+        texture = m_frameResources->getDefaultBlackTexture();
+      }
+
+      GlobalLogger::Log(LogLevel::Debug,
+                        "Using fallback texture for '" + textureName + "' in material: " + material->materialName);
+    }
+
+    if (!texture) {
+      GlobalLogger::Log(
+          LogLevel::Error,
+          "No texture available (including fallback) for '" + textureName + "' in material: " + material->materialName);
+      allTexturesValid = false;
+      break;
+    }
+
+    descriptorSetPtr->setTexture(binding, texture);
     binding++;
   }
 
-  std::string materialKey      = "material_" + std::to_string(reinterpret_cast<uintptr_t>(material));
-  auto        descriptorSetPtr = m_resourceManager->addDescriptorSet(std::move(descriptorSet), materialKey);
-
-  m_materialCache[material].descriptorSet = descriptorSetPtr;
-
-  return descriptorSetPtr;
+  if (allTexturesValid) {
+    m_materialCache[material].descriptorSet = descriptorSetPtr;
+    return descriptorSetPtr;
+  } else {
+    GlobalLogger::Log(LogLevel::Warning,
+                      "Material descriptor set creation failed due to invalid textures: " + material->materialName);
+    return nullptr;
+  }
 }
 }  // namespace renderer
 }  // namespace gfx

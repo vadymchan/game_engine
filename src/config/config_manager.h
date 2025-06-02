@@ -3,8 +3,6 @@
 
 #include "config/config.h"
 
-// NOTE: Not all headers are included here
-
 namespace game_engine {
 
 class ConfigManager {

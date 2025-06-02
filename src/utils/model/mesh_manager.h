@@ -26,6 +26,7 @@ class MeshManager {
 
   private:
   // Map of meshes keyed by unique identifier (path + name)
+  // TODO: use std::filesystem::path as a key
   std::unordered_map<std::string, std::unique_ptr<Mesh>> m_meshes;
   mutable std::mutex                                     m_mutex;
 

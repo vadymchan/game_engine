@@ -79,7 +79,6 @@ ConsoleLogger::ConsoleLogger(const std::string& loggerName,
 }
 
 ConsoleLogger::~ConsoleLogger() {
-  // Explicitly drop the logger from spdlog registry
   if (m_logger_) {
     spdlog::drop(m_logger_->name());
   }
@@ -126,7 +125,6 @@ void ConsoleLogger::log(LogLevel logLevel, const std::string& message, const std
   }
 }
 
-// Getters
 auto ConsoleLogger::getPattern() const -> const std::string& {
   return m_pattern_;
 }
@@ -135,14 +133,11 @@ auto ConsoleLogger::getLogLevel() const -> LogLevel {
   return m_logLevel_;
 }
 
-// Setters
 void ConsoleLogger::setLoggerName(const std::string& name) {
   if (m_logger_) {
-    // Drop the old logger
     spdlog::drop(m_logger_->name());
   }
 
-  // Create a new logger
   m_logger_ = createLogger(name, m_consoleType_, m_isMultithreaded_, m_isColored_);
 
   if (m_logger_) {

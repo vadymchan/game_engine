@@ -10,6 +10,10 @@ std::filesystem::path PathManager::s_getAssetPath() {
   return s_getPath(s_assetPath);
 }
 
+std::filesystem::path PathManager::s_getModelPath() {
+  return s_getPath(s_modelPath);
+}
+
 std::filesystem::path PathManager::s_getShaderPath() {
   return s_getPath(s_shaderPath);
 }
@@ -18,9 +22,15 @@ std::filesystem::path PathManager::s_getDebugPath() {
   return s_getPath(s_debugPath);
 }
 
+std::filesystem::path PathManager::s_getScenesPath() {
+  return s_getPath(s_scenesPath);
+}
+
+std::filesystem::path PathManager::s_getEngineSettingsPath() {
+  return s_getPath(s_engineSettingsPath);
+}
+
 bool PathManager::s_isConfigAvailable() {
-  // if weak_ptr is expired, we need to load the config (either initialization
-  // or reload)
   if (!s_config_) {
     auto configManager = ServiceLocator::s_get<ConfigManager>();
     if (!configManager) {

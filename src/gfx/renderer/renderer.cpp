@@ -2,9 +2,14 @@
 
 #include "ecs/components/camera.h"
 #include "gfx/rhi/backends/dx12/command_buffer_dx12.h"
+#include "gfx/rhi/backends/dx12/device_dx12.h"
+#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
+#include "gfx/rhi/backends/vulkan/device_vk.h"
 #include "gfx/rhi/common/rhi_creators.h"
 #include "platform/common/window.h"
+#include "profiler/profiler.h"
 #include "scene/scene_manager.h"
+#include "utils/resource/resource_deletion_manager.h"
 
 namespace game_engine {
 namespace gfx {
@@ -37,7 +42,7 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
   m_shaderManager   = std::make_unique<rhi::ShaderManager>(m_device.get(), MAX_FRAMES_IN_FLIGHT, true);
   m_resourceManager = std::make_unique<RenderResourceManager>();
 
-  m_frameResources = std::make_unique<FrameResources>(m_device.get(), m_resourceManager.get());
+  m_frameResources = std::make_unique<FrameResources>(m_device.get(), getResourceManager());
   m_frameResources->initialize(MAX_FRAMES_IN_FLIGHT);
   m_frameResources->resize(window->getSize());
 
@@ -64,6 +69,13 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 
   setupRenderPasses_();
 
+  auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+  if (deletionManager) {
+    deletionManager->setDefaultFrameDelay(MAX_FRAMES_IN_FLIGHT);
+  }
+
+  initializeGpuProfiler_();
+
   m_initialized = true;
 
   GlobalLogger::Log(LogLevel::Info, "Renderer initialized successfully");
@@ -71,28 +83,38 @@ bool Renderer::initialize(Window* window, rhi::RenderingApi api) {
 }
 
 RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSettings) {
+  CPU_ZONE_NC("Renderer::beginFrame", color::PURPLE);
   if (!m_initialized) {
     GlobalLogger::Log(LogLevel::Error, "Renderer not initialized");
     return RenderContext();
   }
 
-  m_currentFrame                = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-  auto& fence                   = m_frameFences[m_currentFrame];
-  auto& imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
-  auto& renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
+  m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+  auto& fence    = m_frameFences[m_currentFrame];
 
   fence->wait();
   fence->reset();
 
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    profiler->newFrame();
+  }
+
+  auto deletionManager = ServiceLocator::s_get<ResourceDeletionManager>();
+  if (deletionManager) {
+    deletionManager->setCurrentFrame(m_frameIndex);
+  }
+
   m_resourceManager->updateScheduledPipelines();
 
-  if (!m_swapChain->acquireNextImage(imageAvailableSemaphore.get())) {
+  if (!m_swapChain->acquireNextImage(m_imageAvailableSemaphores[m_currentFrame].get())) {
     GlobalLogger::Log(LogLevel::Error, "Failed to acquire next swapchain image");
     return RenderContext();
   }
 
   auto commandBuffer = acquireCommandBuffer_();
   commandBuffer->begin();
+
+  GPU_ZONE_NC(commandBuffer.get(), "Begin Frame", color::PURPLE);
 
 #ifdef GAME_ENGINE_RHI_DX12
   if (m_device->getApiType() == rhi::RenderingApi::Dx12) {
@@ -108,7 +130,6 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
       break;
     case ApplicationRenderMode::Editor:
       viewportDimension = renderSettings.renderViewportDimension;
-
       onViewportResize(viewportDimension);
       break;
     default:
@@ -126,8 +147,6 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
   context.viewportDimension = viewportDimension;
   context.renderSettings    = renderSettings;
   context.currentImageIndex = m_swapChain->getCurrentImageIndex();
-  context.waitSemaphore     = imageAvailableSemaphore.get();
-  context.signalSemaphore   = renderFinishedSemaphore.get();
 
   m_frameResources->updatePerFrameResources(context);
 
@@ -135,10 +154,14 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
 }
 
 void Renderer::renderFrame(RenderContext& context) {
+  CPU_ZONE_NC("Renderer::renderFrame", color::CYAN);
+
   if (!context.commandBuffer || !m_frameResources.get()) {
     GlobalLogger::Log(LogLevel::Error, "Invalid render context");
     return;
   }
+
+  GPU_ZONE_NC(context.commandBuffer.get(), "Frame Render", color::CYAN);
 
   // TODO: divide this into separate functions
 
@@ -164,7 +187,10 @@ void Renderer::renderFrame(RenderContext& context) {
   auto isDebugPass = context.renderSettings.renderMode == RenderMode::Wireframe
                   || context.renderSettings.renderMode == RenderMode::ShaderOverdraw
                   || context.renderSettings.renderMode == RenderMode::VertexNormalVisualization
-                  || context.renderSettings.renderMode == RenderMode::NormalMapVisualization;
+                  || context.renderSettings.renderMode == RenderMode::NormalMapVisualization
+                  || context.renderSettings.renderMode == RenderMode::LightVisualization
+                  || context.renderSettings.renderMode == RenderMode::WorldGrid
+                  || context.renderSettings.renderMode == RenderMode::MeshHighlight;
 
   if (m_debugPass && isDebugPass) {
     m_debugPass->render(context);
@@ -188,30 +214,39 @@ void Renderer::renderFrame(RenderContext& context) {
 }
 
 void Renderer::endFrame(RenderContext& context) {
+  CPU_ZONE_NC("Renderer::endFrame", color::PURPLE);
   if (!context.commandBuffer) {
     return;
   }
 
+  {
+    GPU_ZONE_NC(context.commandBuffer.get(), "End Frame", color::PURPLE);
+
+    if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+      profiler->collect(context.commandBuffer.get());
+    }
+  } 
+
   context.commandBuffer->end();
 
   std::vector<rhi::Semaphore*> waitSemaphores;
-  if (context.waitSemaphore) {
-    waitSemaphores.push_back(context.waitSemaphore);
+  auto&                        imageAvailableSemaphore = m_imageAvailableSemaphores[m_currentFrame];
+  if (imageAvailableSemaphore.get()) {
+    waitSemaphores.push_back(imageAvailableSemaphore.get());
   }
 
   std::vector<rhi::Semaphore*> signalSemaphores;
-  if (context.signalSemaphore) {
-    signalSemaphores.push_back(context.signalSemaphore);
+  auto&                        renderFinishedSemaphore = m_renderFinishedSemaphores[m_currentFrame];
+  if (renderFinishedSemaphore.get()) {
+    signalSemaphores.push_back(renderFinishedSemaphore.get());
   }
 
   m_device->submitCommandBuffer(
       context.commandBuffer.get(), m_frameFences[m_currentFrame].get(), waitSemaphores, signalSemaphores);
 
-  m_swapChain->present(context.signalSemaphore);
+  m_swapChain->present(renderFinishedSemaphore.get());
 
   recycleCommandBuffer_(std::move(context.commandBuffer));
-
-  // m_frameResources->clearDirtyFlags(context);
 
   m_frameIndex++;
 }
@@ -287,6 +322,16 @@ bool Renderer::onViewportResize(const math::Dimension2Di& newDimension) {
   return true;
 }
 
+void Renderer::initializeGpuProfiler_() {
+  if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
+    if (profiler->initialize(m_device.get())) {
+      GlobalLogger::Log(LogLevel::Info, "GPU profiler initialized successfully");
+    } else {
+      GlobalLogger::Log(LogLevel::Warning, "Failed to initialize GPU profiler");
+    }
+  }
+}
+
 std::unique_ptr<rhi::CommandBuffer> Renderer::acquireCommandBuffer_() {
   auto& pool = m_commandBufferPools[m_currentFrame];
 
@@ -321,13 +366,13 @@ void Renderer::waitForAllFrames_() {
 
 void Renderer::setupRenderPasses_() {
   m_basePass = std::make_unique<BasePass>();
-  m_basePass->initialize(m_device.get(), m_resourceManager.get(), m_frameResources.get(), m_shaderManager.get());
+  m_basePass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 
   m_debugPass = std::make_unique<DebugPass>();
-  m_debugPass->initialize(m_device.get(), m_resourceManager.get(), m_frameResources.get(), m_shaderManager.get());
+  m_debugPass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 
   m_finalPass = std::make_unique<FinalPass>();
-  m_finalPass->initialize(m_device.get(), m_resourceManager.get(), m_frameResources.get(), m_shaderManager.get());
+  m_finalPass->initialize(m_device.get(), getResourceManager(), m_frameResources.get(), m_shaderManager.get());
 }
 }  // namespace renderer
 }  // namespace gfx

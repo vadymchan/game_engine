@@ -76,8 +76,9 @@ class ImGuiRHIContext {
 
   std::unique_ptr<rhi::Sampler> m_sampler;
 
-  // Vulkan
+#ifdef GAME_ENGINE_USE_VULKAN
   std::unique_ptr<rhi::DescriptorPoolManager> m_imguiPoolManager;
+#endif  // GAME_ENGINE_USE_VULKAN
 
 #ifdef GAME_ENGINE_RHI_DX12
   std::unique_ptr<rhi::DescriptorHeapDx12> m_dx12ImGuiDescriptorHeap;

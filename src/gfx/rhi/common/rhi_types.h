@@ -176,7 +176,7 @@ struct ColorBlendAttachmentDesc {
 
 struct ColorBlendStateDesc {
   bool                                  logicOpEnable = false;
-  BlendOp                               logicOp       = BlendOp::Add;
+  LogicOp                               logicOp       = LogicOp::Copy;
   std::vector<ColorBlendAttachmentDesc> attachments;
   float                                 blendConstants[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 };

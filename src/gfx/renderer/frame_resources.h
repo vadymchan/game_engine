@@ -16,6 +16,10 @@
 #include <vector>
 
 namespace game_engine {
+class LightSystem;
+}  // namespace game_engine
+
+namespace game_engine {
 namespace gfx {
 namespace renderer {
 
@@ -53,19 +57,13 @@ class FrameResources {
 
   uint32_t getFramesCount() const { return m_renderTargetsPerFrame.size(); }
 
-  const rhi::Viewport& getViewport() const { return m_viewport; }
-
+  const rhi::Viewport&    getViewport() const { return m_viewport; }
   const rhi::ScissorRect& getScissor() const { return m_scissor; }
 
   rhi::DescriptorSet* getViewDescriptorSet() const { return m_viewDescriptorSet; }
-
-  rhi::DescriptorSet* getDirectionalLightDescriptorSet() const { return m_directionalLightDescriptorSet; }
-
-  rhi::DescriptorSet* getPointLightDescriptorSet() const { return m_pointLightDescriptorSet; }
-
-  rhi::DescriptorSet* getSpotLightDescriptorSet() const { return m_spotLightDescriptorSet; }
-
   rhi::DescriptorSet* getDefaultSamplerDescriptorSet() const { return m_defaultSamplerDescriptorSet; }
+  rhi::DescriptorSet* getLightDescriptorSet() const;
+  rhi::DescriptorSet* getOrCreateModelMatrixDescriptorSet(RenderMesh* renderMesh);
 
   rhi::Sampler* getDefaultSampler() const { return m_defaultSampler; }
 
@@ -75,7 +73,7 @@ class FrameResources {
     math::Matrix4f<> modelMatrix;
     entt::entity     entityId;
 
-    uint32_t materialId = 0;  // Material ID for sorting
+    uint32_t materialId = 0;  // for sorting
 
     bool isDirty = false;
   };
@@ -87,21 +85,26 @@ class FrameResources {
   const std::vector<ModelInstance*>& getModels() const { return m_sortedModels; }
 
   rhi::DescriptorSetLayout* getViewDescriptorSetLayout() const { return m_viewDescriptorSetLayout; }
-
-  rhi::DescriptorSetLayout* getLightDescriptorSetLayout() const { return m_lightDescriptorSetLayout; }
-
+  rhi::DescriptorSetLayout* getModelMatrixDescriptorSetLayout() const { return m_modelMatrixDescriptorSetLayout; }
+  rhi::DescriptorSetLayout* getLightDescriptorSetLayout() const;
   rhi::DescriptorSetLayout* getMaterialDescriptorSetLayout() const { return m_materialDescriptorSetLayout; }
+
+  rhi::Buffer* getOrCreateMaterialParamBuffer(Material* material);
+
+  rhi::Texture* getDefaultWhiteTexture() const { return m_defaultWhiteTexture; }
+  rhi::Texture* getDefaultNormalTexture() const { return m_defaultNormalTexture; }
+  rhi::Texture* getDefaultBlackTexture() const { return m_defaultBlackTexture; }
 
   private:
   void createViewDescriptorSetLayout_();
-  void createLightDescriptorSetLayouts_();
+  void createModelMatrixDescriptorSetLayout_();
   void createMaterialDescriptorSetLayout_();
+  void createDefaultTextures_();
   void createDefaultSampler_();
   void createSamplerDescriptorSet_();
   void createRenderTargets_(RenderTargets& targets, const math::Dimension2Di& dimensions);
 
   void updateViewResources_(const RenderContext& context);
-  void updateLightResources_(const RenderContext& context);
   void updateModelList_(const RenderContext& context);
 
   void sortModelsByMaterial_();
@@ -120,25 +123,45 @@ class FrameResources {
 
   std::vector<RenderTargets> m_renderTargetsPerFrame;
 
-  rhi::DescriptorSet* m_viewDescriptorSet             = nullptr;
-  rhi::DescriptorSet* m_directionalLightDescriptorSet = nullptr;
-  rhi::DescriptorSet* m_pointLightDescriptorSet       = nullptr;
-  rhi::DescriptorSet* m_spotLightDescriptorSet        = nullptr;
-  rhi::DescriptorSet* m_defaultSamplerDescriptorSet   = nullptr;
+  rhi::DescriptorSet* m_viewDescriptorSet           = nullptr;
+  rhi::DescriptorSet* m_defaultSamplerDescriptorSet = nullptr;
 
-  rhi::DescriptorSetLayout* m_viewDescriptorSetLayout     = nullptr;
-  rhi::DescriptorSetLayout* m_lightDescriptorSetLayout    = nullptr;
-  rhi::DescriptorSetLayout* m_materialDescriptorSetLayout = nullptr;
+  rhi::DescriptorSetLayout* m_viewDescriptorSetLayout        = nullptr;
+  rhi::DescriptorSetLayout* m_modelMatrixDescriptorSetLayout = nullptr;
+  rhi::DescriptorSetLayout* m_materialDescriptorSetLayout    = nullptr;
 
-  rhi::Buffer* m_viewUniformBuffer             = nullptr;
-  rhi::Buffer* m_directionalLightUniformBuffer = nullptr;
-  rhi::Buffer* m_pointLightUniformBuffer       = nullptr;
-  rhi::Buffer* m_spotLightUniformBuffer        = nullptr;
+  rhi::Buffer* m_viewUniformBuffer = nullptr;
+
+  rhi::Texture* m_defaultWhiteTexture  = nullptr;
+  rhi::Texture* m_defaultNormalTexture = nullptr;
+  rhi::Texture* m_defaultBlackTexture  = nullptr;
 
   rhi::Sampler* m_defaultSampler = nullptr;
 
+  struct ModelMatrixCache {
+    rhi::DescriptorSet* descriptorSet = nullptr;
+  };
+
+  std::unordered_map<RenderMesh*, ModelMatrixCache> m_modelMatrixCache;
+
+  struct MaterialParametersData {
+    math::Vector4Df baseColor;
+    float           metallic;
+    float           roughness;
+    float           opacity;
+    float           padding;
+  };
+
+  struct MaterialParamCache {
+    rhi::Buffer* paramBuffer = nullptr;
+  };
+
+  std::unordered_map<Material*, MaterialParamCache> m_materialParamCache;
+
   std::unordered_map<entt::entity, ModelInstance> m_modelsMap;
   std::vector<ModelInstance*>                     m_sortedModels;
+
+  LightSystem* m_lightSystem = nullptr;
 };
 
 }  // namespace renderer

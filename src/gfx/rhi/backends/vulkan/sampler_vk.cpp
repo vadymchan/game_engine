@@ -14,34 +14,27 @@ SamplerVk::SamplerVk(const SamplerDesc& desc, DeviceVk* device)
   VkSamplerCreateInfo samplerInfo = {};
   samplerInfo.sType               = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 
-  // Set filter modes
   samplerInfo.magFilter = g_getTextureFilterTypeVk(desc.magFilter);
   samplerInfo.minFilter = g_getTextureFilterTypeVk(desc.minFilter);
 
-  // Set texture address modes
   samplerInfo.addressModeU = g_getTextureAddressModeVk(desc.addressModeU);
   samplerInfo.addressModeV = g_getTextureAddressModeVk(desc.addressModeV);
   samplerInfo.addressModeW = g_getTextureAddressModeVk(desc.addressModeW);
 
-  // Set mipmap mode based on filter
   samplerInfo.mipmapMode = g_getTextureMipmapModeVk(desc.minFilter);
 
-  // Set LOD bias and clamps
   samplerInfo.mipLodBias = desc.mipLodBias;
   samplerInfo.minLod     = desc.minLod;
   samplerInfo.maxLod     = desc.maxLod;
 
-  // Set anisotropy
   samplerInfo.anisotropyEnable = desc.anisotropyEnable ? VK_TRUE : VK_FALSE;
   samplerInfo.maxAnisotropy    = desc.maxAnisotropy;
 
-  // Set comparison
   samplerInfo.compareEnable = desc.compareEnable ? VK_TRUE : VK_FALSE;
   samplerInfo.compareOp     = g_getCompareOpVk(desc.compareOp);
 
-  // Set border color
-  // This is a simplification - in a production system, you might want to support
-  // custom border colors using VK_EXT_custom_border_color if available
+
+  // TODO: consider use VK_EXT_custom_border_color if available
   if (desc.borderColor[0] == 0.0f && desc.borderColor[1] == 0.0f && desc.borderColor[2] == 0.0f
       && desc.borderColor[3] == 0.0f) {
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
@@ -52,15 +45,12 @@ SamplerVk::SamplerVk(const SamplerDesc& desc, DeviceVk* device)
              && desc.borderColor[3] == 1.0f) {
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
   } else {
-    // Default to opaque black for other colors
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     GlobalLogger::Log(LogLevel::Warning, "Custom border colors not fully supported in Vulkan sampler");
   }
 
-  // No unnormalized coordinates in this implementation
   samplerInfo.unnormalizedCoordinates = VK_FALSE;
 
-  // Create the sampler
   if (vkCreateSampler(device->getDevice(), &samplerInfo, nullptr, &m_sampler_) != VK_SUCCESS) {
     GlobalLogger::Log(LogLevel::Error, "Failed to create Vulkan sampler");
   }

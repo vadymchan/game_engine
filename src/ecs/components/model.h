@@ -8,13 +8,11 @@
 
 namespace game_engine {
 
-// TODO: consider adding Node functionality (if that is needed)
-
-// This is the geometry data on CPU side (imported from assimp)
+// This is the geometry data on CPU side (imported from assimp / cgltf)
 struct Model {
-  // TODO: no modelNames (consider adding it, maybe filename will be correct)
-  std::filesystem::path              filePath;
-  std::vector<Mesh*> meshes;
+  // TODO: no modelNames (consider adding it, maybe filename is already okay)
+  std::filesystem::path filePath;
+  std::vector<Mesh*>    meshes;
 };
 
 }  // namespace game_engine

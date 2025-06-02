@@ -1,23 +1,23 @@
 #include "gfx/rhi/backends/vulkan/device_vk.h"
 
-#include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
-
-// Include implementations of resource classes
 #include "gfx/rhi/backends/vulkan/buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
 #include "gfx/rhi/backends/vulkan/descriptor_vk.h"
 #include "gfx/rhi/backends/vulkan/framebuffer_vk.h"
 #include "gfx/rhi/backends/vulkan/pipeline_vk.h"
 #include "gfx/rhi/backends/vulkan/render_pass_vk.h"
+#include "gfx/rhi/backends/vulkan/rhi_enums_vk.h"
 #include "gfx/rhi/backends/vulkan/sampler_vk.h"
 #include "gfx/rhi/backends/vulkan/shader_vk.h"
 #include "gfx/rhi/backends/vulkan/swap_chain_vk.h"
 #include "gfx/rhi/backends/vulkan/synchronization_vk.h"
 #include "gfx/rhi/backends/vulkan/texture_vk.h"
 #include "platform/common/window.h"
+//#include "profiler/backends/gpu_profiler_vk.h"
+#include "profiler/backends/gpu_profiler.h"
+#include "utils/service/service_locator.h"
 #include "utils/logger/global_logger.h"
 
-// For windowing/presentation
 #include <SDL_vulkan.h>
 
 #define VMA_IMPLEMENTATION
@@ -30,7 +30,6 @@ namespace game_engine {
 namespace gfx {
 namespace rhi {
 
-// Constants
 constexpr uint32_t DESCRIPTOR_POOL_MAX_SETS = 1000;
 
 //-------------------------------------------------------------------------
@@ -39,12 +38,9 @@ constexpr uint32_t DESCRIPTOR_POOL_MAX_SETS = 1000;
 
 DeviceVk::DeviceVk(const DeviceDesc& desc)
     : Device(desc) {
-  // Set validation layers (for debug builds)
 #ifdef _DEBUG
   m_validationLayers_ = {"VK_LAYER_KHRONOS_validation"};
 #endif
-
-  // Required device extensions
   m_deviceExtensions_ = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
   if (!createInstance_() || !setupDebugMessenger_() || !createSurface_() || !pickPhysicalDevice_()
@@ -74,7 +70,6 @@ DeviceVk::~DeviceVk() {
     vkDestroySurfaceKHR(m_instance_, m_surface_, nullptr);
   }
 
-  // Destroy debug messenger
 #ifdef _DEBUG
   if (m_instance_ && m_debugMessenger_) {
     auto vkDestroyDebugUtilsMessengerEXT
@@ -86,14 +81,12 @@ DeviceVk::~DeviceVk() {
   }
 #endif
 
-  // Destroy instance
   if (m_instance_) {
     vkDestroyInstance(m_instance_, nullptr);
   }
 }
 
 bool DeviceVk::createInstance_() {
-  // Application info
   VkApplicationInfo appInfo  = {};
   appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pApplicationName   = "Game Engine";
@@ -102,17 +95,14 @@ bool DeviceVk::createInstance_() {
   appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
   appInfo.apiVersion         = VK_API_VERSION_1_3;
 
-  // Instance creation info
   VkInstanceCreateInfo createInfo = {};
   createInfo.sType                = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo     = &appInfo;
 
-  // Setup validation layers if enabled
 #ifdef _DEBUG
   createInfo.enabledLayerCount   = static_cast<uint32_t>(m_validationLayers_.size());
   createInfo.ppEnabledLayerNames = m_validationLayers_.data();
 
-  // Setup debug messenger for instance creation and destruction
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
   g_populateDebugMessengerCreateInfo(debugCreateInfo);
   createInfo.pNext = &debugCreateInfo;
@@ -121,35 +111,28 @@ bool DeviceVk::createInstance_() {
   createInfo.pNext             = nullptr;
 #endif
 
-  // Get required extensions
   std::vector<const char*> extensions;
 
-  // Get SDL required extensions
   unsigned int sdlExtensionCount = 0;
   if (!SDL_Vulkan_GetInstanceExtensions(
           static_cast<SDL_Window*>(getWindow()->getNativeWindowHandle()), &sdlExtensionCount, nullptr)) {
-    // Handle SDL error
     return false;
   }
 
   extensions.resize(sdlExtensionCount);
   if (!SDL_Vulkan_GetInstanceExtensions(
           static_cast<SDL_Window*>(getWindow()->getNativeWindowHandle()), &sdlExtensionCount, extensions.data())) {
-    // Handle SDL error
     return false;
   }
 
 #ifdef _DEBUG
-  // Add debug extension
   extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
 
   createInfo.enabledExtensionCount   = static_cast<uint32_t>(extensions.size());
   createInfo.ppEnabledExtensionNames = extensions.data();
 
-  // Create the instance
   if (vkCreateInstance(&createInfo, nullptr, &m_instance_) != VK_SUCCESS) {
-    // Handle error
     return false;
   }
 
@@ -159,7 +142,7 @@ bool DeviceVk::createInstance_() {
 bool DeviceVk::setupDebugMessenger_() {
 #ifdef _DEBUG
   if (m_validationLayers_.empty()) {
-    return true;  // Debug not enabled
+    return true;
   }
 
   VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
@@ -183,7 +166,6 @@ bool DeviceVk::setupDebugMessenger_() {
 bool DeviceVk::createSurface_() {
   if (!SDL_Vulkan_CreateSurface(
           static_cast<SDL_Window*>(getWindow()->getNativeWindowHandle()), m_instance_, &m_surface_)) {
-    // Handle SDL error
     return false;
   }
 
@@ -195,14 +177,14 @@ bool DeviceVk::pickPhysicalDevice_() {
   vkEnumeratePhysicalDevices(m_instance_, &deviceCount, nullptr);
 
   if (deviceCount == 0) {
-    // No devices with Vulkan support
+    GlobalLogger::Log(LogLevel::Error, "Failed to find GPUs with Vulkan support");
     return false;
   }
 
   std::vector<VkPhysicalDevice> devices(deviceCount);
   vkEnumeratePhysicalDevices(m_instance_, &deviceCount, devices.data());
 
-  // Rate devices and pick the best one
+  // Rate devices (based on properties) and pick the best one
   std::multimap<int, VkPhysicalDevice> candidates;
 
   for (const auto& device : devices) {
@@ -210,46 +192,37 @@ bool DeviceVk::pickPhysicalDevice_() {
       continue;
     }
 
-    // Get device properties
     VkPhysicalDeviceProperties deviceProperties;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
-    // Rate device based on properties
     int score = 0;
 
-    // Prefer discrete GPUs
     if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
       score += 1000;
     } else if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
       score += 100;
     }
 
-    // Higher score for devices with larger max texture size
     score += deviceProperties.limits.maxImageDimension2D / 1024;
 
     candidates.insert(std::make_pair(score, device));
   }
 
-  // Check if we found a suitable device
   if (candidates.empty()) {
     return false;
   }
 
-  // Pick the highest-rated device
   m_physicalDevice_ = candidates.rbegin()->second;
 
-  // Store device properties and features
   vkGetPhysicalDeviceProperties(m_physicalDevice_, &m_deviceProperties_);
   vkGetPhysicalDeviceFeatures(m_physicalDevice_, &m_deviceFeatures_);
 
-  // Store queue family indices
   m_queueFamilyIndices_ = g_findQueueFamilies(m_physicalDevice_, m_surface_);
 
   return true;
 }
 
 bool DeviceVk::createLogicalDevice_() {
-  // Create logical device with required queues
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
   std::set<uint32_t>                   uniqueQueueFamilies = {m_queueFamilyIndices_.graphicsFamily.value(),
                                                               m_queueFamilyIndices_.presentFamily.value(),
@@ -265,13 +238,11 @@ bool DeviceVk::createLogicalDevice_() {
     queueCreateInfos.push_back(queueCreateInfo);
   }
 
-  // Specify device features to use
   VkPhysicalDeviceFeatures deviceFeatures = {};
-  deviceFeatures.samplerAnisotropy        = VK_TRUE;  // Enable anisotropic filtering
-  deviceFeatures.fillModeNonSolid         = VK_TRUE;  // Enable wireframe rendering
-  deviceFeatures.geometryShader           = VK_TRUE;  // Enable geometry shaders
+  deviceFeatures.samplerAnisotropy        = VK_TRUE;
+  deviceFeatures.fillModeNonSolid         = VK_TRUE;
+  deviceFeatures.geometryShader           = VK_TRUE;
 
-  // Create the logical device
   VkDeviceCreateInfo createInfo      = {};
   createInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   createInfo.queueCreateInfoCount    = static_cast<uint32_t>(queueCreateInfos.size());
@@ -280,7 +251,6 @@ bool DeviceVk::createLogicalDevice_() {
   createInfo.enabledExtensionCount   = static_cast<uint32_t>(m_deviceExtensions_.size());
   createInfo.ppEnabledExtensionNames = m_deviceExtensions_.data();
 
-  // Add validation layers if enabled
 #ifdef _DEBUG
   createInfo.enabledLayerCount   = static_cast<uint32_t>(m_validationLayers_.size());
   createInfo.ppEnabledLayerNames = m_validationLayers_.data();
@@ -292,7 +262,6 @@ bool DeviceVk::createLogicalDevice_() {
     return false;
   }
 
-  // Get queue handles
   vkGetDeviceQueue(m_device_, m_queueFamilyIndices_.graphicsFamily.value(), 0, &m_graphicsQueue_);
   vkGetDeviceQueue(m_device_, m_queueFamilyIndices_.presentFamily.value(), 0, &m_presentQueue_);
   vkGetDeviceQueue(m_device_, m_queueFamilyIndices_.computeFamily.value(), 0, &m_computeQueue_);
@@ -313,7 +282,7 @@ bool DeviceVk::createAllocator_() {
   allocatorInfo.physicalDevice         = m_physicalDevice_;
   allocatorInfo.device                 = m_device_;
   allocatorInfo.instance               = m_instance_;
-  allocatorInfo.flags                  = 0;  // optional
+  allocatorInfo.flags                  = 0;
 
   VkResult result = vmaCreateAllocator(&allocatorInfo, &m_allocator_);
   if (result != VK_SUCCESS) {
@@ -325,22 +294,18 @@ bool DeviceVk::createAllocator_() {
 }
 
 VkBuffer DeviceVk::createStagingBuffer(const void* data, size_t size, VmaAllocation& allocation) {
-  // Create a buffer for staging data
   VkBuffer stagingBuffer;
 
-  // Buffer creation info
   VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size               = size;
   bufferInfo.usage              = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   bufferInfo.sharingMode        = VK_SHARING_MODE_EXCLUSIVE;
 
-  // VMA allocation info
   VmaAllocationCreateInfo allocInfo = {};
   allocInfo.usage                   = VMA_MEMORY_USAGE_CPU_TO_GPU;
-  allocInfo.flags                   = VMA_ALLOCATION_CREATE_MAPPED_BIT;  // We need to write to this buffer
+  allocInfo.flags                   = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-  // Create the buffer with VMA
   VmaAllocationInfo allocationInfo;
   VkResult          result
       = vmaCreateBuffer(m_allocator_, &bufferInfo, &allocInfo, &stagingBuffer, &allocation, &allocationInfo);
@@ -350,7 +315,6 @@ VkBuffer DeviceVk::createStagingBuffer(const void* data, size_t size, VmaAllocat
     return VK_NULL_HANDLE;
   }
 
-  // Copy data to the allocated buffer (it's already mapped)
   memcpy(allocationInfo.pMappedData, data, size);
 
   return stagingBuffer;
@@ -361,7 +325,7 @@ std::unique_ptr<Buffer> DeviceVk::createBuffer(const BufferDesc& desc) {
 }
 
 std::unique_ptr<Texture> DeviceVk::createTexture(const TextureDesc& desc) {
-  auto texture = std::make_unique<TextureVk>(desc, this);
+  auto texture   = std::make_unique<TextureVk>(desc, this);
   auto textureVk = static_cast<TextureVk*>(texture.get());
 
   if (desc.initialLayout != ResourceLayout::Undefined) {
@@ -397,7 +361,6 @@ std::unique_ptr<DescriptorSetLayout> DeviceVk::createDescriptorSetLayout(const D
 }
 
 std::unique_ptr<DescriptorSet> DeviceVk::createDescriptorSet(const DescriptorSetLayout* layout) {
-  // Check that layout is the correct type
   const DescriptorSetLayoutVk* descriptorSetLayoutVk = dynamic_cast<const DescriptorSetLayoutVk*>(layout);
   if (!descriptorSetLayoutVk) {
     return nullptr;
@@ -415,7 +378,6 @@ std::unique_ptr<Framebuffer> DeviceVk::createFramebuffer(const FramebufferDesc& 
 }
 
 std::unique_ptr<CommandBuffer> DeviceVk::createCommandBuffer(const CommandBufferDesc& desc) {
-  // Allocate a command buffer
   VkCommandBufferAllocateInfo allocInfo = {};
   allocInfo.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.commandPool                 = m_commandPoolManager_.getPool();
@@ -443,33 +405,28 @@ std::unique_ptr<SwapChain> DeviceVk::createSwapChain(const SwapchainDesc& desc) 
 }
 
 void DeviceVk::updateBuffer(Buffer* buffer, const void* data, size_t size, size_t offset) {
-  // Check if the buffer is of the correct type
   BufferVk* bufferVk = dynamic_cast<BufferVk*>(buffer);
   if (!bufferVk) {
     GlobalLogger::Log(LogLevel::Error, "Invalid buffer type");
     return;
   }
 
-  // Check data
   if (!data || size == 0) {
     GlobalLogger::Log(LogLevel::Warning, "No data to update");
     return;
   }
 
-  // Check that size + offset does not exceed the buffer size
   if (offset + size > bufferVk->getSize()) {
     GlobalLogger::Log(LogLevel::Error, "Update exceeds buffer size");
     return;
   }
 
-  // If the buffer is already mapped, use direct update
   if (bufferVk->isMapped()) {
     if (bufferVk->update_(data, size, offset)) {
       return;
     }
   }
 
-  // Otherwise, use a staging buffer for copying
   VmaAllocation stagingAllocation = VK_NULL_HANDLE;
   VkBuffer      stagingBuffer     = createStagingBuffer(data, size, stagingAllocation);
 
@@ -478,15 +435,12 @@ void DeviceVk::updateBuffer(Buffer* buffer, const void* data, size_t size, size_
     return;
   }
 
-  // Create a command buffer for the copy operation
   CommandBufferDesc cmdBufferDesc;
   cmdBufferDesc.primary = true;
   auto cmdBuffer        = createCommandBuffer(cmdBufferDesc);
 
-  // Begin recording
   cmdBuffer->begin();
 
-  // Perform the copy
   VkBufferCopy copyRegion = {};
   copyRegion.srcOffset    = 0;
   copyRegion.dstOffset    = offset;
@@ -500,19 +454,16 @@ void DeviceVk::updateBuffer(Buffer* buffer, const void* data, size_t size, size_
 
   cmdBuffer->end();
 
-  // Submit and wait for completion
   FenceDesc fenceDesc;
   auto      fence = createFence(fenceDesc);
   submitCommandBuffer(cmdBuffer.get(), fence.get());
   fence->wait();
 
-  // Clean up the staging buffer
   vmaDestroyBuffer(m_allocator_, stagingBuffer, stagingAllocation);
 }
 
 void DeviceVk::updateTexture(
     Texture* texture, const void* data, size_t dataSize, uint32_t mipLevel, uint32_t arrayLayer) {
-  // Implementation should be updated in TextureVk::update
   TextureVk* textureVk = dynamic_cast<TextureVk*>(texture);
   if (!textureVk) {
     return;
@@ -525,13 +476,11 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
                                    Fence*                         signalFence,
                                    const std::vector<Semaphore*>& waitSemaphores,
                                    const std::vector<Semaphore*>& signalSemaphores) {
-  // Check that command buffer is the correct type
   CommandBufferVk* cmdBufferVk = dynamic_cast<CommandBufferVk*>(cmdBuffer);
   if (!cmdBufferVk) {
     return;
   }
 
-  // Prepare wait semaphores
   std::vector<VkSemaphore>          waitSemaphoresVk;
   std::vector<VkPipelineStageFlags> waitStages;
 
@@ -543,7 +492,6 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     }
   }
 
-  // Prepare signal semaphores
   std::vector<VkSemaphore> signalSemaphoresVk;
   for (Semaphore* semaphore : signalSemaphores) {
     SemaphoreVk* semaphoreVk = dynamic_cast<SemaphoreVk*>(semaphore);
@@ -552,7 +500,6 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     }
   }
 
-  // Prepare fence
   VkFence fenceVk = VK_NULL_HANDLE;
   if (signalFence) {
     FenceVk* vkFence_ = dynamic_cast<FenceVk*>(signalFence);
@@ -561,7 +508,6 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     }
   }
 
-  // Submit command buffer
   VkSubmitInfo submitInfo       = {};
   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
@@ -578,8 +524,13 @@ void DeviceVk::submitCommandBuffer(CommandBuffer*                 cmdBuffer,
     submitInfo.pSignalSemaphores    = signalSemaphoresVk.data();
   }
 
-  if (vkQueueSubmit(m_graphicsQueue_, 1, &submitInfo, fenceVk) != VK_SUCCESS) {
-    // Handle error
+  {
+    // TODO: I have threading issue here - both main thread and worker thread (for loading assets) are using queue even
+    // though there's already mutex here
+    std::lock_guard<std::mutex> lock(m_queueSubmitMutex);
+    if (vkQueueSubmit(m_graphicsQueue_, 1, &submitInfo, fenceVk) != VK_SUCCESS) {
+      GlobalLogger::Log(LogLevel::Error, "Failed to submit command buffer");
+    }
   }
 }
 

@@ -10,7 +10,8 @@ namespace game_engine {
 
 struct RenderMesh {
   RenderGeometryMesh* gpuMesh;
-  Material*        material;
+  Material*           material;
+  gfx::rhi::Buffer*   transformMatrixBuffer = nullptr;
 };
 
 }  // namespace game_engine

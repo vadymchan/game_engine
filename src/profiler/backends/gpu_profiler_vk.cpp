@@ -1,0 +1,124 @@
+#include "profiler/backends/gpu_profiler_vk.h"
+
+#ifdef GAME_ENGINE_USE_GPU_PROFILING
+
+#ifdef GAME_ENGINE_USE_VULKAN
+
+#include "gfx/rhi/backends/vulkan/command_buffer_vk.h"
+#include "gfx/rhi/backends/vulkan/device_vk.h"
+#include "utils/logger/global_logger.h"
+
+namespace game_engine {
+namespace gpu {
+
+bool GpuProfilerVk::initialize(gfx::rhi::Device* device) {
+  if (m_initialized) {
+    GlobalLogger::Log(LogLevel::Warning, "GpuProfilerVk already initialized");
+    return true;
+  }
+
+  if (!device) {
+    GlobalLogger::Log(LogLevel::Error, "Invalid Vulkan parameters for profiler");
+    return false;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+  m_cmdBuffer      = device->createCommandBuffer();
+  auto cmdBufferVk = static_cast<gfx::rhi::CommandBufferVk*>(m_cmdBuffer.get());
+
+  auto* deviceVk = static_cast<gfx::rhi::DeviceVk*>(device);
+
+  m_tracyContext = TracyVkContext(deviceVk->getPhysicalDevice(),
+                                  deviceVk->getDevice(),
+                                  deviceVk->getGraphicsQueue(),
+                                  cmdBufferVk->getCommandBuffer());
+
+  if (!m_tracyContext) {
+    GlobalLogger::Log(LogLevel::Error, "Failed to create Tracy Vulkan context");
+    return false;
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Tracy Vulkan profiler initialized");
+#else
+  GlobalLogger::Log(LogLevel::Info, "Tracy profiling disabled, using native GPU markers only");
+#endif
+
+  setApi(gfx::rhi::RenderingApi::Vulkan);
+  m_initialized = true;
+  return true;
+}
+
+void GpuProfilerVk::destroy() {
+  if (!m_initialized) {
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+  if (m_tracyContext) {
+    TracyVkDestroy(m_tracyContext);
+    m_tracyContext = nullptr;
+    GlobalLogger::Log(LogLevel::Info, "Tracy Vulkan profiler destroyed");
+  }
+#endif
+
+  m_initialized = false;
+}
+
+void GpuProfilerVk::setContextName(const std::string& name) {
+  if (!m_initialized) {
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+  if (m_tracyContext) {
+    TracyVkContextName(m_tracyContext, name.c_str(), name.size());
+  }
+#endif
+}
+
+void GpuProfilerVk::collect(gfx::rhi::CommandBuffer* commandBuffer) {
+  if (!m_initialized) {
+    return;
+  }
+
+#ifdef GAME_ENGINE_TRACY_GPU_PROFILING_VK
+  if (m_tracyContext && commandBuffer) {
+    auto commandBufferVk = static_cast<gfx::rhi::CommandBufferVk*>(commandBuffer);
+    TracyVkCollect(m_tracyContext, commandBufferVk->getCommandBuffer());
+  }
+#endif
+}
+
+void GpuProfilerVk::beginZone(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color) {
+  if (!cmdBuffer) {
+    return;
+  }
+
+  auto colorArray = color != 0 ? color::g_toFloatArray(color).data() : nullptr;
+
+  cmdBuffer->beginDebugMarker(name, colorArray);
+}
+
+void GpuProfilerVk::endZone(gfx::rhi::CommandBuffer* cmdBuffer) {
+  if (!cmdBuffer) {
+    return;
+  }
+  cmdBuffer->endDebugMarker();
+}
+
+void GpuProfilerVk::insertMarker(gfx::rhi::CommandBuffer* cmdBuffer, const std::string& name, uint32_t color) {
+  if (!cmdBuffer) {
+    return;
+  }
+
+  auto colorArray = color != 0 ? color::g_toFloatArray(color).data() : nullptr;
+
+  cmdBuffer->insertDebugMarker(name, colorArray);
+}
+
+}  // namespace gpu
+}  // namespace game_engine
+
+#endif  // GAME_ENGINE_USE_GPU_PROFILING
+
+#endif  // GAME_ENGINE_USE_VULKAN

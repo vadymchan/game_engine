@@ -3,6 +3,8 @@
 
 #include "utils/logger/i_logger.h"
 
+#include<spdlog/fmt/fmt.h>
+
 #include <memory>
 #include <vector>
 
@@ -16,12 +18,19 @@ class GlobalLogger {
                   const std::string&          message,
                   const std::source_location& loc = std::source_location::current());
 
+  template <typename... Args>
+  static void Log(LogLevel                    level,
+                  fmt::format_string<Args...> fmtStr,
+                  Args&&... args,
+                  const std::source_location& loc = std::source_location::current()) {
+    GlobalLogger::Log(level, fmt::format(fmtStr, std::forward<Args>(args)...), loc);
+  }
+
   static ILogger* GetLogger(const std::string& name);
 
   static void Shutdown();
 
   private:
-  // Owns all registered loggers
   static inline std::vector<std::unique_ptr<ILogger>> s_loggers;
 };
 

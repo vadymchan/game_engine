@@ -12,14 +12,14 @@ using gfx::rhi::TextureType;
 const std::unordered_set<std::string> DirectXTexImageLoader::supportedExtensions_ = {".dds"};
 
 bool DirectXTexImageLoader::supportsFormat(const std::string& extension) const {
-  return supportedExtensions_.find(extension) != supportedExtensions_.end();
+  return supportedExtensions_.contains(extension);
 }
 
 TextureType DirectXTexImageLoader::determineDimension_(const DirectX::TexMetadata& metadata) const {
   TextureType baseDimension;
   switch (metadata.dimension) {
     case DirectX::TEX_DIMENSION_TEXTURE1D:
-      baseDimension = TextureType::Texture1D;
+      baseDimension = (metadata.arraySize > 1) ? TextureType::Texture1DArray : TextureType::Texture1D;
       break;
     case DirectX::TEX_DIMENSION_TEXTURE2D:
       baseDimension = (metadata.IsCubemap())   ? TextureType::TextureCube
@@ -51,14 +51,11 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
     return nullptr;
   }
 
-  // Calculate total pixel data size
   size_t totalBytes = scratchImage.GetPixelsSize();
 
-  // Copy pixel data into Image::pixels
   std::vector<std::byte> pixels(reinterpret_cast<std::byte*>(scratchImage.GetPixels()),
                                 reinterpret_cast<std::byte*>(scratchImage.GetPixels()) + totalBytes);
 
-  // Populate Image struct
   auto image       = std::make_unique<Image>();
   image->width     = metadata.width;
   image->height    = metadata.height;
@@ -69,7 +66,6 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
   image->dimension = determineDimension_(metadata);
   image->pixels    = std::move(pixels);
 
-  // Populate SubImages
   image->subImages.reserve(image->mipLevels * image->arraySize * image->depth);
 
   for (auto mip = 0; mip < image->mipLevels; ++mip) {
@@ -88,7 +84,8 @@ std::unique_ptr<Image> DirectXTexImageLoader::loadImage(const std::filesystem::p
         subImage.height     = img->height;
         subImage.rowPitch   = img->rowPitch;
         subImage.slicePitch = img->slicePitch;
-        subImage.pixelBegin = image->pixels.begin() + (img->pixels - scratchImage.GetPixels());
+        subImage.pixelOffset = reinterpret_cast<const std::byte*>(img->pixels)
+                             - reinterpret_cast<const std::byte*>(scratchImage.GetPixels());
 
         image->subImages.emplace_back(subImage);
       }

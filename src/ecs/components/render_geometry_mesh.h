@@ -14,11 +14,11 @@ struct RenderGeometryMesh {
   gfx::rhi::Buffer* vertexBuffer;
   gfx::rhi::Buffer* indexBuffer;
 
-  // Store vertex count and index count for convenience
+  // TODO
+  //for convenience
   // uint32_t vertexCount = 0;
   // uint32_t indexCount  = 0;
-
-  // Store stride information for vertex binding
+  // for vertex binding
   // uint32_t vertexStride = 0;
 };
 

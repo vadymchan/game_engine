@@ -14,7 +14,7 @@ namespace game_engine {
  * @brief Manages all systems within the engine.
  *
  * @details
- * - Users should avoid adding duplicate systems.
+ * - User should avoid adding duplicate systems.
  * - Systems should not overlap in functionality to prevent unintended behavior.
  */
 class SystemManager {
@@ -22,6 +22,17 @@ class SystemManager {
   void addSystem(std::unique_ptr<IUpdatableSystem> system);
 
   // TODO: add removeSystem method
+
+  template <typename T>
+  T* getSystem() const {
+    for (const auto& system : m_systems_) {
+      T* typedSystem = dynamic_cast<T*>(system.get());
+      if (typedSystem) {
+        return typedSystem;
+      }
+    }
+    return nullptr;
+  }
 
   void updateSystems(Scene* scene, float deltaTime);
 

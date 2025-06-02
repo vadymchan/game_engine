@@ -7,6 +7,7 @@
 #include "platform/windows/windows_platform_setup.h"
 
 #include <D3D12MemAlloc.h>
+#include <mutex>
 
 #ifdef GAME_ENGINE_RHI_DX12
 
@@ -84,7 +85,9 @@ class DeviceDx12 : public Device {
   ComPtr<IDXGIFactory6>      m_factory_;
   ComPtr<IDXGIAdapter3>      m_adapter_;
   ComPtr<ID3D12Device>       m_device_;
+
   ComPtr<ID3D12CommandQueue> m_commandQueue_;
+  std::mutex                 m_queueSubmitMutex;
 
   ComPtr<D3D12MA::Allocator> m_allocator_;
 
