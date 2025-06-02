@@ -1,10 +1,10 @@
 # ARISE
-ARISE is:
-**A**dvanced 
-**R**endering 
-**I**nterface & 
-**S**andbox 
-**E**ngine
+ARISE is:  
+**A**dvanced  
+**R**endering  
+**I**nterface &  
+**S**andbox  
+**E**ngine  
 
 <img src="assets/logo/arise_logo.png" alt="ARISE Logo" width="400">
 
