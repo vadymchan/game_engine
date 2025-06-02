@@ -33,6 +33,7 @@ option(USE_PROFILING "Enable profiling support (CPU + GPU)" OFF)
 
 # Choose tools
 option(BUILD_ASSET_TOOLS "Build offline asset conversion tools (gltfpack & toktx)" OFF)
+option(BUILD_PROFILING_TOOLS "Download Tracy profiling tools" OFF)
 
 include(CMakeDependentOption)
 
@@ -70,6 +71,10 @@ option(USE_GLTF_SAMPLE_MODELS "Enable importing glTF Sample Models" OFF)
 # set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/lib)
 
 # set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_SYSTEM_NAME}/${PLATFORM}/${CMAKE_BUILD_TYPE}/game_engine.dir)
+
+if(BUILD_TRACY OR BUILD_PROFILING_TOOLS)
+    set(TRACY_VERSION "v0.11.1" CACHE STRING "Tracy profiler version")
+endif()
 
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/third_party)
@@ -352,7 +357,7 @@ if(BUILD_TRACY)
     FetchContent_Declare(
         tracy
         GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-        GIT_TAG v0.11.1
+        GIT_TAG ${TRACY_VERSION}
         GIT_SHALLOW TRUE
     )
 endif()
@@ -1111,6 +1116,4 @@ add_custom_command(TARGET ${PROJECT_NAME}
                    COMMENT "Removing case sensitivity test files from " ${CMAKE_SOURCE_DIR}
 )
 
-if(BUILD_ASSET_TOOLS)
-    add_subdirectory(tools EXCLUDE_FROM_ALL)
-endif()
+add_subdirectory(tools EXCLUDE_FROM_ALL)
