@@ -231,8 +231,8 @@ auto Engine::initialize() -> bool {
   // ------------------------------------------------------------------------
   m_window_ = std::make_unique<Window>(renderingApiString,
                                        // Desired size (for maximized window will be 0)
-                                       math::Dimension2Di{0, 0},
-                                       math::Point2Di{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
+                                       math::Dimension2i{0, 0},
+                                       math::Point2i{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
                                        arise::Window::Flags::Resizable | arise::Window::Flags::Vulkan
                                            | arise::Window::Flags::Maximized);
 

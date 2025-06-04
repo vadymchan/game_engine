@@ -39,30 +39,30 @@ class LightSystem : public IUpdatableSystem {
 
   private:
   struct DirectionalLightData {
-    math::Vector3Df color;
+    math::Vector3f color;
     float           intensity;
-    math::Vector3Df direction;
+    math::Vector3f direction;
     float           padding;
   };
 
   struct PointLightData {
-    math::Vector3Df color;
+    math::Vector3f color;
     float           intensity;
     float           range;
-    math::Vector3Df position;
+    math::Vector3f position;
     float           padding;
   };
 
   struct SpotLightData {
-    math::Vector3Df color;
+    math::Vector3f color;
     float           intensity;
     float           range;
     float           innerConeAngle;
     float           outerConeAngle;
     float           padding1;
-    math::Vector3Df position;
+    math::Vector3f position;
     float           padding2;
-    math::Vector3Df direction;
+    math::Vector3f direction;
     float           padding3;
   };
 

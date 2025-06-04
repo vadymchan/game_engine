@@ -30,7 +30,7 @@ void DebugPass::initialize(rhi::Device*           device,
   m_shaderManager   = shaderManager;
 }
 
-void DebugPass::resize(const math::Dimension2Di& newDimension) {
+void DebugPass::resize(const math::Dimension2i& newDimension) {
   if (m_debugStrategy) {
     m_debugStrategy->resize(newDimension);
   }

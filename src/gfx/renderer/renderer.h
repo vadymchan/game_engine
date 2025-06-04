@@ -39,7 +39,7 @@ class Renderer {
   void          endFrame(RenderContext& context);
 
   bool onWindowResize(uint32_t width, uint32_t height);
-  bool onViewportResize(const math::Dimension2Di& newDimension);
+  bool onViewportResize(const math::Dimension2i& newDimension);
 
   rhi::Device*           getDevice() const { return m_device.get(); }
   uint32_t               getFrameIndex() const { return m_frameIndex; }

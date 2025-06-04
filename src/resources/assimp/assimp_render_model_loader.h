@@ -1,18 +1,17 @@
 #ifndef ARISE_ASSIMP_RENDER_MODEL_LOADER_H
 #define ARISE_ASSIMP_RENDER_MODEL_LOADER_H
 
+// TODO: assimp will be deprecated soon from the project
 #ifdef ARISE_USE_ASSIMP
 
-
-#include "resources/i_render_model_loader.h"
-
 #include "gfx/rhi/interface/device.h"
+#include "resources/i_render_model_loader.h"
 
 namespace arise {
 
 class AssimpRenderModelLoader : public IRenderModelLoader {
   public:
-  AssimpRenderModelLoader() = default;
+  AssimpRenderModelLoader()  = default;
   ~AssimpRenderModelLoader() = default;
 
   std::unique_ptr<RenderModel> loadRenderModel(const std::filesystem::path& filePath,

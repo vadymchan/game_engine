@@ -135,7 +135,7 @@ void Editor::onWindowResize(uint32_t width, uint32_t height) {
       return;
     }
 
-    math::Dimension2Di newDimensions(width, height);
+    math::Dimension2i newDimensions(width, height);
 
     m_imguiContext->resize(newDimensions);
 
@@ -275,7 +275,7 @@ void Editor::renderViewportWindow(gfx::renderer::RenderContext& context) {
     renderWindow.y = 1.0f;
   }
 
-  math::Dimension2Di newDimension(renderWindow.x, renderWindow.y);
+  math::Dimension2i newDimension(renderWindow.x, renderWindow.y);
 
   bool viewportResized = (m_renderParams.renderViewportDimension.width() != static_cast<int>(renderWindow.x)
                           || m_renderParams.renderViewportDimension.height() != static_cast<int>(renderWindow.y));
@@ -801,7 +801,7 @@ void Editor::renderControlsWindow() {
   ImGui::End();
 }
 
-void Editor::renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos) {
+void Editor::renderGizmo(const math::Dimension2i& viewportSize, const ImVec2& viewportPos) {
   if (!shouldRenderGizmo_()) {
     return;
   }
@@ -1008,12 +1008,12 @@ void Editor::updateGizmoConstraints() {
   }
 }
 
-math::Vector3Df Editor::getGizmoWorldPosition() {
+math::Vector3f Editor::getGizmoWorldPosition() {
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
   auto scene        = sceneManager->getCurrentScene();
 
   if (!scene) {
-    return math::Vector3Df(0.0f, 0.0f, 0.0f);
+    return math::Vector3f(0.0f, 0.0f, 0.0f);
   }
 
   auto& registry = scene->getEntityRegistry();
@@ -1027,7 +1027,7 @@ math::Vector3Df Editor::getGizmoWorldPosition() {
     return transform.translation;
   }
 
-  return math::Vector3Df(0.0f, 0.0f, 0.0f);
+  return math::Vector3f(0.0f, 0.0f, 0.0f);
 }
 
 void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
@@ -1040,7 +1040,7 @@ void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
 
   auto& registry = scene->getEntityRegistry();
 
-  math::Vector3Df translation, rotation, scale;
+  math::Vector3f translation, rotation, scale;
   float           translationArray[3], rotationArray[3], scaleArray[3];
 
   ImGuizmo::DecomposeMatrixToComponents(
@@ -1060,7 +1060,7 @@ void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
                                                                 math::g_degreeToRadian(rotation.z()),
                                                                 math::EulerRotationOrder::XYZ);
 
-    math::Vector3Df forward(0.0f, 0.0f, 1.0f);
+    math::Vector3f forward(0.0f, 0.0f, 1.0f);
     dirLight.direction = quat.rotateVector(forward);
     dirLight.isDirty   = true;
 
@@ -1113,7 +1113,7 @@ void Editor::handleEntitySelection(entt::entity entity) {
       const auto& cameraTransform = registry.get<Transform>(cameraEntity);
       const auto& cameraMatrices  = registry.get<CameraMatrices>(cameraEntity);
 
-      math::Vector3Df cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
+      math::Vector3f cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
       cameraForward.normalize();
 
       m_currentDirectionalLightGizmoPosition = getPositionInFrontOfCamera_();
@@ -1182,7 +1182,7 @@ entt::entity Editor::getCameraEntity_() {
   return cameraView.front();
 }
 
-void Editor::setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2Di& viewportSize) {
+void Editor::setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2i& viewportSize) {
   ImGuizmo::SetOrthographic(false);
   ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
   ImGuizmo::SetRect(viewportPos.x,
@@ -1214,12 +1214,12 @@ math::Matrix4f<> Editor::calculateEntityModelMatrix_() {
 math::Matrix4f<> Editor::calculateDirectionalLightMatrix_(Registry& registry) {
   auto& dirLight = registry.get<DirectionalLight>(m_selectedEntity);
 
-  math::Vector3Df gizmoPosition = getGizmoWorldPosition();
+  math::Vector3f gizmoPosition = getGizmoWorldPosition();
 
-  math::Vector3Df direction = dirLight.direction;
+  math::Vector3f direction = dirLight.direction;
   direction.normalize();
 
-  math::Vector3Df forward(0.0f, 0.0f, 1.0f);
+  math::Vector3f forward(0.0f, 0.0f, 1.0f);
 
   math::Quaternionf quat = math::Quaternionf::fromVectors(forward, direction);
 
@@ -1339,11 +1339,11 @@ void Editor::addDirectionalLight() {
   entt::entity entity = registry.create();
 
   auto& light     = registry.emplace<Light>(entity);
-  light.color     = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  light.color     = math::Vector3f(1.0f, 1.0f, 1.0f);
   light.intensity = 1.0f;
 
   auto& dirLight     = registry.emplace<DirectionalLight>(entity);
-  dirLight.direction = math::Vector3Df(0.0f, -1.0f, 0.0f);
+  dirLight.direction = math::Vector3f(0.0f, -1.0f, 0.0f);
 
   handleEntitySelection(entity);
 
@@ -1365,11 +1365,11 @@ void Editor::addPointLight() {
 
   auto& transform       = registry.emplace<Transform>(entity);
   transform.translation = getPositionInFrontOfCamera_();
-  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
-  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
   auto& light     = registry.emplace<Light>(entity);
-  light.color     = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  light.color     = math::Vector3f(1.0f, 1.0f, 1.0f);
   light.intensity = 1.0f;
 
   auto& pointLight = registry.emplace<PointLight>(entity);
@@ -1395,11 +1395,11 @@ void Editor::addSpotLight() {
 
   auto& transform       = registry.emplace<Transform>(entity);
   transform.translation = getPositionInFrontOfCamera_();
-  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
-  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
   auto& light     = registry.emplace<Light>(entity);
-  light.color     = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  light.color     = math::Vector3f(1.0f, 1.0f, 1.0f);
   light.intensity = 1.0f;
 
   auto& spotLight          = registry.emplace<SpotLight>(entity);
@@ -1484,8 +1484,8 @@ void Editor::removeSelectedEntity() {
   m_renderParams.renderMode = gfx::renderer::RenderMode::Solid;
 }
 
-math::Vector3Df Editor::getPositionInFrontOfCamera_() {
-  math::Vector3Df position(0.0f, 0.0f, 0.0f);
+math::Vector3f Editor::getPositionInFrontOfCamera_() {
+  math::Vector3f position(0.0f, 0.0f, 0.0f);
 
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
   auto scene        = sceneManager->getCurrentScene();
@@ -1507,7 +1507,7 @@ math::Vector3Df Editor::getPositionInFrontOfCamera_() {
   const auto& cameraTransform = registry.get<Transform>(cameraEntity);
   const auto& cameraMatrices  = registry.get<CameraMatrices>(cameraEntity);
 
-  math::Vector3Df cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
+  math::Vector3f cameraForward = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
   cameraForward.normalize();
 
   position = cameraTransform.translation + (cameraForward * gizmoDistanceFromCamera);
@@ -1642,7 +1642,7 @@ void Editor::handleAddModelDialog() {
 
     if (ImGui::Button("Reset Transform")) {
       m_newModelTransform       = Transform();
-      m_newModelTransform.scale = math::Vector3Df(1.0f, 1.0f, 1.0f);
+      m_newModelTransform.scale = math::Vector3f(1.0f, 1.0f, 1.0f);
     }
 
     ImGui::Separator();
@@ -1990,9 +1990,9 @@ void Editor::createDefaultCamera_() {
   entt::entity cameraEntity = registry.create();
 
   auto& transform       = registry.emplace<Transform>(cameraEntity);
-  transform.translation = math::Vector3Df(0.0f, 0.0f, 0.0f);
-  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
-  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  transform.translation = math::Vector3f(0.0f, 0.0f, 0.0f);
+  transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
   auto& camera    = registry.emplace<Camera>(cameraEntity);
   camera.type     = CameraType::Perspective;

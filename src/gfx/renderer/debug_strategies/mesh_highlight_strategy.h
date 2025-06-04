@@ -34,7 +34,7 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
                   FrameResources*        frameResources,
                   rhi::ShaderManager*    shaderManager) override;
 
-  void resize(const math::Dimension2Di& newDimension) override;
+  void resize(const math::Dimension2i& newDimension) override;
   void prepareFrame(const RenderContext& context) override;
   void render(const RenderContext& context) override;
   void cleanup() override;
@@ -49,7 +49,7 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
   };
 
   struct HighlightParams {
-    math::Vector4Df color;
+    math::Vector4f color;
     float           thickness;
     float           xRay;
     float           padding[2];
@@ -69,14 +69,14 @@ class MeshHighlightStrategy : public DebugDrawStrategy {
 
   void setupRenderPass_();
   void setupVertexInput_(rhi::GraphicsPipelineDesc& pipelineDesc);
-  void createFramebuffers_(const math::Dimension2Di& dimension);
+  void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
   void updateInstanceBuffer_(RenderModel*                         model,
                              const std::vector<math::Matrix4f<>>& matrices,
                              ModelBufferCache&                    cache);
   void cleanupUnusedBuffers_(
       const std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>& currentFrameInstances);
-  rhi::DescriptorSet*    getOrCreateHighlightParamsDescriptorSet_(const math::Vector4Df& color,
+  rhi::DescriptorSet*    getOrCreateHighlightParamsDescriptorSet_(const math::Vector4f& color,
                                                                   float                  thickness,
                                                                   bool                   xRay);
   rhi::GraphicsPipeline* getOrCreateStencilMarkPipeline_(const std::string& pipelineKey);

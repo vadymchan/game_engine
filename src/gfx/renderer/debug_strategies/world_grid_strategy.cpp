@@ -30,7 +30,7 @@ void WorldGridStrategy::initialize(rhi::Device*           device,
 }
 
 
-void WorldGridStrategy::resize(const math::Dimension2Di& newDimension) {
+void WorldGridStrategy::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -133,7 +133,7 @@ void WorldGridStrategy::setupRenderPass_() {
   m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "world_grid_render_pass");
 }
 
-void WorldGridStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
+void WorldGridStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
     GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
     return;

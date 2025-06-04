@@ -29,7 +29,7 @@ void ShaderOverdrawStrategy::initialize(rhi::Device*           device,
   setupRenderPass_();
 }
 
-void ShaderOverdrawStrategy::resize(const math::Dimension2Di& newDimension) {
+void ShaderOverdrawStrategy::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -147,7 +147,7 @@ void ShaderOverdrawStrategy::setupRenderPass_() {
   m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "overdraw_render_pass");
 }
 
-void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
+void ShaderOverdrawStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
     GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
     return;

@@ -17,13 +17,13 @@ class RuntimeSettings {
   RuntimeSettings(const RuntimeSettings&)            = delete;
   RuntimeSettings& operator=(const RuntimeSettings&) = delete;
 
-  const math::Vector3Df& getWorldUp() const;
+  const math::Vector3f& getWorldUp() const;
 
   void updateFromConfig();
 
   private:
   RuntimeSettings();
-  math::Vector3Df        m_worldUp_;
+  math::Vector3f        m_worldUp_;
 };
 
 }  // namespace arise

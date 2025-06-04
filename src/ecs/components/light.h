@@ -7,14 +7,14 @@ namespace arise {
 
 // TODO: consider adding a base class inside all light types(Directional, Point, Spot) for better cache locality
 struct Light {
-  math::Vector3Df color;
+  math::Vector3f color;
   float           intensity;
   bool            isDirty = true;
   bool            enabled = true;
 };
 
 struct DirectionalLight {
-  math::Vector3Df direction;
+  math::Vector3f direction;
   bool            isDirty = true;
 };
 
@@ -25,7 +25,7 @@ struct PointLight {
 
 struct SpotLight {
   // This can be retrieved from the transform component
-  // math::Vector3Df direction;
+  // math::Vector3f direction;
   float range;
   float innerConeAngle;
   float outerConeAngle;

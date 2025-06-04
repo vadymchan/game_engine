@@ -31,7 +31,7 @@ void VertexNormalVisualizationStrategy::initialize(rhi::Device*           device
   setupRenderPass_();
 }
 
-void VertexNormalVisualizationStrategy::resize(const math::Dimension2Di& newDimension) {
+void VertexNormalVisualizationStrategy::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -160,7 +160,7 @@ void VertexNormalVisualizationStrategy::setupRenderPass_() {
   m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "normal_vis_render_pass");
 }
 
-void VertexNormalVisualizationStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
+void VertexNormalVisualizationStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
     GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
     return;

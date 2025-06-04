@@ -59,7 +59,7 @@ std::unique_ptr<Material> CgltfMaterialLoader::processMaterial(const cgltf_mater
   if (material->has_pbr_metallic_roughness) {
     const auto& pbr = material->pbr_metallic_roughness;
 
-    outMaterial->vectorParameters["base_color"] = math::Vector4Df(
+    outMaterial->vectorParameters["base_color"] = math::Vector4f(
         pbr.base_color_factor[0], pbr.base_color_factor[1], pbr.base_color_factor[2], pbr.base_color_factor[3]);
 
     outMaterial->scalarParameters["metallic"] = pbr.metallic_factor;

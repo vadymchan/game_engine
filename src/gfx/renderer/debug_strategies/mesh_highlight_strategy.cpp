@@ -44,7 +44,7 @@ void MeshHighlightStrategy::initialize(rhi::Device*           device,
   setupRenderPass_();
 }
 
-void MeshHighlightStrategy::resize(const math::Dimension2Di& newDimension) {
+void MeshHighlightStrategy::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -62,7 +62,7 @@ void MeshHighlightStrategy::resize(const math::Dimension2Di& newDimension) {
 
 void MeshHighlightStrategy::prepareFrame(const RenderContext& context) {
   std::unordered_map<RenderModel*, std::vector<math::Matrix4f<>>>     currentFrameInstances;
-  std::unordered_map<RenderModel*, std::pair<math::Vector4Df, float>> highlightParams;
+  std::unordered_map<RenderModel*, std::pair<math::Vector4f, float>> highlightParams;
   std::unordered_map<RenderModel*, bool>                              modelDirtyFlags;
 
   auto& registry = context.scene->getEntityRegistry();
@@ -257,7 +257,7 @@ void MeshHighlightStrategy::setupVertexInput_(rhi::GraphicsPipelineDesc& pipelin
   }
 }
 
-void MeshHighlightStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
+void MeshHighlightStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
     GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
     return;
@@ -318,7 +318,7 @@ void MeshHighlightStrategy::updateInstanceBuffer_(RenderModel*                  
   cache.count = static_cast<uint32_t>(matrices.size());
 }
 
-rhi::DescriptorSet* MeshHighlightStrategy::getOrCreateHighlightParamsDescriptorSet_(const math::Vector4Df& color,
+rhi::DescriptorSet* MeshHighlightStrategy::getOrCreateHighlightParamsDescriptorSet_(const math::Vector4f& color,
                                                                                     float                  thickness,
                                                                                     bool                   xRay) {
   uint64_t colorAsInt     = *reinterpret_cast<const uint64_t*>(&color);

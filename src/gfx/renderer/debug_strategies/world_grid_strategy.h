@@ -25,7 +25,7 @@ class WorldGridStrategy : public DebugDrawStrategy {
                   FrameResources*        frameResources,
                   rhi::ShaderManager*    shaderManager) override;
 
-  void resize(const math::Dimension2Di& newDimension) override;
+  void resize(const math::Dimension2i& newDimension) override;
   void prepareFrame(const RenderContext& context) override;
   void render(const RenderContext& context) override;
   void cleanup() override;
@@ -35,14 +35,14 @@ class WorldGridStrategy : public DebugDrawStrategy {
   private:
   //struct GridParameters {
   //  math::Matrix4f<> invViewProjection;
-  //  math::Vector3Df  cameraPosition;
+  //  math::Vector3f  cameraPosition;
   //  float            gridSize;
   //  float            fadeDistance;
   //  float            padding[2];
   //};
 
   void setupRenderPass_();
-  void createFramebuffers_(const math::Dimension2Di& dimension);
+  void createFramebuffers_(const math::Dimension2i& dimension);
   void createPipeline_();
   //void updateGridParameters_(const RenderContext& context);
 

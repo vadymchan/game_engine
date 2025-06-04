@@ -36,7 +36,7 @@ class BasePass : public RenderPass {
                   FrameResources*        frameResources,
                   rhi::ShaderManager*    shaderManager) override;
 
-  void resize(const math::Dimension2Di& newDimension) override;
+  void resize(const math::Dimension2i& newDimension) override;
 
   void prepareFrame(const RenderContext& context) override;
 
@@ -66,7 +66,7 @@ class BasePass : public RenderPass {
 
   void setupRenderPass_();
 
-  void createFramebuffer_(const math::Dimension2Di& dimension);
+  void createFramebuffer_(const math::Dimension2i& dimension);
 
   void updateInstanceBuffer_(RenderModel*                         model,
                              const std::vector<math::Matrix4f<>>& matrices,

@@ -6,12 +6,12 @@
 namespace arise {
 
 struct Vertex {
-  math::Vector3Df position;
-  math::Vector2Df texCoords;
-  math::Vector3Df normal;
-  math::Vector3Df tangent;
-  math::Vector3Df bitangent;
-  math::Vector4Df color;
+  math::Vector3f position;
+  math::Vector2f texCoords;
+  math::Vector3f normal;
+  math::Vector3f tangent;
+  math::Vector3f bitangent;
+  math::Vector4f color;
 };
 
 }  // namespace arise

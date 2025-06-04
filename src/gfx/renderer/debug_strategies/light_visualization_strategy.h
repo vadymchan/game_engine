@@ -36,7 +36,7 @@ class LightVisualizationStrategy : public DebugDrawStrategy {
                   FrameResources*        frameResources,
                   rhi::ShaderManager*    shaderManager) override;
 
-  void resize(const math::Dimension2Di& newDimension) override;
+  void resize(const math::Dimension2i& newDimension) override;
   void prepareFrame(const RenderContext& context) override;
   void render(const RenderContext& context) override;
   void cleanup() override;
@@ -64,7 +64,7 @@ class LightVisualizationStrategy : public DebugDrawStrategy {
   rhi::DescriptorSet* getOrCreateMaterialDescriptorSet_(Material* material);
 
   void setupRenderPass_();
-  void createFramebuffers_(const math::Dimension2Di& dimension);
+  void createFramebuffers_(const math::Dimension2i& dimension);
   void prepareDrawCalls_(const RenderContext& context);
   void updateInstanceBuffer_(RenderModel*                         model,
                              const std::vector<math::Matrix4f<>>& matrices,

@@ -39,7 +39,7 @@ class FrameResources {
   /**
    * Resize resources when viewport (window / editor viewport) changes
    */
-  void resize(const math::Dimension2Di& newDimension);
+  void resize(const math::Dimension2i& newDimension);
 
   void updatePerFrameResources(const RenderContext& context);
 
@@ -102,7 +102,7 @@ class FrameResources {
   void createDefaultTextures_();
   void createDefaultSampler_();
   void createSamplerDescriptorSet_();
-  void createRenderTargets_(RenderTargets& targets, const math::Dimension2Di& dimensions);
+  void createRenderTargets_(RenderTargets& targets, const math::Dimension2i& dimensions);
 
   void updateViewResources_(const RenderContext& context);
   void updateModelList_(const RenderContext& context);
@@ -145,7 +145,7 @@ class FrameResources {
   std::unordered_map<RenderMesh*, ModelMatrixCache> m_modelMatrixCache;
 
   struct MaterialParametersData {
-    math::Vector4Df baseColor;
+    math::Vector4f baseColor;
     float           metallic;
     float           roughness;
     float           opacity;

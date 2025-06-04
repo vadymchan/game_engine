@@ -76,7 +76,7 @@ std::vector<std::unique_ptr<Material>> AssimpMaterialLoader::processMaterials(co
     for (const auto& param : vectorParametersToFetch) {
       aiColor3D color;
       if (AI_SUCCESS == ai_material->Get(param.pKey, param.type, param.index, color)) {
-        material->vectorParameters[param.name] = math::Vector4Df(color.r, color.g, color.b, 1.0f);
+        material->vectorParameters[param.name] = math::Vector4f(color.r, color.g, color.b, 1.0f);
       }
     }
 

@@ -93,7 +93,7 @@ void Application::update(float deltaTime) {
     auto cameraUp       = cameraMatrices.view.getColumn<1>().resizedCopy<3>();
     auto cameraForward  = cameraMatrices.view.getColumn<2>().resizedCopy<3>();
 
-    math::Vector3Df resultDirection = math::g_zeroVector<float, 3>();
+    math::Vector3f resultDirection = math::g_zeroVector<float, 3>();
 
     if (m_actionStates_.test(static_cast<size_t>(Action::MoveForward))) {
       resultDirection += cameraForward;

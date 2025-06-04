@@ -4,8 +4,8 @@
 
 namespace math {
 
-Vector3Df g_getVectorfromConfig(const arise::ConfigValue& value) {
-  Vector3Df result;
+Vector3f g_getVectorfromConfig(const arise::ConfigValue& value) {
+  Vector3f result;
 
   result.x() = value["x"].GetFloat();
   result.y() = value["y"].GetFloat();

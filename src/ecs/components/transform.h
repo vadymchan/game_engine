@@ -9,10 +9,10 @@ namespace arise {
 struct Transform {
   // translation is position relative to the some origin (world origin, parent
   // object, etc.)
-  math::Vector3Df translation;
+  math::Vector3f translation;
   // rotation is Euler angles in degrees
-  math::Vector3Df rotation;
-  math::Vector3Df scale = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  math::Vector3f rotation;
+  math::Vector3f scale = math::Vector3f(1.0f, 1.0f, 1.0f);
 
   bool isDirty = false;
 };

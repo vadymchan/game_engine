@@ -32,7 +32,7 @@ enum class PostProcessMode {
 struct RenderSettings {
   RenderMode            renderMode              = RenderMode::Solid;
   PostProcessMode       postProcessMode         = PostProcessMode::None;
-  math::Dimension2Di    renderViewportDimension = math::Dimension2Di(1, 1);
+  math::Dimension2i    renderViewportDimension = math::Dimension2i(1, 1);
   ApplicationRenderMode appMode                 = ApplicationRenderMode::Game;
 };
 

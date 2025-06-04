@@ -123,7 +123,7 @@ RenderContext Renderer::beginFrame(Scene* scene, const RenderSettings& renderSet
   }
 #endif  //  ARISE_RHI_DX12
 
-  math::Dimension2Di viewportDimension;
+  math::Dimension2i viewportDimension;
   switch (renderSettings.appMode) {
     case ApplicationRenderMode::Game:
       viewportDimension = m_window->getSize();
@@ -259,24 +259,24 @@ bool Renderer::onWindowResize(uint32_t width, uint32_t height) {
     return false;
   }
 
-  m_frameResources->resize(math::Dimension2Di(width, height));
+  m_frameResources->resize(math::Dimension2i(width, height));
 
   if (m_basePass) {
-    m_basePass->resize(math::Dimension2Di(width, height));
+    m_basePass->resize(math::Dimension2i(width, height));
   }
 
   if (m_debugPass) {
-    m_debugPass->resize(math::Dimension2Di(width, height));
+    m_debugPass->resize(math::Dimension2i(width, height));
   }
 
   if (m_finalPass) {
-    m_finalPass->resize(math::Dimension2Di(width, height));
+    m_finalPass->resize(math::Dimension2i(width, height));
   }
 
   return true;
 }
 
-bool Renderer::onViewportResize(const math::Dimension2Di& newDimension) {
+bool Renderer::onViewportResize(const math::Dimension2i& newDimension) {
   const auto& currentViewport = m_frameResources->getViewport();
 
   if (static_cast<int>(currentViewport.width) == newDimension.width()
@@ -305,18 +305,18 @@ bool Renderer::onViewportResize(const math::Dimension2Di& newDimension) {
     }
   }
 
-  m_frameResources->resize(math::Dimension2Di(width, height));
+  m_frameResources->resize(math::Dimension2i(width, height));
 
   if (m_basePass) {
-    m_basePass->resize(math::Dimension2Di(width, height));
+    m_basePass->resize(math::Dimension2i(width, height));
   }
 
   if (m_debugPass) {
-    m_debugPass->resize(math::Dimension2Di(width, height));
+    m_debugPass->resize(math::Dimension2i(width, height));
   }
 
   if (m_finalPass) {
-    m_finalPass->resize(math::Dimension2Di(width, height));
+    m_finalPass->resize(math::Dimension2i(width, height));
   }
 
   return true;

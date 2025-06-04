@@ -6,7 +6,7 @@
 namespace arise {
 
 struct Movement {
-  math::Vector3Df direction;
+  math::Vector3f direction;
   float           strength;
 };
 

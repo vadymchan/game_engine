@@ -61,7 +61,7 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
         if (meshNode) {
           math::Matrix4f<> localMatrix = getNodeTransformMatrix(meshNode);
           math::Matrix4f<> worldMatrix = calculateWorldMatrix(meshNode, localMatrix);
-          auto             zFlipMatrix = math::g_scale(math::Vector3Df(1.0f, 1.0f, -1.0f));
+          auto             zFlipMatrix = math::g_scale(math::Vector3f(1.0f, 1.0f, -1.0f));
           worldMatrix                  = worldMatrix * zFlipMatrix;  // Flip Z axis to match OpenGL coordinate system
 
           mesh->transformMatrix = worldMatrix;
@@ -116,12 +116,12 @@ math::Matrix4f<> CgltfModelLoader::getNodeTransformMatrix(const cgltf_node* node
     }
     return matrix;
   } else {
-    math::Vector3Df   translation(0.0f, 0.0f, 0.0f);
+    math::Vector3f   translation(0.0f, 0.0f, 0.0f);
     math::Quaternionf rotation(0.0f, 0.0f, 0.0f, 1.0f);
-    math::Vector3Df   scale(1.0f, 1.0f, 1.0f);
+    math::Vector3f   scale(1.0f, 1.0f, 1.0f);
 
     if (node->has_translation) {
-      translation = math::Vector3Df(node->translation[0], node->translation[1], node->translation[2]);
+      translation = math::Vector3f(node->translation[0], node->translation[1], node->translation[2]);
     }
 
     if (node->has_rotation) {
@@ -129,7 +129,7 @@ math::Matrix4f<> CgltfModelLoader::getNodeTransformMatrix(const cgltf_node* node
     }
 
     if (node->has_scale) {
-      scale = math::Vector3Df(node->scale[0], node->scale[1], node->scale[2]);
+      scale = math::Vector3f(node->scale[0], node->scale[1], node->scale[2]);
     }
 
     math::Matrix4f<> scaleMatrix       = math::g_scale(scale);
@@ -218,41 +218,41 @@ void CgltfModelLoader::processVertices(const cgltf_primitive* primitive, Mesh* m
 
     float position[3] = {0, 0, 0};
     cgltf_accessor_read_float(position_accessor, i, position, 3);
-    vertex.position = math::Vector3Df(position[0], position[1], position[2]);
+    vertex.position = math::Vector3f(position[0], position[1], position[2]);
 
     if (normal_accessor) {
       float normal[3] = {0, 0, 0};
       cgltf_accessor_read_float(normal_accessor, i, normal, 3);
-      vertex.normal = math::Vector3Df(normal[0], normal[1], normal[2]);
+      vertex.normal = math::Vector3f(normal[0], normal[1], normal[2]);
     } else {
-      vertex.normal = math::Vector3Df(0.0f, 0.0f, 0.0f);
+      vertex.normal = math::Vector3f(0.0f, 0.0f, 0.0f);
     }
 
     if (texcoord_accessor) {
       float texcoord[2] = {0, 0};
       cgltf_accessor_read_float(texcoord_accessor, i, texcoord, 2);
-      vertex.texCoords = math::Vector2Df(texcoord[0], texcoord[1]);
+      vertex.texCoords = math::Vector2f(texcoord[0], texcoord[1]);
     } else {
-      vertex.texCoords = math::Vector2Df(0.0f, 0.0f);
+      vertex.texCoords = math::Vector2f(0.0f, 0.0f);
     }
 
     if (tangent_accessor) {
       float tangent[4] = {0, 0, 0, 1};  // xyzw, w is handedness
       cgltf_accessor_read_float(tangent_accessor, i, tangent, 4);
-      vertex.tangent = math::Vector3Df(tangent[0], tangent[1], tangent[2]);
+      vertex.tangent = math::Vector3f(tangent[0], tangent[1], tangent[2]);
 
       vertex.bitangent = vertex.normal.cross(vertex.tangent) * tangent[3];
     } else {
-      vertex.tangent   = math::Vector3Df(0.0f, 0.0f, 0.0f);
-      vertex.bitangent = math::Vector3Df(0.0f, 0.0f, 0.0f);
+      vertex.tangent   = math::Vector3f(0.0f, 0.0f, 0.0f);
+      vertex.bitangent = math::Vector3f(0.0f, 0.0f, 0.0f);
     }
 
     if (color_accessor) {
       float color[4] = {1, 1, 1, 1};
       cgltf_accessor_read_float(color_accessor, i, color, 4);
-      vertex.color = math::Vector4Df(color[0], color[1], color[2], color[3]);
+      vertex.color = math::Vector4f(color[0], color[1], color[2], color[3]);
     } else {
-      vertex.color = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
+      vertex.color = math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     mesh->vertices.push_back(vertex);
@@ -294,24 +294,24 @@ void CgltfModelLoader::calculateTangents(Mesh* mesh) {
     Vertex& v1 = mesh->vertices[i1];
     Vertex& v2 = mesh->vertices[i2];
 
-    math::Vector3Df edge1 = v1.position - v0.position;
-    math::Vector3Df edge2 = v2.position - v0.position;
+    math::Vector3f edge1 = v1.position - v0.position;
+    math::Vector3f edge2 = v2.position - v0.position;
 
-    math::Vector2Df deltaUV1 = v1.texCoords - v0.texCoords;
-    math::Vector2Df deltaUV2 = v2.texCoords - v0.texCoords;
+    math::Vector2f deltaUV1 = v1.texCoords - v0.texCoords;
+    math::Vector2f deltaUV2 = v2.texCoords - v0.texCoords;
 
     float f = 1.0f / (deltaUV1.x() * deltaUV2.y() - deltaUV2.x() * deltaUV1.y());
     if (!std::isfinite(f)) {
       f = 0.0f;  // Handle degenerate triangles
     }
 
-    math::Vector3Df tangent;
+    math::Vector3f tangent;
     tangent.x() = f * (deltaUV2.y() * edge1.x() - deltaUV1.y() * edge2.x());
     tangent.y() = f * (deltaUV2.y() * edge1.y() - deltaUV1.y() * edge2.y());
     tangent.z() = f * (deltaUV2.y() * edge1.z() - deltaUV1.y() * edge2.z());
     tangent     = tangent.normalized();
 
-    math::Vector3Df bitangent;
+    math::Vector3f bitangent;
     bitangent.x() = f * (-deltaUV2.x() * edge1.x() + deltaUV1.x() * edge2.x());
     bitangent.y() = f * (-deltaUV2.x() * edge1.y() + deltaUV1.x() * edge2.y());
     bitangent.z() = f * (-deltaUV2.x() * edge1.z() + deltaUV1.x() * edge2.z());
@@ -347,7 +347,7 @@ static int getNumVerticesOfFace(const SMikkTSpaceContext* context, int faceIdx) 
 static void getPosition(const SMikkTSpaceContext* context, float outpos[], int faceIdx, int vertIdx) {
   MikkTSpaceContext*     userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
   int                    index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
-  const math::Vector3Df& pos         = userContext->mesh->vertices[index].position;
+  const math::Vector3f& pos         = userContext->mesh->vertices[index].position;
   outpos[0]                          = pos.x();
   outpos[1]                          = pos.y();
   outpos[2]                          = pos.z();
@@ -356,7 +356,7 @@ static void getPosition(const SMikkTSpaceContext* context, float outpos[], int f
 static void getNormal(const SMikkTSpaceContext* context, float outnormal[], int faceIdx, int vertIdx) {
   MikkTSpaceContext*     userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
   int                    index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
-  const math::Vector3Df& normal      = userContext->mesh->vertices[index].normal;
+  const math::Vector3f& normal      = userContext->mesh->vertices[index].normal;
   outnormal[0]                       = normal.x();
   outnormal[1]                       = normal.y();
   outnormal[2]                       = normal.z();
@@ -365,7 +365,7 @@ static void getNormal(const SMikkTSpaceContext* context, float outnormal[], int 
 static void getTexCoord(const SMikkTSpaceContext* context, float outuv[], int faceIdx, int vertIdx) {
   MikkTSpaceContext*     userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
   int                    index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
-  const math::Vector2Df& uv          = userContext->mesh->vertices[index].texCoords;
+  const math::Vector2f& uv          = userContext->mesh->vertices[index].texCoords;
   outuv[0]                           = uv.x();
   outuv[1]                           = uv.y();
 }
@@ -374,9 +374,9 @@ static void setTangent(const SMikkTSpaceContext* context, const float tangent[],
   MikkTSpaceContext* userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
   int                index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
 
-  userContext->mesh->vertices[index].tangent = math::Vector3Df(tangent[0], tangent[1], tangent[2]);
+  userContext->mesh->vertices[index].tangent = math::Vector3f(tangent[0], tangent[1], tangent[2]);
 
-  const math::Vector3Df& normal                = userContext->mesh->vertices[index].normal;
+  const math::Vector3f& normal                = userContext->mesh->vertices[index].normal;
   userContext->mesh->vertices[index].bitangent = normal.cross(userContext->mesh->vertices[index].tangent) * sign;
 }
 

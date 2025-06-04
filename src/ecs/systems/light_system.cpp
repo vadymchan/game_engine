@@ -171,7 +171,7 @@ void LightSystem::collectSpotLights_(Scene* scene) {
                                                                     math::g_degreeToRadian(transform.rotation.z()),
                                                                     math::EulerRotationOrder::XYZ);
 
-    math::Vector3Df forwardVec(0.0f, 0.0f, 1.0f);
+    math::Vector3f forwardVec(0.0f, 0.0f, 1.0f);
     data.direction = rotation.rotateVector(forwardVec);
 
     data.padding1 = 0.0f;

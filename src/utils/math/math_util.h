@@ -32,11 +32,11 @@ inline float normalizeAngle(float angle) {
   return angle;
 }
 
-inline math::Vector3Df normalizeRotation(const math::Vector3Df& rotation) {
-  return math::Vector3Df(normalizeAngle(rotation.x()), normalizeAngle(rotation.y()), normalizeAngle(rotation.z()));
+inline math::Vector3f normalizeRotation(const math::Vector3f& rotation) {
+  return math::Vector3f(normalizeAngle(rotation.x()), normalizeAngle(rotation.y()), normalizeAngle(rotation.z()));
 }
 
-Vector3Df g_getVectorfromConfig(const arise::ConfigValue& value);
+Vector3f g_getVectorfromConfig(const arise::ConfigValue& value);
 
 }  // namespace math
 

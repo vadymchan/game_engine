@@ -37,7 +37,7 @@ void FrameResources::initialize(uint32_t framesCount) {
   m_initialized = true;
 }
 
-void FrameResources::resize(const math::Dimension2Di& newDimension) {
+void FrameResources::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -150,7 +150,7 @@ rhi::Buffer* FrameResources::getOrCreateMaterialParamBuffer(Material* material) 
   if (colorIt != material->vectorParameters.end()) {
     paramData.baseColor = colorIt->second;
   } else {
-    paramData.baseColor = math::Vector4Df(1.0f, 1.0f, 1.0f, 1.0f);
+    paramData.baseColor = math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
   }
 
   auto metallicIt = material->scalarParameters.find("metallic");
@@ -319,7 +319,7 @@ void FrameResources::createSamplerDescriptorSet_() {
       = m_resourceManager->addDescriptorSet(std::move(samplerDescriptorSet), "default_sampler_descriptor_set");
 }
 
-void FrameResources::createRenderTargets_(RenderTargets& targets, const math::Dimension2Di& dimensions) {
+void FrameResources::createRenderTargets_(RenderTargets& targets, const math::Dimension2i& dimensions) {
   auto width  = dimensions.width() != 0 ? dimensions.width() : 1;
   auto height = dimensions.height() != 0 ? dimensions.height() : 1;
 
@@ -361,7 +361,7 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
 
   if (!m_viewUniformBuffer) {
     rhi::BufferDesc viewUboDesc;
-    viewUboDesc.size = alignConstantBufferSize(sizeof(math::Matrix4f<>) * 6 + sizeof(math::Vector3Df) + sizeof(float));
+    viewUboDesc.size = alignConstantBufferSize(sizeof(math::Matrix4f<>) * 6 + sizeof(math::Vector3f) + sizeof(float));
     viewUboDesc.createFlags = rhi::BufferCreateFlag::CpuAccess | rhi::BufferCreateFlag::ConstantBuffer;
     viewUboDesc.type        = rhi::BufferType::Dynamic;
     viewUboDesc.debugName   = "view_buffer";
@@ -382,7 +382,7 @@ void FrameResources::updateViewResources_(const RenderContext& context) {
     math::Matrix4f<> invView;
     math::Matrix4f<> invProjection;
     math::Matrix4f<> invViewProjection;
-    math::Vector3Df  eyePosition;
+    math::Vector3f  eyePosition;
     float            padding;
   } viewData;
 

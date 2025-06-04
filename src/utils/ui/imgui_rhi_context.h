@@ -39,10 +39,10 @@ class ImGuiRHIContext {
 
   void endFrame(rhi::CommandBuffer*       cmdBuffer,
                 rhi::Texture*             targetTexture,
-                const math::Dimension2Di& viewportDimension,
+                const math::Dimension2i& viewportDimension,
                 uint32_t                  currentFrameIndex);
 
-  void resize(const math::Dimension2Di& newDimensions);
+  void resize(const math::Dimension2i& newDimensions);
 
   ImTextureID createTextureID(rhi::Texture* texture, uint32_t currentIndex);
 
@@ -54,17 +54,17 @@ class ImGuiRHIContext {
 
   void renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
                          rhi::Texture*             targetTexture,
-                         const math::Dimension2Di& viewportDimension,
+                         const math::Dimension2i& viewportDimension,
                          uint32_t                  currentFrameIndex);
 
   void renderImGuiDx12(rhi::CommandBuffer*       cmdBuffer,
                        rhi::Texture*             targetTexture,
-                       const math::Dimension2Di& viewportDimension,
+                       const math::Dimension2i& viewportDimension,
                        uint32_t                  currentFrameIndex);
 
   void              createRenderPass();
   rhi::Framebuffer* getOrCreateFramebuffer(rhi::Texture*             targetTexture,
-                                           const math::Dimension2Di& dimensions,
+                                           const math::Dimension2i& dimensions,
                                            uint32_t                  frameIndex);
 
   Window*           m_window       = nullptr;
@@ -84,7 +84,7 @@ class ImGuiRHIContext {
   std::unique_ptr<rhi::DescriptorHeapDx12> m_dx12ImGuiDescriptorHeap;
 #endif
 
-  math::Dimension2Di m_currentFramebufferSize;
+  math::Dimension2i m_currentFramebufferSize;
 
   bool m_initialized = false;
 };

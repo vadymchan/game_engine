@@ -1,6 +1,7 @@
 #ifndef ARISE_ASSIMP_MATERIAL_LOADER_H
 #define ARISE_ASSIMP_MATERIAL_LOADER_H
 
+// TODO: assimp will be deprecated soon from the project
 #ifdef ARISE_USE_ASSIMP
 
 

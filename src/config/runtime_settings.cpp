@@ -20,7 +20,7 @@ RuntimeSettings::RuntimeSettings() {
     configManager->addConfig(configPath);
     config = configManager->getConfig(configPath);
   }
-  config->registerConverter<math::Vector3Df>(&math::g_getVectorfromConfig);
+  config->registerConverter<math::Vector3f>(&math::g_getVectorfromConfig);
   updateFromConfig();
 }
 
@@ -29,13 +29,13 @@ void RuntimeSettings::updateFromConfig() {
   auto config        = configManager->getConfig(PathManager::s_getEngineSettingsPath() / "settings.json");
 
   if (config) {
-    m_worldUp_ = config->get<math::Vector3Df>("worldUp");
+    m_worldUp_ = config->get<math::Vector3f>("worldUp");
   } else {
     GlobalLogger::Log(LogLevel::Error, std::string("Failed to initialize RuntimeSettings at - config is nullptr."));
   }
 }
 
-const math::Vector3Df& RuntimeSettings::getWorldUp() const {
+const math::Vector3f& RuntimeSettings::getWorldUp() const {
   return m_worldUp_;
 }
 

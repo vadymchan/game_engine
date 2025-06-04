@@ -44,7 +44,7 @@ void NormalMapVisualizationStrategy::initialize(rhi::Device*           device,
   setupRenderPass_();
 }
 
-void NormalMapVisualizationStrategy::resize(const math::Dimension2Di& newDimension) {
+void NormalMapVisualizationStrategy::resize(const math::Dimension2i& newDimension) {
   m_viewport.x        = 0.0f;
   m_viewport.y        = 0.0f;
   m_viewport.width    = static_cast<float>(newDimension.width());
@@ -186,7 +186,7 @@ void NormalMapVisualizationStrategy::setupRenderPass_() {
   m_renderPass    = m_resourceManager->addRenderPass(std::move(renderPass), "normal_map_render_pass");
 }
 
-void NormalMapVisualizationStrategy::createFramebuffers_(const math::Dimension2Di& dimension) {
+void NormalMapVisualizationStrategy::createFramebuffers_(const math::Dimension2i& dimension) {
   if (!m_renderPass) {
     GlobalLogger::Log(LogLevel::Error, "Render pass must be created before framebuffer");
     return;

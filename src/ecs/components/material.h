@@ -24,7 +24,7 @@ struct Material {
   std::unordered_map<std::string, float> scalarParameters;
 
   // base color
-  std::unordered_map<std::string, math::Vector4Df> vectorParameters;
+  std::unordered_map<std::string, math::Vector4f> vectorParameters;
 
   // Textures associated with the material
   // Keyed by texture name (e.g., "albedo", "normal")

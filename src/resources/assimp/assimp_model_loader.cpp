@@ -90,34 +90,34 @@ Vertex AssimpModelLoader::processVertex(aiMesh* ai_mesh, unsigned int index) {
   return vertex;
 }
 
-math::Vector3Df AssimpModelLoader::processPosition(aiMesh* ai_mesh, unsigned int index) {
+math::Vector3f AssimpModelLoader::processPosition(aiMesh* ai_mesh, unsigned int index) {
   aiVector3D pos = ai_mesh->mVertices[index];
-  return math::Vector3Df(pos.x, pos.y, pos.z);
+  return math::Vector3f(pos.x, pos.y, pos.z);
 }
 
-math::Vector3Df AssimpModelLoader::processNormal(aiMesh* ai_mesh, unsigned int index) {
+math::Vector3f AssimpModelLoader::processNormal(aiMesh* ai_mesh, unsigned int index) {
   bool       hasNormals = ai_mesh->HasNormals();
   aiVector3D normal     = hasNormals ? ai_mesh->mNormals[index] : aiVector3D(0.0f, 0.0f, 0.0f);
-  return math::Vector3Df(normal.x, normal.y, normal.z);
+  return math::Vector3f(normal.x, normal.y, normal.z);
 }
 
-math::Vector2Df AssimpModelLoader::processTexCoords(aiMesh* ai_mesh, unsigned int index) {
+math::Vector2f AssimpModelLoader::processTexCoords(aiMesh* ai_mesh, unsigned int index) {
   // TODO: currently only one channel is used, but in future it may change
   bool       hasTexCoords = ai_mesh->HasTextureCoords(0);
   aiVector3D texCoord     = hasTexCoords ? ai_mesh->mTextureCoords[0][index] : aiVector3D(0.0f, 0.0f, 0.0f);
-  return math::Vector2Df(texCoord.x, texCoord.y);
+  return math::Vector2f(texCoord.x, texCoord.y);
 }
 
-std::pair<math::Vector3Df, math::Vector3Df> AssimpModelLoader::processTangentBitangent(aiMesh*      ai_mesh,
+std::pair<math::Vector3f, math::Vector3f> AssimpModelLoader::processTangentBitangent(aiMesh*      ai_mesh,
                                                                                        unsigned int index) {
   bool            hasTangents = ai_mesh->HasTangentsAndBitangents();
-  math::Vector3Df tangent, bitangent;
+  math::Vector3f tangent, bitangent;
 
   if (hasTangents) {
     aiVector3D aiTangent   = ai_mesh->mTangents[index];
     aiVector3D aiBitangent = ai_mesh->mBitangents[index];
-    tangent                = math::Vector3Df(aiTangent.x, aiTangent.y, aiTangent.z);
-    bitangent              = math::Vector3Df(aiBitangent.x, aiBitangent.y, aiBitangent.z);
+    tangent                = math::Vector3f(aiTangent.x, aiTangent.y, aiTangent.z);
+    bitangent              = math::Vector3f(aiBitangent.x, aiBitangent.y, aiBitangent.z);
   } else {
     GlobalLogger::Log(LogLevel::Warning, "No tangents found in mesh. Computing manually.");
   }
@@ -125,10 +125,10 @@ std::pair<math::Vector3Df, math::Vector3Df> AssimpModelLoader::processTangentBit
   return {tangent, bitangent};
 }
 
-math::Vector4Df AssimpModelLoader::processColor(aiMesh* ai_mesh, unsigned int index) {
+math::Vector4f AssimpModelLoader::processColor(aiMesh* ai_mesh, unsigned int index) {
   bool      hasColors = ai_mesh->HasVertexColors(0);
   aiColor4D color     = hasColors ? ai_mesh->mColors[0][index] : aiColor4D(1.0f, 1.0f, 1.0f, 1.0f);
-  return math::Vector4Df(color.r, color.g, color.b, color.a);
+  return math::Vector4f(color.r, color.g, color.b, color.a);
 }
 
 void AssimpModelLoader::processIndices(aiMesh* ai_mesh, Mesh* mesh) {
@@ -160,26 +160,26 @@ void AssimpModelLoader::calculateTangentsAndBitangents(aiMesh* ai_mesh, std::vec
     Vertex& v1 = vertices[i1];
     Vertex& v2 = vertices[i2];
 
-    const math::Vector3Df& p0 = v0.position;
-    const math::Vector3Df& p1 = v1.position;
-    const math::Vector3Df& p2 = v2.position;
+    const math::Vector3f& p0 = v0.position;
+    const math::Vector3f& p1 = v1.position;
+    const math::Vector3f& p2 = v2.position;
 
-    const math::Vector2Df& uv0 = v0.texCoords;
-    const math::Vector2Df& uv1 = v1.texCoords;
-    const math::Vector2Df& uv2 = v2.texCoords;
+    const math::Vector2f& uv0 = v0.texCoords;
+    const math::Vector2f& uv1 = v1.texCoords;
+    const math::Vector2f& uv2 = v2.texCoords;
 
-    math::Vector3Df deltaPos1 = p1 - p0;
-    math::Vector3Df deltaPos2 = p2 - p0;
+    math::Vector3f deltaPos1 = p1 - p0;
+    math::Vector3f deltaPos2 = p2 - p0;
 
-    math::Vector2Df deltaUV1 = uv1 - uv0;
-    math::Vector2Df deltaUV2 = uv2 - uv0;
+    math::Vector2f deltaUV1 = uv1 - uv0;
+    math::Vector2f deltaUV2 = uv2 - uv0;
 
     constexpr float epsilon = 1e-6f;
     float           r       = deltaUV1.x() * deltaUV2.y() - deltaUV1.y() * deltaUV2.x();
     r                       = (std::abs(r) > epsilon) ? 1.0f / r : 1.0f;
 
-    math::Vector3Df tangent   = r * (deltaPos1 * deltaUV2.y() - deltaPos2 * deltaUV1.y());
-    math::Vector3Df bitangent = r * (deltaPos2 * deltaUV1.x() - deltaPos1 * deltaUV2.x());
+    math::Vector3f tangent   = r * (deltaPos1 * deltaUV2.y() - deltaPos2 * deltaUV1.y());
+    math::Vector3f bitangent = r * (deltaPos2 * deltaUV1.x() - deltaPos1 * deltaUV2.x());
 
     tangent = (tangent - v0.normal * v0.normal.dot(tangent)).normalized();
 

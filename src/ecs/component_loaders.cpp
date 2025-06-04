@@ -18,9 +18,9 @@ namespace arise {
 Transform g_loadTransform(const ConfigValue& value) {
   Transform transform;
 
-  transform.translation = math::Vector3Df(0.0f, 0.0f, 0.0f);
-  transform.rotation    = math::Vector3Df(0.0f, 0.0f, 0.0f);
-  transform.scale       = math::Vector3Df(1.0f, 1.0f, 1.0f);
+  transform.translation = math::Vector3f(0.0f, 0.0f, 0.0f);
+  transform.rotation    = math::Vector3f(0.0f, 0.0f, 0.0f);
+  transform.scale       = math::Vector3f(1.0f, 1.0f, 1.0f);
 
   if (value.HasMember("position") && value["position"].IsArray()) {
     auto position = value["position"].GetArray();

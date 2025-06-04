@@ -46,19 +46,19 @@ class Editor {
   void renderNotifications();
   void renderControlsWindow();
 
-  void renderGizmo(const math::Dimension2Di& viewportSize, const ImVec2& viewportPos);
+  void renderGizmo(const math::Dimension2i& viewportSize, const ImVec2& viewportPos);
   void handleGizmoInput();
   void renderGizmoControlsWindow();
 
   bool            isOperationAllowedForEntity(ImGuizmo::OPERATION operation);
   void            updateGizmoConstraints();
-  math::Vector3Df getGizmoWorldPosition();
+  math::Vector3f getGizmoWorldPosition();
   void            handleGizmoManipulation(const math::Matrix4f<>& modelMatrix);
   void            handleEntitySelection(entt::entity entity);
 
   bool             shouldRenderGizmo_();
   entt::entity     getCameraEntity_();
-  void             setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2Di& viewportSize);
+  void             setupImGuizmo_(const ImVec2& viewportPos, const math::Dimension2i& viewportSize);
   math::Matrix4f<> calculateEntityModelMatrix_();
   math::Matrix4f<> calculateDirectionalLightMatrix_(Registry& registry);
   bool             performGizmoManipulation_(math::Matrix4f<>& modelMatrix, entt::entity cameraEntity);
@@ -75,7 +75,7 @@ class Editor {
 
   void removeSelectedEntity();
 
-  math::Vector3Df getPositionInFrontOfCamera_();
+  math::Vector3f getPositionInFrontOfCamera_();
 
   void handleAddModelDialog();
   void createModelEntity(const std::filesystem::path& modelPath, const Transform& transform);
@@ -108,7 +108,7 @@ class Editor {
   ImGuizmo::OPERATION m_currentGizmoOperation = ImGuizmo::TRANSLATE;
   ImGuizmo::MODE      m_currentGizmoMode      = ImGuizmo::WORLD;
 
-  math::Vector3Df m_currentDirectionalLightGizmoPosition;
+  math::Vector3f m_currentDirectionalLightGizmoPosition;
   float           gizmoDistanceFromCamera = 5.0f;
 
   bool        m_showSaveNotification = false;

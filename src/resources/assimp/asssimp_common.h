@@ -1,6 +1,7 @@
 #ifndef ASSIMP_COMMON_H
 #define ASSIMP_COMMON_H
 
+// TODO: assimp will be deprecated soon from the project
 #ifdef ARISE_USE_ASSIMP
 
 #include "utils/logger/global_logger.h"

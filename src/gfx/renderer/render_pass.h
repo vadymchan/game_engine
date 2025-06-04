@@ -50,7 +50,7 @@ class RenderPass {
    * - Framebuffers
    * - Updates viewport/scissor
    */
-  virtual void resize(const math::Dimension2Di& newDimension) = 0;
+  virtual void resize(const math::Dimension2i& newDimension) = 0;
 
   /**
    * Called at the beginning of each frame BEFORE render()

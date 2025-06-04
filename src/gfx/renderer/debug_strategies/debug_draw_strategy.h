@@ -36,7 +36,7 @@ class DebugDrawStrategy {
                           rhi::ShaderManager*    shaderManager)
       = 0;
 
-  virtual void resize(const math::Dimension2Di& newDimension) = 0;
+  virtual void resize(const math::Dimension2i& newDimension) = 0;
   virtual void prepareFrame(const RenderContext& context) = 0;
   virtual void render(const RenderContext& context) = 0;
   virtual void cleanup() = 0;

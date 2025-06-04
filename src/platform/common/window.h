@@ -28,7 +28,7 @@ class Window {
     Vulkan            = SDL_WINDOW_VULKAN
   };
 
-  Window(std::string title, math::Dimension2Di size, math::Point2Di position, Flags flags)
+  Window(std::string title, math::Dimension2i size, math::Point2i position, Flags flags)
       : m_title_{std::move(title)}
       , m_size_{std::move(size)}
       , m_position_{std::move(position)}
@@ -46,7 +46,7 @@ class Window {
 
     int actualWidth, actualHeight;
     SDL_GetWindowSize(m_window_, &actualWidth, &actualHeight);
-    m_size_ = math::Dimension2Di(actualWidth, actualHeight);
+    m_size_ = math::Dimension2i(actualWidth, actualHeight);
   }
 
   Window(const Window&) = delete;
@@ -62,8 +62,8 @@ class Window {
   // clang-format off
 
   [[nodiscard]] auto getTitle() const -> const std::string& { return m_title_; }
-  [[nodiscard]] auto getSize() const -> const math::Dimension2Di& { return m_size_; }
-  [[nodiscard]] auto getPosition() const -> const math::Point2Di& { return m_position_; }
+  [[nodiscard]] auto getSize() const -> const math::Dimension2i& { return m_size_; }
+  [[nodiscard]] auto getPosition() const -> const math::Point2i& { return m_position_; }
   [[nodiscard]] auto getFlags() const -> Flags { return m_flags_; }
   /**
    * This function provides access to the internal SDL_Window handle. 
@@ -78,7 +78,7 @@ class Window {
   // clang-format on
 
   void onResize(const WindowEvent& event) {
-    m_size_ = math::Dimension2Di(event.data1, event.data2);
+    m_size_ = math::Dimension2i(event.data1, event.data2);
     SDL_SetWindowSize(m_window_, event.data1, event.data2);
   }
 
@@ -87,8 +87,8 @@ class Window {
 
   private:
   std::string        m_title_;
-  math::Dimension2Di m_size_;
-  math::Point2Di     m_position_;
+  math::Dimension2i m_size_;
+  math::Point2i     m_position_;
   Flags              m_flags_;
   SDL_Window*        m_window_{nullptr};
 };

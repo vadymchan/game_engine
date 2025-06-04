@@ -155,7 +155,7 @@ void ImGuiRHIContext::beginFrame() {
 
 void ImGuiRHIContext::endFrame(rhi::CommandBuffer*       cmdBuffer,
                                rhi::Texture*             targetTexture,
-                               const math::Dimension2Di& viewportDimension,
+                               const math::Dimension2i& viewportDimension,
                                uint32_t                  currentFrameIndex) {
   if (!m_initialized || !cmdBuffer || !targetTexture) {
     if (!m_initialized) {
@@ -188,7 +188,7 @@ void ImGuiRHIContext::endFrame(rhi::CommandBuffer*       cmdBuffer,
 }
 
 rhi::Framebuffer* ImGuiRHIContext::getOrCreateFramebuffer(rhi::Texture*             targetTexture,
-                                                          const math::Dimension2Di& dimensions,
+                                                          const math::Dimension2i& dimensions,
                                                           uint32_t                  frameIndex) {
   if (frameIndex >= m_framebuffers.size()) {
     m_framebuffers.resize(frameIndex + 1);
@@ -211,7 +211,7 @@ rhi::Framebuffer* ImGuiRHIContext::getOrCreateFramebuffer(rhi::Texture*         
   return m_framebuffers[frameIndex].get();
 }
 
-void ImGuiRHIContext::resize(const math::Dimension2Di& newDimensions) {
+void ImGuiRHIContext::resize(const math::Dimension2i& newDimensions) {
   if (m_currentFramebufferSize.width() == newDimensions.width()
       && m_currentFramebufferSize.height() == newDimensions.height()) {
     return;
@@ -360,7 +360,7 @@ bool ImGuiRHIContext::initializeDx12(rhi::Device* device, uint32_t swapChainBuff
 
 void ImGuiRHIContext::renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
                                         rhi::Texture*             targetTexture,
-                                        const math::Dimension2Di& viewportDimension,
+                                        const math::Dimension2i& viewportDimension,
                                         uint32_t                  currentFrameIndex) {
   auto cmdBufferVk = static_cast<rhi::CommandBufferVk*>(cmdBuffer);
 
@@ -409,7 +409,7 @@ void ImGuiRHIContext::renderImGuiVulkan(rhi::CommandBuffer*       cmdBuffer,
 
 void ImGuiRHIContext::renderImGuiDx12(rhi::CommandBuffer*       cmdBuffer,
                                       rhi::Texture*             targetTexture,
-                                      const math::Dimension2Di& viewportDimension,
+                                      const math::Dimension2i& viewportDimension,
                                       uint32_t                  currentFrameIndex) {
   auto cmdBufferDx12 = static_cast<rhi::CommandBufferDx12*>(cmdBuffer);
 

@@ -23,7 +23,7 @@ class DebugPass : public RenderPass {
                   FrameResources*        frameResources,
                   rhi::ShaderManager*    shaderManager) override;
 
-  void resize(const math::Dimension2Di& newDimension) override;
+  void resize(const math::Dimension2i& newDimension) override;
   void prepareFrame(const RenderContext& context) override;
   void render(const RenderContext& context) override;
 

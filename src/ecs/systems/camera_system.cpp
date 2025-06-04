@@ -12,7 +12,7 @@ namespace arise {
 void CameraSystem::update(Scene* scene, float deltaTime) {
   Registry&              registry        = scene->getEntityRegistry();
   auto&                  runtimeSettings = RuntimeSettings::s_get();
-  const math::Vector3Df& worldUp         = runtimeSettings.getWorldUp();
+  const math::Vector3f& worldUp         = runtimeSettings.getWorldUp();
   auto                   view            = registry.view<Transform, Camera>();
 
   for (auto entity : view) {
