@@ -7,7 +7,7 @@ void RenderModelLoaderManager::registerLoader(ModelType modelType, std::shared_p
 }
 
 std::unique_ptr<RenderModel> RenderModelLoaderManager::loadRenderModel(const std::filesystem::path& filePath,
-                                                                       std::optional<Model*>        outModel) {
+                                                                       Model**                      outModel) {
   std::string extension = filePath.extension().string();
   std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
   ModelType modelType = getModelTypeFromExtension(extension);

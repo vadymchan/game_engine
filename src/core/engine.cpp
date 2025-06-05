@@ -6,6 +6,7 @@
 #include "core/application.h"
 #include "ecs/component_loaders.h"
 #include "ecs/components/camera.h"
+#include "ecs/systems/bounding_volume_system.h"
 #include "ecs/systems/camera_system.h"
 #include "ecs/systems/light_system.h"
 #include "ecs/systems/movement_system.h"
@@ -22,6 +23,7 @@
 #include "resources/assimp/assimp_material_loader.h"
 #include "resources/assimp/assimp_render_model_loader.h"
 #include "resources/cgltf/cgltf_material_loader.h"
+#include "resources/cgltf/cgltf_model_loader.h"
 #include "resources/cgltf/cgltf_render_model_loader.h"
 #include "scene/scene_loader.h"
 #include "scene/scene_manager.h"
@@ -37,6 +39,7 @@
 #include "utils/material/material_manager.h"
 #include "utils/math/math_util.h"
 #include "utils/model/mesh_manager.h"
+#include "utils/model/model_manager.h"
 #include "utils/model/render_geometry_mesh_manager.h"
 #include "utils/model/render_mesh_manager.h"
 #include "utils/model/render_model_loader_manager.h"
@@ -81,7 +84,6 @@ Engine::~Engine() {
   ServiceLocator::s_remove<TextureManager>();
   ServiceLocator::s_remove<BufferManager>();
   ServiceLocator::s_remove<gpu::GpuProfiler>();
-
 
   GlobalLogger::Shutdown();
 }
@@ -229,18 +231,19 @@ auto Engine::initialize() -> bool {
 
   // window
   // ------------------------------------------------------------------------
-  m_window_ = std::make_unique<Window>(renderingApiString,
-                                       // Desired size (for maximized window will be 0)
-                                       math::Dimension2i{0, 0},
-                                       math::Point2i{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
-                                       arise::Window::Flags::Resizable | arise::Window::Flags::Vulkan
-                                           | arise::Window::Flags::Maximized);
+  m_window_ = std::make_unique<Window>(
+      renderingApiString,
+      // Desired size (for maximized window will be 0)
+      math::Dimension2i{0, 0},
+      math::Point2i{SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED},
+      arise::Window::Flags::Resizable | arise::Window::Flags::Vulkan | arise::Window::Flags::Maximized);
 
   // ecs
   // ------------------------------------------------------------------------
   auto systemManager = ServiceLocator::s_get<SystemManager>();
   systemManager->addSystem(std::make_unique<CameraSystem>());
   systemManager->addSystem(std::make_unique<MovementSystem>());
+  systemManager->addSystem(std::make_unique<BoundingVolumeSystem>());
   systemManager->addSystem(std::make_unique<RenderSystem>());
 
   // renderer
@@ -281,10 +284,24 @@ auto Engine::initialize() -> bool {
 
   // mesh / model / material loader
   // ------------------------------------------------------------------------
+
+  // CPU
   ServiceLocator::s_provide<MeshManager>();
+  auto modelLoaderManager = std::make_unique<ModelLoaderManager>();
+#ifdef ARISE_USE_ASSIMP
+  auto assimpCpuModelLoader = std::make_shared<AssimpModelLoader>();
+  modelLoaderManager->registerLoader(ModelType::OBJ, assimpCpuModelLoader);
+  modelLoaderManager->registerLoader(ModelType::FBX, assimpCpuModelLoader);
+#endif  // ARISE_USE_ASSIMP
+  auto cgltfCpuModelLoader = std::make_shared<CgltfModelLoader>();
+  modelLoaderManager->registerLoader(ModelType::GLTF, cgltfCpuModelLoader);
+  modelLoaderManager->registerLoader(ModelType::GLB, cgltfCpuModelLoader);
+  ServiceLocator::s_provide<ModelLoaderManager>(std::move(modelLoaderManager));
+  ServiceLocator::s_provide<ModelManager>();
+
+  // GPU
   ServiceLocator::s_provide<RenderMeshManager>();
   ServiceLocator::s_provide<RenderGeometryMeshManager>();
-
   auto renderModelLoaderManager = std::make_unique<RenderModelLoaderManager>();
 #ifdef ARISE_USE_ASSIMP
   auto assimpModelLoader = std::make_shared<AssimpRenderModelLoader>();
@@ -295,10 +312,10 @@ auto Engine::initialize() -> bool {
   renderModelLoaderManager->registerLoader(ModelType::GLTF, cgltfModelLoader);
   renderModelLoaderManager->registerLoader(ModelType::GLB, cgltfModelLoader);
   ServiceLocator::s_provide<RenderModelLoaderManager>(std::move(renderModelLoaderManager));
-
   auto renderModelManager = std::make_unique<RenderModelManager>();
   ServiceLocator::s_provide<RenderModelManager>(std::move(renderModelManager));
 
+  // Materials
   ServiceLocator::s_provide<MaterialManager>();
   auto materialLoaderManager = std::make_unique<MaterialLoaderManager>();
 #ifdef ARISE_USE_ASSIMP
@@ -309,7 +326,6 @@ auto Engine::initialize() -> bool {
   auto cgltfMaterialLoader = std::make_shared<CgltfMaterialLoader>();
   materialLoaderManager->registerLoader(MaterialType::GLTF, cgltfMaterialLoader);
   ServiceLocator::s_provide<MaterialLoaderManager>(std::move(materialLoaderManager));
-
   // editor
   // ------------------------------------------------------------------------
 

@@ -1,15 +1,26 @@
 #include "utils/model/render_model_manager.h"
 
+#include "utils/model/model_manager.h"
 #include "utils/model/render_mesh_manager.h"
 
 #include <shared_mutex>
 
 namespace arise {
-RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, std::optional<Model*> outModel) {
+RenderModel* RenderModelManager::getRenderModel(const std::filesystem::path& filepath, Model** outModel) {
   {
     std::shared_lock<std::shared_mutex> readLock(mutex_);
     auto                                it = renderModelCache_.find(filepath);
     if (it != renderModelCache_.end()) {
+      if (outModel) {
+        auto modelManager = ServiceLocator::s_get<ModelManager>();
+        if (modelManager) {
+          *outModel = modelManager->getModel(filepath);
+          GlobalLogger::Log(LogLevel::Debug, "CPU model retrieved from cache for: " + filepath.string());
+        } else {
+          GlobalLogger::Log(LogLevel::Warning, "ModelManager not available for cached model: " + filepath.string());
+          *outModel = nullptr;
+        }
+      }
       return it->second.get();
     }
   }

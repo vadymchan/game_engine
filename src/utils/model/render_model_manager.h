@@ -15,7 +15,7 @@ class RenderModelManager {
   public:
   RenderModelManager() = default;
 
-  RenderModel* getRenderModel(const std::filesystem::path& filepath, std::optional<Model*> outModel = std::nullopt);
+  RenderModel* getRenderModel(const std::filesystem::path& filepath, Model** outModel = nullptr);
 
   bool hasRenderModel(const std::filesystem::path& filepath) const;
 

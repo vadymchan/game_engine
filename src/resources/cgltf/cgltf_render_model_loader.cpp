@@ -9,6 +9,7 @@
 #include "utils/logger/global_logger.h"
 #include "utils/material/material_manager.h"
 #include "utils/model/mesh_manager.h"
+#include "utils/model/model_manager.h"
 #include "utils/model/render_geometry_mesh_manager.h"
 #include "utils/model/render_mesh_manager.h"
 #include "utils/service/service_locator.h"
@@ -19,54 +20,47 @@
 namespace arise {
 
 std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
-                                                                     std::optional<Model*>        outModel) {
-  CgltfModelLoader modelLoader;
-  auto             cpuModel = modelLoader.loadModel(filePath);
-  if (!cpuModel) {
-    GlobalLogger::Log(LogLevel::Error, "Failed to load CPU model from " + filePath.string());
-    return nullptr;
-  }
-
+                                                                     Model**                      outModelPtr) {
   auto scene = CgltfSceneCache::getOrLoad(filePath);
   if (!scene) {
     GlobalLogger::Log(LogLevel::Error, "Failed to load GLTF scene for material mapping: " + filePath.string());
     return nullptr;
   }
+
   const cgltf_data* data = scene.get();
 
   auto materialManager           = ServiceLocator::s_get<MaterialManager>();
   auto renderGeometryMeshManager = ServiceLocator::s_get<RenderGeometryMeshManager>();
   auto renderMeshManager         = ServiceLocator::s_get<RenderMeshManager>();
   auto bufferManager             = ServiceLocator::s_get<BufferManager>();
+  auto modelManager              = ServiceLocator::s_get<ModelManager>();
 
-  if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !bufferManager) {
+  if (!materialManager || !renderGeometryMeshManager || !renderMeshManager || !bufferManager || !modelManager) {
     GlobalLogger::Log(LogLevel::Error, "Required managers not available in ServiceLocator.");
     return nullptr;
   }
 
-  std::vector<Material*> materialPointers = materialManager->getMaterials(filePath);
+  auto cpuModelPtr      = modelManager->getModel(filePath);
+  auto materialPointers = materialManager->getMaterials(filePath);
 
   auto renderModel      = std::make_unique<RenderModel>();
   renderModel->filePath = filePath;
 
-  auto& meshes = cpuModel->meshes;
+  auto& meshes = cpuModelPtr->meshes;
   renderModel->renderMeshes.reserve(meshes.size());
 
   size_t meshIndex = 0;
-
   for (size_t i = 0; i < data->meshes_count && meshIndex < meshes.size(); ++i) {
     cgltf_mesh* gltf_mesh = &data->meshes[i];
 
     for (size_t j = 0; j < gltf_mesh->primitives_count && meshIndex < meshes.size(); ++j) {
       Mesh* meshPtr = meshes[meshIndex++];
 
-      auto                renderGeometryMesh = createRenderGeometryMesh(meshPtr);
-      RenderGeometryMesh* gpuMeshPtr
-          = renderGeometryMeshManager->addRenderGeometryMesh(std::move(renderGeometryMesh), meshPtr);
+      auto renderGeometryMesh = createRenderGeometryMesh(meshPtr);
+      auto gpuMeshPtr = renderGeometryMeshManager->addRenderGeometryMesh(std::move(renderGeometryMesh), meshPtr);
 
-      Material* materialPtr = nullptr;
-
-      const cgltf_primitive* primitive = &gltf_mesh->primitives[j];
+      Material*              materialPtr = nullptr;
+      const cgltf_primitive* primitive   = &gltf_mesh->primitives[j];
       if (primitive->material) {
         for (size_t materialIndex = 0; materialIndex < data->materials_count; ++materialIndex) {
           if (&data->materials[materialIndex] == primitive->material) {
@@ -82,14 +76,12 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
         }
       }
 
-      RenderMesh* renderMeshPtr = renderMeshManager->addRenderMesh(gpuMeshPtr, materialPtr, meshPtr);
+      auto renderMeshPtr = renderMeshManager->addRenderMesh(gpuMeshPtr, materialPtr, meshPtr);
 
       std::string bufferName = "transform_matrix_" + meshPtr->meshName;
-
       if (bufferManager) {
         renderMeshPtr->transformMatrixBuffer
             = bufferManager->createUniformBuffer(sizeof(math::Matrix4f<>), &meshPtr->transformMatrix, bufferName);
-
         if (renderMeshPtr->transformMatrixBuffer) {
           GlobalLogger::Log(LogLevel::Debug, "Created transform matrix buffer for mesh " + meshPtr->meshName);
         } else {
@@ -102,8 +94,9 @@ std::unique_ptr<RenderModel> CgltfRenderModelLoader::loadRenderModel(const std::
     }
   }
 
-  if (outModel.has_value()) {
-    *outModel = cpuModel.release();
+  if (outModelPtr) {
+    *outModelPtr = cpuModelPtr;
+    GlobalLogger::Log(LogLevel::Debug, "CPU model pointer provided to caller: " + filePath.string());
   }
 
   return renderModel;

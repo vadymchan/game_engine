@@ -16,13 +16,13 @@ class ModelLoaderManager {
   public:
   ModelLoaderManager() = default;
 
-  void registerLoader(ModelType modelType, std::unique_ptr<IModelLoader> loader);
+  void registerLoader(ModelType modelType, std::shared_ptr<IModelLoader> loader);
 
   std::unique_ptr<Model> loadModel(const std::filesystem::path& filePath);
 
   private:
-  std::unordered_map<ModelType, std::unique_ptr<IModelLoader>> loaderMap_;
-  std::mutex                                                    mutex_;
+  std::unordered_map<ModelType, std::shared_ptr<IModelLoader>> loaderMap_;
+  std::mutex                                                   mutex_;
 };
 
 }  // namespace arise

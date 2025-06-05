@@ -2,7 +2,7 @@
 
 namespace arise {
 
-void ModelLoaderManager::registerLoader(ModelType modelType, std::unique_ptr<IModelLoader> loader) {
+void ModelLoaderManager::registerLoader(ModelType modelType, std::shared_ptr<IModelLoader> loader) {
   std::lock_guard<std::mutex> lock(mutex_);
   loaderMap_[modelType] = std::move(loader);
 }

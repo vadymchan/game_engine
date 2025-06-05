@@ -2,6 +2,7 @@
 
 #include "resources/cgltf/cgltf_model_loader.h"
 
+#include "ecs/components/bounding_volume.h"
 #include "ecs/components/model.h"
 #include "resources/cgltf/cgltf_common.h"
 #include "utils/logger/global_logger.h"
@@ -28,6 +29,10 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
 
   auto model      = std::make_unique<Model>();
   model->filePath = filePath;
+
+  model->boundingBox = bounds::createInvalid();
+
+  std::vector<BoundingBox> meshBoundingBoxes;
 
   auto meshManager = ServiceLocator::s_get<MeshManager>();
   if (!meshManager) {
@@ -65,6 +70,20 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
           worldMatrix                  = worldMatrix * zFlipMatrix;  // Flip Z axis to match OpenGL coordinate system
 
           mesh->transformMatrix = worldMatrix;
+
+          if (bounds::isValid(mesh->boundingBox)) {
+            BoundingBox transformedBounds = bounds::transformAABB(mesh->boundingBox, mesh->transformMatrix);
+            meshBoundingBoxes.push_back(transformedBounds);
+
+            GlobalLogger::Log(LogLevel::Debug,
+                              "Mesh '" + mesh->meshName + "' bounding box: min("
+                                  + std::to_string(mesh->boundingBox.min.x()) + ", "
+                                  + std::to_string(mesh->boundingBox.min.y()) + ", "
+                                  + std::to_string(mesh->boundingBox.min.z()) + ") max("
+                                  + std::to_string(mesh->boundingBox.max.x()) + ", "
+                                  + std::to_string(mesh->boundingBox.max.y()) + ", "
+                                  + std::to_string(mesh->boundingBox.max.z()) + ")");
+          }
         }
 
         Mesh* meshPtr = meshManager->addMesh(std::move(mesh), filePath);
@@ -72,6 +91,16 @@ std::unique_ptr<Model> CgltfModelLoader::loadModel(const std::filesystem::path& 
       }
     }
   }
+
+  if (!meshBoundingBoxes.empty()) {
+    model->boundingBox = bounds::combineAABBs(meshBoundingBoxes);
+    GlobalLogger::Log(LogLevel::Info,
+                      "Model '" + filePath.filename().string() + "' combined bounding box calculated from "
+                          + std::to_string(meshBoundingBoxes.size()) + " meshes");
+  } else {
+    GlobalLogger::Log(LogLevel::Warning, "Model '" + filePath.filename().string() + "' has no valid bounding boxes");
+  }
+
   return model;
 }
 
@@ -116,9 +145,9 @@ math::Matrix4f<> CgltfModelLoader::getNodeTransformMatrix(const cgltf_node* node
     }
     return matrix;
   } else {
-    math::Vector3f   translation(0.0f, 0.0f, 0.0f);
+    math::Vector3f    translation(0.0f, 0.0f, 0.0f);
     math::Quaternionf rotation(0.0f, 0.0f, 0.0f, 1.0f);
-    math::Vector3f   scale(1.0f, 1.0f, 1.0f);
+    math::Vector3f    scale(1.0f, 1.0f, 1.0f);
 
     if (node->has_translation) {
       translation = math::Vector3f(node->translation[0], node->translation[1], node->translation[2]);
@@ -162,6 +191,7 @@ std::unique_ptr<Mesh> CgltfModelLoader::processPrimitive(const cgltf_primitive* 
 
   processVertices(primitive, mesh.get());
   processIndices(primitive, mesh.get());
+  processBoundingBox(mesh.get(), primitive);
 
   bool hasTangents = false;
   for (size_t i = 0; i < primitive->attributes_count; ++i) {
@@ -345,29 +375,29 @@ static int getNumVerticesOfFace(const SMikkTSpaceContext* context, int faceIdx) 
 }
 
 static void getPosition(const SMikkTSpaceContext* context, float outpos[], int faceIdx, int vertIdx) {
-  MikkTSpaceContext*     userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
-  int                    index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
+  MikkTSpaceContext*    userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
+  int                   index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
   const math::Vector3f& pos         = userContext->mesh->vertices[index].position;
-  outpos[0]                          = pos.x();
-  outpos[1]                          = pos.y();
-  outpos[2]                          = pos.z();
+  outpos[0]                         = pos.x();
+  outpos[1]                         = pos.y();
+  outpos[2]                         = pos.z();
 }
 
 static void getNormal(const SMikkTSpaceContext* context, float outnormal[], int faceIdx, int vertIdx) {
-  MikkTSpaceContext*     userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
-  int                    index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
+  MikkTSpaceContext*    userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
+  int                   index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
   const math::Vector3f& normal      = userContext->mesh->vertices[index].normal;
-  outnormal[0]                       = normal.x();
-  outnormal[1]                       = normal.y();
-  outnormal[2]                       = normal.z();
+  outnormal[0]                      = normal.x();
+  outnormal[1]                      = normal.y();
+  outnormal[2]                      = normal.z();
 }
 
 static void getTexCoord(const SMikkTSpaceContext* context, float outuv[], int faceIdx, int vertIdx) {
-  MikkTSpaceContext*     userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
-  int                    index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
+  MikkTSpaceContext*    userContext = static_cast<MikkTSpaceContext*>(context->m_pUserData);
+  int                   index       = userContext->mesh->indices[faceIdx * 3 + vertIdx];
   const math::Vector2f& uv          = userContext->mesh->vertices[index].texCoords;
-  outuv[0]                           = uv.x();
-  outuv[1]                           = uv.y();
+  outuv[0]                          = uv.x();
+  outuv[1]                          = uv.y();
 }
 
 static void setTangent(const SMikkTSpaceContext* context, const float tangent[], float sign, int faceIdx, int vertIdx) {
@@ -376,7 +406,7 @@ static void setTangent(const SMikkTSpaceContext* context, const float tangent[],
 
   userContext->mesh->vertices[index].tangent = math::Vector3f(tangent[0], tangent[1], tangent[2]);
 
-  const math::Vector3f& normal                = userContext->mesh->vertices[index].normal;
+  const math::Vector3f& normal                 = userContext->mesh->vertices[index].normal;
   userContext->mesh->vertices[index].bitangent = normal.cross(userContext->mesh->vertices[index].tangent) * sign;
 }
 
@@ -407,6 +437,64 @@ void CgltfModelLoader::generateMikkTSpaceTangents(Mesh* mesh) {
   }
 }
 #endif  // ARISE_USE_MIKKTS
+
+BoundingBox CgltfModelLoader::extractBoundingBoxFromAccessor(const cgltf_accessor* positionAccessor) {
+  if (!positionAccessor || !positionAccessor->has_min || !positionAccessor->has_max) {
+    return bounds::createInvalid();
+  }
+
+  BoundingBox box;
+  box.min = math::Vector3f(static_cast<float>(positionAccessor->min[0]),
+                           static_cast<float>(positionAccessor->min[1]),
+                           static_cast<float>(positionAccessor->min[2]));
+
+  box.max = math::Vector3f(static_cast<float>(positionAccessor->max[0]),
+                           static_cast<float>(positionAccessor->max[1]),
+                           static_cast<float>(positionAccessor->max[2]));
+
+  return box;
+}
+
+BoundingBox CgltfModelLoader::calculateBoundingBoxFromVertices(const Mesh* mesh) {
+  if (!mesh || mesh->vertices.empty()) {
+    GlobalLogger::Log(LogLevel::Warning, "Cannot calculate bounding box from empty mesh");
+    return bounds::createInvalid();
+  }
+
+  return bounds::calculateAABB(mesh->vertices);
+}
+
+void CgltfModelLoader::processBoundingBox(Mesh* mesh, const cgltf_primitive* primitive) {
+  if (!mesh || !primitive) {
+    return;
+  }
+
+  const cgltf_accessor* positionAccessor = nullptr;
+  for (size_t i = 0; i < primitive->attributes_count; ++i) {
+    const cgltf_attribute* attribute = &primitive->attributes[i];
+    if (attribute->type == cgltf_attribute_type_position) {
+      positionAccessor = attribute->data;
+      break;
+    }
+  }
+
+  if (positionAccessor) {
+    mesh->boundingBox = extractBoundingBoxFromAccessor(positionAccessor);
+
+    if (bounds::isValid(mesh->boundingBox)) {
+      GlobalLogger::Log(LogLevel::Debug, "Bounding box extracted from GLTF accessor data");
+      return;
+    }
+  }
+
+  mesh->boundingBox = calculateBoundingBoxFromVertices(mesh);
+
+  if (bounds::isValid(mesh->boundingBox)) {
+    GlobalLogger::Log(LogLevel::Debug, "Bounding box calculated from vertex data");
+  } else {
+    GlobalLogger::Log(LogLevel::Warning, "Failed to calculate valid bounding box for mesh");
+  }
+}
 
 }  // namespace arise
 

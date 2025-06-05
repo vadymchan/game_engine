@@ -14,7 +14,7 @@ class CgltfRenderModelLoader : public IRenderModelLoader {
   ~CgltfRenderModelLoader() = default;
 
   std::unique_ptr<RenderModel> loadRenderModel(const std::filesystem::path& filePath,
-                                               std::optional<Model*>        outModel = std::nullopt) override;
+                                               Model**                      outModel = nullptr) override;
 
   private:
   // GPU-side geometry mesh

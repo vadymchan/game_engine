@@ -212,23 +212,25 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
 
           registry.emplace<ModelLoadingTag>(entity, modelPath);
 
-          assetLoader->loadModel(modelPath, [registry_ptr = &registry, entity, modelPath](bool success) {
-            if (!registry_ptr->valid(entity)) {
+          assetLoader->loadModel(modelPath, [registryPtr = &registry, entity, modelPath](bool success) {
+            if (!registryPtr->valid(entity)) {
               GlobalLogger::Log(LogLevel::Warning, "Entity no longer exists after model loaded: " + modelPath);
               return;
             }
 
-            if (registry_ptr->any_of<ModelLoadingTag>(entity)) {
-              registry_ptr->remove<ModelLoadingTag>(entity);
+            if (registryPtr->any_of<ModelLoadingTag>(entity)) {
+              registryPtr->remove<ModelLoadingTag>(entity);
             }
 
             if (success) {
               auto modelManager = ServiceLocator::s_get<RenderModelManager>();
               if (modelManager) {
-                auto renderModel = modelManager->getRenderModel(modelPath);
+                Model* model       = nullptr;
+                auto   renderModel = modelManager->getRenderModel(modelPath, &model);
 
-                if (renderModel) {
-                  registry_ptr->emplace<RenderModel*>(entity, renderModel);
+                if (renderModel && model) {
+                  registryPtr->emplace<Model*>(entity, model);
+                  registryPtr->emplace<RenderModel*>(entity, renderModel);
                   GlobalLogger::Log(LogLevel::Info, "Async model loaded and added to entity: " + modelPath);
                 }
               }
@@ -239,12 +241,16 @@ void g_processEntityComponents(Registry& registry, Entity entity, const ConfigVa
 
         } else {
           auto modelManager = ServiceLocator::s_get<RenderModelManager>();
-          auto renderModel  = modelManager->getRenderModel(modelPath);
+          if (modelManager) {
+            Model* model       = nullptr;
+            auto   renderModel = modelManager->getRenderModel(modelPath, &model);
 
-          if (renderModel) {
-            registry.emplace<RenderModel*>(entity, renderModel);
-          } else {
-            GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath);
+            if (renderModel && model) {
+              registry.emplace<Model*>(entity, model);
+              registry.emplace<RenderModel*>(entity, renderModel);
+            } else {
+              GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath);
+            }
           }
         }
       }

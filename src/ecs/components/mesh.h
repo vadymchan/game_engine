@@ -1,6 +1,7 @@
 #ifndef ARISE_MESH_H
 #define ARISE_MESH_H
 
+#include "ecs/components/bounding_volume.h"
 #include "ecs/components/vertex.h"
 
 #include <string>
@@ -14,6 +15,7 @@ struct Mesh {
   std::vector<Vertex>   vertices;
   std::vector<uint32_t> indices;
   math::Matrix4f<>      transformMatrix = math::Matrix4f<>::Identity();
+  BoundingBox           boundingBox; // in mesh local space
 };
 
 }  // namespace arise

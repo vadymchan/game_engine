@@ -19,7 +19,7 @@ class IRenderModelLoader {
 
   // Optionally returns CPU-side geometry model (outModel)
   virtual std::unique_ptr<RenderModel> loadRenderModel(const std::filesystem::path& filepath,
-                                                       std::optional<Model*>        outModel = std::nullopt)
+                                                       Model**                      outModel = nullptr)
       = 0;
 };
 

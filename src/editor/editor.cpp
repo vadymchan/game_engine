@@ -1041,7 +1041,7 @@ void Editor::handleGizmoManipulation(const math::Matrix4f<>& modelMatrix) {
   auto& registry = scene->getEntityRegistry();
 
   math::Vector3f translation, rotation, scale;
-  float           translationArray[3], rotationArray[3], scaleArray[3];
+  float          translationArray[3], rotationArray[3], scaleArray[3];
 
   ImGuizmo::DecomposeMatrixToComponents(
       const_cast<float*>(modelMatrix.data()), translationArray, rotationArray, scaleArray);
@@ -1754,14 +1754,17 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
       if (success) {
         auto modelManager = ServiceLocator::s_get<RenderModelManager>();
         if (modelManager) {
-          auto renderModel = modelManager->getRenderModel(modelPath.string());
+          Model* model       = nullptr;
+          auto   renderModel = modelManager->getRenderModel(modelPath.string(), &model);
 
-          if (renderModel) {
+          if (renderModel && model) {
+            registry.emplace<Model*>(entity, model);
             registry.emplace<RenderModel*>(entity, renderModel);
 
             handleEntitySelection(entity);
-
             GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
+          } else {
+            GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
           }
         }
       } else {
@@ -1774,12 +1777,15 @@ void Editor::createModelEntity(const std::filesystem::path& modelPath, const Tra
   } else {
     auto modelManager = ServiceLocator::s_get<RenderModelManager>();
     if (modelManager) {
-      auto renderModel = modelManager->getRenderModel(modelPath.string());
+      Model* model       = nullptr;
+      auto   renderModel = modelManager->getRenderModel(modelPath.string(), &model);
 
-      if (renderModel) {
+      if (renderModel && model) {
+        registry.emplace<Model*>(entity, model);
         registry.emplace<RenderModel*>(entity, renderModel);
 
         handleEntitySelection(entity);
+        GlobalLogger::Log(LogLevel::Info, "Model loaded successfully: " + modelPath.string());
       } else {
         GlobalLogger::Log(LogLevel::Error, "Failed to load model: " + modelPath.string());
         registry.destroy(entity);

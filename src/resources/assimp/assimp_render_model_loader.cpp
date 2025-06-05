@@ -15,10 +15,10 @@
 namespace arise {
 
 std::unique_ptr<RenderModel> AssimpRenderModelLoader::loadRenderModel(const std::filesystem::path& filePath,
-                                                                      std::optional<Model*>        outModel) {
+                                                                      Model**                      outModel) {
   Assimp::Importer importer;
 
-    auto scenePtr = AssimpSceneCache::getOrLoad(filePath);
+  auto scenePtr = AssimpSceneCache::getOrLoad(filePath);
   if (!scenePtr) {
     return nullptr;
   }
