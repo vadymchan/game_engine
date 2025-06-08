@@ -1,10 +1,11 @@
 # ARISE
+
 ARISE is:  
 **A**dvanced  
 **R**endering  
 **I**nterface &  
 **S**andbox  
-**E**ngine  
+**E**ngine
 
 <img src="assets/logo/arise_logo.png" alt="ARISE Logo" width="400">
 
@@ -12,11 +13,29 @@ A modern, cross-platform graphics engine built with C++20, designed following KI
 
 ## Screenshots
 
-![Demo Main](screenshots/editor_demo_dx12.png)
+base pass (PBR)
+![Base Pass](screenshots/editor_demo_sponza_dx12-08.06.2025.png)
 
-![Renderdoc](screenshots/renderdoc_demo_dx12.png)
+wireframe
+![Wireframe](screenshots/wireframe_sponza-08.06.2025.png)
 
-![Tracy](screenshots/tracy_demo_dx12.png)
+normal map visualization
+![Normal Map](screenshots/normal_map_sponza-08.06.2025.png)
+
+vertex normals visualization
+![Vertex Normals](screenshots/vertex_normals_sponza-08.06.2025.png)
+
+light visualization
+![Light Visualization](screenshots/light_visualization_sponza-08.06.2025.png)
+
+shader overdraw (simplified)
+![Shader Overdraw](screenshots/shader_overdraw_simple_sponza-08.06.2025.png)
+
+Renderdoc debug markers
+![Renderdoc](screenshots/renderdoc_demo_dx12-08.06.2025.png)
+
+Tracy profile
+![Tracy](screenshots/tracy_demo_dx12-08.06.2025.png)
 
 ## Features
 
