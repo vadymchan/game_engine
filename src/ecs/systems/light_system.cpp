@@ -116,7 +116,6 @@ void LightSystem::collectPointLights_(Scene* scene) {
     data.intensity = light.intensity;
     data.range     = pointLight.range;
     data.position  = transform.translation;
-    data.padding   = 0.0f;
 
     m_pointLightData.push_back(data);
     currentEntities.insert(entity);
@@ -254,37 +253,26 @@ void LightSystem::updateLightBuffers_() {
 }
 
 void LightSystem::createOrUpdateDescriptorSet_() {
-  bool needUpdateDescriptors = false;
-
   if (!m_lightDescriptorSet) {
-    auto descriptorSet    = m_device->createDescriptorSet(m_lightLayout);
-    m_lightDescriptorSet  = m_resourceManager->addDescriptorSet(std::move(descriptorSet), "light_descriptor");
-    needUpdateDescriptors = true;
+    auto descriptorSet   = m_device->createDescriptorSet(m_lightLayout);
+    m_lightDescriptorSet = m_resourceManager->addDescriptorSet(std::move(descriptorSet), "light_descriptor");
+    GlobalLogger::Log(LogLevel::Info, "Created new light descriptor set");
   }
 
-  static bool lightCountBufferCreated = false;
-  static bool dirLightBufferCreated   = false;
-  static bool pointLightBufferCreated = false;
-  static bool spotLightBufferCreated  = false;
-
-  if (m_lightCountBuffer && (needUpdateDescriptors || lightCountBufferCreated)) {
+  if (m_lightCountBuffer) {
     m_lightDescriptorSet->setUniformBuffer(0, m_lightCountBuffer);
-    lightCountBufferCreated = false;
   }
 
-  if (m_dirLightBuffer && (needUpdateDescriptors || dirLightBufferCreated)) {
+  if (m_dirLightBuffer) {
     m_lightDescriptorSet->setStorageBuffer(1, m_dirLightBuffer);
-    dirLightBufferCreated = false;
   }
 
-  if (m_pointLightBuffer && (needUpdateDescriptors || pointLightBufferCreated)) {
+  if (m_pointLightBuffer) {
     m_lightDescriptorSet->setStorageBuffer(2, m_pointLightBuffer);
-    pointLightBufferCreated = false;
   }
 
-  if (m_spotLightBuffer && (needUpdateDescriptors || spotLightBufferCreated)) {
+  if (m_spotLightBuffer) {
     m_lightDescriptorSet->setStorageBuffer(3, m_spotLightBuffer);
-    spotLightBufferCreated = false;
   }
 }
 

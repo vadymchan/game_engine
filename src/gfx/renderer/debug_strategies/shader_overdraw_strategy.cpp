@@ -123,6 +123,12 @@ void ShaderOverdrawStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void ShaderOverdrawStrategy::clearSceneResources() {
+  m_instanceBufferCache.clear();
+  m_drawData.clear();
+  GlobalLogger::Log(LogLevel::Info, "Shader overdraw strategy resources cleared for scene switch");
+}
+
 void ShaderOverdrawStrategy::cleanup() {
   m_instanceBufferCache.clear();
   m_drawData.clear();

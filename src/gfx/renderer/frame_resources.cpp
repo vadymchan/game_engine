@@ -74,6 +74,14 @@ void FrameResources::updatePerFrameResources(const RenderContext& context) {
   clearEntityDirtyFlags_(context);
 }
 
+void FrameResources::clearSceneResources() {
+  m_modelsMap.clear();
+  m_sortedModels.clear();
+  m_modelMatrixCache.clear();
+  m_materialParamCache.clear();
+  GlobalLogger::Log(LogLevel::Info, "Frame resources cleared for scene switch");
+}
+
 void FrameResources::cleanup() {
   m_renderTargetsPerFrame.clear();
 

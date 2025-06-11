@@ -44,6 +44,7 @@ class BasePass : public RenderPass {
 
   void endFrame() override { m_drawData.clear(); }
 
+  void clearSceneResources();
   void cleanup() override;
 
   private:

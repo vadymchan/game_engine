@@ -97,6 +97,10 @@ void WorldGridStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void WorldGridStrategy::clearSceneResources() {
+  GlobalLogger::Log(LogLevel::Warning, "World grid strategy tried to clear resources after scene switch (it doesn't have anything dependent on that)");
+}
+
 void WorldGridStrategy::cleanup() {
   //m_gridDescriptorSet    = nullptr;
   //m_gridLayout           = nullptr;

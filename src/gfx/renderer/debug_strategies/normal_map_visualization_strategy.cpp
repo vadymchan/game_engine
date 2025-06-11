@@ -151,6 +151,13 @@ void NormalMapVisualizationStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void NormalMapVisualizationStrategy::clearSceneResources() {
+  m_instanceBufferCache.clear();
+  m_materialCache.clear();
+  m_drawData.clear();
+  GlobalLogger::Log(LogLevel::Info, "Normal map visualization strategy resources cleared for scene switch");
+}
+
 void NormalMapVisualizationStrategy::cleanup() {
   m_instanceBufferCache.clear();
   m_materialCache.clear();

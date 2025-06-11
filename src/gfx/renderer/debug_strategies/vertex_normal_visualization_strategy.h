@@ -39,6 +39,7 @@ class VertexNormalVisualizationStrategy : public DebugDrawStrategy {
   void resize(const math::Dimension2i& newDimension) override;
   void prepareFrame(const RenderContext& context) override;
   void render(const RenderContext& context) override;
+  void clearSceneResources() override;
   void cleanup() override;
 
   bool isExclusive() const override { return false; } // should be false

@@ -154,6 +154,13 @@ void BasePass::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void BasePass::clearSceneResources() {
+  m_instanceBufferCache.clear();
+  m_materialCache.clear();
+  m_drawData.clear();
+  GlobalLogger::Log(LogLevel::Info, "Base pass resources cleared for scene switch");
+}
+
 void BasePass::cleanup() {
   m_instanceBufferCache.clear();
   m_materialCache.clear();

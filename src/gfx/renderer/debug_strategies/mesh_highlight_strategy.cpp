@@ -178,6 +178,14 @@ void MeshHighlightStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void MeshHighlightStrategy::clearSceneResources() {
+  m_instanceBufferCache.clear();
+  m_drawData.clear();
+  m_pipelineCache.clear();
+  m_highlightParamsCache.clear();
+  GlobalLogger::Log(LogLevel::Info, "Mesh highlight strategy resources cleared for scene switch");
+}
+
 void MeshHighlightStrategy::cleanup() {
   m_instanceBufferCache.clear();
   m_drawData.clear();

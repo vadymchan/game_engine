@@ -40,9 +40,10 @@ class FrameResources {
    * Resize resources when viewport (window / editor viewport) changes
    */
   void resize(const math::Dimension2i& newDimension);
-
+  
   void updatePerFrameResources(const RenderContext& context);
-
+  
+  void clearSceneResources();
   void cleanup();
 
   struct RenderTargets {

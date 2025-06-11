@@ -126,6 +126,12 @@ void VertexNormalVisualizationStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void VertexNormalVisualizationStrategy::clearSceneResources() {
+  m_instanceBufferCache.clear();
+  m_drawData.clear();
+  GlobalLogger::Log(LogLevel::Info, "Vertex normal visualization strategy resources cleared for scene switch");
+}
+
 void VertexNormalVisualizationStrategy::cleanup() {
   m_instanceBufferCache.clear();
   m_drawData.clear();

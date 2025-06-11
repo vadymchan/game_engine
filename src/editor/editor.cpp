@@ -17,6 +17,7 @@
 #include "utils/path_manager/path_manager.h"
 #include "utils/service/service_locator.h"
 #include "utils/time/timing_manager.h"
+#include "gfx/renderer/renderer.h"
 
 #include <ImGuiFileDialog.h>
 
@@ -28,7 +29,9 @@ namespace arise {
 bool Editor::initialize(Window*                        window,
                         gfx::rhi::RenderingApi         renderingApi,
                         gfx::rhi::Device*              device,
-                        gfx::renderer::FrameResources* frameResources) {
+                        gfx::renderer::FrameResources* frameResources,
+                        gfx::renderer::Renderer*       renderer) {
+  m_renderer       = renderer;
   m_window         = window;
   m_device         = device;
   m_frameResources = frameResources;
@@ -1932,7 +1935,6 @@ void Editor::switchToScene_(const std::string& sceneName) {
   }
 
   auto sceneManager = ServiceLocator::s_get<SceneManager>();
-
   if (!sceneManager->hasScene(sceneName)) {
     auto scene = SceneLoader::loadScene(sceneName, sceneManager);
     if (!scene) {
@@ -1942,6 +1944,10 @@ void Editor::switchToScene_(const std::string& sceneName) {
   }
 
   if (sceneManager->switchToScene(sceneName)) {
+    if (m_renderer) {
+      m_renderer->onSceneSwitch();
+    }
+
     m_selectedEntity = entt::null;
     GlobalLogger::Log(LogLevel::Info, "Switched to scene: " + sceneName);
   } else {

@@ -65,6 +65,13 @@ void DebugPass::render(const RenderContext& context) {
   }
 }
 
+void DebugPass::clearSceneResources() {
+  if (m_debugStrategy) {
+    m_debugStrategy->clearSceneResources();
+  }
+  GlobalLogger::Log(LogLevel::Info, "Debug pass resources cleared for scene switch");
+}
+
 void DebugPass::cleanup() {
   if (m_debugStrategy) {
     m_debugStrategy->cleanup();

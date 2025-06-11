@@ -340,7 +340,7 @@ auto Engine::initialize() -> bool {
   switch (m_applicationMode) {
     case gfx::renderer::ApplicationRenderMode::Editor:
       if (!m_editor_->initialize(
-              m_window_.get(), renderingApi, m_renderer_->getDevice(), m_renderer_->getFrameResources())) {
+              m_window_.get(), renderingApi, m_renderer_->getDevice(), m_renderer_->getFrameResources(), m_renderer_.get())) {
         GlobalLogger::Log(LogLevel::Error, "Failed to initialize Editor");
         successfullyInitialized = false;
       }

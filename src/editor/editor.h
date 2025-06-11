@@ -14,19 +14,28 @@ namespace arise {
 
 class Window;
 
-namespace gfx::rhi {
+namespace gfx {
+namespace rhi {
 class Device;
-}  // namespace gfx::rhi
+}  // namespace rhi
+
+namespace renderer {
+class Renderer;
+}  // namespace renderer
+}  // namespace gfx
 
 class Editor {
   public:
   Editor()  = default;
   ~Editor() = default;
 
+  // TODO: consider either remove renderer pointer from editor class or remove device & frame resources pointer (we can
+  // get them from renderer though I'm not sure yet that it's a good approach to pass renderer in editor)
   bool initialize(Window*                        window,
                   gfx::rhi::RenderingApi         renderingApi,
                   gfx::rhi::Device*              device,
-                  gfx::renderer::FrameResources* frameResources);
+                  gfx::renderer::FrameResources* frameResources,
+                  gfx::renderer::Renderer*       renderer);
 
   void render(gfx::renderer::RenderContext& context);
 
@@ -50,11 +59,11 @@ class Editor {
   void handleGizmoInput();
   void renderGizmoControlsWindow();
 
-  bool            isOperationAllowedForEntity(ImGuizmo::OPERATION operation);
-  void            updateGizmoConstraints();
+  bool           isOperationAllowedForEntity(ImGuizmo::OPERATION operation);
+  void           updateGizmoConstraints();
   math::Vector3f getGizmoWorldPosition();
-  void            handleGizmoManipulation(const math::Matrix4f<>& modelMatrix);
-  void            handleEntitySelection(entt::entity entity);
+  void           handleGizmoManipulation(const math::Matrix4f<>& modelMatrix);
+  void           handleEntitySelection(entt::entity entity);
 
   bool             shouldRenderGizmo_();
   entt::entity     getCameraEntity_();
@@ -93,6 +102,8 @@ class Editor {
   // Editor state
   gfx::renderer::RenderSettings m_renderParams;
 
+  gfx::renderer::Renderer* m_renderer = nullptr;
+
   Window*                        m_window         = nullptr;
   gfx::rhi::Device*              m_device         = nullptr;
   gfx::renderer::FrameResources* m_frameResources = nullptr;
@@ -109,7 +120,7 @@ class Editor {
   ImGuizmo::MODE      m_currentGizmoMode      = ImGuizmo::WORLD;
 
   math::Vector3f m_currentDirectionalLightGizmoPosition;
-  float           gizmoDistanceFromCamera = 5.0f;
+  float          gizmoDistanceFromCamera = 5.0f;
 
   bool        m_showSaveNotification = false;
   ElapsedTime m_notificationTimer;

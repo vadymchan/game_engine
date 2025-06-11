@@ -225,7 +225,7 @@ void Renderer::endFrame(RenderContext& context) {
     if (auto* profiler = ServiceLocator::s_get<gpu::GpuProfiler>()) {
       profiler->collect(context.commandBuffer.get());
     }
-  } 
+  }
 
   context.commandBuffer->end();
 
@@ -320,6 +320,21 @@ bool Renderer::onViewportResize(const math::Dimension2i& newDimension) {
   }
 
   return true;
+}
+
+void Renderer::onSceneSwitch() {
+  m_device->waitIdle();
+  if (m_frameResources) {
+    m_frameResources->clearSceneResources();
+  }
+  if (m_basePass) {
+    m_basePass->clearSceneResources();
+  }
+  if (m_debugPass) {
+    m_debugPass->clearSceneResources();
+  }
+
+  GlobalLogger::Log(LogLevel::Info, "Renderer resources cleared for scene switch");
 }
 
 void Renderer::initializeGpuProfiler_() {

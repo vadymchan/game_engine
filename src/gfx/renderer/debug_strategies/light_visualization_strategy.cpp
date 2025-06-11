@@ -155,6 +155,13 @@ void LightVisualizationStrategy::render(const RenderContext& context) {
   commandBuffer->endRenderPass();
 }
 
+void LightVisualizationStrategy::clearSceneResources() {
+  m_instanceBufferCache.clear();
+  m_materialCache.clear();
+  m_drawData.clear();
+  GlobalLogger::Log(LogLevel::Info, "Light visualization strategy resources cleared for scene switch");
+}
+
 void LightVisualizationStrategy::cleanup() {
   m_instanceBufferCache.clear();
   m_materialCache.clear();

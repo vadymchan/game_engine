@@ -28,6 +28,7 @@ class DebugPass : public RenderPass {
   void render(const RenderContext& context) override;
 
   void endFrame() override {}
+  void clearSceneResources();
   void cleanup() override;
 
   bool isExclusive() const override;

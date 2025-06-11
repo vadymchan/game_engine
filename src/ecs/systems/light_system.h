@@ -7,7 +7,6 @@
 #include "gfx/rhi/interface/buffer.h"
 #include "gfx/rhi/interface/descriptor.h"
 
-
 #include <unordered_set>
 #include <vector>
 
@@ -40,30 +39,29 @@ class LightSystem : public IUpdatableSystem {
   private:
   struct DirectionalLightData {
     math::Vector3f color;
-    float           intensity;
+    float          intensity;
     math::Vector3f direction;
-    float           padding;
+    float          padding;
   };
 
   struct PointLightData {
     math::Vector3f color;
-    float           intensity;
-    float           range;
+    float          intensity;
+    float          range;
     math::Vector3f position;
-    float           padding;
   };
 
   struct SpotLightData {
     math::Vector3f color;
-    float           intensity;
-    float           range;
-    float           innerConeAngle;
-    float           outerConeAngle;
-    float           padding1;
+    float          intensity;
+    float          range;
+    float          innerConeAngle;
+    float          outerConeAngle;
+    float          padding1;
     math::Vector3f position;
-    float           padding2;
+    float          padding2;
     math::Vector3f direction;
-    float           padding3;
+    float          padding3;
   };
 
   struct LightCounts {
@@ -87,7 +85,7 @@ class LightSystem : public IUpdatableSystem {
                              uint32_t&          currentCapacity,
                              uint32_t           stride);
 
-  gfx::rhi::Device* m_device;
+  gfx::rhi::Device*                     m_device;
   gfx::renderer::RenderResourceManager* m_resourceManager;
 
   std::vector<DirectionalLightData> m_dirLightData;
